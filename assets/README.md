@@ -29,6 +29,15 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 カテゴリ定義は `src/core/assetCategories.ts` にあり、テストでこの構成と一致することを確認しています。
 ディレクトリを増やす場合は両方を更新してください。
 
+## 配置済みの素材（2026-10-22）
+
+| パス | 内容 | 状態 |
+| --- | --- | --- |
+| `images/ui/skillcard/skillcard_master_v4.png` ほか | 技カードUIテンプレート V4（マスター・外枠マスク・マナ/ちから/かしこさのバー・数字1〜10） | ユーザー提供・**正式承認待ちの版**。マスターと外枠マスクは 972×1618 を 1/2 に縮小、数字は 128→64px に縮小（描き換えなし） |
+| `images/characters/player_male_walk_qa.png`・`player_female_walk_qa.png` | 主人公の歩行（4方向×4コマ、128×144） | ユーザー提供・**QA 試作品**（正式品質ではない） |
+
+アプリアイコンは `public/icons/`（同梱の公式アイコン原本を縮小のみで変換）。
+
 ## 命名規則
 
 - 小文字英数字・ハイフン・アンダースコアのみ（例: `monster_001.png`, `bgm-title.ogg`）
@@ -42,7 +51,6 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 
 ## 注意
 
-- 正式素材の組み込みは第2段階以降です。
 - 権利が確認できていない素材は置かないでください。
 - `.psd` `.clip` などの作業用ファイルは `.gitignore` で除外しています。
 - ビルドを通さずにURLで直接参照したいファイル（`robots.txt` 等）は `public/` に置きます。

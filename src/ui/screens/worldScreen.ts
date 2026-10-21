@@ -212,7 +212,6 @@ class WorldView {
 
   #addLabels(): void {
     const map = this.#map;
-    const seen = new Set<string>();
     for (const [ch, label] of Object.entries(BUILDING_LABEL)) {
       let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1;
       map.tiles.forEach((row, y) => [...row].forEach((c, x) => {
@@ -220,7 +219,6 @@ class WorldView {
         minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
       }));
       if (maxX < 0) continue;
-      seen.add(ch);
       const el = h('div', { class: 'world__label world__label--building', text: label });
       Object.assign(el.style, { left: `${minX * TILE}px`, top: `${minY * TILE}px`, width: `${(maxX - minX + 1) * TILE}px`, height: `${(maxY - minY + 1) * TILE}px` });
       this.#mapLayer.append(el);

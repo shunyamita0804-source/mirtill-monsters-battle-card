@@ -79,11 +79,24 @@ export const battleScreen: ScreenDefinition = {
       render();
     };
 
+    /** 防御できるカードが1枚もないときは、防御の選択を出さずに自動で進める */
+    const noDefensePossible = (): boolean =>
+      state.phase === 'defense' &&
+      state.pending?.attacker === 'opponent' &&
+      !state.sides.player.hand.some((c) => cardUsability(state, 'player', c.uid).usable);
+
     const scheduleAi = (): void => {
       if (timer || destroyed) return;
       const side = actingSide(state);
       if (!side) return;
-      if (side === 'player' && !auto) return;
+      if (side === 'player' && !auto) {
+        if (!noDefensePossible()) return;
+        timer = setTimeout(() => {
+          timer = null;
+          if (!destroyed && noDefensePossible()) dispatch({ type: 'defend', side: 'player', cardUid: null });
+        }, AI_STEP_MS + 250);
+        return;
+      }
       timer = setTimeout(() => {
         timer = null;
         if (destroyed) return;
@@ -226,7 +239,7 @@ export const battleScreen: ScreenDefinition = {
             class: 'battle__prompt-text',
             text:
               p.attacker === 'opponent'
-                ? `相手の「${attackerCard.name}」！ ${STAT_LABEL[p.stat]}${p.power}の攻撃`
+                ? `相手の「${attackerCard.name}」！ ${STAT_LABEL[p.stat]}${p.power}の攻撃${noDefensePossible() ? '（防御できるカードなし）' : ''}`
                 : `「${attackerCard.name}」で攻撃中… 相手の防御を待っています`,
           }),
         );
@@ -316,6 +329,7 @@ export const battleScreen: ScreenDefinition = {
 
     const defenseOverlay = (): HTMLElement | null => {
       if (auto || state.phase !== 'defense' || !state.pending || state.pending.attacker !== 'opponent') return null;
+      if (noDefensePossible()) return null;
       const pending = state.pending;
       const target = state.sides.player.monsters.find((m) => m.uid === pending.targetUid);
       const options = state.sides.player.hand.filter((c) => getSkill(c.cardId).effect.type === 'defense');

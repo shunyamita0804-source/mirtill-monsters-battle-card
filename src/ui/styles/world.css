@@ -42,6 +42,8 @@
 }
 
 .world__viewport {
+  /* iOS Safari でタップ（click）を確実に受け取るため */
+  cursor: pointer;
   position: relative;
   flex: 1;
   min-height: 0;
@@ -54,6 +56,7 @@
   top: 0;
   left: 0;
   will-change: transform;
+  animation: fade-in 220ms ease-out;
 }
 
 .world__tiles {

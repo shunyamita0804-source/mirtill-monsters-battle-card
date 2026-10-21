@@ -1,11 +1,12 @@
-# CLAUDE.md — ミルティルモンスターズバトルカード 開発ガイド
+# CLAUDE.md — ミストリアモンスターズ バトルカード 開発ガイド
 
 このファイルは Claude Code 向けの引き継ぎ・作業ルールです。作業前に必ず読んでください。
 
 ## プロジェクト概要
 
-- シリーズ名：**ミルティルモンスターズ**
-- ゲーム名：**ミルティルモンスターズバトルカード**
+- シリーズ名：**ミストリアモンスターズ**（Mistria Monsters）
+- ゲーム名：**ミストリアモンスターズ バトルカード**
+- 旧名称「ミルティル（Mirtill）」から改称（2026-10-22）。GitHub リポジトリ名は未改名（`docs/rename-migration.md`）
 - スマートフォン向け（縦持ち）2Dカードゲーム
 - 構想：モンスターファームバトルカード（GB版・PS版）のようなゲームをスマホ向けに作る
   - ダンジョン攻略と街は GB版風、バトルは PS版風
@@ -25,13 +26,16 @@
 6. **force push しない。** 履歴の書き換えが必要な場合はユーザーに確認する。
 7. 作業できなかったことは「未完了」として明確に報告する。
 
-## 現在の状態（2026-10-21 時点）
+## 現在の状態（2026-10-22 時点）
 
-- **第1段階（開発環境構築）：完了・承認済み**
-- **第2段階（スマホ向けゲーム基盤構築）：実装済み・ユーザーの承認待ち**
-  - 第3段階には進まない。次の指示書が届くまで実装を始めない。
-  - `package-lock.json` はコミット済み。CI は `npm ci` でインストールする。
-- 詳細は `docs/phase-1-report.md`、`docs/phase-2-report.md`、設計は `docs/architecture.md`。
+- 第1段階（開発環境構築）：完了・承認済み
+- 第2段階（スマホ向けゲーム基盤構築）：`main` に push 済み・承認待ち
+- **夜間一括指示（2026-10-22）：ブランチ `nightbatch/2026-10-22` に実装済み・ユーザー確認待ち（`main` には未マージ）**
+  - 最小縦断体験：街 → 家でデッキ確認 → ショップでパック → ダンジョン B1〜B3 ボス → 大会受付 → 対戦 → 報酬
+  - 報告は `docs/nightbatch-2026-10-22-report.md`、設計は `docs/architecture.md`、名称移行は `docs/rename-migration.md`
+  - 次の指示が届くまで新しい作業を始めない
+- **仮データ・仮ルール**：カード・ルール値・価格・提供割合・大会・敵編成・マップはすべて仮（`src/data/`）。正式仕様として扱わない
+- 育成ゲーム本編（`mystic-monsters`）の正式仕様・素材は参照・流用していない（独立のルールを維持）
 
 ## 技術構成
 
@@ -65,31 +69,29 @@ npm run check        # 型チェック＋テスト＋ビルド
 ```
 src/
   main.ts                 エントリ（CSS 読み込みと startApp）
-  style.css               ベーススタイル（色の定義、#app / .viewport / .stage、safe-area、ズーム抑止）
-  config/app.ts           正式名称・バージョン・段階・論理解像度（390×844 縦）
-  config/screens.ts       画面ID一覧（title / town / shop / battle）
-  core/                   DOM 非依存の基盤
-    stageLayout.ts        画面サイズ → ステージの倍率・配置
-    router.ts             画面遷移の履歴（navigate / back / reset）
-    assetPath.ts          public/ のファイルを base パス付きURLにする resolvePublicPath()
-    assetCategories.ts    assets/ のカテゴリ定義と素材ファイル名の命名規則
+  style.css               ベーススタイル（色、#app / .viewport / .stage、safe-area、ズーム抑止）
+  config/                 正式名称・論理解像度（390×844 縦）・画面ID一覧
+  data/                   【仮データ】カード・ルール値・パック/価格・大会・マップ・ダンジョン・欠片
+  core/                   DOM 非依存の基盤（画面の拡大縮小、Router、素材パス）
   game/                   DOM 非依存のゲームロジック
-    cards/                カード型・カタログ・仮カード・画像の引き当て
-    battle/               バトル状態と reducer（選択・仮のターン切り替え）、仮の初期状態
+    battle/               バトルのルール（engine.ts）と AI（ai.ts）
+    deck/                 デッキ検証・スターター・NPC デッキ
+    economy/              ガチャ（提供割合・抽選・購入の二重処理防止）
+    progress/             大会・ダンジョン・欠片の進行
+    save/                 セーブデータ（版管理・移行・安全な読み込み）と保存先
+    world/                歩行マップの当たり判定・経路探索
   ui/                     DOM を扱う層
-    app.ts                ステージ＋ルーター＋画面差し替え
-    stage.ts              論理解像度のステージを拡大縮小して配置
-    dom.ts                h() / button() ヘルパー（文字列は textContent で入れる）
-    cardArtSources.ts     assets/images/cards/ の画像を import.meta.glob で一覧化
-    components/           カード表示・カード詳細・画面ヘッダー
-    screens/              各画面と registry.ts（画面IDとの対応表）
-    styles/               部品・画面・バトルの CSS
-public/                   ビルドを通さず配信するファイル（favicon.svg, .nojekyll）
-assets/                   ゲーム素材（カテゴリ別。詳細は assets/README.md）
-tests/                    Vitest のテスト
-docs/                     開発ドキュメント（architecture.md に設計）
-.github/workflows/ci.yml  CI（デプロイなし）
-.github/scripts/run-step.sh  CI失敗時に出力末尾をエラー注記に残すスクリプト
+    app.ts / stage.ts     画面の組み立て・拡大縮小
+    gameStore.ts          セーブの読み書きと画面をまたぐ一時情報（バトル依頼など）
+    components/           技カード（V4）・モンスターカード・カード詳細・一覧・ダイアログ
+    screens/              各画面と registry.ts
+    styles/               CSS
+public/                   アイコン（icons/）・manifest・.nojekyll
+assets/                   素材（技カードテンプレートV4、主人公歩行QA素材 など。assets/README.md）
+tests/                    Vitest（ロジック・データ整合性・進行不能チェック）
+tools/e2e/                Playwright の通し確認スクリプト（npm 依存外・CI 外）
+docs/                     開発ドキュメント
+.github/workflows/ci.yml  CI（main と nightbatch/** の push、PR。デプロイなし）
 ```
 
 ## 実装上の約束
@@ -107,13 +109,15 @@ docs/                     開発ドキュメント（architecture.md に設計�
   - 画面の CSS は論理 px（390 幅基準）で書く。拡大縮小は `.stage` が一括で行う
   - タップ領域は高さ 40px 以上
 - **画面の追加**：`config/screens.ts` にID → `ui/screens/` に画面 → `registry.ts` に登録（手順は `docs/architecture.md`）
-- **仮データ**：仮カードは `isPlaceholder: true`・ID `tmp-`・名前「仮」始まり。正式カードデータは指示書で許可されるまで作らない
+- **仮データ**：仮カードは `isPlaceholder: true`・名前「仮」始まり。数値・ルール・価格などの仮の値は `src/data/` に集め、画面にも「仮」と出す。正式データは指示書で許可されるまで作らない
+- **セーブ**：変更は `GameStore.update(純粋関数)` で。形式を変えるときは `SAVE_VERSION` を上げて `MIGRATIONS` を足す
+- **二重タップ**：購入・景品・特別復元など一度きりの処理は ID で1回だけ処理する（`processedTransactions`・`claimedEntries`・`once()`）
 - コメント・ドキュメント・コミットメッセージは日本語
 
 ## GitHub
 
 - リポジトリ：https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Private）
-- ブランチ：`main` のみ
+- ブランチ：`main`（第2段階まで）、`nightbatch/2026-10-22`（夜間一括作業。ユーザー確認後に main へマージ）
 - 最初のコミット `87de809 Initial commit` は GitHub が自動生成したもの（上書きせず残している）
 
 ## 報告の形式

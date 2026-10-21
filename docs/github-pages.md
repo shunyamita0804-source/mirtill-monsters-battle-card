@@ -1,5 +1,7 @@
 # GitHub Pages 公開準備
 
+> 名称変更（Mistria）に伴うリポジトリ改名後は URL・base パスが変わります。[rename-migration.md](rename-migration.md) を参照。
+
 > **現在の状態：公開していません。**
 > GitHub Pages の有効化・デプロイ・公開URLの発行は、ユーザーの承認を得てから行います。
 
