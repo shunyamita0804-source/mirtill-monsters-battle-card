@@ -135,7 +135,7 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
   log('dungeon map', await mapId());
   await shot('b1');
   let dungeonDone = false;
-  for (let attempt = 1; attempt <= 4 && !dungeonDone; attempt++) {
+  for (let attempt = 1; attempt <= 6 && !dungeonDone; attempt++) {
     if ((await mapId()) !== 'dungeon-01-b1') {
       await closeModals();
       await walkTo(5, 1); await waitScreen('dungeonSelect'); await page.click('text=出発する'); await waitScreen('world');
@@ -164,6 +164,7 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
     if (r3 === 'modal') { await shot('boss-appear'); await closeModals(); const w = await playBattle('boss'); await waitScreen('world'); await shot('after-boss'); log('after boss:', (await page.textContent('.modal').catch(() => '')).replace(/\s+/g, ' ')); await closeModals(); if (w === 'player') dungeonDone = true; }
   }
   log('dungeon cleared:', dungeonDone, 'map', await mapId());
+  await closeModals();
 
   // 大会
   await walkTo(4, 8, { untilMap: 'town' });
