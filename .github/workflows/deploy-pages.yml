@@ -1,0 +1,40 @@
+# GitHub Pages への公開（2026-10-22 ユーザー承認済み）。Pages の Source を「GitHub Actions」にしてから実行する。
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch: # 手動実行（Pages を有効にした後、main への push での自動公開も追加予定）
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build:pages
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

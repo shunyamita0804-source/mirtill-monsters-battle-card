@@ -20,9 +20,9 @@
 3. **既存の「ミスティックモンスターズ」とは完全に独立。**
    - `shunyamita0804-source/mystic-monsters` のリポジトリ・ブランチ・作業フォルダ・Pagesサイト・素材・設定を変更しない
    - 既存リポジトリからのファイルコピー、ソース流用もしない
-4. **GitHub Pages を公開しない。** 有効化・デプロイ・公開URL発行は、ユーザーの明示的な承認があるまで禁止。
-   Privateリポジトリでも Pages は一般公開されうるため。手順は `docs/github-pages.md`。
-5. **リポジトリは Private のまま。** 公開設定を変えない。
+4. **GitHub Pages：2026-10-22 にユーザーが公開を承認。** `main` の内容を `.github/workflows/deploy-pages.yml`（手動実行）で公開する。
+   公開されたものは誰でも見られる。手順は `docs/github-pages.md`。
+5. **リポジトリの公開設定：2026-10-22 にユーザーが Public 化を承認**（無料プランでは Private のまま Pages を使えないため）。これ以外の設定変更はしない。
 6. **force push しない。** 履歴の書き換えが必要な場合はユーザーに確認する。
 7. 作業できなかったことは「未完了」として明確に報告する。
 
@@ -30,7 +30,7 @@
 
 - 第1段階（開発環境構築）：完了・承認済み
 - 第2段階（スマホ向けゲーム基盤構築）：`main` に push 済み・承認待ち
-- **夜間一括指示（2026-10-22）：ブランチ `nightbatch/2026-10-22` に実装済み・ユーザー確認待ち（`main` には未マージ）**
+- **夜間一括指示（2026-10-22）：実装済み。ユーザーの公開承認により `main` に取り込み済み**（ブランチ `nightbatch/2026-10-22` も残している）
   - 最小縦断体験：街 → 家でデッキ確認 → ショップでパック → ダンジョン B1〜B3 ボス → 大会受付 → 対戦 → 報酬
   - 報告は `docs/nightbatch-2026-10-22-report.md`、設計は `docs/architecture.md`、名称移行は `docs/rename-migration.md`
   - 次の指示が届くまで新しい作業を始めない
@@ -117,7 +117,8 @@ docs/                     開発ドキュメント
 ## GitHub
 
 - リポジトリ：https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Private）
-- ブランチ：`main`（第2段階まで）、`nightbatch/2026-10-22`（夜間一括作業。ユーザー確認後に main へマージ）
+- ブランチ：`main`（公開する版。夜間一括作業を取り込み済み）、`nightbatch/2026-10-22`（夜間一括作業の作業ブランチ）
+- 公開URL（Pages 有効化後）：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/
 - 最初のコミット `87de809 Initial commit` は GitHub が自動生成したもの（上書きせず残している）
 
 ## 報告の形式
