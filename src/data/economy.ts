@@ -1,0 +1,101 @@
+import { HIDDEN_MONSTER_ID, monsterId, skillId } from './cards.ts';
+
+/**
+ * 【仮データ】通貨・パック・提供割合。
+ * 価格・確率・収録カードはすべて未承認の仮の値。正式な値が決まったらこのファイルだけを差し替える。
+ */
+export const CURRENCY = {
+  name: 'ゴールド',
+  unit: 'G',
+  /** 新しく始めたときの所持金（仮） */
+  initial: 300,
+} as const;
+
+export type RankId = 'E' | 'D' | 'C' | 'B' | 'A' | 'S';
+export const RANK_ORDER: readonly RankId[] = ['E', 'D', 'C', 'B', 'A', 'S'];
+
+export function rankAtLeast(rank: RankId, required: RankId): boolean {
+  return RANK_ORDER.indexOf(rank) >= RANK_ORDER.indexOf(required);
+}
+
+export interface PackDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly price: number;
+  readonly cardsPerPack: number;
+  /** 未解放時に表示する解放条件 */
+  readonly unlockHint: string;
+  /** 最初から解放済みか */
+  readonly unlockedFromStart: boolean;
+  /** 収録カードID（レアリティはカード側の値） */
+  readonly cardIds: readonly string[];
+  /** レアリティごとの排出割合（％、合計100） */
+  readonly rarityRates: Readonly<Record<'C' | 'U' | 'R', number>>;
+  readonly isPlaceholder: boolean;
+}
+
+const skillsFor = (keys: readonly string[]): string[] =>
+  keys.flatMap((k) => [1, 2, 3, 4, 5, 6].map((n) => skillId(k, n)));
+
+const RATES = { C: 70, U: 25, R: 5 } as const;
+
+export const PACKS: readonly PackDefinition[] = [
+  {
+    id: 'pack-01',
+    name: '第1弾パック（仮）',
+    description: '仮モンスターA〜Dとその技を収録。',
+    price: 100,
+    cardsPerPack: 5,
+    unlockHint: '最初から購入できます',
+    unlockedFromStart: true,
+    cardIds: [...['a', 'b', 'c', 'd'].map(monsterId), ...skillsFor(['a', 'b', 'c', 'd'])],
+    rarityRates: RATES,
+    isPlaceholder: true,
+  },
+  {
+    id: 'pack-02',
+    name: '第2弾パック（仮）',
+    description: '仮モンスターE〜Gとその技を収録。',
+    price: 120,
+    cardsPerPack: 5,
+    unlockHint: 'Eランク大会で初優勝すると解放',
+    unlockedFromStart: false,
+    cardIds: [...['e', 'f', 'g'].map(monsterId), ...skillsFor(['e', 'f', 'g'])],
+    rarityRates: RATES,
+    isPlaceholder: true,
+  },
+  {
+    id: 'pack-03',
+    name: '第3弾パック（仮）',
+    description: '仮モンスターH・Iとその技、隠しモンスターの技を収録。',
+    price: 150,
+    cardsPerPack: 5,
+    unlockHint: 'Dランク大会で初優勝すると解放',
+    unlockedFromStart: false,
+    // 隠しモンスター本体は収録しない（欠片の特別復元でのみ入手）。技カードだけ収録する
+    cardIds: [
+      ...['h', 'i'].map(monsterId),
+      ...skillsFor(['h', 'i']),
+      skillId('hidden', 1),
+      skillId('hidden', 2),
+      skillId('hidden', 3),
+    ],
+    rarityRates: RATES,
+    isPlaceholder: true,
+  },
+];
+
+export function getPack(id: string): PackDefinition | undefined {
+  return PACKS.find((p) => p.id === id);
+}
+
+/** 通常ガチャで排出してはいけないカード */
+export const NEVER_IN_PACKS: readonly string[] = [HIDDEN_MONSTER_ID];
+
+/** バトル・宝箱などの報酬（仮） */
+export const REWARDS = {
+  dungeonBattleWin: 30,
+  dungeonBossFirstClear: 200,
+  dungeonBossRepeat: 60,
+} as const;

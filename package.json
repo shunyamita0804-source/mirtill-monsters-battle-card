@@ -1,8 +1,8 @@
 {
-  "name": "mirtill-monsters-battle-card",
-  "version": "0.0.0",
+  "name": "mistria-monsters-battle-card",
+  "version": "0.3.0",
   "private": true,
-  "description": "ミルティルモンスターズバトルカード — スマートフォン向け2Dカードゲーム（ミルティルモンスターズシリーズ）",
+  "description": "ミストリアモンスターズ バトルカード — スマートフォン向け2Dカードゲーム（ミストリアモンスターズシリーズ）",
   "type": "module",
   "engines": {
     "node": ">=24"

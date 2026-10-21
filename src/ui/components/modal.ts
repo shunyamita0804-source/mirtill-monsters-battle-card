@@ -1,0 +1,103 @@
+import { button, h, type Child } from '../dom.ts';
+
+/**
+ * 画面内に重ねるダイアログ。parent（position: relative の画面要素）の中に表示する。
+ * 返り値の close() で閉じる。背景タップで閉じるかは closeOnBackdrop で指定。
+ */
+export interface ModalOptions {
+  readonly title?: string;
+  readonly body: readonly Child[];
+  readonly actions?: readonly { readonly label: string; readonly onTap: () => void; readonly primary?: boolean; readonly disabled?: boolean }[];
+  readonly closeOnBackdrop?: boolean;
+  readonly onClose?: () => void;
+  readonly className?: string;
+}
+
+export interface ModalHandle {
+  readonly element: HTMLElement;
+  close(): void;
+}
+
+export function openModal(parent: HTMLElement, options: ModalOptions): ModalHandle {
+  let closed = false;
+  const close = (): void => {
+    if (closed) return;
+    closed = true;
+    overlay.remove();
+    options.onClose?.();
+  };
+  const actions = (options.actions ?? []).map((a) => {
+    const b = button(a.label, a.onTap, `btn${a.primary ? ' btn--primary' : ''}`);
+    b.disabled = a.disabled ?? false;
+    return b;
+  });
+  const panel = h(
+    'div',
+    {
+      class: `modal__panel${options.className ? ` ${options.className}` : ''}`,
+      attrs: { role: 'dialog', 'aria-modal': 'true' },
+      on: { click: (e) => e.stopPropagation() },
+    },
+    options.title ? h('h2', { class: 'modal__title', text: options.title }) : null,
+    h('div', { class: 'modal__body' }, ...options.body),
+    actions.length > 0 ? h('div', { class: 'modal__actions' }, ...actions) : null,
+  );
+  const overlay = h(
+    'div',
+    {
+      class: 'modal',
+      on: {
+        click: () => {
+          if (options.closeOnBackdrop ?? true) close();
+        },
+      },
+    },
+    panel,
+  );
+  parent.append(overlay);
+  queueMicrotask(() => (actions.find((b) => !b.disabled) ?? panel).focus?.({ preventScroll: true }));
+  return { element: overlay, close };
+}
+
+/** はい／いいえの確認。onYes は1回だけ呼ばれる（二重タップ防止） */
+export function confirmModal(
+  parent: HTMLElement,
+  title: string,
+  body: readonly Child[],
+  yesLabel: string,
+  onYes: () => void,
+  noLabel = 'やめる',
+  onClose?: () => void,
+): ModalHandle {
+  let done = false;
+  const handle = openModal(parent, {
+    title,
+    body,
+    ...(onClose ? { onClose } : {}),
+    actions: [
+      { label: noLabel, onTap: () => handle.close() },
+      {
+        label: yesLabel,
+        primary: true,
+        onTap: () => {
+          if (done) return;
+          done = true;
+          handle.close();
+          onYes();
+        },
+      },
+    ],
+  });
+  return handle;
+}
+
+/** お知らせ（閉じるボタンのみ） */
+export function messageModal(parent: HTMLElement, text: string, onClose?: () => void, title?: string): ModalHandle {
+  const handle = openModal(parent, {
+    ...(title ? { title } : {}),
+    body: text.split('\n').map((line) => h('p', { class: 'modal__text', text: line })),
+    actions: [{ label: 'OK', primary: true, onTap: () => handle.close() }],
+    ...(onClose ? { onClose } : {}),
+  });
+  return handle;
+}

@@ -17,6 +17,19 @@ npm ci
 `package-lock.json` はコミット済みです。依存関係は `npm ci` でロックファイルどおりに入れてください。
 依存を追加・更新したときだけ `npm install` を使い、更新された `package-lock.json` をコミットします。
 
+Node.js 24 がない環境では `nvm install 24`（Node 22 付属の npm 10 では依存解決が内部エラーになる）。
+
+## スマホでの確認
+
+`npm run dev` を実行すると `Network: http://192.168.x.x:5173/` のように表示されます。同じ Wi-Fi の iPhone の Safari でその URL を開いてください。
+URL の末尾に `?qa=1` を付けると QA 用のボタン（バトルのオート・即勝利、所持金追加、全カード付与、全パック解放）が出ます。
+
+セーブはブラウザの localStorage（キー `mistria-battle-card/save`）に保存されます。最初からやり直すときはベッドの「セーブデータを消す」。
+
+## ブラウザでの通し確認
+
+`tools/e2e/README.md` を参照（Playwright を別途用意して実行）。
+
 ## よく使うコマンド
 
 | コマンド | 内容 |

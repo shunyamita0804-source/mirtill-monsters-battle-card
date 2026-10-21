@@ -1,0 +1,21 @@
+# ブラウザでの通し確認（E2E）
+
+Playwright で実際の画面を操作して、最小縦断体験を確認するスクリプトです。
+npm の依存には入れていません（CI では実行しません）。手元で確認するときだけ使います。
+
+| スクリプト | 内容 |
+| --- | --- |
+| `flow.cjs` | 新規開始 → 家（デッキ・図鑑・ベッド）→ 欠片 → ショップ（一覧・提供割合・ガチャ・二重タップ）→ ダンジョン B1〜B3 ボス → 大会 → 景品 → 再読み込みで復帰。バトルは QA 用のオート（AI が実際に対戦）で進める |
+| `flow2.cjs` | 人の操作でのバトル（拡大表示・対象選択・防御・使用不可）、大会初優勝の景品と二重受け取り防止、欠片10個目と特別復元、375×667 / 390×844 / 430×932 での画面はみ出し確認 |
+
+## 使い方
+
+```bash
+npm run build
+npx vite preview --port 4173 &
+# Playwright を別途用意して、そのパスを PLAYWRIGHT_MODULE に渡す（例：グローバルにインストールした場合）
+PLAYWRIGHT_MODULE=/path/to/node_modules/playwright E2E_OUT=/tmp/e2e node tools/e2e/flow.cjs http://127.0.0.1:4173/
+PLAYWRIGHT_MODULE=/path/to/node_modules/playwright E2E_OUT=/tmp/e2e node tools/e2e/flow2.cjs http://127.0.0.1:4173/
+```
+
+スクリーンショットは `E2E_OUT` に保存されます。URL に `?qa=1` を付けると QA 用ボタン（オート・即勝利・所持金追加など）が出ます。

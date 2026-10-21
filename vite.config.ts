@@ -10,7 +10,14 @@ import { defineConfig } from 'vitest/config';
  * - `npm run build:pages`: base = '/mirtill-monsters-battle-card/'（GitHub Pages 向け）
  * - 環境変数 VITE_BASE_PATH を指定した場合はそれを最優先（独自ドメイン等）
  */
-export const REPO_NAME = 'mirtill-monsters-battle-card';
+/**
+ * GitHub 上のリポジトリ名（= Pages の base パス）。
+ * 名称変更（Mirtill → Mistria）に伴うリポジトリ改名は未実施（ユーザー承認待ち）。
+ * 改名したら CURRENT_REPO_NAME を PLANNED_REPO_NAME に変え、CI の base パス確認も合わせる（docs/rename-migration.md）。
+ */
+export const CURRENT_REPO_NAME = 'mirtill-monsters-battle-card';
+export const PLANNED_REPO_NAME = 'mistria-monsters-battle-card';
+export const REPO_NAME = CURRENT_REPO_NAME;
 export const PAGES_BASE = `/${REPO_NAME}/`;
 
 export function resolveBase(mode: string, envBase?: string): string {

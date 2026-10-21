@@ -1,0 +1,267 @@
+/* ===== 歩行画面（仮マップ） ===== */
+.world {
+  background: #0d0a18;
+}
+
+.world__hud {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 52px;
+  padding: 0 8px;
+  background: rgb(0 0 0 / 0.55);
+  border-bottom: 1px solid var(--color-line);
+  z-index: 2;
+}
+
+.world__place {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.world__place-name {
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.world__place-note {
+  font-size: 10px;
+  color: var(--color-sub);
+}
+
+.world__coins {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.world__viewport {
+  /* iOS Safari でタップ（click）を確実に受け取るため */
+  cursor: pointer;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.world__map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  animation: fade-in 220ms ease-out;
+}
+
+.world__tiles {
+  display: grid;
+  grid-auto-rows: 40px;
+}
+
+/* タイル（仮の配色。正式背景が届いたら背景画像に置き換える） */
+.tile {
+  width: 40px;
+  height: 40px;
+}
+
+.tile--wall { background: #2b2440; box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.3); }
+.tile--floor { background: #8c7a5e; }
+.tile--grass { background: #5d9b4f; background-image: radial-gradient(circle at 30% 40%, rgb(255 255 255 / 0.08) 0 2px, transparent 3px); }
+.tile--road { background: #d8c49a; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.05); }
+.tile--tree { background: radial-gradient(circle at 50% 45%, #2f6b34 0 14px, #5d9b4f 15px); }
+.tile--water { background: #3d8bd6; box-shadow: inset 0 0 8px rgb(255 255 255 / 0.3); }
+.tile--bld-hall { background: #3f5fb0; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15); }
+.tile--bld-home { background: #b5653a; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15); }
+.tile--bld-shop { background: #3a8a8a; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15); }
+.tile--door { background: #5a3a1f; box-shadow: inset 0 0 0 4px #c9a24a; }
+.tile--exit { background: #6b5536; box-shadow: inset 0 -10px 0 #3a2a14; }
+.tile--fountain { background: radial-gradient(circle, #7cc2ff 0 12px, #b9b2a0 13px); }
+.tile--stairs-down { background: repeating-linear-gradient(180deg, #4a3f2a 0 6px, #2a2418 6px 10px); box-shadow: inset 0 0 0 3px #ffcf5a; }
+.tile--stairs-up { background: repeating-linear-gradient(0deg, #9a8a6a 0 6px, #6a5a3a 6px 10px); box-shadow: inset 0 0 0 3px #8fd0ff; }
+.tile--bed { background: #e9e2f7; box-shadow: inset 0 0 0 3px #7b6fb0; }
+.tile--wallmap { background: #e8d8a8; box-shadow: inset 0 0 0 3px #6b4a2a; }
+.tile--bookshelf { background: repeating-linear-gradient(180deg, #6b4a2a 0 8px, #c75 8px 10px, #57a 10px 12px); }
+.tile--desk { background: #8a5a30; box-shadow: inset 0 -6px 0 #5a3a1f; }
+.tile--shelf { background: #6b4a2a; box-shadow: inset 0 0 0 2px #3a2a14; }
+.tile--counter { background: #9a6a3a; box-shadow: inset 0 -8px 0 #6a4422; }
+.tile--npc { background: #8c7a5e; }
+.tile--gacha { background: linear-gradient(180deg, #ffcf5a 0 30%, #5b4bb0 30%); box-shadow: inset 0 0 0 2px #c9a24a; }
+.tile--table { background: #2f7a4a; box-shadow: inset 0 0 0 3px #c9a24a; }
+.tile--rug { background: #9a4a5a; }
+
+.world__map--dungeon .tile--floor { background: #4a4258; }
+.world__map--dungeon .tile--wall { background: #1a1528; }
+.world__map--interior .tile--wall { background: #4a3a5a; }
+
+.tile--npc::after {
+  content: '';
+}
+
+.world__label {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  line-height: 1.2;
+}
+
+.world__label--building {
+  font-size: 15px;
+}
+
+.world__label--warp {
+  font-size: 10px;
+}
+
+/* 人（店員・受付）は床の上に仮の人形を描く */
+.world__map .tile--npc {
+  background:
+    radial-gradient(circle at 50% 28%, #e8c7a0 0 7px, transparent 8px),
+    linear-gradient(180deg, transparent 0 40%, #3f7fd6 40% 90%, transparent 90%) 50% 0 / 20px 100% no-repeat,
+    #8c7a5e;
+}
+
+.world__enemy {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 40% 40%;
+  background: radial-gradient(circle at 50% 40%, #ff7a8a, #a02a3a);
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.35);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  animation: enemy-bob 1.2s ease-in-out infinite;
+}
+
+.world__enemy--boss {
+  background: radial-gradient(circle at 50% 40%, #c07aff, #4a1a7a);
+  font-size: 10px;
+}
+
+@keyframes enemy-bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.world__chest {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background:
+    linear-gradient(180deg, #a0672a 0 45%, #6a3f14 45% 52%, #a0672a 52%) 4px 8px / 32px 26px no-repeat;
+  box-shadow: inset 0 0 0 0 transparent;
+}
+
+.world__chest::after {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 17px;
+  width: 6px;
+  height: 7px;
+  background: #ffcf5a;
+}
+
+.world__chest.is-open {
+  opacity: 0.55;
+}
+
+.world__chest.is-open::after {
+  display: none;
+}
+
+.world__player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 45px;
+  background-size: 160px 180px;
+  background-repeat: no-repeat;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.world__controls {
+  flex: none;
+  display: grid;
+  grid-template-columns: 150px 1fr 96px;
+  align-items: center;
+  gap: 8px;
+  height: 170px;
+  padding: 8px 12px 12px;
+  background: rgb(0 0 0 / 0.55);
+  border-top: 1px solid var(--color-line);
+}
+
+.world__pad {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  touch-action: none;
+}
+
+.world__pad-btn {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-panel-strong);
+  color: var(--color-text);
+  font-size: 18px;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.world__pad-btn:active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.world__pad-btn--up { left: 49px; top: 0; }
+.world__pad-btn--down { left: 49px; bottom: 0; }
+.world__pad-btn--left { left: 0; top: 49px; }
+.world__pad-btn--right { right: 0; top: 49px; }
+
+.world__hint {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--color-sub);
+  white-space: pre-line;
+}
+
+.world__action {
+  width: 88px;
+  height: 88px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 4px 0 #a07a20;
+  cursor: pointer;
+}
+
+.world__action:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #a07a20;
+}
