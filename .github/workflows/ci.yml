@@ -23,19 +23,22 @@ jobs:
           node-version-file: .nvmrc
 
       - name: 依存関係のインストール
-        run: npm install --no-audit --no-fund
+        run: .github/scripts/run-step.sh install npm install --no-audit --no-fund
+
+      - name: 使用バージョンの記録
+        run: echo "::notice title=versions::node $(node -v) / $(npm ls --depth=0 2>/dev/null | tail -n +2 | tr '\n' ' ')"
 
       - name: 型チェック
-        run: npm run typecheck
+        run: .github/scripts/run-step.sh typecheck npm run typecheck
 
       - name: テスト（Vitest）
-        run: npm test
+        run: .github/scripts/run-step.sh test npm test
 
       - name: ビルド（通常）
-        run: npm run build
+        run: .github/scripts/run-step.sh build npm run build
 
       - name: ビルド（GitHub Pages 用 base パス）
-        run: npm run build:pages
+        run: .github/scripts/run-step.sh build-pages npm run build:pages
 
       - name: Pages 用ビルドの base パス確認
         run: grep -q '/mirtill-monsters-battle-card/static/' dist/index.html
