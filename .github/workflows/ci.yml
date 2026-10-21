@@ -23,7 +23,7 @@ jobs:
           node-version-file: .nvmrc
 
       - name: 依存関係のインストール
-        run: .github/scripts/run-step.sh install npm install --no-audit --no-fund
+        run: .github/scripts/run-step.sh install npm ci --no-audit --no-fund
 
       - name: 使用バージョンの記録
         run: echo "::notice title=versions::node $(node -v) / $(npm ls --depth=0 2>/dev/null | tail -n +2 | tr '\n' ' ')"
