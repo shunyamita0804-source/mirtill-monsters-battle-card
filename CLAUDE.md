@@ -116,9 +116,9 @@ docs/                     開発ドキュメント
 
 ## GitHub
 
-- リポジトリ：https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Private）
+- リポジトリ：https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （2026-10-22 から Public）
 - ブランチ：`main`（公開する版。夜間一括作業を取り込み済み）、`nightbatch/2026-10-22`（夜間一括作業の作業ブランチ）
-- 公開URL（Pages 有効化後）：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/
+- 公開URL：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ （2026-10-22 公開。更新は Actions の「Deploy to GitHub Pages」を手動実行）
 - 最初のコミット `87de809 Initial commit` は GitHub が自動生成したもの（上書きせず残している）
 
 ## 報告の形式

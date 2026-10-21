@@ -2,7 +2,7 @@
 
 > 名称変更（Mistria）に伴うリポジトリ改名後は URL・base パスが変わります。[rename-migration.md](rename-migration.md) を参照。
 
-> **現在の状態：2026-10-22 にユーザーが公開を承認。** リポジトリを Public にし、Pages の Source を「GitHub Actions」にしたうえで、
+> **現在の状態：2026-10-22 公開済み（ユーザー承認）。** リポジトリを Public にし、Pages の Source を「GitHub Actions」にしたうえで、
 > `.github/workflows/deploy-pages.yml`（手動実行）で `main` を公開する。
 > 公開URL：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/
 
