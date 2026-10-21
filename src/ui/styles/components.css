@@ -5,10 +5,11 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-  animation: screen-in 160ms ease-out;
+  overflow: hidden;
+  animation: fade-in 160ms ease-out;
 }
 
-@keyframes screen-in {
+@keyframes fade-in {
   from {
     opacity: 0;
   }
@@ -18,12 +19,26 @@
 }
 
 .notice {
+  flex: none;
   margin: 8px 12px 0;
   padding: 8px 10px;
   border-radius: 8px;
   background: var(--color-panel);
   color: var(--color-sub);
   font-size: 12px;
+}
+
+.notice--warn {
+  color: #ffd27a;
+  border: 1px solid #b8862f;
+}
+
+.rule-list {
+  margin: 4px 0;
+  padding-left: 1.2em;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: left;
 }
 
 /* ===== ボタン ===== */
@@ -57,6 +72,12 @@
   color: var(--color-accent-text);
 }
 
+.btn--danger {
+  border-color: #c45;
+  background: #5a1f2c;
+  color: #ffd6dc;
+}
+
 .btn--ghost {
   border-color: transparent;
   background: transparent;
@@ -71,7 +92,7 @@
 
 .btn--large {
   min-height: 56px;
-  padding: 0 40px;
+  padding: 0 32px;
   font-size: 18px;
   border-radius: 14px;
 }
@@ -85,7 +106,7 @@
   height: 52px;
   padding: 0 4px;
   border-bottom: 1px solid var(--color-line);
-  background: rgb(0 0 0 / 0.15);
+  background: rgb(0 0 0 / 0.2);
 }
 
 .screen-header__title {
@@ -103,250 +124,73 @@
 
 .screen-header__side--right {
   justify-content: flex-end;
+  padding-right: 4px;
 }
 
-/* ===== カード ===== */
-.card {
-  --card-color: var(--color-line);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  flex: none;
-  margin: 0;
-  padding: 4px;
-  border: 2px solid var(--card-color);
-  border-radius: 8px;
-  background: linear-gradient(180deg, var(--color-panel-strong), var(--color-panel));
-  text-align: center;
-  overflow: hidden;
-  cursor: pointer;
-  transition:
-    transform 120ms ease-out,
-    box-shadow 120ms ease-out;
-}
-
-div.card {
-  cursor: default;
-}
-
-.card--monster {
-  --card-color: var(--color-monster);
-}
-
-.card--skill {
-  --card-color: var(--color-skill);
-}
-
-.card.is-selected {
-  border-color: var(--color-accent);
-  box-shadow:
-    0 0 0 2px var(--color-accent),
-    0 0 14px rgb(255 207 90 / 0.6);
-  transform: translateY(-4px);
-}
-
-.card__kind {
-  flex: none;
-  font-size: 9px;
-  line-height: 1.2;
-  color: var(--card-color);
-  font-weight: 700;
-}
-
-.card__art {
-  flex: 1;
-  min-height: 0;
-  margin: 2px 0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.card__img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-
-.card__placeholder-art {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background:
-    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.06) 0 6px, transparent 6px 12px),
-    color-mix(in srgb, var(--card-color) 35%, #1a1430);
-}
-
-.card__placeholder-mark {
-  font-size: 22px;
-  font-weight: 800;
-  color: color-mix(in srgb, var(--card-color) 70%, white);
-}
-
-.card__placeholder-tag {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  padding: 0 3px;
-  border-radius: 3px;
-  background: rgb(0 0 0 / 0.5);
-  font-size: 9px;
-  line-height: 1.4;
-}
-
-.card__name {
-  flex: none;
-  font-size: 10px;
-  line-height: 1.25;
-  font-weight: 600;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  min-height: 2.5em;
-}
-
-/* 全面画像（完成済みのカード画像） */
-.card--full-art {
-  padding: 0;
-}
-
-.card--full-art .card__img {
-  flex: 1;
-}
-
-/* 裏向き */
-.card--back {
-  border-color: #8a7bd0;
-  background:
-    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.12) 0 3px, transparent 3px 6px),
-    #4b3d8f;
-  cursor: default;
-}
-
-.card--missing {
-  align-items: center;
-  justify-content: center;
-}
-
-/* サイズ（論理px） */
-.card--mini {
-  width: 16px;
-  height: 22px;
-  padding: 0;
-  border-width: 1px;
-  border-radius: 3px;
-}
-
-.card--field {
-  width: 100px;
-  height: 140px;
-}
-
-.card--hand {
-  width: 80px;
-  height: 112px;
-}
-
-.card--shop {
-  width: 104px;
-  height: 146px;
-}
-
-.card--detail {
-  width: 150px;
-  height: 210px;
-  padding: 6px;
-  cursor: default;
-}
-
-.card--detail .card__kind {
-  font-size: 12px;
-}
-
-.card--detail .card__name {
-  font-size: 13px;
-}
-
-.card--detail .card__placeholder-mark {
-  font-size: 40px;
-}
-
-.card--detail .card__placeholder-tag {
-  font-size: 12px;
-}
-
-/* ===== カード詳細 ===== */
-.card-detail {
+/* ===== ダイアログ ===== */
+.modal {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
   background: rgb(8 4 20 / 0.72);
-  animation: screen-in 120ms ease-out;
+  animation: fade-in 120ms ease-out;
 }
 
-.card-detail__panel {
+.modal__panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  max-width: 340px;
+  max-width: 350px;
   max-height: 100%;
-  padding: 20px 16px 16px;
+  padding: 18px 16px 14px;
   border: 1px solid var(--color-line);
   border-radius: 16px;
   background: var(--color-panel);
   box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
 }
 
-.card-detail__card {
-  flex: none;
-}
-
-.card-detail__info {
-  width: 100%;
-  min-height: 0;
-  overflow-y: auto;
+.modal__title {
+  font-size: 17px;
   text-align: center;
 }
 
-.card-detail__kind,
-.card-detail__location {
-  color: var(--color-sub);
-  font-size: 12px;
-}
-
-.card-detail__name {
-  margin: 2px 0 6px;
-  font-size: 18px;
-  overflow-wrap: anywhere;
-}
-
-.card-detail__description {
-  margin-top: 8px;
-  font-size: 13px;
-  text-align: left;
+.modal__body {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   user-select: text;
   -webkit-user-select: text;
 }
 
-.card-detail__note {
-  margin-top: 8px;
-  font-size: 11px;
-  color: var(--color-accent);
+.modal__text {
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
 }
 
-.card-detail__close {
+.modal__text--sub {
+  font-size: 12px;
+  color: var(--color-sub);
+}
+
+.modal__text--warn {
+  font-size: 12px;
+  color: #ffd27a;
+}
+
+.modal__actions {
   flex: none;
-  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+
+.modal__actions .btn {
+  flex: 1;
 }

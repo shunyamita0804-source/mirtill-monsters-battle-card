@@ -3,42 +3,44 @@ import { INITIAL_SCREEN, isScreenId, SCREEN_IDS, type ScreenId } from '../src/co
 import { Router } from '../src/core/router.ts';
 
 describe('画面ID', () => {
-  it('第2段階の4画面がある', () => {
-    expect([...SCREEN_IDS]).toEqual(['title', 'town', 'shop', 'battle']);
+  it('タイトルから始まり、歩行・デッキ・ショップ・ガチャ・大会・バトルの画面がある', () => {
     expect(INITIAL_SCREEN).toBe('title');
+    for (const id of ['world', 'deck', 'shopMenu', 'gacha', 'dungeonSelect', 'tournament', 'battle', 'settings'] as const) {
+      expect(SCREEN_IDS).toContain(id);
+    }
   });
 
   it('isScreenId', () => {
     expect(isScreenId('battle')).toBe(true);
-    expect(isScreenId('gacha')).toBe(false);
+    expect(isScreenId('nowhere')).toBe(false);
   });
 });
 
 describe('Router', () => {
-  it('タイトル → 街 → ショップ → 戻る → バトル → 戻る', () => {
+  it('タイトル → 歩行 → デッキ → 戻る → バトル → 戻る', () => {
     const router = new Router<ScreenId>('title');
     const listener = vi.fn();
     router.subscribe(listener);
 
-    router.reset('town');
-    expect(router.current).toBe('town');
+    router.reset('world');
+    expect(router.current).toBe('world');
     expect(router.canGoBack).toBe(false);
 
-    router.navigate('shop');
-    expect(router.history).toEqual(['town', 'shop']);
+    router.navigate('deck');
+    expect(router.history).toEqual(['world', 'deck']);
     expect(router.back()).toBe(true);
-    expect(router.current).toBe('town');
+    expect(router.current).toBe('world');
 
     router.navigate('battle');
     expect(router.back()).toBe(true);
-    expect(router.current).toBe('town');
+    expect(router.current).toBe('world');
 
     expect(listener.mock.calls.map(([change]) => change)).toEqual([
-      { from: 'title', to: 'town' },
-      { from: 'town', to: 'shop' },
-      { from: 'shop', to: 'town' },
-      { from: 'town', to: 'battle' },
-      { from: 'battle', to: 'town' },
+      { from: 'title', to: 'world' },
+      { from: 'world', to: 'deck' },
+      { from: 'deck', to: 'world' },
+      { from: 'world', to: 'battle' },
+      { from: 'battle', to: 'world' },
     ]);
   });
 
@@ -51,14 +53,14 @@ describe('Router', () => {
   });
 
   it('現在と同じ画面への移動・リセットは通知しない', () => {
-    const router = new Router<ScreenId>('town');
+    const router = new Router<ScreenId>('world');
     const listener = vi.fn();
     router.subscribe(listener);
-    router.navigate('town');
-    expect(router.history).toEqual(['town']);
-    router.navigate('shop');
-    router.reset('shop');
-    expect(router.history).toEqual(['shop']);
+    router.navigate('world');
+    expect(router.history).toEqual(['world']);
+    router.navigate('deck');
+    router.reset('deck');
+    expect(router.history).toEqual(['deck']);
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
@@ -67,7 +69,7 @@ describe('Router', () => {
     const listener = vi.fn();
     const unsubscribe = router.subscribe(listener);
     unsubscribe();
-    router.navigate('town');
+    router.navigate('world');
     expect(listener).not.toHaveBeenCalled();
   });
 });

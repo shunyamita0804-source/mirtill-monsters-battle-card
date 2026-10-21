@@ -1,9 +1,15 @@
 import type { ScreenId } from '../../config/screens.ts';
 import { battleScreen } from './battleScreen.ts';
-import { shopScreen } from './shopScreen.ts';
+import { cardListScreen, collectionScreen } from './collectionScreens.ts';
+import { deckScreen } from './deckScreen.ts';
+import { dungeonSelectScreen } from './dungeonSelectScreen.ts';
+import { newGameScreen } from './newGameScreen.ts';
+import { settingsScreen } from './settingsScreen.ts';
+import { gachaScreen, shopMenuScreen } from './shopScreens.ts';
 import { titleScreen } from './titleScreen.ts';
-import { townScreen } from './townScreen.ts';
+import { tournamentScreen } from './tournamentScreen.ts';
 import type { ScreenDefinition } from './types.ts';
+import { worldScreen } from './worldScreen.ts';
 
 /**
  * 画面IDと画面定義の対応表。
@@ -11,7 +17,15 @@ import type { ScreenDefinition } from './types.ts';
  */
 export const SCREENS: Readonly<Record<ScreenId, ScreenDefinition>> = {
   title: titleScreen,
-  town: townScreen,
-  shop: shopScreen,
+  newGame: newGameScreen,
+  world: worldScreen,
+  deck: deckScreen,
+  collection: collectionScreen,
+  shopMenu: shopMenuScreen,
+  cardList: cardListScreen,
+  gacha: gachaScreen,
+  dungeonSelect: dungeonSelectScreen,
+  tournament: tournamentScreen,
   battle: battleScreen,
+  settings: settingsScreen,
 };

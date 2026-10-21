@@ -1,0 +1,343 @@
+/* ===== 技カード（V4 テンプレート） ===== */
+.skill-card {
+  position: relative;
+  flex: none;
+  container-type: inline-size;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.skill-card > * {
+  position: absolute;
+}
+
+.skill-card__master,
+.skill-card__tint {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.skill-card__tint {
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.skill-card__art {
+  object-fit: cover;
+}
+
+.skill-card__art--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.18) 0 4cqw, transparent 4cqw 8cqw),
+    linear-gradient(160deg, #e9e2cf, #b9ae94);
+  color: rgb(60 40 20 / 0.55);
+}
+
+.skill-card__art-mark {
+  font-size: 30cqw;
+  font-weight: 800;
+}
+
+.skill-card__art-note {
+  position: absolute;
+  top: 3cqw;
+  right: 3cqw;
+  padding: 0 2cqw;
+  border-radius: 2cqw;
+  background: rgb(0 0 0 / 0.45);
+  color: #fff;
+  font-size: 7cqw;
+}
+
+.skill-card__bar,
+.skill-card__number {
+  object-fit: contain;
+}
+
+.skill-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4cqw;
+  color: #3b2410;
+  font-size: 7cqw;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skill-card__desc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4cqw;
+  color: #3b2410;
+  font-size: 6cqw;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* ===== モンスターカード（仮デザイン） ===== */
+.monster-card {
+  --theme: #888;
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border: 3px solid var(--theme);
+  border-radius: 9px;
+  background: linear-gradient(180deg, #f3ead6, #d9c9a6);
+  color: #3b2410;
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+.monster-card__art {
+  flex: 1;
+  min-height: 0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.monster-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.monster-card__placeholder {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.12) 0 5px, transparent 5px 10px),
+    color-mix(in srgb, var(--theme) 70%, #222);
+}
+
+.monster-card__mark {
+  font-size: 36cqw;
+  font-weight: 800;
+  color: rgb(255 255 255 / 0.85);
+}
+
+.monster-card__tag {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  font-size: 9px;
+}
+
+.monster-card__name {
+  flex: none;
+  margin-top: 3px;
+  font-size: max(9px, 10cqw);
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.monster-card__life {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.monster-card__life-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.25);
+  overflow: hidden;
+}
+
+.monster-card__life-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3fbf5f, #8fe07a);
+  transition: width 250ms ease-out;
+}
+
+.monster-card__life-text {
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.monster-card__life-text--base {
+  font-size: max(8px, 9cqw);
+  text-align: center;
+}
+
+.monster-card.is-down .monster-card__art {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.monster-card__down {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.45);
+  color: #ffd6dc;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.card-unknown {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-line);
+  border-radius: 8px;
+  color: var(--color-sub);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+/* ===== カード詳細 ===== */
+.card-detail .modal__body {
+  align-items: center;
+}
+
+.card-detail__card {
+  display: flex;
+  justify-content: center;
+}
+
+.card-detail__name {
+  font-size: 17px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.card-detail__extra {
+  font-size: 12px;
+  color: var(--color-sub);
+}
+
+.card-detail__description {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.card-detail__rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  width: 100%;
+  margin: 0;
+  font-size: 12px;
+}
+
+.card-detail__rows dt {
+  color: var(--color-sub);
+}
+
+.card-detail__rows dd {
+  margin: 0;
+}
+
+.card-detail__note {
+  font-size: 11px;
+  color: var(--color-accent);
+}
+
+/* ===== カード一覧 ===== */
+.card-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-grid__tabs,
+.deck__tabs {
+  flex: none;
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  overflow-x: auto;
+}
+
+.card-grid__tab,
+.deck__tab {
+  flex: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 18px;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.card-grid__tab.is-active,
+.deck__tab.is-active {
+  background: var(--color-accent);
+  border-color: transparent;
+  color: var(--color-accent-text);
+  font-weight: 700;
+}
+
+.card-grid__items {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-content: start;
+  gap: 12px 6px;
+  padding: 4px 8px 24px;
+  overflow-y: auto;
+}
+
+.card-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.card-grid__item.is-unowned > :first-child {
+  opacity: 0.45;
+}
+
+.card-grid__name {
+  max-width: 110px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-grid__owned {
+  font-size: 11px;
+  color: var(--color-sub);
+}

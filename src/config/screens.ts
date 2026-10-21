@@ -2,9 +2,22 @@
  * 画面ID一覧。
  *
  * 画面を追加するときは、ここにIDを足し、src/ui/screens/registry.ts に画面定義を登録する。
- * （ダンジョン・ガチャ・大会は第2段階では実装しない）
+ * 街・家・ショップ・大会会場・ダンジョンの歩行は、セーブの現在地に応じて 'world' 画面1つで表示する。
  */
-export const SCREEN_IDS = ['title', 'town', 'shop', 'battle'] as const;
+export const SCREEN_IDS = [
+  'title',
+  'newGame',
+  'world',
+  'deck',
+  'collection',
+  'shopMenu',
+  'cardList',
+  'gacha',
+  'dungeonSelect',
+  'tournament',
+  'battle',
+  'settings',
+] as const;
 
 export type ScreenId = (typeof SCREEN_IDS)[number];
 

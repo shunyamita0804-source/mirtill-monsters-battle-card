@@ -1,221 +1,442 @@
 /* ===== カードバトル ===== */
-.battle-turn-count {
-  padding-right: 8px;
-  font-size: 13px;
+.battle {
+  background: radial-gradient(ellipse at 50% 50%, #2e2556 0%, #17122c 75%);
+}
+
+.battle__missing {
+  margin: 40px 20px 12px;
+  text-align: center;
+}
+
+.battle__header {
+  flex: none;
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+  height: 44px;
+  padding: 0 4px;
+  background: rgb(0 0 0 / 0.35);
+}
+
+.battle__title {
+  font-size: 14px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle__header-right {
+  text-align: right;
+  padding-right: 6px;
+}
+
+.battle__turn-no {
+  font-size: 12px;
   color: var(--color-sub);
 }
 
-.battle-side {
+.battle__qa {
   flex: none;
   display: flex;
-  flex-direction: column;
   gap: 6px;
-  padding: 6px 8px;
-  border-left: 3px solid transparent;
+  justify-content: center;
+  padding: 2px;
+  background: rgb(184 134 47 / 0.25);
 }
 
-.battle-side--opponent {
-  background: linear-gradient(180deg, rgb(255 122 138 / 0.12), transparent);
-}
-
-.battle-side--player {
-  background: linear-gradient(0deg, rgb(111 182 255 / 0.12), transparent);
-}
-
-.battle-side--opponent[data-active='true'] {
-  border-left-color: var(--color-opponent);
-}
-
-.battle-side--player[data-active='true'] {
-  border-left-color: var(--color-player);
-}
-
-.battle-side__info {
+.battle__bar {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 28px;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  border-left: 4px solid transparent;
 }
 
-.battle-side__name {
-  font-weight: 700;
-  font-size: 13px;
+.battle__bar.is-active {
+  border-left-color: var(--color-accent);
+  background: rgb(255 207 90 / 0.08);
 }
 
-.battle-side--opponent .battle-side__name {
+.battle__bar--opponent .battle__bar-name {
   color: var(--color-opponent);
 }
 
-.battle-side--player .battle-side__name {
+.battle__bar--player .battle__bar-name {
   color: var(--color-player);
 }
 
-.battle-opponent-hand {
+.battle__bar-name {
+  font-weight: 800;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle__bar-info {
+  color: var(--color-sub);
+}
+
+.battle-mana {
   display: flex;
   align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.battle-mana__label {
+  color: #7fb2ff;
+  font-weight: 700;
+}
+
+.battle-mana__pips {
+  display: flex;
   gap: 2px;
 }
 
-.battle-opponent-hand__count {
-  margin-left: 4px;
-  font-size: 12px;
-  color: var(--color-sub);
+.battle-mana__pip {
+  width: 8px;
+  height: 11px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: rgb(127 178 255 / 0.25);
 }
 
-/* 場 */
-.battle-field {
+.battle-mana__pip.is-on {
+  background: linear-gradient(180deg, #bfe0ff, #3d8bff);
+}
+
+.battle-mana__value {
+  min-width: 1.5em;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 800;
+  color: #bfe0ff;
+}
+
+.battle__monsters {
+  flex: none;
   display: flex;
   justify-content: space-evenly;
-  height: 148px;
-  padding-top: 4px;
+  padding: 4px 6px;
 }
 
-.battle-field__slot {
-  display: flex;
-  align-items: flex-end;
+.battle__monster {
+  position: relative;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  transition: transform 150ms;
 }
 
-.battle-field__empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100px;
-  height: 140px;
-  border: 2px dashed var(--color-line);
-  border-radius: 8px;
-  color: var(--color-sub);
-  font-size: 12px;
+.battle__monster.is-target {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 14px rgb(255 207 90 / 0.8);
+  animation: target-pulse 0.9s ease-in-out infinite;
 }
 
-/* 手番表示 */
-.battle-turn-banner {
+@keyframes target-pulse {
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+.battle__monster.is-attacked {
+  border-color: #ff4d6d;
+  box-shadow: 0 0 16px rgb(255 77 109 / 0.8);
+}
+
+.battle__monster.is-acted .monster-card {
+  filter: brightness(0.75);
+}
+
+.battle__acted {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.65);
+  color: #fff;
+  font-size: 10px;
+}
+
+.battle__center {
   flex: 1;
-  min-height: 36px;
+  min-height: 80px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
+  gap: 6px;
+  padding: 4px 12px;
+}
+
+.battle__turn {
+  font-size: 18px;
+  font-weight: 800;
   letter-spacing: 0.1em;
 }
 
-.battle-turn-banner--player {
+.battle__turn--player {
   color: var(--color-player);
 }
 
-.battle-turn-banner--opponent {
+.battle__turn--opponent {
   color: var(--color-opponent);
 }
 
-/* マナ */
-.mana {
+.battle__prompt {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  font-size: 12px;
-}
-
-.mana__label {
-  color: var(--color-sub);
-}
-
-.mana__pips {
-  display: flex;
-  gap: 3px;
-}
-
-.mana__pip {
-  width: 12px;
-  height: 12px;
-  border: 1px solid #7fb2ff;
-  border-radius: 50%;
-  background: transparent;
-}
-
-.mana__pip.is-filled {
-  background: radial-gradient(circle at 35% 35%, #d9ecff, #3d8bff);
-}
-
-.mana__value {
-  min-width: 2.5em;
-  text-align: right;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-/* 手札 */
-.battle-hand {
-  flex: none;
-  padding: 4px 0 0;
-  border-top: 1px solid var(--color-line);
-  background: rgb(0 0 0 / 0.15);
-}
-
-.battle-hand__label {
-  padding: 0 12px;
-  font-size: 12px;
-  color: var(--color-sub);
-}
-
-.battle-hand__cards {
-  display: flex;
   gap: 8px;
-  height: 128px;
-  padding: 10px 12px 6px;
+}
+
+.battle__prompt-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-accent);
+  text-align: center;
+}
+
+.battle__log {
+  width: 100%;
+  min-height: 2.8em;
+  text-align: center;
+}
+
+.battle__log-line {
+  font-size: 12px;
+  color: var(--color-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle__log-line:last-child {
+  color: var(--color-text);
+}
+
+.battle__hand {
+  flex: none;
+  display: flex;
+  gap: 6px;
+  height: 132px;
+  padding: 8px 10px 4px;
   overflow-x: auto;
   overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
+  border-top: 1px solid var(--color-line);
+  background: rgb(0 0 0 / 0.25);
   scrollbar-width: none;
 }
 
-.battle-hand__cards::-webkit-scrollbar {
+.battle__hand::-webkit-scrollbar {
   display: none;
 }
 
-/* 下部操作 */
-.battle-actions {
+.battle__hand-card {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 66px;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  transition: transform 120ms;
+}
+
+.battle__hand-card.is-usable {
+  border-color: rgb(143 224 122 / 0.7);
+}
+
+.battle__hand-card.is-unusable {
+  opacity: 0.45;
+}
+
+.battle__hand-card.is-selected {
+  border-color: var(--color-accent);
+  transform: translateY(-4px);
+}
+
+.battle__hand-name {
+  width: 100%;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battle__footer {
   flex: none;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  height: 64px;
+  height: 56px;
   padding: 0 10px;
-  border-top: 1px solid var(--color-line);
   background: var(--color-panel);
 }
 
-.battle-actions__selection {
+.battle__footer .btn--primary {
+  min-width: 140px;
+}
+
+/* 拡大表示 */
+.battle__preview,
+.battle__defense,
+.battle__result {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(8 4 20 / 0.6);
+  animation: fade-in 120ms ease-out;
+}
+
+.battle__preview-panel,
+.battle__defense-panel,
+.battle__result-panel {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+  padding: 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  background: var(--color-panel);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.5);
+}
+
+.battle__preview-panel {
+  align-items: flex-start;
+}
+
+.battle__preview-info {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
-.battle-actions__where,
-.battle-actions__hint {
-  font-size: 11px;
+.battle__preview-name {
+  font-size: 16px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.battle__preview-owner,
+.battle__preview-text {
+  font-size: 12px;
+}
+
+.battle__preview-owner {
   color: var(--color-sub);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.battle-actions__hint {
-  white-space: pre-line;
-  line-height: 1.5;
+.battle__preview-ok {
+  font-size: 12px;
+  color: #8fe07a;
 }
 
-.battle-actions__name {
+.battle__preview-ng {
+  font-size: 12px;
+  color: #ff8a9a;
+}
+
+.battle__preview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.battle__defense-panel,
+.battle__result-panel {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.battle__defense-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ff8a9a;
+}
+
+.battle__defense-text {
   font-size: 14px;
   font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.battle-actions__buttons {
-  flex: none;
+.battle__defense-hint {
+  font-size: 12px;
+  color: var(--color-sub);
+}
+
+.battle__defense-cards {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.battle__defense-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 2px solid rgb(143 224 122 / 0.7);
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+}
+
+.battle__defense-card.is-unusable {
+  border-color: transparent;
+  opacity: 0.45;
+}
+
+.battle__defense-label {
+  max-width: 76px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.battle__defense-none {
+  font-size: 12px;
+  color: var(--color-sub);
+}
+
+.battle__result-title {
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.battle__result--player .battle__result-title {
+  color: var(--color-accent);
+}
+
+.battle__result--opponent .battle__result-title {
+  color: #ff8a9a;
+}
+
+.battle__result-sub {
+  font-size: 13px;
+  color: var(--color-sub);
 }
