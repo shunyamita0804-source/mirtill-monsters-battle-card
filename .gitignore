@@ -1,0 +1,32 @@
+# 依存関係
+node_modules/
+
+# ビルド成果物
+dist/
+dist-ssr/
+*.local
+
+# テスト・カバレッジ
+coverage/
+
+# ログ
+*.log
+npm-debug.log*
+
+# 環境変数（秘密情報はコミットしない）
+.env
+.env.*
+!.env.example
+
+# エディタ・OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# 素材の作業用ファイル（書き出し前の元データは別管理）
+assets/**/*.psd
+assets/**/*.clip
+assets/**/*.kra
+assets/**/*.aseprite

@@ -1,0 +1,41 @@
+# 型チェック・テスト・ビルドの自動確認のみを行うワークフロー。
+# GitHub Pages への公開（デプロイ）は一切行わない。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: 依存関係のインストール
+        run: npm install --no-audit --no-fund
+
+      - name: 型チェック
+        run: npm run typecheck
+
+      - name: テスト（Vitest）
+        run: npm test
+
+      - name: ビルド（通常）
+        run: npm run build
+
+      - name: ビルド（GitHub Pages 用 base パス）
+        run: npm run build:pages
+
+      - name: Pages 用ビルドの base パス確認
+        run: grep -q '/mirtill-monsters-battle-card/static/' dist/index.html
