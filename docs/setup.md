@@ -2,7 +2,7 @@
 
 ## 必要なもの
 
-- Node.js 22 以上（`.nvmrc` 参照）
+- Node.js 24 以上（`.nvmrc` 参照）
 - npm
 - Git
 

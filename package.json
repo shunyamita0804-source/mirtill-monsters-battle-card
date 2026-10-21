@@ -5,7 +5,7 @@
   "description": "ミルティルモンスターズバトルカード — スマートフォン向け2Dカードゲーム（ミルティルモンスターズシリーズ）",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "vite",
