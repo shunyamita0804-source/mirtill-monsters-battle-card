@@ -37,6 +37,9 @@
 }
 
 .battle__qa {
+  /* QA用：拡大表示・防御選択の上でも押せるようにする */
+  position: relative;
+  z-index: 30;
   flex: none;
   display: flex;
   gap: 6px;
@@ -69,9 +72,16 @@
   color: var(--color-player);
 }
 
+.battle__bar > * {
+  flex: none;
+  white-space: nowrap;
+}
+
 .battle__bar-name {
+  flex: 0 1 auto;
+  min-width: 0;
   font-weight: 800;
-  max-width: 140px;
+  max-width: 120px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -79,6 +89,7 @@
 
 .battle__bar-info {
   color: var(--color-sub);
+  font-size: 11px;
 }
 
 .battle-mana {
@@ -99,7 +110,7 @@
 }
 
 .battle-mana__pip {
-  width: 8px;
+  width: 7px;
   height: 11px;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   background: rgb(127 178 255 / 0.25);
@@ -153,6 +164,52 @@
 
 .battle__monster.is-acted .monster-card {
   filter: brightness(0.75);
+}
+
+.battle__monster.is-hit {
+  animation: hit-shake 0.35s ease-out;
+}
+
+.battle__monster.is-hit .monster-card {
+  animation: hit-flash 0.45s ease-out;
+}
+
+@keyframes hit-shake {
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes hit-flash {
+  0% { filter: brightness(2) saturate(0.4); }
+  100% { filter: none; }
+}
+
+.battle__float {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 26px;
+  font-weight: 900;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.6);
+  pointer-events: none;
+  animation: float-up 0.9s ease-out forwards;
+}
+
+.battle__float.is-damage {
+  color: #ff5a6e;
+}
+
+.battle__float.is-heal {
+  color: #8fe07a;
+}
+
+@keyframes float-up {
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.8); }
+  20% { opacity: 1; transform: translate(-50%, 0) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -26px) scale(1); }
 }
 
 .battle__acted {
@@ -226,7 +283,7 @@
   flex: none;
   display: flex;
   gap: 6px;
-  height: 132px;
+  height: 144px;
   padding: 8px 10px 4px;
   overflow-x: auto;
   overflow-y: hidden;

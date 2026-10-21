@@ -55,21 +55,16 @@ export function directionBetween(from: Point, to: Point): Direction {
 }
 
 /**
- * 4方向の幅優先探索で経路を探す（start を含まない）。
- * goal が通れないマス（家具・敵など）のときは、その隣まで行く経路を返す。見つからなければ null。
+ * 4方向の幅優先探索で、isGoal を満たす最も近いマスまでの経路を探す（start を含まない）。見つからなければ null。
  */
-export function findPath(
+export function findPathWhere(
   map: MapDefinition,
   start: Point,
-  goal: Point,
+  isGoal: (x: number, y: number) => boolean,
   blocked: (x: number, y: number) => boolean,
   maxNodes = 4000,
 ): Point[] | null {
   const { width, height } = mapSize(map);
-  if (goal.x < 0 || goal.y < 0 || goal.x >= width || goal.y >= height) return null;
-  const goalBlocked = blocked(goal.x, goal.y);
-  const isGoal = (x: number, y: number): boolean =>
-    goalBlocked ? Math.abs(x - goal.x) + Math.abs(y - goal.y) === 1 : x === goal.x && y === goal.y;
   if (isGoal(start.x, start.y)) return [];
   const key = (x: number, y: number): number => y * width + x;
   const prev = new Map<number, number>();
@@ -96,6 +91,46 @@ export function findPath(
       }
       queue.push({ x: nx, y: ny });
     }
+  }
+  return null;
+}
+
+/**
+ * goal までの経路（start を含まない）。
+ * goal が通れないマス（家具・敵など）のときは、その隣まで行く経路を返す。見つからなければ null。
+ */
+export function findPath(
+  map: MapDefinition,
+  start: Point,
+  goal: Point,
+  blocked: (x: number, y: number) => boolean,
+  maxNodes = 4000,
+): Point[] | null {
+  const { width, height } = mapSize(map);
+  if (goal.x < 0 || goal.y < 0 || goal.x >= width || goal.y >= height) return null;
+  const goalBlocked = blocked(goal.x, goal.y);
+  const isGoal = (x: number, y: number): boolean =>
+    goalBlocked ? Math.abs(x - goal.x) + Math.abs(y - goal.y) === 1 : x === goal.x && y === goal.y;
+  return findPathWhere(map, start, isGoal, blocked, maxNodes);
+}
+
+/** 物（複数マスの家具など）のどこかに隣接するマスへ行く経路 */
+export function findPathToObject(
+  map: MapDefinition,
+  start: Point,
+  obj: MapObject,
+  blocked: (x: number, y: number) => boolean,
+): Point[] | null {
+  const touches = (x: number, y: number): boolean =>
+    !objectCovers(obj, x, y) &&
+    [DIR_DELTA.up, DIR_DELTA.down, DIR_DELTA.left, DIR_DELTA.right].some((d) => objectCovers(obj, x + d.x, y + d.y));
+  return findPathWhere(map, start, touches, blocked);
+}
+
+/** p に隣接する、物の中のマス（向く方向を決めるのに使う） */
+export function adjacentCellOf(obj: MapObject, p: Point): Point | null {
+  for (const d of [DIR_DELTA.up, DIR_DELTA.down, DIR_DELTA.left, DIR_DELTA.right]) {
+    if (objectCovers(obj, p.x + d.x, p.y + d.y)) return { x: p.x + d.x, y: p.y + d.y };
   }
   return null;
 }

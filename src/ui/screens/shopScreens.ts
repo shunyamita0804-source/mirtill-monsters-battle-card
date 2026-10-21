@@ -143,13 +143,15 @@ export const gachaScreen: ScreenDefinition = {
         () => {
           const before = store.save.collection;
           const r = purchasePack(store.save, pack.id, tx, randomSeed());
+          // 先に画面を描き直してから演出を重ねる（描き直しで演出が消えないように）
+          render();
           if (r.status === 'ok') {
             store.update(() => r.save);
+            render();
             openPack(pack, r.cards, before);
           } else if (r.status === 'error') {
             messageModal(element, r.message);
           }
-          render();
         },
       );
     };
@@ -157,6 +159,8 @@ export const gachaScreen: ScreenDefinition = {
     /** パック開封の演出：パックが震えて開き、カードを1枚ずつめくる */
     const openPack = (pack: PackDefinition, cards: readonly string[], before: Readonly<Record<string, number>>): void => {
       const seen = new Set<string>();
+      // 詳細は演出の上に重ねる（演出の下に隠れて閉じられなくならないように）
+      const overlay = h('div', { class: 'pack-open' });
       const slots = cards.map((id) => {
         const card = cardCatalog.get(id);
         const isNew = (before[id] ?? 0) === 0 && !seen.has(id);
@@ -164,7 +168,7 @@ export const gachaScreen: ScreenDefinition = {
         const face = card ? createCardView(card, 92, false) : h('div');
         return h(
           'button',
-          { class: 'pack-open__card', attrs: { type: 'button' }, on: { click: () => card && openCardDetail(element, card, { owned: store.save.collection[id] ?? 0 }) } },
+          { class: 'pack-open__card', attrs: { type: 'button' }, on: { click: () => card && openCardDetail(overlay, card, { owned: store.save.collection[id] ?? 0 }) } },
           h('div', { class: 'pack-open__back' }),
           h('div', { class: 'pack-open__face' }, face),
           h('span', { class: 'pack-open__name', text: card?.name ?? id }),
@@ -175,7 +179,7 @@ export const gachaScreen: ScreenDefinition = {
       const cardsEl = h('div', { class: 'pack-open__cards' }, ...slots);
       const done = button('閉じる', () => overlay.remove(), 'btn btn--primary');
       done.disabled = true;
-      const overlay = h('div', { class: 'pack-open' }, packEl, cardsEl, h('p', { class: 'pack-open__hint', text: 'カードは所持に追加されました。タップで詳細。' }), done);
+      overlay.append(packEl, cardsEl, h('p', { class: 'pack-open__hint', text: 'カードは所持に追加されました。タップで詳細。' }), done);
       element.append(overlay);
       setTimeout(() => packEl.classList.add('is-opening'), 50);
       setTimeout(() => {

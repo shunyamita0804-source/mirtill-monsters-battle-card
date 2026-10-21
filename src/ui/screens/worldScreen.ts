@@ -1,7 +1,7 @@
 import { getDungeon, ENCOUNTERS } from '../../data/dungeons.ts';
 import { CURRENCY } from '../../data/economy.ts';
 import { FRAGMENT_TOTAL } from '../../data/fragments.ts';
-import { getMap, TILE_INFO, type ChestObject, type EnemyObject, type MapDefinition, type MapObject } from '../../data/maps.ts';
+import { getMap, type ChestObject, type EnemyObject, type MapDefinition, type MapObject } from '../../data/maps.ts';
 import { getMonster } from '../../data/cards.ts';
 import { isDeckValid } from '../../game/deck/deck.ts';
 import {
@@ -14,7 +14,16 @@ import {
 } from '../../game/progress/dungeon.ts';
 import { collectFragment, fragmentAt, fragmentCount } from '../../game/progress/fragments.ts';
 import type { Direction, Location } from '../../game/save/saveData.ts';
-import { DIR_DELTA, findPath, isBlocked, mapSize, objectsAt, tileAt, type Point } from '../../game/world/world.ts';
+import {
+  adjacentCellOf,
+  DIR_DELTA,
+  findPath,
+  findPathToObject,
+  isBlocked,
+  mapSize,
+  objectsAt,
+  type Point,
+} from '../../game/world/world.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
 import { button, h } from '../dom.ts';
 import maleSheet from '@assets/images/characters/player_male_walk_qa.png';
@@ -65,7 +74,8 @@ class WorldView {
   #dir: Direction = 'down';
   #move: Move | null = null;
   #path: Point[] = [];
-  #afterPath: Point | null = null;
+  /** 経路の最後に話しかける・調べる物 */
+  #afterPath: MapObject | null = null;
   #held: Direction | null = null;
   #busy = false;
   #raf = 0;
@@ -278,10 +288,12 @@ class WorldView {
       return;
     }
     if (this.#afterPath) {
-      const target = this.#afterPath;
+      const cell = adjacentCellOf(this.#afterPath, this.#tile);
       this.#afterPath = null;
-      this.#dir = this.#dirTo(target);
-      this.#interactAt(target.x, target.y);
+      if (cell) {
+        this.#dir = this.#dirTo(cell);
+        this.#interactAt(cell.x, cell.y);
+      }
       return;
     }
     if (this.#held) this.#tryStep(this.#held);
@@ -368,19 +380,28 @@ class WorldView {
     const scale = rect.width / (width * TILE);
     const x = Math.floor((e.clientX - rect.left) / scale / TILE);
     const y = Math.floor((e.clientY - rect.top) / scale / TILE);
-    const objects = objectsAt(this.#map, x, y, this.#isVisible);
-    const interactive = objects.some((o) => o.type !== 'warp') || (TILE_INFO[tileAt(this.#map, x, y)]?.solid && objects.length > 0);
+    // 話しかけ・調べる対象（出入口は歩いて踏むので対象外）
+    const target = objectsAt(this.#map, x, y, this.#isVisible).find((o) => o.type !== 'warp');
     const from = this.#move ? this.#move.to : this.#tile;
-    if (interactive && Math.abs(from.x - x) + Math.abs(from.y - y) === 1 && !this.#move) {
-      this.#dir = this.#dirTo({ x, y });
-      this.#interactAt(x, y);
+    if (target) {
+      const here = adjacentCellOf(target, from);
+      if (here && !this.#move) {
+        this.#dir = this.#dirTo(here);
+        this.#interactAt(here.x, here.y);
+        return;
+      }
+      const path = findPathToObject(this.#map, from, target, this.#blocked);
+      if (!path) return;
+      this.#held = null;
+      this.#path = path;
+      this.#afterPath = target;
       return;
     }
     const path = findPath(this.#map, from, { x, y }, this.#blocked);
     if (!path) return;
     this.#held = null;
     this.#path = path;
-    this.#afterPath = interactive ? { x, y } : null;
+    this.#afterPath = null;
   }
 
   /** 正面（と足元）を調べる */

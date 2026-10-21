@@ -62,6 +62,8 @@ export const battleScreen: ScreenDefinition = {
       randomSeed(),
     );
     let previewUid: string | null = null;
+    /** 前回描画時のライフ（ダメージ・回復の演出に使う） */
+    const prevLife = new Map<string, number>();
     let targeting: Targeting | null = null;
     let auto = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -156,18 +158,21 @@ export const battleScreen: ScreenDefinition = {
         { class: `battle__monsters battle__monsters--${side}` },
         ...state.sides[side].monsters.map((m) => {
           const isTarget = targeting?.targets.includes(m.uid) ?? false;
+          const before = prevLife.get(m.uid) ?? m.life;
+          const diff = m.life - before;
           const isPendingTarget = state.pending?.targetUid === m.uid;
           const view = createMonsterCard(getMonster(m.cardId), { width: 104, life: { current: m.life, max: m.maxLife } });
           return h(
             'button',
             {
-              class: `battle__monster${isTarget ? ' is-target' : ''}${isPendingTarget ? ' is-attacked' : ''}${m.acted && m.life > 0 ? ' is-acted' : ''}`,
+              class: `battle__monster${isTarget ? ' is-target' : ''}${isPendingTarget ? ' is-attacked' : ''}${m.acted && m.life > 0 ? ' is-acted' : ''}${diff < 0 ? ' is-hit' : ''}`,
               attrs: { type: 'button', 'aria-label': `${getMonster(m.cardId).name} ライフ${m.life}` },
               dataset: { uid: m.uid },
               on: { click: () => tapMonster(side, m) },
             },
             view,
             m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: '行動済' }) : null,
+            diff !== 0 ? h('span', { class: `battle__float ${diff < 0 ? 'is-damage' : 'is-heal'}`, text: diff < 0 ? String(diff) : `+${diff}` }) : null,
           );
         }),
       );
@@ -193,7 +198,7 @@ export const battleScreen: ScreenDefinition = {
         'div',
         { class: `battle__bar battle__bar--${side}${state.active === side && state.phase !== 'ended' ? ' is-active' : ''}` },
         h('span', { class: 'battle__bar-name', text: side === 'player' ? 'あなた' : s.name }),
-        h('span', { class: 'battle__bar-info', text: `山札${s.deck.length} 手札${s.hand.length}` }),
+        h('span', { class: 'battle__bar-info', text: `山札${s.deck.length}・手札${s.hand.length}` }),
         manaView(side),
       );
     };
@@ -424,6 +429,9 @@ export const battleScreen: ScreenDefinition = {
       element.append(...overlays);
       const hand = element.querySelector('.battle__hand');
       if (hand) hand.scrollLeft = handScroll;
+      for (const side of ['player', 'opponent'] as const) {
+        for (const m of state.sides[side].monsters) prevLife.set(m.uid, m.life);
+      }
       element.dataset.phase = state.phase;
       element.dataset.active = state.active;
       element.dataset.acting = actingSide(state) ?? 'none';
