@@ -11,10 +11,11 @@
 ```bash
 git clone https://github.com/shunyamita0804-source/mirtill-monsters-battle-card.git
 cd mirtill-monsters-battle-card
-npm install
+npm ci
 ```
 
-初回の `npm install` で `package-lock.json` が作られます。依存バージョンを固定するため、作成されたらコミットしてください。
+`package-lock.json` はコミット済みです。依存関係は `npm ci` でロックファイルどおりに入れてください。
+依存を追加・更新したときだけ `npm install` を使い、更新された `package-lock.json` をコミットします。
 
 ## よく使うコマンド
 
@@ -31,7 +32,7 @@ npm install
 ## ディレクトリ
 
 ```
-src/      ゲームのソースコード（TypeScript）
+src/      ゲームのソースコード（TypeScript）→ docs/architecture.md
 public/   ビルドを通さずそのまま配信するファイル
 assets/   ゲーム素材（画像・音声・フォント・データ）→ assets/README.md
 tests/    Vitest のテスト

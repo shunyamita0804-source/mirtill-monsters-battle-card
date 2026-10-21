@@ -28,9 +28,10 @@
 ## 現在の状態（2026-10-21 時点）
 
 - **第1段階（開発環境構築）：完了・承認済み**
-- **第2段階：ユーザーの指示書待ち。** 指示書が届くまで実装を始めない。
-- 第2段階の最初の作業：`npm install` で生成される `package-lock.json` をコミットして依存バージョンを固定する（第1段階では未コミット）。
-- 第1段階の詳細は `docs/phase-1-report.md`。
+- **第2段階（スマホ向けゲーム基盤構築）：実装済み・ユーザーの承認待ち**
+  - 第3段階には進まない。次の指示書が届くまで実装を始めない。
+  - `package-lock.json` はコミット済み。CI は `npm ci` でインストールする。
+- 詳細は `docs/phase-1-report.md`、`docs/phase-2-report.md`、設計は `docs/architecture.md`。
 
 ## 技術構成
 
@@ -39,7 +40,7 @@
 | 言語 | TypeScript 6（strict、`noUncheckedIndexedAccess`、`exactOptionalPropertyTypes` 有効） |
 | ビルド | Vite 7 |
 | テスト | Vitest 4（`tests/**/*.test.ts`、environment: node） |
-| Node.js | **24 以上**（`.nvmrc`）。Node 22 付属の npm 10 では依存解決が内部エラー（`edgesOut`）になった |
+| Node.js | **24 以上**（`.nvmrc`）。Node 22 付属の npm 10 では依存解決が内部エラー（`edgesOut`）になった。作業環境に Node 24 がなければ `nvm install 24` |
 | CI | `.github/workflows/ci.yml`：push/PR で インストール→型チェック→テスト→ビルド→Pages用ビルド。**デプロイはしない** |
 
 CI 実績での解決バージョン：Node 24.21.0 / TypeScript 6.0.3 / Vite 7.3.7 / Vitest 4.1.12 / @types/node 22.20.5
@@ -47,7 +48,8 @@ CI 実績での解決バージョン：Node 24.21.0 / TypeScript 6.0.3 / Vite 7.
 ## コマンド
 
 ```bash
-npm install          # 依存関係のインストール
+npm ci               # 依存関係のインストール（package-lock.json どおり）
+npm install          # 依存を追加・更新するときだけ。更新された package-lock.json をコミット
 npm run dev          # 開発サーバー（host: true なので同じWi-Fiのスマホから確認可）
 npm run typecheck    # 型チェック
 npm test             # テスト
@@ -62,15 +64,30 @@ npm run check        # 型チェック＋テスト＋ビルド
 
 ```
 src/
-  main.ts                 エントリ（現在は第1段階のプレースホルダー画面のみ）
-  style.css               スマホ向けベーススタイル（safe-area、ズーム抑止など）
+  main.ts                 エントリ（CSS 読み込みと startApp）
+  style.css               ベーススタイル（色の定義、#app / .viewport / .stage、safe-area、ズーム抑止）
   config/app.ts           正式名称・バージョン・段階・論理解像度（390×844 縦）
-  core/assetPath.ts       public/ のファイルを base パス付きURLにする resolvePublicPath()
-  core/assetCategories.ts assets/ のカテゴリ定義と素材ファイル名の命名規則
+  config/screens.ts       画面ID一覧（title / town / shop / battle）
+  core/                   DOM 非依存の基盤
+    stageLayout.ts        画面サイズ → ステージの倍率・配置
+    router.ts             画面遷移の履歴（navigate / back / reset）
+    assetPath.ts          public/ のファイルを base パス付きURLにする resolvePublicPath()
+    assetCategories.ts    assets/ のカテゴリ定義と素材ファイル名の命名規則
+  game/                   DOM 非依存のゲームロジック
+    cards/                カード型・カタログ・仮カード・画像の引き当て
+    battle/               バトル状態と reducer（選択・仮のターン切り替え）、仮の初期状態
+  ui/                     DOM を扱う層
+    app.ts                ステージ＋ルーター＋画面差し替え
+    stage.ts              論理解像度のステージを拡大縮小して配置
+    dom.ts                h() / button() ヘルパー（文字列は textContent で入れる）
+    cardArtSources.ts     assets/images/cards/ の画像を import.meta.glob で一覧化
+    components/           カード表示・カード詳細・画面ヘッダー
+    screens/              各画面と registry.ts（画面IDとの対応表）
+    styles/               部品・画面・バトルの CSS
 public/                   ビルドを通さず配信するファイル（favicon.svg, .nojekyll）
 assets/                   ゲーム素材（カテゴリ別。詳細は assets/README.md）
 tests/                    Vitest のテスト
-docs/                     開発ドキュメント
+docs/                     開発ドキュメント（architecture.md に設計）
 .github/workflows/ci.yml  CI（デプロイなし）
 .github/scripts/run-step.sh  CI失敗時に出力末尾をエラー注記に残すスクリプト
 ```
@@ -87,6 +104,10 @@ docs/                     開発ドキュメント
 - **パスエイリアス**：`@/` → `src/`、`@assets/` → `assets/`
 - **ロジックと描画を分ける**：ゲームルール（バトル計算など）は DOM に依存しない純粋な TypeScript にして、Vitest でテストする
 - **スマホ前提**：縦持ち 390×844 を基準に拡大縮小、タップ操作、safe-area 対応
+  - 画面の CSS は論理 px（390 幅基準）で書く。拡大縮小は `.stage` が一括で行う
+  - タップ領域は高さ 40px 以上
+- **画面の追加**：`config/screens.ts` にID → `ui/screens/` に画面 → `registry.ts` に登録（手順は `docs/architecture.md`）
+- **仮データ**：仮カードは `isPlaceholder: true`・ID `tmp-`・名前「仮」始まり。正式カードデータは指示書で許可されるまで作らない
 - コメント・ドキュメント・コミットメッセージは日本語
 
 ## GitHub

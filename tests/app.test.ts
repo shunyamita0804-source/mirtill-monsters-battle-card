@@ -7,8 +7,8 @@ describe('APP_INFO', () => {
     expect(APP_INFO.gameName).toBe('ミルティルモンスターズバトルカード');
   });
 
-  it('第1段階である', () => {
-    expect(APP_INFO.phase).toBe(1);
+  it('第2段階である', () => {
+    expect(APP_INFO.phase).toBe(2);
   });
 });
 

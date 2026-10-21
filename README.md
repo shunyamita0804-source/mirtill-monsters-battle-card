@@ -2,7 +2,7 @@
 
 **ミルティルモンスターズ**シリーズのスマートフォン向け 2D カードゲームです。
 
-> 第1段階（開発環境構築）完了。第2段階の指示書待ちです。ゲーム本体はまだ実装していません。
+> 第2段階（スマホ向けゲーム基盤構築）実装済み・承認待ち。タイトル／街／カードショップ／カードバトルの4画面を仮素材で表示できます。戦闘ルールは未実装です。
 
 ## 技術構成
 
@@ -14,7 +14,7 @@
 ## はじめかた
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -26,7 +26,9 @@ npm run dev
 - [GitHub Pages 公開準備](docs/github-pages.md)（現在は公開していません）
 - [素材の置き方](assets/README.md)
 - [開発段階](docs/roadmap.md)
+- [設計（画面・ロジックの構成）](docs/architecture.md)
 - [第1段階 完了報告](docs/phase-1-report.md)
+- [第2段階 完了報告](docs/phase-2-report.md)
 - [Claude Code 向け作業ルール](CLAUDE.md)
 
 ## 独立プロジェクトについて
