@@ -4,6 +4,8 @@ import turnOrderOgg from '@assets/audio/se/turn_order_select.ogg';
 import turnOrderM4a from '@assets/audio/se/turn_order_select.m4a';
 import manaGainOgg from '@assets/audio/se/mana_gain.ogg';
 import manaGainM4a from '@assets/audio/se/mana_gain.m4a';
+import manaConvertOgg from '@assets/audio/se/mana_convert.ogg';
+import manaConvertM4a from '@assets/audio/se/mana_convert.m4a';
 import evadeMp3 from '@assets/audio/se/evade_success.mp3';
 import hitNormalMp3 from '@assets/audio/se/hit_normal.mp3';
 import hitStrongMp3 from '@assets/audio/se/hit_strong.mp3';
@@ -19,7 +21,7 @@ import manaSpendMp3 from '@assets/audio/se/mana_spend.mp3';
  * - 音が鳴らせない環境では何もしない（ゲームは止めない）
  * - 設定の効果音の音量（0〜1）を SE_REGISTRY の gain に掛ける。0（ミュート含む）なら鳴らさない
  */
-export type SoundId = 'cardDraw' | 'turnOrderSelect' | 'manaGain' | 'evade' | 'hitNormal' | 'hitStrong' | 'manaSpend';
+export type SoundId = 'cardDraw' | 'turnOrderSelect' | 'manaGain' | 'manaConvert' | 'evade' | 'hitNormal' | 'hitStrong' | 'manaSpend';
 
 type SoundEntry = (
   | {
@@ -39,8 +41,11 @@ export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   cardDraw: { ogg: cardDrawOgg, m4a: cardDrawM4a, gain: 2.0 },
   // 先攻・後攻のカードを選んだ瞬間：ミスティックモンスターズ正式素材「分かれ道の選択」（15_branch_select）
   turnOrderSelect: { ogg: turnOrderOgg, m4a: turnOrderM4a, gain: 1.0 },
-  // カードをマナにした・山札からマナが増えた：ミスティックモンスターズの GOLD_GET と同じ音（Mix of SFX by Ivokard「bell」・CC0）
+  // 山札からマナが増えた（手札5枚のときのドロー・カードの効果）：ミスティックモンスターズの GOLD_GET と同じ音（Mix of SFX by Ivokard「bell」・CC0）
   manaGain: { ogg: manaGainOgg, m4a: manaGainM4a, gain: 1.8 },
+  // 手札のカードをマナにした（マナ化・1枚につき1回）：ChatGPT が作った独自の電子音の試作を、ユーザーが送って使うよう指示したもの（2026-10-22）。
+  // 原作 PS版の音のコピーではない。何枚か続けて鳴るので、ほかの音より少し小さく
+  manaConvert: { ogg: manaConvertOgg, m4a: manaConvertM4a, gain: 0.7 },
   // ここから正式採用の4音（ユーザー承認 2026-10-22。docs/audio-credits.md）。受け取った MP3 をそのまま使う
   // 回避が成功してダメージ0が確定した：効果音ラボ「高速移動」
   evade: { mp3: evadeMp3, gain: 1.0 },

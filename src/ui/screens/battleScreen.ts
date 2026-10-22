@@ -37,6 +37,8 @@ import type { ScreenDefinition } from './types.ts';
 /** ルール上のきっかけ → 効果音 */
 const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
   manaSpend: 'manaSpend',
+  manaConvert: 'manaConvert',
+  manaGain: 'manaGain',
   evade: 'evade',
   hitNormal: 'hitNormal',
   hitStrong: 'hitStrong',
@@ -50,8 +52,8 @@ const DEAL_MS = 110;
 const ORDER_REVEAL_MS = 1300;
 /** マナにするカードが情報箱へ飛んでいく時間（ミリ秒） */
 const MANA_FLY_MS = 620;
-/** 何枚かまとめてマナにするとき、1枚ずつ少しずらして飛ばす（ミリ秒） */
-const MANA_FLY_STAGGER_MS = 70;
+/** 何枚かまとめてマナにするとき、1枚ずつ少しずらして飛ばす（ミリ秒。1枚ごとに着いた所でマナ化の音が鳴るので、音が重なりすぎない間隔） */
+const MANA_FLY_STAGGER_MS = 120;
 /** 場面の表示（あなたのターン・マナ化など）が出ている時間（ミリ秒） */
 const BANNER_MS = 1100;
 
@@ -114,6 +116,16 @@ export const battleScreen: ScreenDefinition = {
     let lastFxSeq = 0;
     /** マナ化で選んだ手札（まとめてマナにする） */
     const manaPicks = new Set<string>();
+    /** マナ化で飛んでいる途中の手札（着くまで手札の列では隠しておく） */
+    const manaFlying = new Set<string>();
+    /** 描き直しても外さない演出の層（飛んでいくカード。外すとアニメーションが最初からになる） */
+    const fxLayer = h('div', { class: 'battle__fx-layer', attrs: { 'aria-hidden': 'true' } });
+    /** 画面を描き直す（演出の層だけは外さずに残す） */
+    const replaceView = (...nodes: (Node | string)[]): void => {
+      for (const child of [...element.childNodes]) if (child !== fxLayer) child.remove();
+      element.prepend(...nodes);
+      if (!fxLayer.isConnected) element.append(fxLayer);
+    };
     /** 最後に出した場面の表示（同じ表示を繰り返さない） */
     let bannerKey = '';
     /** 前回出したコマンド（同じなら出てくる動きをつけない） */
@@ -145,7 +157,10 @@ export const battleScreen: ScreenDefinition = {
       return w > 0 ? element.getBoundingClientRect().width / w : 1;
     };
 
-    /** 選んだ手札をまとめてマナにする：カードが情報箱へ飛んでいき、着いたらマナが増える */
+    /**
+     * 選んだ手札をまとめてマナにする：カードが1枚ずつ情報箱へ飛んでいき、
+     * 1枚着くたびにマナが1増えてマナ化の音が1回鳴る（音・絵・マナの数をそろえる）
+     */
     const convertPicked = (): void => {
       if (!state || dealing() || manaPicks.size === 0) return;
       const picks = state.sides.player.hand.filter((c) => manaPicks.has(c.uid)).map((c) => c.uid);
@@ -165,22 +180,27 @@ export const battleScreen: ScreenDefinition = {
           fly.style.setProperty('--dx', `${(g.left + g.width / 2 - (r.left + r.width / 2)) / scale}px`);
           fly.style.setProperty('--dy', `${(g.top + g.height / 2 - (r.top + r.height / 2)) / scale}px`);
           fly.style.setProperty('--delay', `${i * MANA_FLY_STAGGER_MS}ms`);
-          element.append(fly);
+          fxLayer.append(fly);
           setTimeout(() => fly.remove(), MANA_FLY_MS + i * MANA_FLY_STAGGER_MS + 50);
           element.querySelector(`.battle__hand-card[data-uid="${uid}"]`)?.classList.add('is-leaving');
         }
       }
+      for (const uid of picks) manaFlying.add(uid);
       const total = MANA_FLY_MS + (picks.length - 1) * MANA_FLY_STAGGER_MS;
       busyUntil = Math.max(busyUntil, Date.now() + total);
-      setTimeout(() => {
-        if (destroyed || !state) return;
-        let next = state;
-        for (const uid of picks) next = applyAction(next, { type: 'convertToMana', side: 'player', cardUid: uid });
-        manaPicks.clear();
-        selectedUid = null;
-        state = next;
-        render();
-      }, total);
+      for (const [i, uid] of picks.entries()) {
+        setTimeout(() => {
+          manaFlying.delete(uid);
+          if (destroyed || !state) return;
+          // 1枚ずつルールに渡す（できなかった分は何も起きず、音も鳴らない）
+          state = applyAction(state, { type: 'convertToMana', side: 'player', cardUid: uid });
+          if (i === picks.length - 1) {
+            manaPicks.clear();
+            selectedUid = null;
+          }
+          render();
+        }, MANA_FLY_MS + i * MANA_FLY_STAGGER_MS);
+      }
     };
 
     /** マナ化で手札をタップ：マナにする候補に入れる／外す（最初のターンは決まった枚数まで） */
@@ -477,10 +497,11 @@ export const battleScreen: ScreenDefinition = {
           const usable = cardUsability(s, 'player', c.uid).usable;
           const isNew = !shownHand.has(c.uid);
           const picked = myMana && manaPicks.has(c.uid);
+          const leaving = manaFlying.has(c.uid) ? ' is-leaving' : '';
           const el = h(
             'button',
             {
-              class: `battle__hand-card${usable ? ' is-usable' : ''}${!usable && myTurnMain ? ' is-unusable' : ''}${selectedUid === c.uid ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${isNew ? ' is-dealt' : ''}`,
+              class: `battle__hand-card${usable ? ' is-usable' : ''}${!usable && myTurnMain ? ' is-unusable' : ''}${selectedUid === c.uid ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${isNew ? ' is-dealt' : ''}${leaving}`,
               attrs: {
                 type: 'button',
                 'aria-label': picked
@@ -698,7 +719,7 @@ export const battleScreen: ScreenDefinition = {
       );
     };
 
-    /** マナが増えた・ダメージを受けたときの演出と効果音（前回の描画との差で判断する） */
+    /** マナが増えた演出（前回の描画との差で判断する）と効果音（ルールで確定したきっかけで鳴らす） */
     const playEffects = (s: BattleState): void => {
       for (const side of ['player', 'opponent'] as const) {
         const now = manaOf(s.sides[side]);
@@ -710,9 +731,9 @@ export const battleScreen: ScreenDefinition = {
           box.classList.add('is-mana-up');
           box.append(h('span', { class: 'battle__mana-float', text: `+${now - before}` }), h('span', { class: 'battle__mana-spark', attrs: { 'aria-hidden': 'true' } }));
         }
-        sound.play('manaGain');
       }
-      // 回避成功・命中・マナ消費：ルールで結果が確定した分だけ、1件につき1回（描き直しでは鳴らさない）
+      // 音はマナの数の差では選ばず、ルールで確定したきっかけで鳴らす（1件につき1回。描き直しでは鳴らさない）
+      // マナ化＝manaConvert（1枚1回）、山札からマナ＝manaGain、支払い＝manaSpend、回避・命中
       if (s.fxSeq < lastFxSeq) lastFxSeq = 0;
       for (const fx of s.fx) {
         if (fx.seq <= lastFxSeq) continue;
@@ -804,7 +825,7 @@ export const battleScreen: ScreenDefinition = {
     const render = (): void => {
       element.dataset.stage = state ? 'play' : 'order';
       if (!state) {
-        element.replaceChildren(header(), orderView());
+        replaceView(header(), orderView());
         return;
       }
       const s = state;
@@ -820,7 +841,7 @@ export const battleScreen: ScreenDefinition = {
         s.phase === 'ended'
           ? t('battle.turnBar.ended')
           : t('battle.turnBar', { n: s.turn, who: t(`battle.side.${s.active}`), phase: t(`battle.phase.${s.phase}`) });
-      element.replaceChildren(
+      replaceView(
         header(),
         qaBar() ?? '',
         h(

@@ -807,6 +807,14 @@
  * マナにするカード：その場で裏返して伏せ（裏面）、マナ（情報箱）へ飛んで積まれる。
  * PS版の「手札を裏向きの資源として積む」操作感を参考にした独自の演出（原作の画像・音は使わない）
  */
+/* 描き直しても外さない演出の層（マナ化で飛んでいくカードを入れる） */
+.battle__fx-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
 .battle__mana-fly {
   position: absolute;
   z-index: 30;

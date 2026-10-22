@@ -10,7 +10,7 @@
 | 場面（SE_REGISTRY） | ファイル | 元の素材（ミスティックモンスターズ） | 作者・ライセンス | 加工 |
 | --- | --- | --- | --- | --- |
 | `cardDraw`：カードを引く・手札に配る（1枚ごと） | `card_draw.ogg` / `card_draw.m4a` | `assets/audio/se/interface_sfx_pack_1/cursor_style_2.ogg`（本編の UI_SELECT） | Interface SFX Pack 1 / ObsydianX（CC0・クレジット不要） | 末尾の無音を切り落とし、iPhone 用に M4A（AAC）も作成。音色は変えていない |
-| `manaGain`：カードをマナにした・山札からマナが増えた | `mana_gain.ogg` / `mana_gain.m4a` | `assets/audio/se/ivokard/bell.ogg`（本編の GOLD_GET） | Mix of SFX by Ivokard（CC0・クレジット不要） | 先頭1.0秒に切り、最後0.3秒をフェードアウト。M4A も作成 |
+| `manaGain`：山札からマナが増えた（手札5枚のときのドロー・カードの効果）。2026-10-22 からマナ化では鳴らさない | `mana_gain.ogg` / `mana_gain.m4a` | `assets/audio/se/ivokard/bell.ogg`（本編の GOLD_GET） | Mix of SFX by Ivokard（CC0・クレジット不要） | 先頭1.0秒に切り、最後0.3秒をフェードアウト。M4A も作成 |
 | `turnOrderSelect`：先攻・後攻のカードを選んだ瞬間 | `turn_order_select.ogg` / `turn_order_select.m4a` | `assets/audio/se/mystic_monsters_official/15_branch_select.ogg`（本編の BRANCH_SELECT） | ミスティックモンスターズ正式素材（ユーザー提供・ゲーム所有） | 同上 |
 
 - 2026-10-22：以前の `damageHit`（本編の BATTLE_HIT）は、正式採用の命中音（下の表）と二重に鳴らないよう使うのをやめ、ファイルも削除した
@@ -30,8 +30,21 @@
 
 - 参照：https://soundeffect-lab.info/ ・ https://otologic.jp/ （最新の規約に従う）
 - 鳴らすきっかけはバトルのルール（`src/game/battle/engine.ts` の `fx`）で、結果が確定したときに1件ずつ記録する。画面は描き直しても同じ音を2回鳴らさない
-- **使わない音（不採用・未承認）**：01 カード使用・02 防御・07 KO・08 回復（旧素材は NG、代わりの候補も未承認）、09 マナ化の新しい音（未承認）。
-  防御が成功してダメージ0のとき・KO のときは無音。マナ化は以前からの `manaGain` のまま
+- **使わない音（不採用・未承認）**：01 カード使用・02 防御・07 KO・08 回復（旧素材は NG、代わりの候補も未承認）。
+  防御が成功してダメージ0のとき・KO のときは無音
+
+## マナ化の音（09・2026-10-22 追加）
+
+統合便のときは「未承認の候補」として送られておらず、ゲームに届いていなかった（ユーザーの指摘で判明）。
+2026-10-22 にユーザーが `Seimon_ManaConvert_SE_EmergencyFix_Claude_20261022.zip` で送り、使うよう指示した。
+**ChatGPT が作った独自の電子音の試作**で、原作 PS版の音のコピーではない。正式採用の4音（03〜06）とは別の経緯。
+
+| 場面（SE_REGISTRY）・鳴らすとき | ファイル | 加工 |
+| --- | --- | --- |
+| `manaConvert`：手札のカードをマナにした瞬間（マナ化。1枚につき1回。カードが情報箱に着いてマナが1増えるのと同時。相手のマナ化も） | `mana_convert.ogg` / `mana_convert.m4a`（受け取ったまま。SHA-256 は ZIP の照合表と一致） | なし（音量は `SE_REGISTRY` で 0.7 倍） |
+
+- 原本 `mana_convert_original_44100.wav`（44.1kHz・モノラル・約0.55秒）も `assets/audio/se/` に保管（ゲームでは読み込まない）。試聴用 MP3 は使っていない
+- 鳴らすきっかけはルール（`engine.ts` の `fx`）の `manaConvert`。山札からマナが増えたときは `manaGain`（従来のベル）で、マナ化と二重には鳴らない
 
 - 再生は Web Audio。OGG を再生できるブラウザは OGG、できないブラウザ（iPhone Safari の一部など）は M4A を使う（正式採用の4音は MP3 をどのブラウザでも使う）
 - iPhone は最初のタップまで音を出せないため、最初のタップで音を使えるようにしてから読み込む
