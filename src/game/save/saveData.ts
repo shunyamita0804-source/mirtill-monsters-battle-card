@@ -18,7 +18,7 @@ import { isIntroState, recoverIntro } from '../story/intro.ts';
  * - 読み込み時は normalizeSave() で型・範囲を確認し、壊れた値は既定値に戻す
  * - 変更はすべて「古いセーブを受け取り新しいセーブを返す」純粋関数で行う
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type Gender = 'male' | 'female';
 export type Direction = 'down' | 'up' | 'left' | 'right';
@@ -96,10 +96,11 @@ export interface SaveData {
 
 export const TRANSACTION_LOG_SIZE = 100;
 
-export const DEFAULT_LOCATION: Location = { mapId: 'town', x: 10, y: 18, dir: 'up' };
+/** 街の決まった位置：主人公の家の前（正式な絵の街。マスは設計図の 32px） */
+export const DEFAULT_LOCATION: Location = { mapId: 'town', x: 96, y: 121, dir: 'down' };
 
 /** 新しく始めたときの位置：自分の家の中（家から街に出ると、となりの家の女性が声をかける） */
-export const NEW_GAME_LOCATION: Location = { mapId: 'home', x: 4, y: 6, dir: 'down' };
+export const NEW_GAME_LOCATION: Location = { mapId: 'home', x: 12, y: 14, dir: 'down' };
 
 export function createNewSave(now: Date = new Date()): SaveData {
   const iso = now.toISOString();
@@ -161,10 +162,24 @@ function migrateStoryV3(raw: RawObject): RawObject {
   return { ...raw, story: { intro: 'deferred' } };
 }
 
+/**
+ * version 3 → 4（2026-10-22）：街と部屋を正式な絵に作り直し、マス目の大きさと座標が変わった。
+ * 古い街・部屋の座標は新しい地図では壁の中になりうるので、街か部屋にいたら主人公の家の前に移す（ダンジョンはそのまま）。
+ */
+const OLD_WALK_MAPS: readonly string[] = ['town', 'home', 'shop', 'hall', 'practice'];
+function migrateWorldV4(raw: RawObject): RawObject {
+  const loc = raw.location;
+  if (isObject(loc) && typeof loc.mapId === 'string' && OLD_WALK_MAPS.includes(loc.mapId)) {
+    return { ...raw, location: { ...DEFAULT_LOCATION } };
+  }
+  return raw;
+}
+
 /** version n → n+1 の変換。形式を変えるときはここに足し、SAVE_VERSION を上げる */
 const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
   1: migrateDeckRulesV2,
   2: migrateStoryV3,
+  3: migrateWorldV4,
 };
 
 export function migrate(raw: RawObject): RawObject | null {

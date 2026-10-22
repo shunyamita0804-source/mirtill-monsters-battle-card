@@ -1,12 +1,13 @@
 import type { Direction } from '../game/save/saveData.ts';
 import type { CardReward } from './tournaments.ts';
+import { WORLD_ART, type ArtMap, type CellRect } from './worldArt.generated.ts';
 
 /**
- * 【仮マップ】街・家・カードショップ・大会会場・ダンジョンの歩行用マップ。
+ * 歩行用マップ（街・部屋・ダンジョン）。
  *
- * 正式な街マップ・家・ショップ・大会会場の背景画像はこのリポジトリにないため（不足素材一覧を参照）、
- * 歩行・当たり判定・入口の確認用に、地形を記号で表した仮マップで実装している。
- * 正式背景が届いたら、背景画像を敷き、この記号マップは当たり判定用として位置を合わせ直す。
+ * - 街と部屋（家・となりの家・民家・カードショップ・カード研究所・大会会場・カード練習場）は、ユーザー承認済みの正式な絵を
+ *   設計図どおりに並べたもの（tools/design/seimon_world_build.py が worldArt.generated.ts を作る）。マスは設計図の 32px
+ * - ダンジョンは【仮マップ】のまま（正式な絵が無い）。地形を記号で表して描く
  *
  * 記号（TILE_INFO）：# 壁 / . 床 / , 草 / = 道 / T 木 / ~ 水 / H 大会会場 / A 家 / B ショップ / P カード練習場 / N となりの家
  *                  D 入口 / d 出口 / G ダンジョン入口
@@ -108,7 +109,7 @@ export interface ChestObject {
 
 /**
  * 人（NPC）。表示するかどうか・話しかけたときの会話は、物語の進み具合で決まる（src/game/story/）。
- * 絵が届くまでは仮の印で表示する。
+ * 足元の1マスが歩けない。絵は人物ごとの歩行の絵（worldScreen.ts）
  */
 export interface NpcObject extends Rect {
   readonly type: 'npc';
@@ -129,6 +130,8 @@ export interface MapDefinition {
   readonly spawn: { readonly x: number; readonly y: number; readonly dir: Direction };
   /** 階段を上って戻ってきたときの出現位置（ダンジョンのみ） */
   readonly upArrival?: { readonly x: number; readonly y: number; readonly dir: Direction };
+  /** 正式な絵（街・部屋）。あれば背景・家具の絵を敷く。無ければ記号のマスで描く（ダンジョン：仮） */
+  readonly art?: ArtMap;
 }
 
 const interact = (
@@ -172,159 +175,186 @@ const chest = (id: string, x: number, y: number, coins: number, cards: readonly 
   reward: { coins, cards },
 });
 
+/* ---------- 街・部屋（正式な絵。worldArt.generated.ts の座標を使う） ---------- */
+
+const artOf = (id: string): ArtMap => {
+  const art = WORLD_ART[id];
+  if (!art) throw new Error(`worldArt: ${id}`);
+  return art;
+};
+
+const doorOf = (art: ArtMap, id: string): NonNullable<ArtMap['doors']>[string] => {
+  const d = art.doors?.[id];
+  if (!d) throw new Error(`door: ${id}`);
+  return d;
+};
+
+const itemOf = (art: ArtMap, id: string): CellRect => {
+  const r = art.items?.[id];
+  if (!r) throw new Error(`item: ${id}`);
+  return r;
+};
+
+const interactAt = (id: string, r: CellRect, label: string, action: InteractAction, message?: string): InteractObject =>
+  interact(id, r.x, r.y, r.w, r.h, label, action, message);
+
+/** 部屋の入口（入ったときに立つ所：出入口の手前の床。奥を向く） */
+const entryOf = (art: ArtMap): { x: number; y: number; dir: Direction } => ({ x: art.spawn.x, y: art.spawn.y, dir: 'up' });
+
+const TOWN_ART = artOf('town');
+
+/** 地図 ID → 部屋の絵 */
+const ROOM_ART_OF: Readonly<Record<string, string>> = {
+  home: 'player', neighbor: 'guide', shop: 'shop', lab: 'lab', hall: 'arena', practice: 'training',
+  'house-a': 'house', 'house-b': 'house', 'house-c': 'house', 'house-d': 'house', 'house-e': 'house',
+};
+
+/** 街の建物（設計図の ID）→ 入る部屋 */
+const TOWN_DOORS: readonly { readonly id: string; readonly building: string; readonly mapId: string; readonly label: string }[] = [
+  { id: 'door-practice', building: 'TRAINING', mapId: 'practice', label: 'カード練習場' },
+  { id: 'door-hall', building: 'ARENA', mapId: 'hall', label: '大会会場' },
+  { id: 'door-home', building: 'PLAYER_HOME', mapId: 'home', label: '家' },
+  { id: 'door-neighbor', building: 'GUIDE_HOME', mapId: 'neighbor', label: 'となりの家' },
+  { id: 'door-shop', building: 'SHOP', mapId: 'shop', label: 'カードショップ' },
+  { id: 'door-lab', building: 'LAB', mapId: 'lab', label: 'カード研究所' },
+  { id: 'door-house-a', building: 'HOUSE_A', mapId: 'house-a', label: '民家' },
+  { id: 'door-house-b', building: 'HOUSE_B', mapId: 'house-b', label: '民家' },
+  { id: 'door-house-c', building: 'HOUSE_C', mapId: 'house-c', label: '民家' },
+  { id: 'door-house-d', building: 'HOUSE_D', mapId: 'house-d', label: '民家' },
+  { id: 'door-house-e', building: 'HOUSE_E', mapId: 'house-e', label: '民家' },
+];
+
+/** 街の上に出す施設の名前（絵には焼き込まない。表示は i18n の world.building.*）。位置は建物の絵の上端の中央（設計図の単位） */
+export const TOWN_SIGNS: readonly { readonly building: string; readonly label: 'hall' | 'practice' | 'home' | 'neighbor' | 'shop' | 'lab'; readonly x: number; readonly y: number }[] = (
+  [
+    ['ARENA', 'hall'], ['TRAINING', 'practice'], ['PLAYER_HOME', 'home'], ['GUIDE_HOME', 'neighbor'], ['SHOP', 'shop'], ['LAB', 'lab'],
+  ] as const
+).map(([building, label]) => ({ building, label, ...doorOf(TOWN_ART, building).label }));
+
+/** 建物から出たときに立つ所（玄関の前。手前を向く） */
+export function townDoorFront(building: string): { x: number; y: number; dir: Direction } {
+  const d = doorOf(TOWN_ART, building);
+  return { x: d.back.x, y: d.back.y, dir: 'down' };
+}
+
+const exitTo = (building: string): WarpTarget => ({ kind: 'map', mapId: 'town', ...townDoorFront(building) });
+
+/** 部屋の出口（手前の壁のすき間の一番下） */
+const roomExit = (id: string, art: ArtMap, building: string): WarpObject =>
+  warp(id, art.exit.x, art.exit.y, art.exit.w, '外へ', exitTo(building));
+
+/** 部屋の背景・家具の絵を使う地図を作る */
+const artMap = (
+  id: string,
+  name: string,
+  area: MapDefinition['area'],
+  art: ArtMap,
+  objects: readonly MapObject[],
+  spawn: MapDefinition['spawn'],
+): MapDefinition => ({ id, name, area, tiles: art.grid, objects, spawn, art });
+
 /**
- * 街（仮マップ）。並びは新しい街の設計図（docs/design/seimon-town/）に近づけてある：
- * 北西＝カード練習場、北中央＝大会会場、中央＝噴水広場、南西＝カードショップ、南東＝主人公の家ととなりの家、南＝草原（ダンジョン方面）。
- * 正式な街の絵が届いたら、設計図の座標で作り直す。
+ * 街。ユーザー承認済みの正式な絵（建物11棟・噴水・地面・小物）を、設計図（docs/design/seimon-town/）どおりに並べたもの。
+ * 北中央＝大会会場、北西＝カード練習場・住宅A/B、北東＝住宅C/D/E、中央＝噴水広場、南西＝カードショップ・カード研究所、
+ * 南東＝主人公の家ととなりの家（案内役の家）、南＝草原への出口（ダンジョン方面）。
  */
-export const TOWN: MapDefinition = {
-  id: 'town',
-  name: '街（仮マップ）',
-  area: 'town',
-  tiles: [
-    'TTTTTTTTTTTTTTTTTTTT',
-    'T,PPPPP,HHHHHH,,,,,T',
-    'T,PPPPP,HHHHHH,,T,,T',
-    'T,PPPPP,HHHHHH,,,,,T',
-    'T,PPDPP,HHDDHH,,,T,T',
-    'T,,,=,,,,,==,,,,,,,T',
-    'T,,,=,,,,,==,,,,,,,T',
-    'T,,,=,,,,====,,,,,,T',
-    'T,,,======FF=======T',
-    'T,,,,,,,,=FF=,,,,,,T',
-    'T,,,,,,,,====,,,,,,T',
-    'T,,,,,,,,,==,,,,,,,T',
-    'T,BBBB,,,,==,AAA,NNT',
-    'T,BBBB,,,,==,AAA,NNT',
-    'T,BBDB,,,,==,ADA,NNT',
-    'T,,,=,,,,,==,,=,,,,T',
-    'T,,,============,,,T',
-    'T,,,,,,,,,==,,,,,,,T',
-    'T,TT,,,,,,==,,,,TT,T',
-    'T,,,,,,,,,==,,,,,,,T',
-    'TTTTTTTTTTGGTTTTTTTT',
+export const TOWN: MapDefinition = artMap(
+  'town',
+  '街',
+  'town',
+  TOWN_ART,
+  [
+    ...TOWN_DOORS.map((d) => {
+      const door = doorOf(TOWN_ART, d.building);
+      const room = artOf(ROOM_ART_OF[d.mapId] ?? '');
+      return warp(d.id, door.x, door.y, door.w, d.label, { kind: 'map', mapId: d.mapId, ...entryOf(room) });
+    }),
+    // 南の土の道の端（草原の方角）。踏むと既存のダンジョン選択（家の壁の地図と同じ画面）へ
+    warp('door-dungeon', TOWN_ART.exit.x, TOWN_ART.exit.y, TOWN_ART.exit.w, 'ダンジョン入口', { kind: 'dungeonGate' }),
+    interactAt('sign-fountain', TOWN_ART.fountain as CellRect, '噴水', 'message', '街の中央の噴水。水の音が心地よい。'),
+    // となりの家の女性（案内役）。物語の進み具合で、街か練習場のどちらかにいる。街では自分の家の前の通り
+    npc('guide-town', doorOf(TOWN_ART, 'GUIDE_HOME').back.x - 4, doorOf(TOWN_ART, 'GUIDE_HOME').back.y + 6, 'neighbor_guide'),
   ],
-  objects: [
-    warp('door-practice', 4, 4, 1, 'カード練習場', { kind: 'map', mapId: 'practice', x: 4, y: 7, dir: 'up' }),
-    warp('door-hall', 10, 4, 2, '大会会場', { kind: 'map', mapId: 'hall', x: 5, y: 10, dir: 'up' }),
-    // 中央の道を南へまっすぐ進んだ突き当たり（草原の方角）。踏むと既存のダンジョン選択（家の壁の地図と同じ画面）へ
-    warp('door-dungeon', 10, 20, 2, 'ダンジョン入口', { kind: 'dungeonGate' }),
-    warp('door-home', 14, 14, 1, '家', { kind: 'map', mapId: 'home', x: 4, y: 7, dir: 'up' }),
-    warp('door-shop', 4, 14, 1, 'カードショップ', { kind: 'map', mapId: 'shop', x: 4, y: 7, dir: 'up' }),
-    interact('sign-fountain', 10, 8, 2, 2, '噴水', 'message', '街の中央の噴水。（仮マップ：正式な街背景は制作中）'),
-    // となりの家の女性（案内役）。物語の進み具合で、街か練習場のどちらかにいる
-    npc('guide-town', 16, 15, 'neighbor_guide'),
-  ],
-  spawn: { x: 10, y: 18, dir: 'up' },
-};
+  { ...townDoorFront('PLAYER_HOME'), y: TOWN_ART.spawn.y, dir: 'down' },
+);
 
-export const HOME: MapDefinition = {
-  id: 'home',
-  name: '家（仮マップ）',
-  area: 'interior',
-  tiles: [
-    '##########',
-    '#bb..MM.h#',
-    '#bb.....h#',
-    '#........#',
-    '#..rrrr..#',
-    '#..rrrr..#',
-    '#kk......#',
-    '#........#',
-    '####dd####',
-  ],
-  objects: [
-    interact('home-bed', 1, 1, 2, 2, 'ベッド', 'settings'),
-    interact('home-map', 5, 1, 2, 1, '壁の地図', 'dungeonSelect'),
-    interact('home-shelf', 8, 1, 1, 2, '本棚', 'collection'),
-    interact('home-desk', 1, 6, 2, 1, '机', 'deck'),
-    warp('home-exit', 4, 8, 2, '外へ', { kind: 'map', mapId: 'town', x: 14, y: 15, dir: 'down' }),
-  ],
-  spawn: { x: 4, y: 7, dir: 'up' },
-};
+const HOME_ART = artOf('player');
+export const HOME: MapDefinition = artMap('home', '家', 'interior', HOME_ART, [
+  interactAt('home-bed', itemOf(HOME_ART, 'BED'), 'ベッド', 'settings'),
+  interactAt('home-map', itemOf(HOME_ART, 'WALL_MAP'), '壁の地図', 'dungeonSelect'),
+  interactAt('home-shelf', itemOf(HOME_ART, 'BOOKSHELF'), '本棚', 'collection'),
+  interactAt('home-desk', itemOf(HOME_ART, 'DESK'), '机', 'deck'),
+  interactAt('home-plant', itemOf(HOME_ART, 'PLANT'), '植木鉢', 'message', '元気に育っている。'),
+  roomExit('home-exit', HOME_ART, 'PLAYER_HOME'),
+], entryOf(HOME_ART));
 
-export const SHOP: MapDefinition = {
-  id: 'shop',
-  name: 'カードショップ（仮マップ）',
-  area: 'interior',
-  tiles: [
-    '##########',
-    '#ssss..gg#',
-    '#...n..gg#',
-    '#.ccccc..#',
-    '#........#',
-    '#........#',
-    '#........#',
-    '#........#',
-    '####dd####',
-  ],
-  objects: [
-    interact('shop-clerk', 4, 2, 1, 1, '店員', 'shopClerk'),
-    interact('shop-counter', 2, 3, 5, 1, 'カウンター', 'shopClerk'),
-    interact('shop-gacha', 7, 1, 2, 2, 'カードガチャマシン', 'gacha'),
-    interact('shop-shelf', 1, 1, 4, 1, '商品棚', 'message', 'カードがきれいに並んでいる。'),
-    warp('shop-exit', 4, 8, 2, '外へ', { kind: 'map', mapId: 'town', x: 4, y: 15, dir: 'down' }),
-  ],
-  spawn: { x: 4, y: 7, dir: 'up' },
-};
+const NEIGHBOR_ART = artOf('guide');
+/** となりの家（案内役の家）。案内役はいま街か練習場にいるので、家の中には出さない（同じ人が2か所に出ないように） */
+export const NEIGHBOR: MapDefinition = artMap('neighbor', 'となりの家', 'interior', NEIGHBOR_ART, [
+  interactAt('neighbor-fireplace', itemOf(NEIGHBOR_ART, 'FIREPLACE'), '暖炉', 'message', '暖炉の火がぱちぱちと燃えている。'),
+  interactAt('neighbor-kitchen', itemOf(NEIGHBOR_ART, 'KITCHEN'), '台所の棚', 'message', 'お茶の道具がきれいに並んでいる。'),
+  interactAt('neighbor-shelf', itemOf(NEIGHBOR_ART, 'BOOKSHELF'), '本棚', 'message', 'カードの本がたくさん並んでいる。'),
+  interactAt('neighbor-table', itemOf(NEIGHBOR_ART, 'TABLE'), '丸テーブル', 'message', 'テーブルの上にティーセットが置いてある。'),
+  interactAt('neighbor-flower', itemOf(NEIGHBOR_ART, 'FLOWER'), '花台', 'message', 'きれいな花が飾ってある。'),
+  roomExit('neighbor-exit', NEIGHBOR_ART, 'GUIDE_HOME'),
+], entryOf(NEIGHBOR_ART));
 
-export const HALL: MapDefinition = {
-  id: 'hall',
-  name: '大会会場（仮マップ）',
-  area: 'interior',
-  tiles: [
-    '############',
-    '#,,,,,,,,,,#',
-    '#,,,,,,,,,,#',
-    '#,,,xxxx,,,#',
-    '#,,,xxxx,,,#',
-    '#,,,,,,,,,,#',
-    '#..........#',
-    '#ss..n...ss#',
-    '#ss.ccc..ss#',
-    '#..........#',
-    '#..........#',
-    '#####dd#####',
-  ],
-  objects: [
-    interact('hall-receptionist', 5, 7, 1, 1, '受付', 'tournamentDesk'),
-    interact('hall-desk', 4, 8, 3, 1, '受付カウンター', 'tournamentDesk'),
-    interact('hall-table', 4, 3, 4, 2, '対戦テーブル', 'message', '屋根付きの会場の中央にある対戦テーブル。大会の対戦はここで行われる。'),
-    interact('hall-seats-l', 1, 7, 2, 2, '客席', 'message', '観客席。'),
-    interact('hall-seats-r', 9, 7, 2, 2, '客席', 'message', '観客席。'),
-    warp('hall-exit', 5, 11, 2, '外へ', { kind: 'map', mapId: 'town', x: 10, y: 5, dir: 'down' }),
-  ],
-  spawn: { x: 5, y: 10, dir: 'up' },
-};
+const SHOP_ART = artOf('shop');
+/** カードショップ。主役はカードの購入（店員のカウンター）とカードパックの販売機（いまのガチャ。カプセルではない） */
+export const SHOP: MapDefinition = artMap('shop', 'カードショップ', 'interior', SHOP_ART, [
+  interactAt('shop-counter', itemOf(SHOP_ART, 'COUNTER'), 'カウンター', 'shopClerk'),
+  interactAt('shop-gacha', itemOf(SHOP_ART, 'PACK_MACHINE'), 'カードパック販売機', 'gacha'),
+  interactAt('shop-shelf', itemOf(SHOP_ART, 'SHELF_WALL'), '商品棚', 'message', 'カードとパックがきれいに並んでいる。'),
+  interactAt('shop-case-l', itemOf(SHOP_ART, 'CASE_L'), 'ショーケース', 'message', '珍しいカードが飾ってある。'),
+  interactAt('shop-case-r', itemOf(SHOP_ART, 'CASE_R'), 'ショーケース', 'message', '珍しいカードが飾ってある。'),
+  roomExit('shop-exit', SHOP_ART, 'SHOP'),
+], entryOf(SHOP_ART));
 
-/** カード練習場（仮マップ）。初心者がカードを学ぶ場所。練習テーブルで練習試合ができる */
-export const PRACTICE: MapDefinition = {
-  id: 'practice',
-  name: 'カード練習場（仮マップ）',
-  area: 'interior',
-  tiles: [
-    '##########',
-    '#ss.MMM..#',
-    '#........#',
-    '#.xx..xx.#',
-    '#.xx..xx.#',
-    '#........#',
-    '#ss....ss#',
-    '#........#',
-    '####dd####',
-  ],
-  objects: [
-    interact('practice-shelf', 1, 1, 2, 1, '教材の棚', 'message', '練習用のカードがきちんと並んでいる。'),
-    interact('practice-board', 4, 1, 3, 1, '黒板', 'message', 'カードの並べ方の図が描いてある。'),
-    interact('practice-table-1', 2, 3, 2, 2, '練習テーブル', 'practiceTable'),
-    interact('practice-table-2', 6, 3, 2, 2, '練習テーブル', 'practiceTable'),
-    interact('practice-bench-l', 1, 6, 2, 1, 'ベンチ', 'message', '順番を待つ人のためのベンチ。'),
-    interact('practice-bench-r', 7, 6, 2, 1, 'ベンチ', 'message', '順番を待つ人のためのベンチ。'),
-    npc('guide-practice', 8, 2, 'neighbor_guide'),
-    warp('practice-exit', 4, 8, 2, '外へ', { kind: 'map', mapId: 'town', x: 4, y: 5, dir: 'down' }),
-  ],
-  spawn: { x: 4, y: 7, dir: 'up' },
-};
+const LAB_ART = artOf('lab');
+/** カード研究所。図鑑（集めたカード）への入り口。研究所だけの新しい仕組みは作らない */
+export const LAB: MapDefinition = artMap('lab', 'カード研究所', 'interior', LAB_ART, [
+  interactAt('lab-shelf', itemOf(LAB_ART, 'BIG_SHELF'), '図鑑の本棚', 'collection'),
+  interactAt('lab-crystal', itemOf(LAB_ART, 'CRYSTAL'), '水晶の台', 'message', '水晶が静かに光っている。'),
+  interactAt('lab-specimen', itemOf(LAB_ART, 'SPECIMEN'), 'カード標本ケース', 'message', 'めずらしいカードが標本のように並んでいる。'),
+  interactAt('lab-desk', itemOf(LAB_ART, 'DESK'), '研究机', 'message', '研究の資料が広げてある。'),
+  interactAt('lab-shelf2', itemOf(LAB_ART, 'SHELF2'), '資料棚', 'message', '資料がぎっしり詰まっている。'),
+  interactAt('lab-table', itemOf(LAB_ART, 'TABLE'), '閲覧テーブル', 'message', '本を読むためのテーブル。'),
+  roomExit('lab-exit', LAB_ART, 'LAB'),
+], entryOf(LAB_ART));
+
+const HALL_ART = artOf('arena');
+/** 大会会場（屋根付きのカード大会の会場。中央に対戦テーブル） */
+export const HALL: MapDefinition = artMap('hall', '大会会場', 'interior', HALL_ART, [
+  interactAt('hall-desk', itemOf(HALL_ART, 'RECEPTION'), '受付カウンター', 'tournamentDesk'),
+  interactAt('hall-table', itemOf(HALL_ART, 'STAGE'), '対戦テーブル', 'message', '屋根付きの会場の中央にある対戦テーブル。大会の対戦はここで行われる。'),
+  interactAt('hall-seats-l', itemOf(HALL_ART, 'SEATS_L'), '客席', 'message', '観客席。'),
+  interactAt('hall-seats-r', itemOf(HALL_ART, 'SEATS_R'), '客席', 'message', '観客席。'),
+  roomExit('hall-exit', HALL_ART, 'ARENA'),
+], entryOf(HALL_ART));
+
+const PRACTICE_ART = artOf('training');
+/** カード練習場。初心者がカードを学ぶ場所。練習テーブルで練習試合ができる */
+export const PRACTICE: MapDefinition = artMap('practice', 'カード練習場', 'interior', PRACTICE_ART, [
+  interactAt('practice-shelf', itemOf(PRACTICE_ART, 'SHELF'), '教材の棚', 'message', '練習用のカードがきちんと並んでいる。'),
+  interactAt('practice-board', itemOf(PRACTICE_ART, 'BOARD'), '黒板', 'message', 'カードの並べ方の図が描いてある。'),
+  interactAt('practice-table-1', itemOf(PRACTICE_ART, 'TABLE_1'), '練習テーブル', 'practiceTable'),
+  interactAt('practice-table-2', itemOf(PRACTICE_ART, 'TABLE_2'), '練習テーブル', 'practiceTable'),
+  interactAt('practice-bench-l', itemOf(PRACTICE_ART, 'BENCH_L'), 'ベンチ', 'message', '順番を待つ人のためのベンチ。'),
+  interactAt('practice-bench-r', itemOf(PRACTICE_ART, 'BENCH_R'), 'ベンチ', 'message', '順番を待つ人のためのベンチ。'),
+  // 案内役は先生の立ち位置（黒板の前）にいる
+  npc('guide-practice', itemOf(PRACTICE_ART, 'TEACHER_SPOT').x + 1, itemOf(PRACTICE_ART, 'TEACHER_SPOT').y + 1, 'neighbor_guide'),
+  roomExit('practice-exit', PRACTICE_ART, 'TRAINING'),
+], entryOf(PRACTICE_ART));
+
+const HOUSE_ART = artOf('house');
+/** 民家（住宅A〜E。部屋の絵は共通）。住人の絵がまだ無いので無人 */
+const house = (key: 'a' | 'b' | 'c' | 'd' | 'e'): MapDefinition =>
+  artMap(`house-${key}`, '民家', 'interior', HOUSE_ART, [
+    interactAt(`house-${key}-shelf`, itemOf(HOUSE_ART, 'SHELF'), '棚', 'message', '食器がきちんと並んでいる。'),
+    interactAt(`house-${key}-table`, itemOf(HOUSE_ART, 'TABLE'), 'テーブル', 'message', 'テーブルクロスがかかっている。'),
+    roomExit(`house-${key}-exit`, HOUSE_ART, `HOUSE_${key.toUpperCase()}`),
+  ], entryOf(HOUSE_ART));
+export const HOUSES: readonly MapDefinition[] = (['a', 'b', 'c', 'd', 'e'] as const).map(house);
 
 export const DUNGEON_B1: MapDefinition = {
   id: 'dungeon-01-b1',
@@ -430,7 +460,7 @@ export const DUNGEON_B3: MapDefinition = {
   spawn: { x: 6, y: 14, dir: 'up' },
 };
 
-export const MAPS: readonly MapDefinition[] = [TOWN, HOME, SHOP, HALL, PRACTICE, DUNGEON_B1, DUNGEON_B2, DUNGEON_B3];
+export const MAPS: readonly MapDefinition[] = [TOWN, HOME, NEIGHBOR, SHOP, LAB, HALL, PRACTICE, ...HOUSES, DUNGEON_B1, DUNGEON_B2, DUNGEON_B3];
 
 export function getMap(id: string): MapDefinition | undefined {
   return MAPS.find((m) => m.id === id);

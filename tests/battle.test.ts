@@ -425,3 +425,55 @@ describe('勝敗（AI 同士で最後まで対戦）', () => {
     expect(s.sides.opponent.monsters[0]?.maxLife).toBeLessThan(full.sides.opponent.monsters[0]?.maxLife ?? 0);
   });
 });
+
+describe('効果音のきっかけ（1つの結果につき1回）', () => {
+  const kinds = (s: BattleState, after: number): string[] => s.fx.filter((f) => f.seq > after).map((f) => f.kind);
+
+  it('命中：必要マナ2の技は通常、3以上は強攻撃（仮の基準）。マナの支払いは1回の使用で1件', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 2), skillId('b', 3)], 9);
+    s = withHand(s, 'opponent', [], 0);
+    s = { ...s, sides: { ...s.sides, player: { ...s.sides.player, hand: [{ uid: 't0', cardId: skillId('a', 2) }, { uid: 't1', cardId: skillId('b', 3) }] } } };
+    const target = enemyUid(s, 'e');
+    let seq = s.fxSeq;
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target });
+    expect(kinds(s, seq)).toEqual(['manaSpend']);
+    seq = s.fxSeq;
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
+    expect(kinds(s, seq)).toEqual(['hitNormal']);
+    seq = s.fxSeq;
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't1', targetUid: target });
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
+    expect(kinds(s, seq)).toEqual(['manaSpend', 'hitStrong']);
+  });
+
+  it('回避成功（ダメージ0）は回避の音だけ。命中の音は出ない', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 2)], 5);
+    s = withHand(s, 'opponent', [skillId('f', 5)], 2);
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: enemyUid(s, 'f') });
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' });
+    const seq = s.fxSeq;
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
+    expect(kinds(s, seq)).toEqual(['evade']);
+  });
+
+  it('防御でダメージ0は無音（防御の音は未承認）', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 1)], 5); // ちから3
+    s = withHand(s, 'opponent', [skillId('e', 4), skillId('e', 4)], 3); // -2 を2枚
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: enemyUid(s, 'e') });
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' });
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't1' });
+    const seq = s.fxSeq;
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
+    expect(kinds(s, seq)).toEqual([]);
+  });
+
+  it('マナ化（マナが増える）ではマナ消費の音を出さない', () => {
+    let s = battle();
+    const seq = s.fxSeq;
+    const card = s.sides.player.hand[0];
+    if (!card) throw new Error('hand');
+    s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: card.uid });
+    expect(manaOf(s.sides.player)).toBe(1);
+    expect(kinds(s, seq)).toEqual([]);
+  });
+});

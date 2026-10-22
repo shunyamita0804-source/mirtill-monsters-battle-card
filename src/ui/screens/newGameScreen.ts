@@ -2,8 +2,8 @@ import type { Gender } from '../../game/save/saveData.ts';
 import { t } from '../../i18n/i18n.ts';
 import { button, h } from '../dom.ts';
 import { once } from '../gameStore.ts';
-import maleSheet from '@assets/images/characters/player_male_walk_qa.png';
-import femaleSheet from '@assets/images/characters/player_female_walk_qa.png';
+import maleSheet from '@assets/images/characters/player_male_idle_front.png';
+import femaleSheet from '@assets/images/characters/player_female_idle_front.png';
 import type { ScreenDefinition } from './types.ts';
 
 /** 主人公の選択（男性：黒髪・青系の帽子と服／女性：赤系の帽子と服）。歩行素材は QA 試作品 */
@@ -34,7 +34,6 @@ export const newGameScreen: ScreenDefinition = {
         choice('male', t('newGame.male'), t('newGame.maleNote'), maleSheet),
         choice('female', t('newGame.female'), t('newGame.femaleNote'), femaleSheet),
       ),
-      h('p', { class: 'notice', text: t('newGame.qaNote') }),
       button(t('newGame.back'), () => ctx.back('title'), 'btn btn--ghost'),
     );
     return { element };

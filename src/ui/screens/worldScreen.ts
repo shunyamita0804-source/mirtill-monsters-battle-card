@@ -1,6 +1,6 @@
 import { getDungeon, ENCOUNTERS } from '../../data/dungeons.ts';
 import { FRAGMENT_TOTAL } from '../../data/fragments.ts';
-import { getMap, type ChestObject, type EnemyObject, type MapDefinition, type MapObject, type NpcObject } from '../../data/maps.ts';
+import { getMap, TOWN_SIGNS, type ChestObject, type EnemyObject, type MapDefinition, type MapObject, type NpcObject } from '../../data/maps.ts';
 import type { SceneId } from '../../data/storyScenes.ts';
 import { getMonster } from '../../data/cards.ts';
 import { isDeckValid } from '../../game/deck/deck.ts';
@@ -16,6 +16,7 @@ import { collectFragment, fragmentAt, fragmentCount } from '../../game/progress/
 import type { Direction, Location } from '../../game/save/saveData.ts';
 import {
   adjacentCellOf,
+  canStep,
   DIR_DELTA,
   findPath,
   findPathToObject,
@@ -37,25 +38,52 @@ import {
 import { playScene } from '../components/dialogue.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
 import { button, h } from '../dom.ts';
-import maleSheet from '@assets/images/characters/player_male_walk_qa.png';
-import femaleSheet from '@assets/images/characters/player_female_walk_qa.png';
+import maleSheet from '@assets/images/characters/player_male_walk.png';
+import femaleSheet from '@assets/images/characters/player_female_walk.png';
+import maleIdleFront from '@assets/images/characters/player_male_idle_front.png';
+import maleIdleBack from '@assets/images/characters/player_male_idle_back.png';
+import maleIdleLeft from '@assets/images/characters/player_male_idle_left.png';
+import maleIdleRight from '@assets/images/characters/player_male_idle_right.png';
+import femaleIdleFront from '@assets/images/characters/player_female_idle_front.png';
+import femaleIdleBack from '@assets/images/characters/player_female_idle_back.png';
+import femaleIdleLeft from '@assets/images/characters/player_female_idle_left.png';
+import femaleIdleRight from '@assets/images/characters/player_female_idle_right.png';
+import guideSheet from '@assets/images/characters/npc_neighbor_guide_walk.png';
 import { t, type Params } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
 import { cardName, dungeonName, mapName, objectLabel, objectMessage, opponentName } from '../../i18n/content.ts';
 import type { ScreenContext, ScreenDefinition } from './types.ts';
 
-/** 1マスの大きさ（論理px） */
+/** 仮マップ（ダンジョン）の1マスの大きさ（論理px） */
 const TILE = 40;
+/** 正式な絵の街・部屋：設計図の 1 単位 → 論理px（主人公 108×144 が 61×81 になる） */
+const ART_SCALE = 0.5625;
 /** スティック：これ以上指を動かしたら移動の操作にする／スティックの半径／方向を決める最小の距離（論理px） */
 const STICK_START = 12;
 const STICK_RADIUS = 42;
 const STICK_DEAD = 16;
-/** 歩行速度（マス/秒・仮。実機で調整） */
-const WALK_SPEED = 4.5;
-/** 歩行素材：128×144 を 40×45 に縮小。行＝方向（front/back/left/right）、列＝4コマ */
-const SPRITE_W = 40;
-const SPRITE_H = 45;
+/** 歩行速度（論理px/秒・仮。実機で調整） */
+const WALK_PX = 185;
+/** 歩行のコマ送り（コマ/秒。素材の推奨は約7） */
+const WALK_FPS = 7;
+/**
+ * 人物の歩行素材：1コマ 216×288、足元 (108, 270)。行＝方向（front/back/left/right）、列＝4コマ（シート 864×1152）。
+ * 街・部屋では 108×144 単位（設計図どおり）、ダンジョン（仮マップ）では少し小さく描く
+ */
+const FRAME_W = 216;
+const FRAME_H = 288;
+const FOOT_X = 108;
+const FOOT_Y = 270;
 const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, right: 3 };
+/** 待機の絵が歩行シートの何列目と同じか（案内役の待機は2コマ目と同じ絵） */
+const NPC_IDLE_COL = 1;
+
+const PLAYER_ART: Readonly<Record<'male' | 'female', { sheet: string; idle: Readonly<Record<Direction, string>> }>> = {
+  male: { sheet: maleSheet, idle: { down: maleIdleFront, up: maleIdleBack, left: maleIdleLeft, right: maleIdleRight } },
+  female: { sheet: femaleSheet, idle: { down: femaleIdleFront, up: femaleIdleBack, left: femaleIdleLeft, right: femaleIdleRight } },
+};
+
+const NPC_SHEET: Readonly<Record<NpcObject['npcId'], string>> = { neighbor_guide: guideSheet };
 
 const TILE_CLASS: Readonly<Record<string, string>> = {
   '#': 'wall', '.': 'floor', ',': 'grass', '=': 'road', T: 'tree', '~': 'water', H: 'bld-hall', A: 'bld-home',
@@ -63,16 +91,11 @@ const TILE_CLASS: Readonly<Record<string, string>> = {
   h: 'bookshelf', k: 'desk', s: 'shelf', c: 'counter', n: 'npc', g: 'gacha', x: 'table', r: 'rug',
 };
 
-/** 建物（同じ記号のかたまり）の名前ラベル */
-const BUILDING_LABEL: Readonly<Record<string, MessageKey>> = {
-  H: 'world.building.hall',
-  A: 'world.building.home',
-  B: 'world.building.shop',
-  P: 'world.building.practice',
-  N: 'world.building.neighbor',
-};
-
 const coins = (n: number): string => t('common.coins', { n } satisfies Params);
+
+/** 向き → 1歩の向き（斜めの絵は無いので、斜めに歩くときは左右の絵） */
+const facing = (dx: number, dy: number, prev: Direction): Direction =>
+  dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : dy < 0 ? 'up' : prev;
 
 export const worldScreen: ScreenDefinition = {
   id: 'world',
@@ -88,6 +111,8 @@ export const worldScreen: ScreenDefinition = {
 interface Move {
   readonly from: Point;
   readonly to: Point;
+  /** 1歩の長さ（斜めは √2） */
+  readonly len: number;
   t: number;
 }
 
@@ -102,11 +127,16 @@ class WorldView {
   #path: Point[] = [];
   /** 経路の最後に話しかける・調べる物 */
   #afterPath: MapObject | null = null;
-  #held: Direction | null = null;
+  /** スティック・方向キーで歩く向き（8方向） */
+  #held: Point | null = null;
+  #keys = new Set<Direction>();
   #busy = false;
   #raf = 0;
   #last = 0;
-  #walked = 0;
+  /** 歩いている時間（コマ送り用）・最後に歩いていた時刻 */
+  #walkTime = 0;
+  #lastMoving = 0;
+  #playerLook = '';
   #destroyed = false;
   #mapLayer!: HTMLElement;
   #viewport!: HTMLElement;
@@ -136,6 +166,36 @@ class WorldView {
     cancelAnimationFrame(this.#raf);
     window.removeEventListener('keydown', this.#onKeyDown);
     window.removeEventListener('keyup', this.#onKeyUp);
+  }
+
+  /** 1マスの大きさ（論理px） */
+  get #cell(): number {
+    return this.#map.art ? this.#map.art.cell * ART_SCALE : TILE;
+  }
+
+  /** 人物の絵の高さ（論理px）。街・部屋は設計図どおり 144 単位、仮マップは小さめ */
+  get #figureH(): number {
+    return this.#map.art ? 144 * ART_SCALE : 54;
+  }
+
+  /** マス (x, y) に立つ人の足元（論理px） */
+  #foot(p: Point): Point {
+    const c = this.#cell;
+    return { x: (p.x + 0.5) * c, y: this.#map.art ? (p.y + 0.5) * c : (p.y + 0.9) * c };
+  }
+
+  /** 人物の絵の位置と大きさ（足元を合わせる） */
+  #placeFigure(el: HTMLElement, p: Point): void {
+    const k = this.#figureH / (FRAME_H / 2);
+    const f = this.#foot(p);
+    el.style.transform = `translate(${f.x - (FOOT_X / 2) * k}px, ${f.y - (FOOT_Y / 2) * k}px)`;
+    el.style.zIndex = String(10 + Math.round(f.y));
+  }
+
+  #sizeFigure(el: HTMLElement): void {
+    const k = this.#figureH / (FRAME_H / 2);
+    el.style.width = `${(FRAME_W / 2) * k}px`;
+    el.style.height = `${(FRAME_H / 2) * k}px`;
   }
 
   /** セーブの現在地のマップを表示する */
@@ -189,21 +249,32 @@ class WorldView {
   #build(): void {
     this.#touch = null;
     this.#held = null;
+    this.#keys.clear();
     const map = this.#map;
     const { width, height } = mapSize(map);
     const save = this.#store.save;
     const dungeon = save.activeDungeon ? getDungeon(save.activeDungeon.dungeonId) : undefined;
     const title = map.area === 'dungeon' && dungeon ? t('world.placeDungeon', { dungeon: dungeonName(dungeon), floor: mapName(map) }) : mapName(map);
+    const cell = this.#cell;
 
-    const tiles = h('div', { class: 'world__tiles' });
-    tiles.style.gridTemplateColumns = `repeat(${width}, ${TILE}px)`;
-    for (const row of map.tiles) {
-      for (const ch of row) tiles.append(h('div', { class: `tile tile--${TILE_CLASS[ch] ?? 'wall'}` }));
+    this.#mapLayer = h('div', { class: `world__map world__map--${map.area}${map.art ? ' world__map--art' : ''}` });
+    this.#mapLayer.style.width = `${width * cell}px`;
+    this.#mapLayer.style.height = `${height * cell}px`;
+    if (map.art) {
+      // 正式な絵：背景（街は分割した絵・部屋は部屋の箱）＋家具（人と前後を比べて重ねる）
+      for (const img of map.art.tiles) this.#mapLayer.append(this.#artImage(img.file, img, 'world__bg', 0));
+      for (const img of map.art.sprites) {
+        const z = img.z ? 10 + Math.round(img.z * ART_SCALE) : 1;
+        this.#mapLayer.append(this.#artImage(img.file, img, 'world__furniture', z));
+      }
+    } else {
+      const tiles = h('div', { class: 'world__tiles' });
+      tiles.style.gridTemplateColumns = `repeat(${width}, ${TILE}px)`;
+      for (const row of map.tiles) {
+        for (const ch of row) tiles.append(h('div', { class: `tile tile--${TILE_CLASS[ch] ?? 'wall'}` }));
+      }
+      this.#mapLayer.append(tiles);
     }
-
-    this.#mapLayer = h('div', { class: `world__map world__map--${map.area}` }, tiles);
-    this.#mapLayer.style.width = `${width * TILE}px`;
-    this.#mapLayer.style.height = `${height * TILE}px`;
     this.#addLabels();
     this.#objectEls.clear();
     for (const obj of map.objects) {
@@ -214,7 +285,8 @@ class WorldView {
       }
     }
     this.#player = h('div', { class: 'world__player', attrs: { 'aria-label': t('world.player') } });
-    this.#player.style.backgroundImage = `url("${save.player.gender === 'female' ? femaleSheet : maleSheet}")`;
+    this.#sizeFigure(this.#player);
+    this.#playerLook = '';
     this.#mapLayer.append(this.#player);
 
     this.#viewport = h('div', { class: 'world__viewport' }, this.#mapLayer);
@@ -222,13 +294,18 @@ class WorldView {
     const hud = h(
       'header',
       { class: 'world__hud' },
-      h('div', { class: 'world__place' }, h('span', { class: 'world__place-name', text: title }), h('span', { class: 'world__place-note', text: t('world.placeNote') })),
+      h(
+        'div',
+        { class: 'world__place' },
+        h('span', { class: 'world__place-name', text: title }),
+        map.art ? null : h('span', { class: 'world__place-note', text: t('world.placeNote') }),
+      ),
       h('span', { class: 'world__coins', text: coins(save.coins) }),
       map.area === 'dungeon' ? button(t('world.escape'), () => this.#confirmLeave(), 'btn btn--small') : null,
       button(t('world.menu'), () => this.#menu(), 'btn btn--small'),
     );
 
-    // 移動：画面のどこでも指を置いてすべらせると、その方向へ歩く（指を置いた所に半透明のスティックが出る）。
+    // 移動：画面のどこでも指を置いてすべらせると、その方向へ歩く（指を置いた所に半透明のスティックが出る。8方向）。
     // すべらせずに離したら、これまでどおりタップ（その場所へ歩く・人や家具に話す・調べる）
     this.#stick = h('div', { class: 'world__stick', attrs: { 'aria-hidden': 'true' } }, h('div', { class: 'world__stick-knob' }));
     this.#viewport.append(this.#stick);
@@ -252,32 +329,47 @@ class WorldView {
     this.#render();
   }
 
+  #artImage(src: string, r: { x: number; y: number; w: number; h: number }, cls: string, z: number): HTMLElement {
+    const img = h('img', { class: cls, attrs: { src, alt: '', draggable: 'false', decoding: 'async' } });
+    Object.assign(img.style, {
+      left: `${r.x * ART_SCALE}px`,
+      top: `${r.y * ART_SCALE}px`,
+      width: `${r.w * ART_SCALE}px`,
+      height: `${r.h * ART_SCALE}px`,
+      zIndex: String(z),
+    });
+    return img;
+  }
+
   #addLabels(): void {
     const map = this.#map;
-    for (const [ch, label] of Object.entries(BUILDING_LABEL)) {
-      let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1;
-      map.tiles.forEach((row, y) => [...row].forEach((c, x) => {
-        if (c !== ch) return;
-        minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
-      }));
-      if (maxX < 0) continue;
-      const goal = ch === 'P' && showsPracticeGoal(this.#store.save, map.id);
-      const el = h('div', { class: `world__label world__label--building${goal ? ' is-goal' : ''}`, text: t(label) });
-      Object.assign(el.style, { left: `${minX * TILE}px`, top: `${minY * TILE}px`, width: `${(maxX - minX + 1) * TILE}px`, height: `${(maxY - minY + 1) * TILE}px` });
-      this.#mapLayer.append(el);
+    const cell = this.#cell;
+    const save = this.#store.save;
+    if (map.id === 'town') {
+      // 施設の名前（建物の絵の上端）
+      for (const sign of TOWN_SIGNS) {
+        const goal = sign.label === 'practice' && showsPracticeGoal(save, map.id);
+        const el = h('div', { class: `world__sign${goal ? ' is-goal' : ''}`, text: t(`world.building.${sign.label}` as MessageKey) });
+        Object.assign(el.style, { left: `${sign.x * ART_SCALE}px`, top: `${sign.y * ART_SCALE}px` });
+        this.#mapLayer.append(el);
+      }
+      return;
     }
     for (const obj of map.objects) {
       if (obj.type !== 'interact' && obj.type !== 'warp') continue;
+      // 正式な絵の部屋では、使える家具（調べると画面が開く物）と出口だけに名前を出す
+      if (map.art && obj.type === 'interact' && obj.action === 'message') continue;
       const el = h('div', { class: `world__label world__label--${obj.type}`, text: objectLabel(obj) });
-      Object.assign(el.style, { left: `${obj.x * TILE}px`, top: `${obj.y * TILE}px`, width: `${obj.w * TILE}px`, height: `${obj.h * TILE}px` });
+      Object.assign(el.style, { left: `${obj.x * cell}px`, top: `${obj.y * cell}px`, width: `${obj.w * cell}px`, height: `${obj.h * cell}px` });
       this.#mapLayer.append(el);
     }
   }
 
   #objectElement(obj: MapObject): HTMLElement | null {
+    const cell = this.#cell;
     const place = (el: HTMLElement, x: number, y: number): HTMLElement => {
-      el.style.left = `${x * TILE}px`;
-      el.style.top = `${y * TILE}px`;
+      el.style.left = `${x * cell}px`;
+      el.style.top = `${y * cell}px`;
       return el;
     };
     if (obj.type === 'enemy') {
@@ -291,18 +383,13 @@ class WorldView {
     }
     if (obj.type === 'npc') {
       if (!this.#isVisible(obj)) return null;
-      // 会話の絵・歩行の絵が届くまでの仮の印（人物の絵は作らない）
-      const name = t('story.speaker.neighborGuide');
-      return place(
-        h(
-          'div',
-          { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': name } },
-          h('span', { class: 'world__npc-dot', text: t('story.ui.portraitTemp') }),
-          h('span', { class: 'world__npc-name', text: name }),
-        ),
-        obj.x,
-        obj.y,
-      );
+      // 人物の歩行の絵（待機の向き）。足元のマスに立つ
+      const el = h('div', { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': t('story.speaker.neighborGuide') } });
+      this.#sizeFigure(el);
+      el.style.backgroundImage = `url("${NPC_SHEET[obj.npcId]}")`;
+      this.#faceNpc(el, 'down');
+      this.#placeFigure(el, obj);
+      return el;
     }
     if (obj.type === 'chest') {
       const save = this.#store.save;
@@ -312,6 +399,13 @@ class WorldView {
     return null;
   }
 
+  #faceNpc(el: HTMLElement, dir: Direction): void {
+    const w = parseFloat(el.style.width);
+    const hgt = parseFloat(el.style.height);
+    el.style.backgroundSize = `${w * 4}px ${hgt * 4}px`;
+    el.style.backgroundPosition = `${-NPC_IDLE_COL * w}px ${-DIR_ROW[dir] * hgt}px`;
+  }
+
   /* ---------- ループ ---------- */
 
   #frame(time: number): void {
@@ -319,14 +413,18 @@ class WorldView {
     const dt = Math.min(0.05, (time - this.#last) / 1000);
     this.#last = time;
     if (!this.#busy) this.#step(dt);
-    this.#render();
+    if (this.#move) {
+      this.#walkTime += dt;
+      this.#lastMoving = time;
+    }
+    this.#render(time);
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
   }
 
   #step(dt: number): void {
     if (this.#move) {
-      this.#move.t += dt * WALK_SPEED;
-      this.#walked += dt * WALK_SPEED;
+      const speed = WALK_PX / this.#cell;
+      this.#move.t += (dt * speed) / this.#move.len;
       if (this.#move.t >= 1) {
         this.#tile = this.#move.to;
         this.#pos = { ...this.#tile };
@@ -340,7 +438,9 @@ class WorldView {
     }
     const next = this.#path.shift();
     if (next) {
-      this.#tryStep(this.#dirTo(next));
+      const dx = next.x - this.#tile.x;
+      const dy = next.y - this.#tile.y;
+      if (!this.#tryStep(dx, dy, false)) this.#path = [];
       return;
     }
     if (this.#afterPath) {
@@ -352,7 +452,7 @@ class WorldView {
       }
       return;
     }
-    if (this.#held) this.#tryStep(this.#held);
+    if (this.#held) this.#tryStep(this.#held.x, this.#held.y, true);
   }
 
   #dirTo(p: Point): Direction {
@@ -362,17 +462,24 @@ class WorldView {
     return dy > 0 ? 'down' : 'up';
   }
 
-  #tryStep(dir: Direction): void {
-    this.#dir = dir;
-    const d = DIR_DELTA[dir];
-    const to = { x: this.#tile.x + d.x, y: this.#tile.y + d.y };
-    if (this.#blocked(to.x, to.y)) {
-      const enemy = objectsAt(this.#map, to.x, to.y, this.#isVisible).find((o): o is EnemyObject => o.type === 'enemy');
-      this.#path = [];
-      if (enemy) this.#encounter(enemy);
-      return;
+  /** (dx, dy) へ1歩。斜めで進めないときは、進める方の縦か横へすべる（スティック操作のとき）。進めたら true */
+  #tryStep(dx: number, dy: number, slide: boolean): boolean {
+    this.#dir = facing(dx, dy, this.#dir);
+    const from = this.#tile;
+    const tries: [number, number][] = [[dx, dy]];
+    if (slide && dx !== 0 && dy !== 0) tries.push([dx, 0], [0, dy]);
+    for (const [sx, sy] of tries) {
+      if (canStep(from, sx, sy, this.#blocked)) {
+        this.#dir = facing(sx, sy, this.#dir);
+        this.#move = { from, to: { x: from.x + sx, y: from.y + sy }, len: sx !== 0 && sy !== 0 ? Math.SQRT2 : 1, t: 0 };
+        return true;
+      }
     }
-    this.#move = { from: this.#tile, to, t: 0 };
+    // 進めない：その先が敵なら戦う
+    const enemy = objectsAt(this.#map, from.x + dx, from.y + dy, this.#isVisible).find((o): o is EnemyObject => o.type === 'enemy');
+    this.#path = [];
+    if (enemy) this.#encounter(enemy);
+    return false;
   }
 
   #arrive(): void {
@@ -391,7 +498,7 @@ class WorldView {
         this.load();
       } else if (target.kind === 'dungeonGate') {
         // 入口の1マス手前（北）に戻してから選択画面へ。戻ってきたとき入口の上に立ったままにならないように
-        const back: Location = { mapId: this.#map.id, x: this.#tile.x, y: this.#tile.y - 1, dir: 'down' };
+        const back: Location = { mapId: this.#map.id, x: this.#tile.x, y: this.#tile.y - 1, dir: 'up' };
         this.#store.update((s) => ({ ...s, location: back }));
         this.#busy = true;
         this.#ctx.navigate('dungeonSelect');
@@ -401,18 +508,42 @@ class WorldView {
     }
   }
 
-  #render(): void {
+  #render(time = performance.now()): void {
     const p = this.#pos;
-    const frame = this.#move ? Math.floor(this.#walked * 2) % 4 : 0;
-    this.#player.style.transform = `translate(${p.x * TILE}px, ${p.y * TILE + TILE - SPRITE_H}px)`;
-    this.#player.style.backgroundPosition = `${-frame * SPRITE_W}px ${-DIR_ROW[this.#dir] * SPRITE_H}px`;
+    // 歩いている間（と、歩き続けている途中のマスの切り替わり）は歩行シート、止まったら待機の絵
+    const walking = this.#move !== null || time - this.#lastMoving < 90;
+    const art = PLAYER_ART[this.#store.save.player.gender === 'female' ? 'female' : 'male'];
+    const w = parseFloat(this.#player.style.width);
+    const hgt = parseFloat(this.#player.style.height);
+    const look = walking ? `walk:${this.#dir}:${Math.floor(this.#walkTime * WALK_FPS) % 4}` : `idle:${this.#dir}`;
+    if (look !== this.#playerLook) {
+      if (walking) {
+        const frame = Math.floor(this.#walkTime * WALK_FPS) % 4;
+        if (!this.#playerLook.startsWith('walk')) {
+          this.#player.style.backgroundImage = `url("${art.sheet}")`;
+          this.#player.style.backgroundSize = `${w * 4}px ${hgt * 4}px`;
+        }
+        this.#player.style.backgroundPosition = `${-frame * w}px ${-DIR_ROW[this.#dir] * hgt}px`;
+      } else {
+        this.#walkTime = 0;
+        this.#player.style.backgroundImage = `url("${art.idle[this.#dir]}")`;
+        this.#player.style.backgroundSize = '100% 100%';
+        this.#player.style.backgroundPosition = '0 0';
+      }
+      this.#playerLook = look;
+    }
+    this.#placeFigure(this.#player, p);
     const { width, height } = mapSize(this.#map);
+    const cell = this.#cell;
     const vw = this.#viewport.clientWidth || 390;
     const vh = this.#viewport.clientHeight || 600;
-    const mw = width * TILE;
-    const mh = height * TILE;
-    const cx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(p.x * TILE + TILE / 2 - vw / 2, 0), mw - vw);
-    const cy = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(p.y * TILE + TILE / 2 - vh / 2, 0), mh - vh);
+    const mw = width * cell;
+    const mh = height * cell;
+    const f = this.#foot(p);
+    // カメラは人物の体の真ん中を追う
+    const fy = f.y - this.#figureH / 2;
+    const cx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(f.x - vw / 2, 0), mw - vw);
+    const cy = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fy - vh / 2, 0), mh - vh);
     this.#mapLayer.style.transform = `translate(${Math.round(cx)}px, ${Math.round(cy)}px)`;
     this.#root.dataset.px = String(this.#tile.x);
     this.#root.dataset.py = String(this.#tile.y);
@@ -457,7 +588,14 @@ class WorldView {
     const k = Math.min(1, STICK_RADIUS / Math.max(dist, 1));
     const knob = this.#stick.firstElementChild as HTMLElement | null;
     if (knob) knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
-    this.#held = this.#busy || dist < STICK_DEAD ? null : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+    if (this.#busy || dist < STICK_DEAD) {
+      this.#held = null;
+      return;
+    }
+    // 8方向：45度ずつ
+    const sector = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+    const a = (sector * Math.PI) / 4;
+    this.#held = { x: Math.round(Math.cos(a)), y: Math.round(Math.sin(a)) };
   }
 
   #pointerUp(e: PointerEvent, tap: boolean): void {
@@ -484,8 +622,16 @@ class WorldView {
       e.preventDefault();
       if (down) {
         this.#path = [];
-        this.#held = dir;
-      } else if (this.#held === dir) this.#held = null;
+        this.#keys.add(dir);
+      } else this.#keys.delete(dir);
+      // 押している方向キーを合わせて8方向に
+      let x = 0;
+      let y = 0;
+      for (const k of this.#keys) {
+        x += DIR_DELTA[k].x;
+        y += DIR_DELTA[k].y;
+      }
+      this.#held = x === 0 && y === 0 ? null : { x: Math.sign(x), y: Math.sign(y) };
     } else if (down && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       this.#examine();
@@ -495,12 +641,22 @@ class WorldView {
   #tap(e: MouseEvent): void {
     if (this.#busy) return;
     const rect = this.#mapLayer.getBoundingClientRect();
+    const cell = this.#cell;
     const { width } = mapSize(this.#map);
-    const scale = rect.width / (width * TILE);
-    const x = Math.floor((e.clientX - rect.left) / scale / TILE);
-    const y = Math.floor((e.clientY - rect.top) / scale / TILE);
+    const scale = rect.width / (width * cell);
+    const lx = (e.clientX - rect.left) / scale;
+    const ly = (e.clientY - rect.top) / scale;
+    const x = Math.floor(lx / cell);
+    const y = Math.floor(ly / cell);
+    // 人の絵（足元のマスより大きい）をタップしたら、その人に話しかける
+    const person = this.#map.objects.find((o): o is NpcObject => {
+      if (o.type !== 'npc' || !this.#isVisible(o)) return false;
+      const f = this.#foot(o);
+      const hw = this.#figureH * 0.3;
+      return lx >= f.x - hw && lx <= f.x + hw && ly >= f.y - this.#figureH && ly <= f.y + cell / 2;
+    });
     // 話しかけ・調べる対象（出入口は歩いて踏むので対象外）
-    const target = objectsAt(this.#map, x, y, this.#isVisible).find((o) => o.type !== 'warp');
+    const target = person ?? objectsAt(this.#map, x, y, this.#isVisible).find((o) => o.type !== 'warp');
     const from = this.#move ? this.#move.to : this.#tile;
     if (target) {
       const here = adjacentCellOf(target, from);
@@ -529,8 +685,10 @@ class WorldView {
     const d = DIR_DELTA[this.#dir];
     const front = { x: this.#tile.x + d.x, y: this.#tile.y + d.y };
     if (this.#interactAt(front.x, front.y)) return;
+    // 欠片：正式な絵の街ではマスが細かいので、まわり2マスまで
+    const range = this.#map.art ? 2 : 0;
     for (const p of [this.#tile, front]) {
-      const fragment = fragmentAt(this.#map.id, p.x, p.y);
+      const fragment = fragmentAt(this.#map.id, p.x, p.y, range);
       if (fragment) {
         const r = collectFragment(this.#store.save, fragment.id);
         if (r.collected) {
@@ -570,6 +728,13 @@ class WorldView {
   /* ---------- 会話・練習試合（序盤イベント。進み具合は src/game/story/intro.ts） ---------- */
 
   #talk(npc: NpcObject): void {
+    // 話しかけられた人は主人公の方を向く
+    const el = this.#objectEls.get(npc.id);
+    if (el) {
+      const dx = this.#tile.x - npc.x;
+      const dy = this.#tile.y - npc.y;
+      this.#faceNpc(el, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up');
+    }
     if (npc.npcId === 'neighbor_guide') this.#playScene(sceneOnTalk(this.#store.save));
   }
 

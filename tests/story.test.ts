@@ -62,12 +62,12 @@ describe('序盤イベント：セーブ', () => {
     if (loaded) expect(sceneOnEnter(loaded, 'town')).toBeNull();
   });
 
-  it('旧セーブの位置が、作り直した仮の街で建物の中になっていたら、街の出現位置に戻す（閉じ込められない）', () => {
+  it('旧セーブの位置が、作り直した街で建物の中になっていたら、街の出現位置に戻す（閉じ込められない）', () => {
     const inside = { ...withIntro('deferred'), location: { mapId: 'town', x: 3, y: 2, dir: 'down' as const } };
     expect(isBlocked(TOWN, 3, 2, () => true)).toBe(true);
     const fixed = sanitizeLocation(inside);
     expect(fixed.location).toMatchObject({ mapId: 'town', x: TOWN.spawn.x, y: TOWN.spawn.y });
-    const ok = { ...inside, location: { mapId: 'town', x: 10, y: 15, dir: 'down' as const } };
+    const ok = { ...inside, location: { mapId: 'town', x: TOWN.spawn.x, y: TOWN.spawn.y, dir: 'down' as const } };
     expect(sanitizeLocation(ok)).toBe(ok);
   });
 

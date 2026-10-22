@@ -54,15 +54,29 @@ export function directionBetween(from: Point, to: Point): Direction {
   return dy > 0 ? 'down' : 'up';
 }
 
+/** 8方向の1歩（斜めは、角をすり抜けないように縦・横の両方が通れるときだけ） */
+export const STEPS: readonly Point[] = [
+  DIR_DELTA.up, DIR_DELTA.down, DIR_DELTA.left, DIR_DELTA.right,
+  { x: -1, y: -1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: 1, y: 1 },
+];
+
+/** from から (dx, dy) へ1歩進めるか（斜めは角のすり抜けをしない） */
+export function canStep(from: Point, dx: number, dy: number, blocked: (x: number, y: number) => boolean): boolean {
+  if (blocked(from.x + dx, from.y + dy)) return false;
+  if (dx !== 0 && dy !== 0) return !blocked(from.x + dx, from.y) && !blocked(from.x, from.y + dy);
+  return true;
+}
+
 /**
- * 4方向の幅優先探索で、isGoal を満たす最も近いマスまでの経路を探す（start を含まない）。見つからなければ null。
+ * 8方向の幅優先探索で、isGoal を満たす最も近いマスまでの経路を探す（start を含まない）。見つからなければ null。
+ * 斜めは角をすり抜けない。同じ歩数なら縦横を先に選ぶ。
  */
 export function findPathWhere(
   map: MapDefinition,
   start: Point,
   isGoal: (x: number, y: number) => boolean,
   blocked: (x: number, y: number) => boolean,
-  maxNodes = 4000,
+  maxNodes = 40000,
 ): Point[] | null {
   const { width, height } = mapSize(map);
   if (isGoal(start.x, start.y)) return [];
@@ -73,12 +87,12 @@ export function findPathWhere(
   let head = 0;
   while (head < queue.length && head < maxNodes) {
     const cur = queue[head++] as Point;
-    for (const d of [DIR_DELTA.up, DIR_DELTA.down, DIR_DELTA.left, DIR_DELTA.right]) {
+    for (const d of STEPS) {
       const nx = cur.x + d.x;
       const ny = cur.y + d.y;
       if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
       const k = key(nx, ny);
-      if (prev.has(k) || blocked(nx, ny)) continue;
+      if (prev.has(k) || !canStep(cur, d.x, d.y, blocked)) continue;
       prev.set(k, key(cur.x, cur.y));
       if (isGoal(nx, ny)) {
         const path: Point[] = [];
@@ -104,7 +118,7 @@ export function findPath(
   start: Point,
   goal: Point,
   blocked: (x: number, y: number) => boolean,
-  maxNodes = 4000,
+  maxNodes = 40000,
 ): Point[] | null {
   const { width, height } = mapSize(map);
   if (goal.x < 0 || goal.y < 0 || goal.x >= width || goal.y >= height) return null;

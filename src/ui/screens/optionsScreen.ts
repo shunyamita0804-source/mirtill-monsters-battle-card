@@ -162,6 +162,9 @@ export const optionsScreen: ScreenDefinition = {
           h('h2', { class: 'settings__heading', text: t('options.help') }),
           h('ol', { class: 'options__help' }, ...t('options.helpSteps').split('\n').map((line) => h('li', { text: line.replace(/^\d+\.\s*/, '') }))),
           h('p', { class: 'settings__note', text: t('options.helpNote') }),
+
+          h('h2', { class: 'settings__heading', text: t('options.credits') }),
+          h('p', { class: 'settings__note', text: t('options.creditsText') }),
         ),
       );
       const body = element.querySelector('.options__body');

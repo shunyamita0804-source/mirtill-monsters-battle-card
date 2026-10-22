@@ -1,6 +1,12 @@
 import windowUrl from '@assets/images/ui/talk/dialogue_window_blank.png';
 import nameUrl from '@assets/images/ui/talk/name_label_blank.png';
 import choiceUrl from '@assets/images/ui/talk/button_blank.png';
+import guideNormal from '@assets/images/characters/neighbor_guide_talk_normal.webp';
+import guideSmile from '@assets/images/characters/neighbor_guide_talk_smile.webp';
+import guideExplain from '@assets/images/characters/neighbor_guide_talk_explain.webp';
+import guideSurprised from '@assets/images/characters/neighbor_guide_talk_surprised.webp';
+import guideWorried from '@assets/images/characters/neighbor_guide_talk_worried.webp';
+import guideHappy from '@assets/images/characters/neighbor_guide_talk_happy.webp';
 import { SCENES, type Expression, type SceneEffect, type SceneId, type SceneStep, type Speaker } from '../../data/storyScenes.ts';
 import { t } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
@@ -12,13 +18,37 @@ import { button, h } from '../dom.ts';
  *
  * - 画面のどこをタップしても次へ（文字を出している途中なら、まず全部出す）
  * - 選択肢はボタン（高さ 46px）。スキップは右上
- * - 会話の絵（バストアップ・表情6種）は制作中。届くまでは「仮」の札を出す。届いたら PORTRAITS に足すだけで差し替わる
+ * - 会話の絵（胸から上・表情6種）。6枚とも同じ位置・同じ大きさで描かれているので、表情だけ差し替えても人物は動かない
+ *   （原本 1122×1402 を半分に縮小して WebP にしたもの。描き換えなし）。会話を始めるときに6枚とも先に読み込む
+ * - 絵が無い表情は「仮」の札を出す（いまは全部そろっている）
  */
 
-/** 会話の絵（人物 → 表情 → 画像の URL）。正式な絵が届いたらここに足す */
+/** 会話の絵（人物 → 表情 → 画像の URL）。困り顔（troubled）の絵は 05_worried */
 const PORTRAITS: Readonly<Record<Exclude<Speaker, 'system'>, Partial<Record<Expression, string>>>> = {
-  neighbor_guide: {},
+  neighbor_guide: {
+    normal: guideNormal,
+    smile: guideSmile,
+    explain: guideExplain,
+    surprised: guideSurprised,
+    troubled: guideWorried,
+    happy: guideHappy,
+  },
 };
+
+/** 会話の絵を先に読み込む（表情を切り替えた瞬間に白く抜けないように） */
+const preloaded = new Set<string>();
+function preloadPortraits(): void {
+  if (typeof Image === 'undefined') return;
+  for (const set of Object.values(PORTRAITS)) {
+    for (const url of Object.values(set)) {
+      if (!url || preloaded.has(url)) continue;
+      preloaded.add(url);
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
+    }
+  }
+}
 
 const SPEAKER_NAME: Readonly<Record<Exclude<Speaker, 'system'>, MessageKey>> = {
   neighbor_guide: 'story.speaker.neighborGuide',
@@ -45,7 +75,9 @@ export function playScene(parent: HTMLElement, start: SceneId, options: Dialogue
   let fullText = '';
   let closed = false;
 
+  preloadPortraits();
   const portrait = h('div', { class: 'talk__portrait' });
+  const portraitImg = h('img', { class: 'talk__portrait-img', attrs: { alt: '', draggable: 'false' } }) as HTMLImageElement;
   const name = h('div', { class: 'talk__name' });
   const text = h('p', { class: 'talk__text', attrs: { 'aria-live': 'polite' } });
   const next = h('span', { class: 'talk__next', text: '▼', attrs: { 'aria-hidden': 'true' } });
@@ -92,8 +124,10 @@ export function playScene(parent: HTMLElement, start: SceneId, options: Dialogue
     portrait.hidden = false;
     const url = expression ? PORTRAITS[speaker][expression] : undefined;
     portrait.dataset.expression = expression ?? 'normal';
+    portrait.classList.toggle('is-temp', !url);
     if (url) {
-      portrait.replaceChildren(h('img', { class: 'talk__portrait-img', attrs: { src: url, alt: '', draggable: 'false' } }));
+      if (portraitImg.getAttribute('src') !== url) portraitImg.src = url;
+      if (portraitImg.parentElement !== portrait) portrait.replaceChildren(portraitImg);
     } else {
       // 仮：会話の絵が届くまでの札（人物の絵は勝手に作らない）
       portrait.replaceChildren(

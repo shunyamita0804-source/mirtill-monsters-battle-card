@@ -83,6 +83,23 @@ export interface LogEntry {
   readonly text: string;
 }
 
+/**
+ * 効果音を鳴らすきっかけ（ルール上の結果が確定した瞬間に1件ずつ記録する。画面は seq で「まだ鳴らしていない分」だけ鳴らす）
+ * - manaSpend：マナを支払った（1回の支払いで1件。何枚でも1件）
+ * - evade：回避が成功してダメージ0が確定した
+ * - hit：攻撃が命中してダメージを与えた（strong＝強攻撃。いまは仮に「必要マナ3以上の技」）
+ * 防御でダメージ0になったときは記録しない（防御の音は未承認のため無音）
+ */
+export type BattleFxKind = 'manaSpend' | 'evade' | 'hitNormal' | 'hitStrong';
+export interface BattleFx {
+  readonly seq: number;
+  readonly kind: BattleFxKind;
+  readonly side: Side;
+}
+
+/** 強攻撃（命中の音を「強」にする）とみなす必要マナ。仮の基準（ユーザー指定 2026-10-22。正式な技が決まったら見直す） */
+export const STRONG_ATTACK_COST = 3;
+
 export interface BattleState {
   readonly seed: number;
   /** 手番の通し番号（1から） */
@@ -101,6 +118,9 @@ export interface BattleState {
   readonly manaConvertLimit: number | null;
   readonly log: readonly LogEntry[];
   readonly nextUid: number;
+  /** 効果音のきっかけ（新しい順に最大20件だけ残す） */
+  readonly fx: readonly BattleFx[];
+  readonly fxSeq: number;
 }
 
 export type BattleAction =
@@ -193,6 +213,8 @@ export function createBattle(
       { turn: 1, text: t('battle.log.firstTurnMana', { n: BATTLE_RULES.firstTurnManaLimit }) },
     ],
     nextUid: uid,
+    fx: [],
+    fxSeq: 0,
   };
 }
 
@@ -319,6 +341,11 @@ function addLog(state: BattleState, text: string): BattleState {
   return { ...state, log: [...state.log, { turn: state.turn, text }] };
 }
 
+function addFx(state: BattleState, kind: BattleFxKind, side: Side): BattleState {
+  const seq = (state.fxSeq ?? 0) + 1;
+  return { ...state, fxSeq: seq, fx: [...(state.fx ?? []), { seq, kind, side }].slice(-20) };
+}
+
 function updateSide(state: BattleState, side: Side, patch: Partial<BattleSide>): BattleState {
   return { ...state, sides: { ...state.sides, [side]: { ...state.sides[side], ...patch } } };
 }
@@ -347,7 +374,8 @@ function payMana(state: BattleState, side: Side, cost: number): BattleState {
   const oldest = BATTLE_RULES.manaPayOrder === 'oldest';
   const paid = oldest ? s.manaPile.slice(0, n) : s.manaPile.slice(s.manaPile.length - n);
   const manaPile = oldest ? s.manaPile.slice(n) : s.manaPile.slice(0, s.manaPile.length - n);
-  return updateSide(state, side, { manaPile, discard: [...s.discard, ...paid] });
+  const next = updateSide(state, side, { manaPile, discard: [...s.discard, ...paid] });
+  return n > 0 ? addFx(next, 'manaSpend', side) : next;
 }
 
 const nameOf = (cardId: string): string => cardName(cardId);
@@ -397,7 +425,18 @@ function resolvePending(state: BattleState): BattleState {
   const pending = state.pending;
   if (!pending) return state;
   const next: BattleState = { ...state, phase: 'main', pending: null };
-  return applyDamage(next, pending.targetUid, pendingDamage(pending));
+  const damage = pendingDamage(pending);
+  const target = findMonster(state, pending.targetUid);
+  const evaded = pending.responses.some((id) => getSkill(id).effect.type === 'evade');
+  let withFx = next;
+  if (damage > 0) withFx = addFx(next, hitKind(pending.cardId), pending.attacker);
+  else if (evaded) withFx = addFx(next, 'evade', target?.side ?? otherSide(pending.attacker));
+  return applyDamage(withFx, pending.targetUid, damage);
+}
+
+/** 命中の音の種類（強攻撃は仮に必要マナ STRONG_ATTACK_COST 以上の技） */
+function hitKind(skillId: string): BattleFxKind {
+  return getSkill(skillId).cost >= STRONG_ATTACK_COST ? 'hitStrong' : 'hitNormal';
 }
 
 /**
@@ -494,7 +533,9 @@ function useCard(
       if (!target) return state;
       const power = attackPower(state, skill);
       // 防御も回避もできない攻撃は、守備を待たずにダメージ
-      if (skill.effect.unblockable && skill.effect.undodgeable) return applyDamage(next, target.uid, power);
+      if (skill.effect.unblockable && skill.effect.undodgeable) {
+        return applyDamage(power > 0 ? addFx(next, hitKind(skill.id), side) : next, target.uid, power);
+      }
       return {
         ...next,
         phase: 'defense',
