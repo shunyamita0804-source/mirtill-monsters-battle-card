@@ -181,19 +181,94 @@
   text-overflow: ellipsis;
 }
 
-.battle__footer {
-  flex: none;
+/* コマンドの帯：必要なときだけ画面中央に帯を敷き、コマンドを縦に並べる */
+.battle__command-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  z-index: 15;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  height: 56px;
-  padding: 0 10px;
-  background: var(--color-panel);
+  justify-content: center;
+  padding: 10px 0;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgb(6 10 30 / 0) 0%, rgb(6 10 30 / 0.78) 18%, rgb(8 12 36 / 0.82) 50%, rgb(6 10 30 / 0.78) 82%, rgb(6 10 30 / 0) 100%);
+  pointer-events: none;
 }
 
-.battle__footer .btn--primary {
-  min-width: 140px;
+/* 帯の上下の金の線 */
+.battle__command-band::before,
+.battle__command-band::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(201 162 74 / 0.7) 25%, rgb(201 162 74 / 0.7) 75%, transparent);
+}
+
+.battle__command-band::before {
+  top: 0;
+}
+
+.battle__command-band::after {
+  bottom: 0;
+}
+
+/* 対象を選んでいる間は、モンスターを隠さないよう低い位置に出す */
+.battle__command-band.is-low {
+  top: auto;
+  bottom: 150px;
+  transform: none;
+}
+
+.battle__command-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.battle__command-list .command-btn {
+  width: 150px;
+  height: 51px;
+}
+
+.battle__command-band.is-enter {
+  animation: band-open 200ms ease-out both;
+}
+
+.battle__command-band.is-enter .command-btn {
+  animation: command-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.battle__command-band.is-enter .command-btn:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.battle__command-band.is-enter .command-btn:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+@keyframes band-open {
+  from {
+    clip-path: inset(50% 0 50% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes command-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* 拡大表示 */
@@ -315,8 +390,12 @@
 }
 
 .battle-turn__text {
+  min-width: 0;
+  overflow: hidden;
   font-size: 14px;
   font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .battle-turn--player .battle-turn__text {
@@ -399,22 +478,6 @@
   font-weight: 900;
   color: #bfe0ff;
   line-height: 1;
-}
-
-.battle-info__pips {
-  display: flex;
-  gap: 1px;
-}
-
-.battle-info__pip {
-  width: 8px;
-  height: 10px;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-  background: rgb(127 178 255 / 0.25);
-}
-
-.battle-info__pip.is-on {
-  background: linear-gradient(180deg, #bfe0ff, #3d8bff);
 }
 
 .battle-info__count {
@@ -535,10 +598,7 @@
   font-size: 12px;
 }
 
-.battle__footer .btn {
-  flex: 1;
-  padding: 0 8px;
-}
+
 
 /* 手札を1枚ずつ配る */
 .battle__hand-card.is-dealt {
@@ -653,4 +713,274 @@
 
 .battle-order__card:not(.is-open):active {
   transform: translateY(2px);
+}
+
+/* ---------- 演出（技アニメーションは使わない。ダメージは対象モンスターのエフェクトと効果音だけ） ---------- */
+
+/* ダメージ：対象モンスターに衝撃の輪 */
+.battle__burst {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 84px;
+  height: 84px;
+  margin: -42px 0 0 -42px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.95) 0 18%, rgb(255 120 90 / 0.85) 30%, rgb(255 60 60 / 0) 62%);
+  animation: burst 0.42s ease-out forwards;
+}
+
+@keyframes burst {
+  0% { opacity: 1; transform: scale(0.2); }
+  60% { opacity: 0.9; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.35); }
+}
+
+/* 守備待ちの攻撃の対象：いまのダメージ予定 */
+.battle__incoming {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 2px solid #fff;
+  border-radius: 14px;
+  background: #e8344e;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 24px;
+  text-align: center;
+  box-shadow: 0 0 10px rgb(232 52 78 / 0.8);
+  animation: target-pulse 0.9s ease-in-out infinite;
+}
+
+/* マナ：増えたとき情報箱が光り、+N が浮かぶ */
+.battle-info__mana {
+  position: relative;
+}
+
+.battle-info__mana.is-mana-up .battle-info__mana-value {
+  animation: mana-pop 0.5s ease-out;
+}
+
+@keyframes mana-pop {
+  0% { transform: scale(1); color: #fff; text-shadow: 0 0 0 #7fb2ff; }
+  40% { transform: scale(1.5); color: #fff; text-shadow: 0 0 14px #7fb2ff; }
+  100% { transform: scale(1); }
+}
+
+.battle__mana-float {
+  position: absolute;
+  left: 52px;
+  top: -4px;
+  color: #9fd0ff;
+  font-size: 16px;
+  font-weight: 900;
+  pointer-events: none;
+  text-shadow: 0 1px 2px #000;
+  animation: float-up 0.9s ease-out forwards;
+}
+
+.battle__mana-spark {
+  position: absolute;
+  left: 40px;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  pointer-events: none;
+  background:
+    conic-gradient(from 0deg, transparent 0 8%, #bfe0ff 9% 11%, transparent 12% 33%, #bfe0ff 34% 36%, transparent 37% 58%, #bfe0ff 59% 61%, transparent 62% 83%, #bfe0ff 84% 86%, transparent 87%);
+  border-radius: 50%;
+  mask-image: radial-gradient(circle, transparent 0 20%, #000 21% 70%, transparent 71%);
+  animation: spark 0.55s ease-out forwards;
+}
+
+@keyframes spark {
+  0% { opacity: 1; transform: scale(0.3) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.4) rotate(45deg); }
+}
+
+/* マナにするカードが情報箱へ飛ぶ */
+.battle__mana-fly {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  animation: mana-fly 380ms cubic-bezier(0.4, 0, 0.8, 0.6) forwards;
+}
+
+@keyframes mana-fly {
+  0% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+  100% { opacity: 0.2; transform: translate(var(--dx), var(--dy)) scale(0.25) rotate(-20deg); }
+}
+
+.battle__hand-card.is-leaving {
+  visibility: hidden;
+}
+
+/* マナ化で選んだ手札 */
+.battle__hand-card {
+  position: relative;
+}
+
+.battle__hand-card.is-picked {
+  border-color: #7fb2ff;
+  transform: translateY(-8px);
+  box-shadow: 0 0 12px rgb(127 178 255 / 0.8);
+}
+
+.battle__hand-mana {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 8px;
+  border-radius: 9px;
+  background: #3d8bff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* 場面の表示（あなたのターン・マナ化など） */
+.battle__banner {
+  position: absolute;
+  top: 42%;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(10 8 24 / 0.88) 15% 85%, transparent);
+  animation: banner 1.1s ease-in-out forwards;
+}
+
+.battle__banner-main {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.battle__banner--player .battle__banner-main {
+  color: var(--color-player);
+}
+
+.battle__banner--opponent .battle__banner-main {
+  color: var(--color-opponent);
+}
+
+.battle__banner-sub {
+  font-size: 12px;
+  color: var(--color-sub);
+}
+
+@keyframes banner {
+  0% { opacity: 0; transform: translateX(60px); }
+  18% { opacity: 1; transform: translateX(0); }
+  80% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-60px); }
+}
+
+/* 場の全体カード（上の帯の右） */
+.battle-turn__field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 190px;
+  height: 24px;
+  padding: 0 8px 0 2px;
+  border: 1px solid #c9a24a;
+  border-radius: 12px;
+  background: rgb(176 138 62 / 0.25);
+  color: var(--color-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.battle-turn__field-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c9a24a;
+  color: #2a1a05;
+  font-weight: 900;
+}
+
+.battle-turn__field-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 上の帯の右端：場の全体カードと、自分の攻撃中だけの小さな「攻撃終了」 */
+.battle-turn__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.battle-turn__right {
+  flex: none;
+}
+
+.battle-turn__right .battle-turn__field {
+  min-width: 0;
+  max-width: 104px;
+}
+
+/* 攻撃終了が出ているときは「あなたが先攻」の表示を省く（場所をあける） */
+.battle-turn__right:has(.battle-turn__end) .battle-turn__first {
+  display: none;
+}
+
+/* 見た目は 84×28 の小さなワインレッドのボタン。押せる範囲は高さ40px（帯の高さは変えない） */
+.battle-turn__end {
+  position: relative;
+  flex: none;
+  width: 84px;
+  height: 40px;
+  margin: -6px -8px -6px 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.battle-turn__end-img {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 84px;
+  height: 28px;
+  pointer-events: none;
+  filter: saturate(0.78) brightness(0.92) drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
+}
+
+.battle-turn__end-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #fff;
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.8);
+}
+
+.battle-turn__end:active .battle-turn__end-img {
+  filter: brightness(1.12);
 }

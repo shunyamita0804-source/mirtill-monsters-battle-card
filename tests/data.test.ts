@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardCatalog, HIDDEN_MONSTER_ID, MONSTERS, SKILLS, skillsOf } from '../src/data/cards.ts';
+import { cardCatalog, HIDDEN_MONSTER_ID, MONSTERS, SKILLS, skillsOf, SUPPORTS } from '../src/data/cards.ts';
 import { DUNGEONS, ENCOUNTERS } from '../src/data/dungeons.ts';
 import { getPack, NEVER_IN_PACKS, PACKS } from '../src/data/economy.ts';
 import { FRAGMENT_TOTAL, FRAGMENTS } from '../src/data/fragments.ts';
@@ -23,15 +23,28 @@ describe('カードデータ（仮）', () => {
   });
 
   it('仮データであることが明示されている', () => {
-    for (const c of [...MONSTERS, ...SKILLS]) expect(c.isPlaceholder).toBe(true);
+    for (const c of [...MONSTERS, ...SKILLS, ...SUPPORTS]) expect(c.isPlaceholder).toBe(true);
   });
 
-  it('各モンスターに防御（ちから・かしこさ）を含む適合技がある', () => {
+  it('サポートカードは名前が「仮」で始まり、パックで手に入る', () => {
+    expect(SUPPORTS.length).toBeGreaterThan(0);
+    for (const c of SUPPORTS) {
+      expect(c.kind).toBe('support');
+      expect(c.name.startsWith('仮')).toBe(true);
+      expect(PACKS.some((p) => p.cardIds.includes(c.id))).toBe(true);
+    }
+    // 旧ブリーダーにあたるもの（すぐ効果）は1ターン1回、旧全体カードにあたるもの（場に残る）は回数制限なし
+    for (const c of SUPPORTS.filter((x) => x.duration === 'instant')) expect(c.limitPerTurn).toBe(1);
+    for (const c of SUPPORTS.filter((x) => x.duration === 'field')) expect(c.effect.type).toBe('field');
+  });
+
+  it('各モンスターに守備（ちから・かしこさの防御か回避）を含む適合技がある', () => {
     for (const m of MONSTERS.filter((x) => !x.hidden)) {
       const skills = skillsOf(m.id);
       expect(skills.length).toBe(6);
-      const defenseTypes = new Set(skills.filter((s) => s.effect.type === 'defense').map((s) => s.stat.type));
-      expect(defenseTypes).toEqual(new Set(['force', 'wisdom']));
+      const guards = skills.filter((s) => s.effect.type === 'defense' || s.effect.type === 'evade');
+      expect(new Set(guards.map((s) => s.stat.type))).toEqual(new Set(['force', 'wisdom']));
+      expect(guards.some((s) => s.effect.type === 'evade')).toBe(true);
     }
   });
 

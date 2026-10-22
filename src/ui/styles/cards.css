@@ -341,3 +341,22 @@
   font-size: 11px;
   color: var(--color-sub);
 }
+
+/* サポートカード：能力の代わりに区分（サポート／全体）を出す */
+.skill-card__kind {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3cqw;
+  background: linear-gradient(180deg, #f3dc9a, #c99b3c);
+  color: #3b2410;
+  font-size: 7cqw;
+  font-weight: 900;
+}
+
+.skill-card__art--support {
+  background:
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.18) 0 4cqw, transparent 4cqw 8cqw),
+    linear-gradient(160deg, #f2e2b0, #c8a660);
+}

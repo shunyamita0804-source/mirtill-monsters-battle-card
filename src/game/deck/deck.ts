@@ -1,4 +1,4 @@
-import { cardCatalog, monsterId, skillId, skillsOf } from '../../data/cards.ts';
+import { cardCatalog, monsterId, skillId, skillsOf, supportId, SUPPORTS } from '../../data/cards.ts';
 import { DECK_RULES } from '../../data/rules.ts';
 
 export interface Deck {
@@ -57,7 +57,7 @@ export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
   if (deck.skills.length !== DECK_RULES.skillCount) {
     issues.push({
       code: 'skillCount',
-      message: `技カードは${DECK_RULES.skillCount}枚必要です（現在${deck.skills.length}枚）`,
+      message: `山札（技カード＋サポート）は${DECK_RULES.skillCount}枚必要です（現在${deck.skills.length}枚）`,
     });
   }
   const skillCounts = countCards(deck.skills);
@@ -67,8 +67,8 @@ export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
       issues.push({ code: 'unknownCard', message: `存在しないカードです: ${id}` });
       continue;
     }
-    if (card.kind !== 'skill') {
-      issues.push({ code: 'notSkill', message: `${card.name} は技カードではありません` });
+    if (card.kind === 'monster') {
+      issues.push({ code: 'notSkill', message: `${card.name} は山札に入れられません（技カード・サポートのみ）` });
       continue;
     }
     if (count > DECK_RULES.maxCopies) {
@@ -77,7 +77,8 @@ export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
         message: `${card.name} は${DECK_RULES.maxCopies}枚までです（現在${count}枚）`,
       });
     }
-    if (!deck.monsters.includes(card.monsterId)) {
+    // サポートはどのモンスターのデッキにも入れられる。技はデッキのモンスターの適合技だけ
+    if (card.kind === 'skill' && !deck.monsters.includes(card.monsterId)) {
       issues.push({ code: 'notCompatible', message: `${card.name} はデッキのモンスターの技ではありません` });
     }
   }
@@ -98,9 +99,14 @@ export function isDeckValid(deck: Deck, collection?: CardCounts): boolean {
   return validateDeck(deck, collection).length === 0;
 }
 
-/** 新しく始めたときのデッキ（仮）：仮モンスターA〜C と、それぞれの技1〜4・6 を4枚ずつ */
+/**
+ * 新しく始めたときのデッキ（仮）：仮モンスターA〜C と、それぞれの技1〜6 を3枚ずつ（54枚）＋仮サポート6枚＝60枚。
+ * 同じカードは3枚までなので、技だけでは60枚に届かない分をサポートで埋める。
+ */
 export const STARTER_MONSTER_KEYS = ['a', 'b', 'c'] as const;
-const STARTER_SKILL_NUMBERS = [1, 2, 3, 4, 6] as const;
+const STARTER_SKILL_NUMBERS = [1, 2, 3, 4, 5, 6] as const;
+const STARTER_SUPPORTS = [1, 2, 4] as const;
+const STARTER_SUPPORT_COPIES = 2;
 
 export function createStarterDeck(): Deck {
   const skills: string[] = [];
@@ -108,6 +114,9 @@ export function createStarterDeck(): Deck {
     for (const no of STARTER_SKILL_NUMBERS) {
       for (let i = 0; i < DECK_RULES.maxCopies; i++) skills.push(skillId(key, no));
     }
+  }
+  for (const no of STARTER_SUPPORTS) {
+    for (let i = 0; i < STARTER_SUPPORT_COPIES; i++) skills.push(supportId(no));
   }
   return { monsters: STARTER_MONSTER_KEYS.map(monsterId), skills };
 }
@@ -118,15 +127,19 @@ export function createStarterCollection(): Record<string, number> {
   return countCards([...deck.monsters, ...deck.skills]);
 }
 
+/** NPC のデッキに入れる仮サポート（各2枚） */
+const NPC_SUPPORTS = [1, 2, 4, 5].map(supportId);
+const NPC_SUPPORT_COPIES = 2;
+
 /**
- * NPC（ダンジョンの敵・大会の相手）用のデッキを、モンスターの適合技から自動で組む。
- * 技を順番に入れて上限枚数を超えないように60枚にする。
+ * NPC（ダンジョンの敵・大会の相手）用のデッキを自動で組む。
+ * 仮サポートを少し入れ、残りはモンスターの適合技を順番に、上限枚数を超えないように入れて60枚にする。
  */
 export function buildAutoDeck(monsters: readonly string[]): Deck {
   const pool = monsters.flatMap((m) => skillsOf(m).map((s) => s.id));
-  const skills: string[] = [];
+  const skills: string[] = pool.length === 0 ? [] : NPC_SUPPORTS.flatMap((id) => Array<string>(NPC_SUPPORT_COPIES).fill(id));
+  const counts: Record<string, number> = countCards(skills);
   if (pool.length === 0) return { monsters, skills };
-  const counts: Record<string, number> = {};
   let i = 0;
   while (skills.length < DECK_RULES.skillCount && i < pool.length * DECK_RULES.maxCopies) {
     const id = pool[i % pool.length] as string;
@@ -136,30 +149,40 @@ export function buildAutoDeck(monsters: readonly string[]): Deck {
     }
     i++;
   }
+  // 適合技だけで60枚に届かないとき（技の少ないモンスターなど）は、サポートを上限まで足して埋める
+  for (const card of SUPPORTS) {
+    while (skills.length < DECK_RULES.skillCount && (counts[card.id] ?? 0) < DECK_RULES.maxCopies) {
+      counts[card.id] = (counts[card.id] ?? 0) + 1;
+      skills.push(card.id);
+    }
+  }
   return { monsters, skills };
 }
 
 /**
  * 所持カードから、指定モンスター3体で組める一番近いデッキを自動で作る（デッキ編集の「おまかせ」）。
- * 技カードが足りなければ60枚に満たないデッキを返す（画面側で不足を表示）。
+ * 適合技を先に入れ、足りない分を持っているサポートで埋める。それでも足りなければ60枚に満たないデッキを返す（画面側で不足を表示）。
  */
 export function buildDeckFromCollection(monsters: readonly string[], collection: CardCounts): Deck {
   const skills: string[] = [];
-  const candidates = monsters.flatMap((m) => skillsOf(m));
-  // 安い技・攻撃を優先しすぎないよう、技番号順に1枚ずつ巡回して入れる
-  let added = true;
   const used: Record<string, number> = {};
-  while (skills.length < DECK_RULES.skillCount && added) {
-    added = false;
-    for (const s of candidates) {
-      if (skills.length >= DECK_RULES.skillCount) break;
-      const n = used[s.id] ?? 0;
-      if (n < DECK_RULES.maxCopies && n < (collection[s.id] ?? 0)) {
-        used[s.id] = n + 1;
-        skills.push(s.id);
-        added = true;
+  // 安い技・攻撃を優先しすぎないよう、番号順に1枚ずつ巡回して入れる（適合技 → サポートの順）
+  const fill = (candidates: readonly { readonly id: string }[]): void => {
+    let added = true;
+    while (skills.length < DECK_RULES.skillCount && added) {
+      added = false;
+      for (const s of candidates) {
+        if (skills.length >= DECK_RULES.skillCount) break;
+        const n = used[s.id] ?? 0;
+        if (n < DECK_RULES.maxCopies && n < (collection[s.id] ?? 0)) {
+          used[s.id] = n + 1;
+          skills.push(s.id);
+          added = true;
+        }
       }
     }
-  }
+  };
+  fill(monsters.flatMap((m) => skillsOf(m)));
+  fill(SUPPORTS);
   return { monsters, skills };
 }

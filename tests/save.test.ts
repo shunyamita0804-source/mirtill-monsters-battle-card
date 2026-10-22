@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { validateDeck } from '../src/game/deck/deck.ts';
 import { createNewSave, migrate, normalizeSave, SAVE_VERSION, type SaveData } from '../src/game/save/saveData.ts';
 import { BACKUP_KEY, MemoryStorage, SAVE_KEY, SaveRepository } from '../src/game/save/saveRepository.ts';
 
@@ -39,6 +40,24 @@ describe('セーブデータ', () => {
     storage.setItem(SAVE_KEY, JSON.stringify({ ...createNewSave(), version: SAVE_VERSION + 1 }));
     expect(new SaveRepository(storage).load().status).toBe('unreadable');
     expect(migrate({ version: 0 })).toBeNull();
+  });
+
+  it('version 1 のセーブ（同じカード4枚のデッキ）は、新しいルールで使えるデッキに直り、足りないカードを受け取る', () => {
+    // 旧スターター：仮モンスターA〜C の技1〜4・6 を4枚ずつ
+    const oldSkills = ['a', 'b', 'c'].flatMap((k) => [1, 2, 3, 4, 6].flatMap((n) => Array<string>(4).fill(`skl-${k}-${n}`)));
+    const oldCollection: Record<string, number> = { 'mon-a': 1, 'mon-b': 1, 'mon-c': 1 };
+    for (const id of oldSkills) oldCollection[id] = 4;
+    const raw = { ...createNewSave(), version: 1, collection: oldCollection, deck: { monsters: ['mon-a', 'mon-b', 'mon-c'], skills: oldSkills } };
+    const migrated = migrate(raw);
+    expect(migrated?.version).toBe(SAVE_VERSION);
+    const save = normalizeSave(raw);
+    if (!save) throw new Error('save');
+    expect(save.deck.monsters).toEqual(['mon-a', 'mon-b', 'mon-c']);
+    expect(validateDeck(save.deck, save.collection)).toEqual([]);
+    // 持っていた枚数は減らさない
+    expect(save.collection['skl-a-1']).toBe(4);
+    expect(save.collection['skl-a-5']).toBeGreaterThan(0);
+    expect(save.collection['sup-1']).toBeGreaterThan(0);
   });
 
   it('不正な値は既定値に直し、未知のカードは捨てる', () => {

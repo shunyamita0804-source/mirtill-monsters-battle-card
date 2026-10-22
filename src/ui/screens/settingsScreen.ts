@@ -1,5 +1,5 @@
 import { APP_INFO } from '../../config/app.ts';
-import { MONSTERS, SKILLS } from '../../data/cards.ts';
+import { MONSTERS, SKILLS, SUPPORTS } from '../../data/cards.ts';
 import { CURRENCY, PACKS } from '../../data/economy.ts';
 import { addCards, addCoins, unlockPacks } from '../../game/save/saveData.ts';
 import { confirmModal, messageModal } from '../components/modal.ts';
@@ -71,7 +71,7 @@ export const settingsScreen: ScreenDefinition = {
                   render();
                 }, 'btn btn--small'),
                 button('全カードを4枚ずつ', () => {
-                  store.update((x) => addCards(x, [...MONSTERS.filter((m) => !m.hidden), ...SKILLS].map((c) => ({ cardId: c.id, count: 4 }))));
+                  store.update((x) => addCards(x, [...MONSTERS.filter((m) => !m.hidden), ...SKILLS, ...SUPPORTS].map((c) => ({ cardId: c.id, count: 4 }))));
                   render();
                 }, 'btn btn--small'),
                 button('全パック解放', () => {

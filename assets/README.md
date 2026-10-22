@@ -34,9 +34,10 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 | パス | 内容 | 状態 |
 | --- | --- | --- |
 | `images/ui/skillcard/skillcard_master_v4.png` ほか | 技カードUIテンプレート V4（マスター・外枠マスク・マナ/ちから/かしこさのバー・数字1〜10） | ユーザー提供・**正式承認待ちの版**。マスターと外枠マスクは 972×1618 を 1/2 に縮小、数字は 128→64px に縮小（描き換えなし） |
+| `images/ui/button/btn_command_blank.png`・`btn_command_blank_wine.png` | コマンドボタン（金の枠・青地／ワインレッド地）。無地に場面ごとの文字を重ねて使う | ユーザー提供（2026-10-22）の「はい／いいえ」画像から切り出し、1/2 に縮小。「はい」の文字の部分を左右の色でつないで消した（「はい／いいえ」の文字入りは使わない：ユーザー指示）。ワインレッドは青地だけを塗り替えたもの（金の枠はそのまま） |
 | `images/characters/player_male_walk_qa.png`・`player_female_walk_qa.png` | 主人公の歩行（4方向×4コマ、128×144） | ユーザー提供・**QA 試作品**（正式品質ではない） |
 
-| `audio/se/card_draw.*`・`audio/se/turn_order_select.*` | 効果音（カードを引く・先攻後攻を選ぶ）。OGG と M4A | ミスティックモンスターズの素材を許可により利用（`docs/audio-credits.md`） |
+| `audio/se/card_draw.*`・`turn_order_select.*`・`mana_gain.*`・`damage_hit.*` | 効果音（カードを引く・先攻後攻を選ぶ・マナが増える・ダメージ）。OGG と M4A | ミスティックモンスターズの素材を許可により利用（`docs/audio-credits.md`） |
 
 アプリアイコンは `public/icons/`（同梱の公式アイコン原本を縮小のみで変換）。
 

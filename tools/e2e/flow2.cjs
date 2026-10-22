@@ -68,18 +68,28 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
         if (!(await page.$('.battle__defense-panel'))) continue;
         await page.screenshot({ path: `${OUT}/manual-defense.png` });
         const usable = await page.$('.battle__defense-card:not([disabled])');
-        if (usable) await usable.click(); else await page.click('.battle__defense >> text=防御しない');
+        if (usable) await usable.click(); else await page.click('.battle__defense-end');
         manualActions++; continue;
+      }
+      if (st.acting === 'player' && st.phase === 'mana') {
+        // マナ化：手札を1枚マナにしてからターン終了
+        // 画面が描き直されても押せるよう、押す瞬間に探す（マナにするカードは飛んでいく演出のあいだ待つ）
+        if (await page.$('.battle__hand-card')) {
+          await page.click('.battle__hand-card >> nth=0');
+          await page.click('.battle__command-band >> text=マナにする', { timeout: 2000 }).catch(() => {});
+          await page.waitForTimeout(500);
+        }
+        await page.click('.battle__command-band >> text=ターン終了'); manualActions++; continue;
       }
       if (st.acting !== 'player' || st.phase !== 'main') continue;
       // 使えるカードを選ぶ → 拡大表示 → 使う → 対象選択
       const unusable = await page.$('.battle__hand-card.is-unusable');
       if (unusable && !sawUnusable) { sawUnusable = true; await unusable.click(); await page.screenshot({ path: `${OUT}/manual-unusable.png` }); log('unusable reason:', await page.textContent('.battle-text__ng')); }
       const card = await page.$('.battle__hand-card.is-usable');
-      if (!card) { await page.click('.battle__footer >> text=ターン終了'); manualActions++; continue; }
+      if (!card) { await page.click('.battle-turn__end'); manualActions++; continue; }
       await card.click(); sawPreview = true;
       if (manualActions < 2) await page.screenshot({ path: `${OUT}/manual-preview-${manualActions}.png` });
-      await page.click('.battle__footer >> text=使う'); manualActions++;
+      await page.click('.battle__command-band >> text=使う'); manualActions++;
       await page.waitForTimeout(100);
       const target = await page.$('.battle__monster.is-target');
       if (target) { sawTarget = true; if (manualActions < 4) await page.screenshot({ path: `${OUT}/manual-target.png` }); await target.click({ force: true }); }
