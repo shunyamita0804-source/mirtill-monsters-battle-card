@@ -60,6 +60,9 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
   };
   const playBattle = async (label) => {
     await waitScreen('battle');
+    // 先攻・後攻のカードを1枚選ぶ → 手札が配られる
+    await page.click('.battle-order__card[data-index="0"]');
+    await page.waitForSelector('.battle__qa', { timeout: 5000 });
     await shot(`battle-${label}-start`);
     await page.click('text=QA:オート');
     const bt = Date.now();
