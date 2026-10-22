@@ -94,13 +94,20 @@ describe('バトル開始', () => {
   });
 });
 
-describe('攻撃と防御', () => {
-  it('攻撃 → 防御待ち → 防御カードでダメージ軽減', () => {
-    let s = withHand(battle(), 'player', [skillId('a', 2)], 5); // a-2: ちから攻撃
-    s = withHand(s, 'opponent', [skillId('e', 4)], 3); // e-4: ちから防御
-    const target = s.sides.opponent.monsters[0];
-    if (!target) throw new Error('target');
-    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target.uid });
+/** 相手の、指定モンスターの uid */
+function enemyUid(s: BattleState, key: string): string {
+  return s.sides.opponent.monsters.find((m) => m.cardId === monsterId(key))?.uid ?? '';
+}
+
+const lifeOf = (s: BattleState, uid: string): number => s.sides.opponent.monsters.find((m) => m.uid === uid)?.life ?? -1;
+
+describe('攻撃と守備', () => {
+  it('攻撃 → 守備待ち → 防御カードを2枚使い、守備を終えてからまとめてダメージ', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 2)], 5); // a-2: ちから5の攻撃
+    s = withHand(s, 'opponent', [skillId('e', 4), skillId('e', 4)], 3); // e-4: ちから防御（-2）
+    const target = enemyUid(s, 'e');
+    const before = lifeOf(s, target);
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target });
     expect(s.phase).toBe('defense');
     const cost = getSkill(skillId('a', 2)).cost;
     expect(manaOf(s.sides.player)).toBe(5 - cost);
@@ -108,33 +115,60 @@ describe('攻撃と防御', () => {
     expect(s.sides.player.discard).toHaveLength(1 + cost);
     expect(actingSide(s)).toBe('opponent');
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' });
-    expect(s.phase).toBe('main');
-    const dmg = getSkill(skillId('a', 2)).stat.value - getSkill(skillId('e', 4)).stat.value;
-    expect(s.sides.opponent.monsters[0]?.life).toBe(target.life - dmg);
-  });
-
-  it('能力が違う防御カードは使えない', () => {
-    let s = withHand(battle(), 'player', [skillId('a', 2)], 5);
-    s = withHand(s, 'opponent', [skillId('e', 5)], 3); // e-5: かしこさ防御
-    const target = s.sides.opponent.monsters[0];
-    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target?.uid ?? '' });
-    expect(cardUsability(s, 'opponent', 't0').usable).toBe(false);
-    expect(applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' })).toBe(s);
+    // 1枚使っても守備は続く（まだダメージは入らない）
+    expect(s.phase).toBe('defense');
+    expect(lifeOf(s, target)).toBe(before);
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't1' });
+    expect(s.pending?.responses).toHaveLength(2);
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
-    expect(s.sides.opponent.monsters[0]?.life).toBe((target?.life ?? 0) - getSkill(skillId('a', 2)).stat.value);
+    expect(s.phase).toBe('main');
+    const reduction = getSkill(skillId('e', 4)).stat.value * 2;
+    expect(lifeOf(s, target)).toBe(before - (getSkill(skillId('a', 2)).stat.value - reduction));
+    expect(manaOf(s.sides.opponent)).toBe(3 - getSkill(skillId('e', 4)).cost * 2);
   });
 
-  it('防御されない攻撃（貫通）はすぐにダメージ', () => {
-    let s = withHand(battle(), 'player', [skillId('d', 6)], 10); // d-6: 貫通
+  it('回避カードを使うとダメージ0', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 2)], 5);
+    s = withHand(s, 'opponent', [skillId('f', 5)], 2); // f-5: ちから攻撃の回避
+    expect(getSkill(skillId('f', 5)).effect.type).toBe('evade');
+    const target = enemyUid(s, 'f');
+    const before = lifeOf(s, target);
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target });
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' });
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
+    expect(lifeOf(s, target)).toBe(before);
+  });
+
+  it('能力が違う守備カードと、狙われていないモンスターの守備カードは使えない', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 2)], 5);
+    s = withHand(s, 'opponent', [skillId('f', 4), skillId('e', 4)], 3); // f-4: かしこさ防御、e-4: Eのちから防御
+    const target = enemyUid(s, 'f');
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target });
+    expect(cardUsability(s, 'opponent', 't0')).toMatchObject({ usable: false, reason: 'ちから攻撃には使えません' });
+    expect(cardUsability(s, 'opponent', 't1')).toMatchObject({ usable: false, reason: '狙われたモンスターの守備カードではありません' });
+    expect(applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' })).toBe(s);
+    const before = lifeOf(s, target);
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
+    expect(lifeOf(s, target)).toBe(before - getSkill(skillId('a', 2)).stat.value);
+  });
+
+  it('防御も回避もできない攻撃は、守備を待たずにすぐダメージ', () => {
+    let s = withHand(battle(), 'player', [skillId('d', 6)], 10); // d-6: 守備されない攻撃
     s = { ...s, sides: { ...s.sides, player: { ...s.sides.player, monsters: [...buildD(s)] } } };
     const target = s.sides.opponent.monsters[1];
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target?.uid ?? '' });
     expect(s.phase).toBe('main');
     expect(s.sides.opponent.monsters[1]?.life).toBe(Math.max(0, (target?.life ?? 0) - getSkill(skillId('d', 6)).stat.value));
   });
+
+  it('防御・回避カードは自分のターンには使えない', () => {
+    const s = withHand(battle(), 'player', [skillId('a', 4), skillId('a', 5)], 5);
+    expect(cardUsability(s, 'player', 't0').reason).toBe('防御・回避カードは相手の攻撃を受けたときに使います');
+    expect(cardUsability(s, 'player', 't1').reason).toBe('防御・回避カードは相手の攻撃を受けたときに使います');
+  });
 });
 
-/** プレイヤーの1体目を仮モンスターDに替える（貫通技のテスト用） */
+/** プレイヤーの1体目を仮モンスターDに替える（守備されない攻撃のテスト用） */
 function buildD(s: BattleState) {
   return s.sides.player.monsters.map((m, i) => (i === 0 ? { ...m, cardId: monsterId('d') } : m));
 }

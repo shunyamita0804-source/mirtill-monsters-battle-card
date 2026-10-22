@@ -110,9 +110,11 @@ export function skillShortText(skill: SkillCard): string {
   const v = skill.stat.value;
   switch (skill.effect.type) {
     case 'attack':
-      return skill.effect.pierce ? `${v}ダメージ（防御されない）` : `相手1体に${v}ダメージ`;
+      return skill.effect.unblockable && skill.effect.undodgeable ? `${v}ダメージ（守備されない）` : `相手1体に${v}ダメージ`;
     case 'defense':
       return `防御：ダメージ-${v}`;
+    case 'evade':
+      return '回避：ダメージ0';
     case 'heal':
       return `味方1体のライフ+${v}`;
     case 'mana':

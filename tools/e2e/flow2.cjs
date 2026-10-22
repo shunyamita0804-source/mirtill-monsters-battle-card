@@ -68,7 +68,7 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
         if (!(await page.$('.battle__defense-panel'))) continue;
         await page.screenshot({ path: `${OUT}/manual-defense.png` });
         const usable = await page.$('.battle__defense-card:not([disabled])');
-        if (usable) await usable.click(); else await page.click('.battle__defense >> text=防御しない');
+        if (usable) await usable.click(); else await page.click('.battle__defense-end');
         manualActions++; continue;
       }
       if (st.acting === 'player' && st.phase === 'mana') {

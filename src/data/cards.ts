@@ -62,7 +62,7 @@ const SIXTH_SKILLS: readonly Omit<SkillSeed, 'no'>[] = [
   { cost: 2, stat: 'other', value: 4, effect: { type: 'heal' }, rarity: 'U' },
   { cost: 1, stat: 'other', value: 3, effect: { type: 'mana' }, rarity: 'U' },
   { cost: 1, stat: 'other', value: 2, effect: { type: 'draw' }, rarity: 'U' },
-  { cost: 4, stat: 'main', value: 6, effect: { type: 'attack', pierce: true }, rarity: 'R' },
+  { cost: 4, stat: 'main', value: 6, effect: { type: 'attack', unblockable: true, undodgeable: true }, rarity: 'R' },
 ];
 
 function skillSeeds(index: number): SkillSeed[] {
@@ -72,7 +72,7 @@ function skillSeeds(index: number): SkillSeed[] {
     { no: 2, cost: 2, stat: 'main', value: 5, effect: { type: 'attack' }, rarity: 'C' },
     { no: 3, cost: 3, stat: 'other', value: 6, effect: { type: 'attack' }, rarity: 'U' },
     { no: 4, cost: 1, stat: 'main', value: 2, effect: { type: 'defense' }, rarity: 'C' },
-    { no: 5, cost: 1, stat: 'other', value: 2, effect: { type: 'defense' }, rarity: 'C' },
+    { no: 5, cost: 2, stat: 'other', value: 2, effect: { type: 'evade' }, rarity: 'C' },
     { no: 6, ...sixth },
   ];
 }
@@ -111,7 +111,7 @@ const HIDDEN_MONSTER: MonsterCard = {
 const HIDDEN_SKILLS: SkillCard[] = makeSkills('hidden', 'wisdom', [
   { no: 1, cost: 2, stat: 'main', value: 4, effect: { type: 'attack' }, rarity: 'U' },
   { no: 2, cost: 1, stat: 'other', value: 2, effect: { type: 'defense' }, rarity: 'U' },
-  { no: 3, cost: 4, stat: 'main', value: 7, effect: { type: 'attack', pierce: true }, rarity: 'R' },
+  { no: 3, cost: 4, stat: 'main', value: 7, effect: { type: 'attack', unblockable: true, undodgeable: true }, rarity: 'R' },
 ]).map((s) => ({ ...s, name: s.name.replace('仮技HIDDEN', '隠し技（未確定）') }));
 
 export const MONSTERS: readonly MonsterCard[] = [...MONSTER_SEEDS.map(makeMonster), HIDDEN_MONSTER];

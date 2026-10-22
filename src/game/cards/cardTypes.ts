@@ -58,10 +58,19 @@ export interface MonsterCard extends CardBase {
   readonly undetermined?: boolean;
 }
 
-/** 技の効果（仮ルール。種類と対象の決まりは src/game/battle/rules.ts） */
+/**
+ * 技の効果（数値は仮。決まりは docs/battle-rules.md）。
+ * 攻撃の印：unblockable＝防御できない、undodgeable＝回避できない、halfOnEvade＝回避されても半分のダメージ。
+ */
 export type SkillEffect =
-  | { readonly type: 'attack'; readonly pierce?: boolean }
+  | {
+      readonly type: 'attack';
+      readonly unblockable?: boolean;
+      readonly undodgeable?: boolean;
+      readonly halfOnEvade?: boolean;
+    }
   | { readonly type: 'defense' }
+  | { readonly type: 'evade' }
   | { readonly type: 'heal' }
   | { readonly type: 'mana' }
   | { readonly type: 'draw' };
@@ -71,6 +80,7 @@ export type SkillEffectType = SkillEffect['type'];
 export const EFFECT_LABEL: Readonly<Record<SkillEffectType, string>> = {
   attack: '攻撃',
   defense: '防御',
+  evade: '回避',
   heal: '回復',
   mana: 'マナ',
   draw: 'ドロー',
@@ -103,9 +113,11 @@ export function describeSkill(card: SkillCard): string {
   const v = card.stat.value;
   switch (card.effect.type) {
     case 'attack':
-      return `相手モンスター1体に${stat}で${v}ダメージ。${card.effect.pierce ? '防御されない。' : ''}`;
+      return `相手モンスター1体に${stat}で${v}ダメージ。${attackNote(card.effect)}`;
     case 'defense':
-      return `相手の${stat}攻撃を受けたときに使う。ダメージを${v}減らす。`;
+      return `このモンスターが${stat}攻撃を受けたときに使う。ダメージを${v}減らす。`;
+    case 'evade':
+      return `このモンスターが${stat}攻撃を受けたときに使う。回避してダメージを0にする。`;
     case 'heal':
       return `味方モンスター1体のライフを${v}回復する。`;
     case 'mana':
@@ -113,4 +125,11 @@ export function describeSkill(card: SkillCard): string {
     case 'draw':
       return `山札からカードを${v}枚引く。`;
   }
+}
+
+/** 攻撃の印の説明 */
+function attackNote(effect: Extract<SkillEffect, { type: 'attack' }>): string {
+  if (effect.unblockable && effect.undodgeable) return '防御・回避されない。';
+  const notes = [effect.unblockable ? '防御されない。' : '', effect.undodgeable ? '回避されない。' : '', effect.halfOnEvade ? '回避されても半分のダメージ。' : ''];
+  return notes.join('');
 }

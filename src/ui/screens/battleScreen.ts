@@ -8,6 +8,7 @@ import {
   cardUsability,
   createBattle,
   manaOf,
+  pendingDamage,
   SIDE_LABEL,
   targetsFor,
   type BattleAction,
@@ -96,7 +97,7 @@ export const battleScreen: ScreenDefinition = {
       render();
     };
 
-    /** 防御できるカードが1枚もないときは、防御の選択を出さずに自動で進める */
+    /** 守備に使えるカードが1枚もないときは、守備の選択を出さずに自動で進める */
     const noDefensePossible = (s: BattleState): boolean =>
       s.phase === 'defense' &&
       s.pending?.attacker === 'opponent' &&
@@ -306,8 +307,8 @@ export const battleScreen: ScreenDefinition = {
             class: 'battle-text__prompt',
             text:
               p.attacker === 'opponent'
-                ? `相手の「${getSkill(p.cardId).name}」！ ${STAT_LABEL[p.stat]}${p.power}の攻撃${noDefensePossible(s) ? '（防御できるカードなし）' : ''}`
-                : `「${getSkill(p.cardId).name}」で攻撃中… 相手の防御を待っています`,
+                ? `相手の「${getSkill(p.cardId).name}」！ ${STAT_LABEL[p.stat]}${p.power}の攻撃${noDefensePossible(s) ? '（守備できるカードなし）' : ''}`
+                : `「${getSkill(p.cardId).name}」で攻撃中… 相手の守備を待っています（いまのダメージ ${pendingDamage(p)}）`,
           }),
         ];
       } else if (skill && hand) {
@@ -397,7 +398,12 @@ export const battleScreen: ScreenDefinition = {
       if (noDefensePossible(s)) return null;
       const pending = s.pending;
       const target = s.sides.player.monsters.find((m) => m.uid === pending.targetUid);
-      const options = s.sides.player.hand.filter((c) => getSkill(c.cardId).effect.type === 'defense');
+      // 守備に使えるのは狙われたモンスターのカードだけなので、そのカードだけ並べる
+      const options = s.sides.player.hand.filter((c) => {
+        const skill = getSkill(c.cardId);
+        return ['defense', 'evade'].includes(skill.effect.type) && skill.monsterId === target?.cardId;
+      });
+      const used = pending.responses.map((id) => getSkill(id).name).join('・');
       return h(
         'div',
         { class: 'battle__defense' },
@@ -409,28 +415,40 @@ export const battleScreen: ScreenDefinition = {
             class: 'battle__defense-text',
             text: `「${getSkill(pending.cardId).name}」→ ${target ? getMonster(target.cardId).name : ''}に ${STAT_LABEL[pending.stat]}${pending.power}`,
           }),
-          h('p', { class: 'battle__defense-hint', text: `${STAT_LABEL[pending.stat]}の防御カードでダメージを減らせます（マナ ${manaOf(s.sides.player)}）` }),
+          h('p', {
+            class: 'battle__defense-hint',
+            text: `狙われたモンスターの${STAT_LABEL[pending.stat]}の防御・回避カードを何枚でも使えます（マナ ${manaOf(s.sides.player)}）`,
+          }),
+          h('p', {
+            class: 'battle__defense-hint',
+            text: `いまのダメージ ${pendingDamage(pending)}${used ? `（使った守備：${used}）` : ''}`,
+          }),
           h(
             'div',
             { class: 'battle__defense-cards' },
             ...options.map((c) => {
               const usable = cardUsability(s, 'player', c.uid);
               const skill = getSkill(c.cardId);
+              const label = skill.effect.type === 'evade' ? '回避' : `-${skill.stat.value}`;
               const b = h(
                 'button',
                 {
                   class: `battle__defense-card${usable.usable ? '' : ' is-unusable'}`,
-                  attrs: { type: 'button', 'aria-label': `${skill.name}で防御` },
+                  attrs: { type: 'button', 'aria-label': `${skill.name}で守備` },
                   on: { click: () => dispatch({ type: 'defend', side: 'player', cardUid: c.uid }) },
                 },
                 createSkillCard(skill, { width: 70, showText: false }),
-                h('span', { class: 'battle__defense-label', text: usable.usable ? `-${skill.stat.value}` : (usable.reason ?? '') }),
+                h('span', { class: 'battle__defense-label', text: usable.usable ? label : (usable.reason ?? '') }),
               );
               b.disabled = !usable.usable;
               return b;
             }),
           ),
-          button('防御しない', () => dispatch({ type: 'defend', side: 'player', cardUid: null }), 'btn'),
+          button(
+            pending.responses.length === 0 ? '守備しない' : '守備を終える',
+            () => dispatch({ type: 'defend', side: 'player', cardUid: null }),
+            'btn battle__defense-end',
+          ),
         ),
       );
     };

@@ -7,6 +7,7 @@ import {
   cardUsability,
   manaOf,
   otherSide,
+  pendingDamage,
   targetsFor,
   type BattleAction,
   type BattleState,
@@ -32,13 +33,7 @@ function usableOptions(state: BattleState, side: Side): Option[] {
 export function chooseAction(state: BattleState, side: Side): BattleAction | null {
   if (state.phase === 'ended') return null;
 
-  if (state.phase === 'defense') {
-    const pending = state.pending;
-    if (!pending || pending.attacker === side) return null;
-    const defenses = usableOptions(state, side).sort((a, b) => b.skill.stat.value - a.skill.stat.value);
-    const best = defenses[0];
-    return { type: 'defend', side, cardUid: best ? best.card.uid : null };
-  }
+  if (state.phase === 'defense') return chooseDefense(state, side);
 
   if (state.active !== side) return null;
   if (state.phase === 'mana') return chooseManaAction(state, side);
@@ -81,23 +76,47 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
 
 /**
  * マナ化（仮の思考）：残す手札を最大2枚に絞り、残りをすべてマナにする。
- * - 防御カード1枚：いまのマナで払える中で一番強いもの（相手の攻撃に備える）
+ * - 防御・回避カード1枚：いまのマナで払える中で一番強いもの（相手の攻撃に備える）
  * - 技1枚：マナ化し終えたあとのマナで払える中で一番重いもの（次のターンに使う）
  * マナ化するたびにマナ+1・手札-1 なので「マナ化し終えたあとのマナ」は途中で変わらず、残す札が安定する。
  */
+/** 防御・回避カードか */
+const isGuard = (c: HandCard): boolean => ['defense', 'evade'].includes(getSkill(c.cardId).effect.type);
+
 function chooseManaAction(state: BattleState, side: Side): BattleAction {
   const mine = state.sides[side];
   const mana = manaOf(mine);
   const byCost = (a: HandCard, b: HandCard): number => getSkill(b.cardId).cost - getSkill(a.cardId).cost;
   const keepDefense = mine.hand
-    .filter((c) => getSkill(c.cardId).effect.type === 'defense' && getSkill(c.cardId).cost <= mana)
+    .filter((c) => isGuard(c) && getSkill(c.cardId).cost <= mana)
     .sort((a, b) => getSkill(b.cardId).stat.value - getSkill(a.cardId).stat.value)[0];
-  const others = mine.hand.filter((c) => c !== keepDefense && getSkill(c.cardId).effect.type !== 'defense');
+  const others = mine.hand.filter((c) => c !== keepDefense && !isGuard(c));
   const manaAfter = mana + mine.hand.length - (keepDefense ? 1 : 0) - 1;
   const keepSkill = [...others].sort(byCost).find((c) => getSkill(c.cardId).cost <= manaAfter);
   const convert = mine.hand.find((c) => c !== keepDefense && c !== keepSkill);
   if (convert && canConvertToMana(state, side)) return { type: 'convertToMana', side, cardUid: convert.uid };
   return { type: 'endTurn', side };
+}
+
+/**
+ * 守備（仮の思考）：1枚ずつ選び、ダメージが0になるか使えるカードがなくなったら守備を終える。
+ * 回避は倒されそうなときか大きなダメージのときに使い、そうでなければ防御で減らす。
+ */
+function chooseDefense(state: BattleState, side: Side): BattleAction | null {
+  const pending = state.pending;
+  if (!pending || pending.attacker === side) return null;
+  const end: BattleAction = { type: 'defend', side, cardUid: null };
+  const damage = pendingDamage(pending);
+  if (damage === 0) return end;
+  const target = state.sides[side].monsters.find((m) => m.uid === pending.targetUid);
+  const options = usableOptions(state, side);
+  const evade = options.filter((o) => o.skill.effect.type === 'evade').sort((a, b) => a.skill.cost - b.skill.cost)[0];
+  if (evade && (damage >= 3 || (target !== undefined && damage >= target.life))) {
+    return { type: 'defend', side, cardUid: evade.card.uid };
+  }
+  const defense = options.filter((o) => o.skill.effect.type === 'defense').sort((a, b) => b.skill.stat.value - a.skill.stat.value)[0];
+  if (defense) return { type: 'defend', side, cardUid: defense.card.uid };
+  return end;
 }
 
 function attackAction(state: BattleState, side: Side, option: Option, targetUid: string): BattleAction {

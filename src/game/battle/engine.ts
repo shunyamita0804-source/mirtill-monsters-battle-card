@@ -48,7 +48,7 @@ export function manaOf(side: BattleSide): number {
   return side.manaPile.length;
 }
 
-/** 防御待ちの攻撃 */
+/** 守備待ちの攻撃 */
 export interface PendingAttack {
   readonly attacker: Side;
   readonly userUid: string;
@@ -56,6 +56,8 @@ export interface PendingAttack {
   readonly cardId: string;
   readonly stat: StatType;
   readonly power: number;
+  /** 守備側がこの攻撃に使ったカード（使った順）。守備がすべて終わってからまとめてダメージを計算する */
+  readonly responses: readonly string[];
 }
 
 /** main＝技を使う（攻撃）、defense＝相手の防御待ち、mana＝攻撃のあとのマナ化 */
@@ -220,16 +222,23 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
 
   if (state.phase === 'defense') {
     const pending = state.pending;
-    if (!pending || pending.attacker === side) return NO('相手の防御を待っています');
-    if (skill.effect.type !== 'defense') return NO('いまは防御カードしか使えません');
-    if (skill.stat.type !== pending.stat) return NO(`${STAT_LABEL[pending.stat]}攻撃は防げません`);
+    if (!pending || pending.attacker === side) return NO('相手の守備を待っています');
+    const type = skill.effect.type;
+    if (type !== 'defense' && type !== 'evade') return NO('いまは防御・回避カードしか使えません');
+    // 守備に使えるのは、狙われたモンスターの防御・回避カードだけ
+    const target = state.sides[side].monsters.find((m) => m.uid === pending.targetUid);
+    if (!target || target.cardId !== skill.monsterId) return NO('狙われたモンスターの守備カードではありません');
+    if (skill.stat.type !== pending.stat) return NO(`${STAT_LABEL[pending.stat]}攻撃には使えません`);
+    const attack = getSkill(pending.cardId).effect;
+    if (attack.type === 'attack' && type === 'defense' && attack.unblockable) return NO('この攻撃は防御できません');
+    if (attack.type === 'attack' && type === 'evade' && attack.undodgeable) return NO('この攻撃は回避できません');
     if (manaOf(state.sides[side]) < skill.cost) return NO('マナが足りません');
     return YES;
   }
 
   if (state.active !== side) return NO('相手のターンです');
   if (state.phase === 'mana') return NO('マナ化の間は技を使えません');
-  if (skill.effect.type === 'defense') return NO('防御カードは相手の攻撃を受けたときに使います');
+  if (skill.effect.type === 'defense' || skill.effect.type === 'evade') return NO('防御・回避カードは相手の攻撃を受けたときに使います');
   if (manaOf(state.sides[side]) < skill.cost) return NO('マナが足りません');
   if (availableUsers(state, side, skill).length === 0) return NO('使えるモンスターは行動済みです');
   if (skill.effect.type === 'attack' && aliveMonsters(state.sides[otherSide(side)]).length === 0) {
@@ -320,12 +329,26 @@ function applyDamage(state: BattleState, targetUid: string, damage: number): Bat
   return checkKnockout(next);
 }
 
-function resolvePending(state: BattleState, reduction: number): BattleState {
+/**
+ * 守備がすべて終わったあとのダメージ計算。
+ * 回避が1枚でもあれば0（「回避しても半分」の攻撃なら半分・端数切り捨て）。なければ防御の合計だけ減らす。
+ * 反射・無効などは正式カードが決まってから足す。
+ */
+export function pendingDamage(pending: PendingAttack): number {
+  const cards = pending.responses.map(getSkill);
+  if (cards.some((c) => c.effect.type === 'evade')) {
+    const attack = getSkill(pending.cardId).effect;
+    return attack.type === 'attack' && attack.halfOnEvade ? Math.floor(pending.power / 2) : 0;
+  }
+  const reduction = cards.filter((c) => c.effect.type === 'defense').reduce((sum, c) => sum + c.stat.value, 0);
+  return Math.max(0, pending.power - reduction);
+}
+
+function resolvePending(state: BattleState): BattleState {
   const pending = state.pending;
   if (!pending) return state;
-  const damage = Math.max(0, pending.power - reduction);
   const next: BattleState = { ...state, phase: 'main', pending: null };
-  return applyDamage(next, pending.targetUid, damage);
+  return applyDamage(next, pending.targetUid, pendingDamage(pending));
 }
 
 /**
@@ -415,7 +438,8 @@ function useCard(
   switch (skill.effect.type) {
     case 'attack': {
       if (!target) return state;
-      if (skill.effect.pierce) return applyDamage(next, target.uid, skill.stat.value);
+      // 防御も回避もできない攻撃は、守備を待たずにダメージ
+      if (skill.effect.unblockable && skill.effect.undodgeable) return applyDamage(next, target.uid, skill.stat.value);
       return {
         ...next,
         phase: 'defense',
@@ -426,6 +450,7 @@ function useCard(
           cardId: skill.id,
           stat: skill.stat.type,
           power: skill.stat.value,
+          responses: [],
         },
       };
     }
@@ -452,22 +477,31 @@ function useCard(
       return addLog(next, `カードを${drawn.drawn}枚引いた。`);
     }
     case 'defense':
+    case 'evade':
       return state;
   }
 }
 
+/**
+ * 守備：防御・回避カードを1枚使う（条件を満たす限り1回の攻撃に何枚でも）。
+ * cardUid が null なら守備を終えて、ダメージを計算する。
+ */
 function defend(state: BattleState, side: Side, cardUid: string | null): BattleState {
   const pending = state.pending;
   if (state.phase !== 'defense' || !pending || pending.attacker === side) return state;
-  if (cardUid === null) return resolvePending(addLog(state, `${SIDE_LABEL[side]}は防御しなかった。`), 0);
+  if (cardUid === null) {
+    const text = pending.responses.length === 0 ? `${SIDE_LABEL[side]}は守備しなかった。` : `${SIDE_LABEL[side]}は守備を終えた。`;
+    return resolvePending(addLog(state, text));
+  }
   if (!cardUsability(state, side, cardUid).usable) return state;
   const hand = findHandCard(state, side, cardUid);
   if (!hand) return state;
   const skill = getSkill(hand.cardId);
   let next = removeFromHand(state, side, cardUid);
   next = payMana(next, side, skill.cost);
-  next = addLog(next, `${SIDE_LABEL[side]}は「${skill.name}」で防御！ダメージ-${skill.stat.value}。`);
-  return resolvePending(next, skill.stat.value);
+  next = { ...next, pending: { ...pending, responses: [...pending.responses, skill.id] } };
+  const what = skill.effect.type === 'evade' ? '回避' : `防御（ダメージ-${skill.stat.value}）`;
+  return addLog(next, `${SIDE_LABEL[side]}は「${skill.name}」で${what}！`);
 }
 
 /** 行動を待っている側（防御待ちなら防御側） */

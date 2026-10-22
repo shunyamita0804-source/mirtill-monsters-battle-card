@@ -26,12 +26,13 @@ describe('カードデータ（仮）', () => {
     for (const c of [...MONSTERS, ...SKILLS]) expect(c.isPlaceholder).toBe(true);
   });
 
-  it('各モンスターに防御（ちから・かしこさ）を含む適合技がある', () => {
+  it('各モンスターに守備（ちから・かしこさの防御か回避）を含む適合技がある', () => {
     for (const m of MONSTERS.filter((x) => !x.hidden)) {
       const skills = skillsOf(m.id);
       expect(skills.length).toBe(6);
-      const defenseTypes = new Set(skills.filter((s) => s.effect.type === 'defense').map((s) => s.stat.type));
-      expect(defenseTypes).toEqual(new Set(['force', 'wisdom']));
+      const guards = skills.filter((s) => s.effect.type === 'defense' || s.effect.type === 'evade');
+      expect(new Set(guards.map((s) => s.stat.type))).toEqual(new Set(['force', 'wisdom']));
+      expect(guards.some((s) => s.effect.type === 'evade')).toBe(true);
     }
   });
 
