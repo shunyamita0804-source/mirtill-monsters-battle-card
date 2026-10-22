@@ -1,0 +1,76 @@
+セイクリッドモンスターズ バトルカード　生成AI担当への制作依頼（2026-10-22）
+作成：Claude（ゲームの組み込み担当）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ このゲームについて
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+スマホ縦持ちの 2D カードゲーム（販売する商品）。街を歩いて、カードで対戦する。
+街・建物・部屋・主人公の絵はすでにある（参考画像）。今回は、足りない絵・品質が足りない絵を作ってもらう。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 今回お願いするもの（優先順）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+01 主人公・案内役の描き直し（横向き・背中の歩き、案内役の会話の絵の髪）　　優先 A
+02 街の環境素材の描き直し（岩・噴水広場の輪・会場前の飾り石・縁石・植え込み）　優先 A
+03 縦長の部屋の箱（7部屋）　　　　　　　　　　　　　　　　　　　　　　　　　優先 B
+04 UI の部品（場所の名前の札・看板・金貨・アイコン・丸ボタン）　　　　　　　　優先 C
+05 ダンジョン（床と壁・小物・敵）　　　　　　　　　　　　　　　　　　　　　　優先 C
+06 斜め歩き（任意）　　　　　　　　　　　　　　　　　　　　　　　　　　　　　優先 D
+
+■ お願いしないもの（別の担当が作成中。作らないでください）
+・店員・研究員・大会の受付・練習場の先生・住人5人の「歩く姿」と「会話の絵」
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ いちばん大事なこと：手描きの塗り
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+前回、別の方法で作った環境素材（参考画像の「不採用の例」）は、図形を平らに塗ったような絵（ベクター風・ローポリ風）で、
+手描きの建物と並べると浮いてしまい、使えなかった。
+すべての素材を、参考画像の建物・人物と同じ「筆で塗り重ねた手描きの質感」で描くこと。
+（色のむら・ハイライト・影のグラデーション・細かい描き込み。輪郭は濃い茶色系の線）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 【共通ルール】（毎回の依頼の最初に付ける。英語版は下）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー（style_master.png と、依頼文に書いた参考画像を添付する）
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の素材を1つ描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本・建物・人物の絵と同じ画風。筆で塗り重ねた手描きの質感（色のむら、ハイライト、影のグラデーション、細かい描き込み）。
+　図形を平らに塗ったような絵（ベクター風・フラットデザイン・ローポリ風）は禁止。
+【視点・光】斜め上から見下ろす正面の視点（指定があるときは真上）。光は左上から。
+【禁止】文字・数字・ロゴ・透かし・サイン。実在の作品のキャラクターや紋章に似せること。依頼していない物（人・動物・地面・背景・枠）を足すこと。
+【形式】背景は透明（できなければマゼンタ一色 #FF00FF）。PNG。素材の外側に少し余白。複数の素材を1枚に並べるときは重ねない。
+▲ここまで
+
+▼English version
+Draw ONE asset for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Match the attached style sample, buildings and characters exactly: hand-painted look with layered brush strokes, color variation, highlights,
+soft shading gradients and fine detail, dark-brown outlines. NO flat vector art, NO flat design, NO low-poly look.
+[View/Light] Three-quarter top-down front view (or straight top-down when stated). Light from the upper left.
+[Forbidden] Any text, numbers, logos, watermarks, signatures. Resemblance to existing IP characters or emblems. Anything not requested (people, animals, ground, background, frames).
+[Format] Transparent background (if impossible, solid magenta #FF00FF). PNG. Small margin around the asset. When several assets share one image, do not let them overlap.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 参考画像（ZIP の「参考画像」フォルダ）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+style_master.png　　　　　　 画風見本（毎回添付）
+town_now.jpg　　　　　　　　 いまの街（部品を並べたもの）
+player_male_walk.png・player_female_walk.png　主人公の歩行（4方向×4コマ、1コマ 216×288）
+neighbor_guide_walk.png　　　案内役（となりの家の女性）の歩行
+neighbor_guide_talk_01〜06.png　案内役の会話の絵（6表情）
+room_shell_*.png　　　　　　 いまの部屋の箱（正方形）
+tex_stone.png　　　　　　　　いまの石畳の模様
+town_fountain.png　　　　　　噴水（広場の輪の大きさの基準）
+btn_command_blank.png・dialogue_window_blank.png　いまのボタン・会話の枠（UI の質感の基準）
+不採用の例/　　　　　　　　 前回使えなかった絵（こうしないでほしい例）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 納品ファイル名（英小文字・数字・アンダーバー、PNG）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+01　player_male_walk_side.png　player_female_walk_side.png　npc_guide_walk_side.png　player_male_walk_back.png
+　　talk_guide_01_normal.png 〜 talk_guide_06_happy.png
+02　props_rock_v3.png　plaza_ring_v2.png　plaza_carpet_v2.png　edge_curb_v2.png　props_bush_v3.png
+03　room_tall_player.png　room_tall_guide.png　room_tall_house.png　room_tall_shop.png　room_tall_lab.png　room_tall_training.png　room_tall_arena.png
+04　ui_hud_plate.png　ui_sign_wood.png　ui_coin.png　ui_icon_set.png　ui_button_round.png
+05　dungeon_tiles.png　dungeon_props.png　dungeon_enemies.png
+06　player_male_walk_diag.png　player_female_walk_diag.png　npc_guide_walk_diag.png
+→ まとめて ZIP にして、ユーザー経由で Claude に渡す

@@ -1,0 +1,18 @@
+【06】斜め歩き（優先 D・任意）　3枚
+
+■ 目的
+いまは斜めに歩くとき、左右向きの絵で代用している。斜め向きの絵があると歩きがなめらかに見える。
+（01 の横向きの描き直しが終わってから。01 と同じ足の動き・同じ大きさにする）
+
+▼ここからコピー
+添付の歩行の絵とまったく同じ人物・画風・大きさで、斜め向きの歩行の絵を描いてください。縦長 1024×1536。4列×4行。
+・行は上から「左下へ歩く・右下へ歩く・左上へ歩く・右上へ歩く」、列は歩きの4コマ（足を開く→沈む→足が交差する→足が前へ）
+・すべてのコマで体の大きさ・足元の高さをそろえる。背景透明。影・文字なし
+▲ここまで
+▼English
+Same character, style and size as the attached walk sheet. Draw diagonal walking frames, portrait 1024x1536, 4 columns x 4 rows.
+Rows top to bottom: walking down-left, down-right, up-left, up-right. Columns: the 4 walk key poses (contact, down, passing, up).
+Same body size and foot baseline in every frame. Transparent background, no shadow, no text.
+▲
+
+保存名：player_male_walk_diag.png・player_female_walk_diag.png・npc_guide_walk_diag.png

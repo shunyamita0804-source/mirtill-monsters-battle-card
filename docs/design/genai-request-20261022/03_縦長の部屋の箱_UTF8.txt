@@ -1,0 +1,33 @@
+【03】縦長の部屋の箱（優先 B）　7枚
+
+■ 目的
+いまの部屋の箱（room_shell_*.png）は正方形なので、縦長のスマホでは部屋の上下が空いてしまう。同じ部屋を縦長に描き直す。
+
+■ 共通
+・いまの部屋の箱（添付）と、床の材質・壁の色・窓・柱・飾りを同じにする（同じ部屋に見えること）
+・奥の壁は画像の上 20% くらい。床を縦に長く広く。手前の壁は下 6% くらい
+・出入口は手前の壁の真ん中に1つ（いまと同じ幅）。出入口の外は暗い色
+・家具・人・文字は描かない（家具はゲームが置く）。背景あり（画像全体が部屋）
+
+▼ここからコピー（主人公の家の例。添付の元の絵だけ差し替える）
+添付の部屋の絵（正方形）と同じ部屋を、縦長 1024×1536 に描き直してください。斜め上から見下ろす視点。
+・床の材質・壁の色・窓・柱・飾りは添付と同じにする。家具・人・文字は描かない
+・奥の壁は上 20% くらい、手前の壁は下 6% くらい。そのあいだの床を縦に広くする
+・出入口は手前の壁の真ん中に1つ。出入口の外は暗い色
+・手描きの塗りの質感は添付と同じ
+▲ここまで
+▼English
+Redraw the attached square room interior as the SAME room in portrait 1024x1536, three-quarter top-down view.
+Keep the same floor material, wall colors, windows, pillars and decorations. No furniture, no people, no text.
+Back wall occupies about the top 20%, front wall about the bottom 6%; the floor in between is taller/deeper.
+One doorway in the center of the front wall (same width as now); outside the doorway is dark. Same hand-painted rendering as the attached image. The image is fully opaque (the whole image is the room).
+▲
+
+保存名と元の絵：
+room_tall_player.png ← room_shell_player.png（主人公の家）
+room_tall_guide.png ← room_shell_guide.png（となりの家）
+room_tall_house.png ← room_shell_house.png（民家）
+room_tall_shop.png ← room_shell_shop.png（カードショップ）
+room_tall_lab.png ← room_shell_lab.png（カード研究所）
+room_tall_training.png ← room_shell_training.png（カード練習場）
+room_tall_arena.png ← room_shell_arena.png（大会会場。円い床のまま縦長に）
