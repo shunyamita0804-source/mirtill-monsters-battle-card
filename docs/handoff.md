@@ -7,7 +7,7 @@
 | 項目 | 状態 |
 | --- | --- |
 | 正式名称 | セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card・短縮「セイクリッドBC」）。旧称ミルティル・ミストリア |
-| 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `deed858` を公開。2026-10-22。公開後に新しい音のファイルが 200 になることを確認）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
+| 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `eef8e26` を公開。2026-10-22。主人公の選択「男性／女性」が公開版に出ることを確認）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
 | リポジトリ | https://github.com/shunyamita0804-source/sacred-monsters-battle-card （Public。2026-10-22 ユーザーが改名。旧名 mirtill-monsters-battle-card） |
 | 最新版 | `main`（`5ccf667` の内容＋引き継ぎメモ）。テスト 281件。正式な街・部屋・人物・効果音の統合＋試遊を受けた品質改善まで |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
