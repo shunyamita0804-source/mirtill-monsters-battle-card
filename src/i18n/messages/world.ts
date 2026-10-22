@@ -9,6 +9,8 @@ export const WORLD = {
   'world.building.hall': { ja: '大会会場', en: 'Tournament Hall' },
   'world.building.home': { ja: '家', en: 'Home' },
   'world.building.shop': { ja: 'カードショップ', en: 'Card Shop' },
+  'world.building.practice': { ja: 'カード練習場', en: 'Practice Hall' },
+  'world.building.neighbor': { ja: 'となりの家', en: 'Neighbor\'s House' },
 
   // 上の帯・操作
   'world.placeDungeon': { ja: '{dungeon} {floor}', en: '{dungeon} {floor}' },

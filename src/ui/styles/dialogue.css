@@ -1,0 +1,195 @@
+/* ===== 会話（ミスティックモンスターズの会話 UI の画像を使う。src/ui/components/dialogue.ts） ===== */
+.talk {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 10px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(rgb(4 10 32 / 0) 35%, rgb(4 10 32 / 0.55));
+  animation: fade-in 160ms ease-out;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* スキップ（右上） */
+.talk__skip {
+  position: absolute;
+  top: calc(60px + env(safe-area-inset-top, 0px));
+  right: 10px;
+  min-height: 40px;
+  z-index: 2;
+}
+
+/* 会話の絵（右。届くまでは「仮」の札） */
+.talk__portrait {
+  align-self: flex-end;
+  width: 138px;
+  height: 172px;
+  margin: 0 4px -6px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(#cfeee0, #9fd6c0);
+  border: 2px solid #c9a24a;
+  border-bottom: 0;
+  color: #1d4a3c;
+  text-align: center;
+  overflow: hidden;
+}
+.talk__portrait[hidden] { display: none; }
+.talk__portrait-img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.talk__portrait-temp { font-size: 44px; font-weight: 700; line-height: 1; }
+.talk__portrait-expr { font-size: 15px; font-weight: 700; }
+.talk__portrait-note { font-size: 11px; opacity: 0.8; padding: 0 6px; }
+
+/* 選択肢（左。名前の札より上） */
+.talk__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 236px;
+  margin: 0 0 52px 2px;
+}
+.talk__choices:empty { display: none; }
+.talk.is-choice .talk__portrait { margin-bottom: -6px; }
+.talk.is-choice .talk__choices { position: absolute; left: 12px; bottom: calc(14px + 168px + 52px + env(safe-area-inset-bottom, 0px)); margin: 0; }
+
+.talk__choice {
+  box-sizing: border-box;
+  height: 46px;
+  min-height: 46px;
+  padding: 0 6px;
+  border: 0 solid transparent;
+  border-width: 0 22px;
+  border-image: var(--talk-choice) 0 54 fill / 0 22px / 0 stretch;
+  background: none;
+  color: #fff;
+  font: 700 16px/1.2 var(--font-base);
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 2px #000;
+  cursor: pointer;
+}
+.talk__choice:active { transform: translateY(2px) scale(0.985); }
+
+/* セリフ枠（四隅の飾りは縮尺のまま、中央だけ伸ばす） */
+.talk__window {
+  position: relative;
+  min-height: 168px;
+  box-sizing: border-box;
+  padding: 12px 8px 10px;
+  border: 22px solid transparent;
+  border-image: var(--talk-window) 60 fill / 22px / 0 stretch;
+  color: #f6f1e2;
+}
+
+/* 名前の札（枠の左上にかぶせる） */
+.talk__name {
+  position: absolute;
+  top: -46px;
+  left: -14px;
+  min-width: 132px;
+  box-sizing: border-box;
+  padding: 7px 28px 8px;
+  background: var(--talk-name) center / 100% 100% no-repeat;
+  color: #1d2442;
+  font: 700 16px/1.2 var(--font-base);
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-shadow: 0 1px 0 rgb(255 250 235 / 0.7);
+  filter: drop-shadow(0 3px 5px rgb(0 0 0 / 0.42));
+}
+.talk__name[hidden] { display: none; }
+
+.talk__text {
+  margin: 0;
+  min-height: 3.2em;
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.talk__next {
+  position: absolute;
+  right: 6px;
+  bottom: 0;
+  font-size: 13px;
+  color: #e8cf86;
+  opacity: 0;
+}
+.talk.is-ready:not(.is-choice) .talk__next { opacity: 1; animation: talk-next 0.9s ease-in-out infinite; }
+@keyframes talk-next {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
+/* ===== 街の案内役（絵が届くまでの仮の印）・目的地 ===== */
+.world__npc {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.world__npc-dot {
+  width: 30px;
+  height: 36px;
+  margin-top: -8px;
+  border-radius: 15px 15px 6px 6px;
+  background: linear-gradient(#f3dc8a 0 38%, #7fd1b4 38%);
+  border: 2px solid #1d4a3c;
+  box-shadow: 0 3px 0 rgb(0 0 0 / 0.25);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1d4a3c;
+}
+.world__npc-name {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 10px;
+}
+
+.world__goal {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: rgb(20 40 80 / 0.85);
+  border: 1px solid #c9a24a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.world__label--building.is-goal {
+  outline: 3px solid #f3dc8a;
+  outline-offset: -3px;
+  animation: goal-blink 1.4s ease-in-out infinite;
+}
+@keyframes goal-blink {
+  0%, 100% { outline-color: #f3dc8a; }
+  50% { outline-color: rgb(243 220 138 / 0.2); }
+}

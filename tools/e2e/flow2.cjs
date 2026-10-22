@@ -127,8 +127,8 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.click('text=はじめから'); await page.click('[data-gender="female"]'); await waitScreen(page, 'world'); await page.click('.modal .btn--primary');
-    // 9個持っている状態にして、10個目（街 1,2）を調べて拾う
-    await patchReload(page, { fragments: ['fragment-02','fragment-03','fragment-04','fragment-05','fragment-06','fragment-07','fragment-08','fragment-09','fragment-10'], location: { mapId: 'town', x: 1, y: 3, dir: 'up' } });
+    // 9個持っている状態にして、10個目（街 1,1）を調べて拾う（序盤イベントの声かけは済んだことにする）
+    await patchReload(page, { fragments: ['fragment-02','fragment-03','fragment-04','fragment-05','fragment-06','fragment-07','fragment-08','fragment-09','fragment-10'], location: { mapId: 'town', x: 1, y: 2, dir: 'up' }, story: { intro: 'deferred' } });
     await page.click('text=つづきから'); await waitScreen(page, 'world');
     await page.click('.world__action');
     log('examine front:', (await page.textContent('.modal')).replace(/\s+/g, ' '));

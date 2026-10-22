@@ -2,6 +2,7 @@ import { getDungeon } from '../../data/dungeons.ts';
 import { REWARDS } from '../../data/economy.ts';
 import { getMap, HOME, type ChestObject } from '../../data/maps.ts';
 import { addCards, addCoins, type DungeonRecord, type Location, type SaveData } from '../save/saveData.ts';
+import { isSolidTile } from '../world/world.ts';
 
 /**
  * ダンジョン探索の進行。
@@ -115,7 +116,8 @@ export function sanitizeLocation(save: SaveData): SaveData {
     return { ...save, activeDungeon: null };
   }
   const row = map.tiles[save.location.y];
-  if (!row || save.location.x < 0 || save.location.x >= row.length) {
+  // マップの外や、通れないマス（仮マップの作り直しで建物になった場所など）にいたら出現位置へ
+  if (!row || save.location.x < 0 || save.location.x >= row.length || isSolidTile(row[save.location.x] ?? '#')) {
     return { ...save, location: { mapId: map.id, ...map.spawn } };
   }
   return save;

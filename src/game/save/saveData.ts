@@ -8,6 +8,8 @@ import {
   isDeckValid,
   type Deck,
 } from '../deck/deck.ts';
+import type { IntroState } from '../../data/storyScenes.ts';
+import { isIntroState, recoverIntro } from '../story/intro.ts';
 
 /**
  * セーブデータ（カード所持・通貨・パック解放・欠片・大会実績・ダンジョン進捗・デッキを一元管理）。
@@ -16,7 +18,7 @@ import {
  * - 読み込み時は normalizeSave() で型・範囲を確認し、壊れた値は既定値に戻す
  * - 変更はすべて「古いセーブを受け取り新しいセーブを返す」純粋関数で行う
  */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type Gender = 'male' | 'female';
 export type Direction = 'down' | 'up' | 'left' | 'right';
@@ -88,11 +90,16 @@ export interface SaveData {
     readonly battlesLost: number;
     readonly packsOpened: number;
   };
+  /** 物語の進み具合（序盤イベント。src/game/story/intro.ts） */
+  readonly story: { readonly intro: IntroState };
 }
 
 export const TRANSACTION_LOG_SIZE = 100;
 
-export const DEFAULT_LOCATION: Location = { mapId: 'town', x: 7, y: 21, dir: 'up' };
+export const DEFAULT_LOCATION: Location = { mapId: 'town', x: 10, y: 18, dir: 'up' };
+
+/** 新しく始めたときの位置：自分の家の中（家から街に出ると、となりの家の女性が声をかける） */
+export const NEW_GAME_LOCATION: Location = { mapId: 'home', x: 4, y: 6, dir: 'down' };
 
 export function createNewSave(now: Date = new Date()): SaveData {
   const iso = now.toISOString();
@@ -113,9 +120,10 @@ export function createNewSave(now: Date = new Date()): SaveData {
     activeDungeon: null,
     fragments: [],
     hiddenRestored: false,
-    location: DEFAULT_LOCATION,
+    location: NEW_GAME_LOCATION,
     processedTransactions: [],
     stats: { battlesWon: 0, battlesLost: 0, packsOpened: 0 },
+    story: { intro: 'notSeen' },
   };
 }
 
@@ -145,9 +153,18 @@ function migrateDeckRulesV2(raw: RawObject): RawObject {
   return { ...raw, collection, deck: next };
 }
 
+/**
+ * version 2 → 3（2026-10-22）：物語の進み具合（序盤イベント）を足した。
+ * すでに遊んでいる人に導入の会話を突然始めないよう、「あとで」を選んだのと同じ状態にする（話しかければ誘い直す）。
+ */
+function migrateStoryV3(raw: RawObject): RawObject {
+  return { ...raw, story: { intro: 'deferred' } };
+}
+
 /** version n → n+1 の変換。形式を変えるときはここに足し、SAVE_VERSION を上げる */
 const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
   1: migrateDeckRulesV2,
+  2: migrateStoryV3,
 };
 
 export function migrate(raw: RawObject): RawObject | null {
@@ -252,6 +269,7 @@ export function normalizeSave(raw: unknown): SaveData | null {
   const base = createNewSave();
   const player = isObject(migrated.player) ? migrated.player : {};
   const stats = isObject(migrated.stats) ? migrated.stats : {};
+  const story = isObject(migrated.story) ? migrated.story : {};
   const rank = RANK_ORDER.includes(migrated.rank as RankId) ? (migrated.rank as RankId) : 'E';
   const startPacks = PACKS.filter((p) => p.unlockedFromStart).map((p) => p.id);
   return {
@@ -281,6 +299,8 @@ export function normalizeSave(raw: unknown): SaveData | null {
       battlesLost: asCount(stats.battlesLost),
       packsOpened: asCount(stats.packsOpened),
     },
+    // 読めない値は「あとで」と同じ扱い（導入を突然始めない）。練習試合の最中に閉じたなら練習場に着いた状態へ
+    story: { intro: isIntroState(story.intro) ? recoverIntro(story.intro) : 'deferred' },
   };
 }
 

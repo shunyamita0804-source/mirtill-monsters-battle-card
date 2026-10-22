@@ -18,6 +18,7 @@ import {
 } from '../../game/battle/engine.ts';
 import { describePlayCard, effectLabel, statLabel, supportShortText } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
+import { nextBattleHint, type BattleHintId } from '../../game/story/battleTutorial.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
 import { cardName, opponentName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
@@ -109,6 +110,9 @@ export const battleScreen: ScreenDefinition = {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let destroyed = false;
     const finish = once((winner: BattleState['winner']) => req.onFinish(winner ?? 'draw'));
+    /** 最初の練習試合のヒント（出したものは2度出さない。出ている間は相手も待つ） */
+    const seenHints = new Set<BattleHintId>();
+    let hintOpen: BattleHintId | null = null;
 
     const dealing = (): boolean => Date.now() < busyUntil;
 
@@ -182,7 +186,7 @@ export const battleScreen: ScreenDefinition = {
       !s.sides.player.hand.some((c) => cardUsability(s, 'player', c.uid).usable);
 
     const scheduleAi = (): void => {
-      if (timer || destroyed || !state) return;
+      if (timer || destroyed || !state || hintOpen) return;
       const side = actingSide(state);
       if (!side) return;
       const wait = Math.max(0, busyUntil - Date.now());
@@ -588,6 +592,35 @@ export const battleScreen: ScreenDefinition = {
       );
     };
 
+    /** 練習試合のヒント（「わかった」で閉じる。常設のボタンは増やさない） */
+    const hintOverlay = (s: BattleState): HTMLElement | null => {
+      if (!req.tutorial || auto) return null;
+      if (!hintOpen && !dealing()) {
+        const next = nextBattleHint(s, seenHints, !noDefensePossible(s));
+        if (next) {
+          hintOpen = next;
+          seenHints.add(next);
+        }
+      }
+      if (!hintOpen) return null;
+      const ok = commandButton(t('story.hint.ok'), () => {
+        ok.disabled = true;
+        hintOpen = null;
+        render();
+      });
+      return h(
+        'div',
+        { class: 'battle__hint', dataset: { hint: hintOpen }, attrs: { role: 'dialog' } },
+        h(
+          'div',
+          { class: 'battle__hint-panel' },
+          h('p', { class: 'battle__hint-title', text: t('story.hint.title') }),
+          h('p', { class: 'battle__hint-text', text: t(`story.hint.${hintOpen}`) }),
+          ok,
+        ),
+      );
+    };
+
     const header = (): HTMLElement =>
       h(
         'header',
@@ -780,7 +813,7 @@ export const battleScreen: ScreenDefinition = {
         detailPanel(s),
         hand,
       );
-      const overlays = [commands, defenseOverlay(s), resultOverlay(s), phaseBanner(s)].filter((o): o is HTMLElement => o !== null);
+      const overlays = [commands, defenseOverlay(s), resultOverlay(s), phaseBanner(s), hintOverlay(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);
       const handEl = element.querySelector('.battle__hand');
       if (handEl) handEl.scrollLeft = handScroll;

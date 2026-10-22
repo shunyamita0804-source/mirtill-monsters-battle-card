@@ -2,6 +2,7 @@ import { BATTLE } from './battle.ts';
 import { CARDS } from './cards.ts';
 import { COMMON } from './common.ts';
 import { SCREENS } from './screens.ts';
+import { STORY } from './story.ts';
 import { WORLD } from './world.ts';
 
 /**
@@ -14,6 +15,7 @@ export const MESSAGE_GROUPS = {
   screens: SCREENS,
   world: WORLD,
   battle: BATTLE,
+  story: STORY,
 } as const;
 
 export const MESSAGES = {
@@ -22,6 +24,7 @@ export const MESSAGES = {
   ...SCREENS,
   ...WORLD,
   ...BATTLE,
+  ...STORY,
 };
 
 export type MessageKey = keyof typeof MESSAGES;

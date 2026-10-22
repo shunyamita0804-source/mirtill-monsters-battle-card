@@ -41,10 +41,10 @@ export function objectsAt(
   return map.objects.filter((o) => isVisible(o) && objectCovers(o, x, y));
 }
 
-/** 通れないマスか。敵・宝箱は表示中なら通れない（敵は接触でバトル） */
+/** 通れないマスか。敵・宝箱・人は表示中なら通れない（敵は接触でバトル） */
 export function isBlocked(map: MapDefinition, x: number, y: number, isVisible: (obj: MapObject) => boolean): boolean {
   if (isSolidTile(tileAt(map, x, y))) return true;
-  return objectsAt(map, x, y, isVisible).some((o) => o.type === 'enemy' || o.type === 'chest');
+  return objectsAt(map, x, y, isVisible).some((o) => o.type === 'enemy' || o.type === 'chest' || o.type === 'npc');
 }
 
 export function directionBetween(from: Point, to: Point): Direction {

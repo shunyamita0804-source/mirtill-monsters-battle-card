@@ -38,4 +38,6 @@ export const ENCOUNTERS: Readonly<Record<string, OpponentDefinition>> = {
   'enc-b3-a': { id: 'enc-b3-a', name: '深層の群れ（仮）', monsters: ['g', 'a', 'f'].map(monsterId), lifeScale: 0.85 },
   'enc-b3-b': { id: 'enc-b3-b', name: '深層の群れ（仮）', monsters: ['e', 'g', 'b'].map(monsterId), lifeScale: 0.85 },
   'enc-b3-boss': { id: 'enc-b3-boss', name: '最奥のボス（仮）', monsters: ['g', 'e', 'f'].map(monsterId), lifeScale: 0.85 },
+  // カード練習場の練習相手（序盤の練習試合）。スターターと同じモンスター3体を少し弱くしたもの（仮。正式な練習相手のデッキは未定）
+  'enc-practice': { id: 'enc-practice', name: '練習相手（仮）', monsters: ['a', 'b', 'c'].map(monsterId), lifeScale: 0.6 },
 };

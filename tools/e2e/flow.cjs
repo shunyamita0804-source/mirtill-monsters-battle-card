@@ -32,6 +32,12 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
   const mapId = () => page.evaluate(() => document.querySelector('.world')?.dataset.map ?? null);
   const pos = () => page.evaluate(() => { const w = document.querySelector('.world'); return w ? [Number(w.dataset.px), Number(w.dataset.py)] : null; });
   const closeModals = async () => { for (let i = 0; i < 5; i++) { const b = await page.$('.modal .btn--primary'); if (!b) return; await b.click(); await page.waitForTimeout(150); } };
+  /** 会話が開いていたらスキップする（序盤イベントの声かけなど） */
+  const skipTalk = async () => {
+    for (let i = 0; i < 10 && !(await page.$('.talk')); i++) await page.waitForTimeout(200);
+    const s = await page.$('.talk__skip');
+    if (s) { await s.click(); await page.waitForTimeout(200); log('talk skipped'); }
+  };
   const waitScreen = async (id, timeout = 15000) => { await page.waitForFunction((id) => document.querySelector('.stage').dataset.screen === id, id, { timeout }); };
   // 画面外のマスは、その方向で画面内に見えている一番遠いマスをタップする（人が操作するのと同じ）
   const tapTile = async (x, y) => {
@@ -82,10 +88,8 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
   await page.click('[data-gender="female"]');
   await waitScreen('world');
   await closeModals();
-  await shot('town-start');
-
-  // 家：机・本棚・ベッド・地図
-  log('walk to home', await walkTo(3, 11, { untilMap: 'home' }));
+  // 新しく始めると自分の家の中から始まる
+  log('start map', await mapId());
   await shot('home');
   await walkTo(1, 6); await waitScreen('deck'); await shot('deck');
   log('deck status:', await page.textContent('.deck__status'));
@@ -94,16 +98,18 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
   await walkTo(8, 1); await waitScreen('collection'); await shot('collection'); await page.click('text=‹ 戻る'); await waitScreen('world');
   await walkTo(1, 1); await waitScreen('settings'); await shot('settings'); await page.click('text=‹ 戻る'); await waitScreen('world');
 
-  // 欠片：街の (12,7) で調べる
+  // 欠片：街の (16,7) で調べる（最初に街へ出たときの声かけはスキップ）
   log('to town', await walkTo(4, 8, { untilMap: 'town' }));
-  await walkTo(12, 7);
+  await skipTalk();
+  await shot('town-start');
+  await walkTo(16, 7);
   await page.click('.world__action');
   log('examine:', (await page.textContent('.modal')).replace(/\s+/g, ' '));
   await shot('fragment');
   await closeModals();
 
   // ショップ
-  log('to shop', await walkTo(13, 11, { untilMap: 'shop' }));
+  log('to shop', await walkTo(4, 14, { untilMap: 'shop' }));
   await shot('shop');
   await walkTo(4, 2); await waitScreen('shopMenu'); await shot('shop-menu');
   await page.click('text=カードを見る'); await waitScreen('cardList'); await shot('card-list');
@@ -132,7 +138,7 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
 
   // ダンジョン
   await walkTo(4, 8, { untilMap: 'town' });
-  await walkTo(3, 11, { untilMap: 'home' });
+  await walkTo(14, 14, { untilMap: 'home' });
   await walkTo(5, 1); await waitScreen('dungeonSelect'); await shot('dungeon-select');
   await page.click('text=出発する'); await waitScreen('world');
   log('dungeon map', await mapId());
@@ -171,7 +177,7 @@ const log = (...a) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}s]`,
 
   // 大会
   await walkTo(4, 8, { untilMap: 'town' });
-  await walkTo(7, 5, { untilMap: 'hall' });
+  await walkTo(10, 4, { untilMap: 'hall' });
   await shot('hall');
   await walkTo(5, 7); await waitScreen('tournament'); await shot('tournament');
   let won = false;
