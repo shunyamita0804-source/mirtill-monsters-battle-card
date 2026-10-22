@@ -1,0 +1,644 @@
+{
+ "note": "単位は部屋の左上からのピクセル。1マス64。上192pxは奥の壁",
+ "wall_top": 192,
+ "rooms": [
+  {
+   "id": "ROOM_PLAYER",
+   "name": "主人公の家",
+   "size": [
+    768,
+    832
+   ],
+   "door": [
+    320,
+    448
+   ],
+   "items": [
+    {
+     "id": "BED",
+     "name": "ベッド",
+     "kind": "furniture",
+     "rect": [
+      64,
+      192,
+      256,
+      448
+     ],
+     "use": "設定（言語・音など）"
+    },
+    {
+     "id": "WALL_MAP",
+     "name": "壁の地図",
+     "kind": "wall",
+     "rect": [
+      288,
+      48,
+      480,
+      160
+     ],
+     "use": "ダンジョンを選ぶ"
+    },
+    {
+     "id": "BOOKSHELF",
+     "name": "本棚",
+     "kind": "furniture",
+     "rect": [
+      576,
+      192,
+      704,
+      288
+     ],
+     "use": "図鑑（集めたカード）"
+    },
+    {
+     "id": "DESK",
+     "name": "机と椅子",
+     "kind": "furniture",
+     "rect": [
+      64,
+      576,
+      256,
+      704
+     ],
+     "use": "デッキを組む"
+    },
+    {
+     "id": "RUG",
+     "name": "じゅうたん",
+     "kind": "rug",
+     "rect": [
+      288,
+      384,
+      512,
+      576
+     ],
+     "use": ""
+    },
+    {
+     "id": "PLANT",
+     "name": "植木鉢",
+     "kind": "furniture",
+     "rect": [
+      640,
+      640,
+      704,
+      736
+     ],
+     "use": ""
+    },
+    {
+     "id": "WINDOW",
+     "name": "窓",
+     "kind": "wall",
+     "rect": [
+      544,
+      48,
+      704,
+      144
+     ],
+     "use": ""
+    }
+   ]
+  },
+  {
+   "id": "ROOM_GUIDE",
+   "name": "案内役の家",
+   "size": [
+    768,
+    832
+   ],
+   "door": [
+    320,
+    448
+   ],
+   "items": [
+    {
+     "id": "FIREPLACE",
+     "name": "暖炉",
+     "kind": "wall",
+     "rect": [
+      288,
+      32,
+      480,
+      192
+     ],
+     "use": ""
+    },
+    {
+     "id": "KITCHEN",
+     "name": "台所の棚",
+     "kind": "furniture",
+     "rect": [
+      64,
+      192,
+      256,
+      288
+     ],
+     "use": ""
+    },
+    {
+     "id": "BOOKSHELF",
+     "name": "本棚",
+     "kind": "furniture",
+     "rect": [
+      576,
+      192,
+      704,
+      288
+     ],
+     "use": ""
+    },
+    {
+     "id": "TABLE",
+     "name": "丸テーブルと椅子",
+     "kind": "furniture",
+     "rect": [
+      224,
+      384,
+      448,
+      576
+     ],
+     "use": ""
+    },
+    {
+     "id": "GUIDE_SPOT",
+     "name": "案内役の立ち位置",
+     "kind": "npc",
+     "rect": [
+      512,
+      416,
+      608,
+      512
+     ],
+     "use": "話しかける（案内・チュートリアル）"
+    },
+    {
+     "id": "FLOWER",
+     "name": "花台",
+     "kind": "furniture",
+     "rect": [
+      64,
+      640,
+      128,
+      736
+     ],
+     "use": ""
+    },
+    {
+     "id": "WINDOW",
+     "name": "窓",
+     "kind": "wall",
+     "rect": [
+      64,
+      48,
+      224,
+      144
+     ],
+     "use": ""
+    }
+   ]
+  },
+  {
+   "id": "ROOM_HOUSE",
+   "name": "民家（住宅A〜Eで共通）",
+   "size": [
+    640,
+    704
+   ],
+   "door": [
+    256,
+    384
+   ],
+   "items": [
+    {
+     "id": "SHELF",
+     "name": "棚",
+     "kind": "furniture",
+     "rect": [
+      64,
+      192,
+      192,
+      256
+     ],
+     "use": ""
+    },
+    {
+     "id": "PLANT",
+     "name": "植木鉢",
+     "kind": "furniture",
+     "rect": [
+      512,
+      192,
+      576,
+      256
+     ],
+     "use": ""
+    },
+    {
+     "id": "TABLE",
+     "name": "テーブルと椅子",
+     "kind": "furniture",
+     "rect": [
+      192,
+      320,
+      448,
+      448
+     ],
+     "use": ""
+    },
+    {
+     "id": "RESIDENT_SPOT",
+     "name": "住人の立ち位置",
+     "kind": "npc",
+     "rect": [
+      480,
+      416,
+      576,
+      512
+     ],
+     "use": "話しかける"
+    },
+    {
+     "id": "WINDOW",
+     "name": "窓",
+     "kind": "wall",
+     "rect": [
+      256,
+      48,
+      384,
+      144
+     ],
+     "use": ""
+    }
+   ]
+  },
+  {
+   "id": "ROOM_SHOP",
+   "name": "カードショップ",
+   "size": [
+    1024,
+    896
+   ],
+   "door": [
+    448,
+    576
+   ],
+   "items": [
+    {
+     "id": "SHELF_WALL",
+     "name": "商品棚（カードとパック）",
+     "kind": "furniture",
+     "rect": [
+      64,
+      192,
+      512,
+      256
+     ],
+     "use": "見る"
+    },
+    {
+     "id": "PACK_MACHINE",
+     "name": "カードパック販売機",
+     "kind": "furniture",
+     "rect": [
+      768,
+      192,
+      960,
+      320
+     ],
+     "use": "パックを買う（今のガチャ）"
+    },
+    {
+     "id": "CLERK_SPOT",
+     "name": "店員の立ち位置",
+     "kind": "npc",
+     "rect": [
+      432,
+      320,
+      528,
+      416
+     ],
+     "use": ""
+    },
+    {
+     "id": "COUNTER",
+     "name": "カウンター",
+     "kind": "furniture",
+     "rect": [
+      256,
+      416,
+      704,
+      512
+     ],
+     "use": "店員と話す（買う・売る）"
+    },
+    {
+     "id": "CASE_L",
+     "name": "ショーケース（左）",
+     "kind": "furniture",
+     "rect": [
+      64,
+      576,
+      320,
+      672
+     ],
+     "use": "見る"
+    },
+    {
+     "id": "CASE_R",
+     "name": "ショーケース（右）",
+     "kind": "furniture",
+     "rect": [
+      704,
+      576,
+      960,
+      672
+     ],
+     "use": "見る"
+    }
+   ]
+  },
+  {
+   "id": "ROOM_LAB",
+   "name": "カード研究所",
+   "size": [
+    1024,
+    896
+   ],
+   "door": [
+    448,
+    576
+   ],
+   "items": [
+    {
+     "id": "BIG_SHELF",
+     "name": "図鑑の大きな本棚",
+     "kind": "furniture",
+     "rect": [
+      64,
+      192,
+      448,
+      256
+     ],
+     "use": "図鑑（集めたカード）"
+    },
+    {
+     "id": "CRYSTAL",
+     "name": "水晶の表示台",
+     "kind": "furniture",
+     "rect": [
+      576,
+      192,
+      736,
+      320
+     ],
+     "use": "集めた割合を見る（仮）"
+    },
+    {
+     "id": "SPECIMEN",
+     "name": "カード標本ケース",
+     "kind": "furniture",
+     "rect": [
+      832,
+      192,
+      960,
+      384
+     ],
+     "use": "見る"
+    },
+    {
+     "id": "RESEARCHER_SPOT",
+     "name": "研究員の立ち位置",
+     "kind": "npc",
+     "rect": [
+      432,
+      320,
+      528,
+      416
+     ],
+     "use": ""
+    },
+    {
+     "id": "DESK",
+     "name": "研究机",
+     "kind": "furniture",
+     "rect": [
+      256,
+      416,
+      704,
+      512
+     ],
+     "use": "研究員と話す"
+    },
+    {
+     "id": "SHELF2",
+     "name": "資料棚",
+     "kind": "furniture",
+     "rect": [
+      64,
+      576,
+      256,
+      672
+     ],
+     "use": ""
+    },
+    {
+     "id": "TABLE",
+     "name": "閲覧テーブル",
+     "kind": "furniture",
+     "rect": [
+      768,
+      576,
+      960,
+      672
+     ],
+     "use": ""
+    }
+   ]
+  },
+  {
+   "id": "ROOM_TRAINING",
+   "name": "カード練習場",
+   "size": [
+    1152,
+    960
+   ],
+   "door": [
+    512,
+    640
+   ],
+   "items": [
+    {
+     "id": "BOARD",
+     "name": "黒板（カードの図だけ・文字なし）",
+     "kind": "wall",
+     "rect": [
+      384,
+      32,
+      768,
+      176
+     ],
+     "use": "遊び方を見る（仮）"
+    },
+    {
+     "id": "TEACHER_SPOT",
+     "name": "先生の立ち位置",
+     "kind": "npc",
+     "rect": [
+      528,
+      224,
+      624,
+      320
+     ],
+     "use": "話しかける（練習の案内）"
+    },
+    {
+     "id": "SHELF",
+     "name": "教材の棚",
+     "kind": "furniture",
+     "rect": [
+      64,
+      192,
+      256,
+      256
+     ],
+     "use": ""
+    },
+    {
+     "id": "TABLE_1",
+     "name": "練習テーブル1",
+     "kind": "furniture",
+     "rect": [
+      128,
+      416,
+      448,
+      576
+     ],
+     "use": "練習試合（仮）"
+    },
+    {
+     "id": "TABLE_2",
+     "name": "練習テーブル2",
+     "kind": "furniture",
+     "rect": [
+      704,
+      416,
+      1024,
+      576
+     ],
+     "use": "練習試合（仮）"
+    },
+    {
+     "id": "BENCH_L",
+     "name": "ベンチ（左）",
+     "kind": "furniture",
+     "rect": [
+      128,
+      736,
+      384,
+      800
+     ],
+     "use": ""
+    },
+    {
+     "id": "BENCH_R",
+     "name": "ベンチ（右）",
+     "kind": "furniture",
+     "rect": [
+      768,
+      736,
+      1024,
+      800
+     ],
+     "use": ""
+    }
+   ]
+  },
+  {
+   "id": "ROOM_ARENA",
+   "name": "カードバトル大会会場",
+   "size": [
+    1280,
+    1152
+   ],
+   "door": [
+    576,
+    704
+   ],
+   "items": [
+    {
+     "id": "FLAGS",
+     "name": "旗（紋章だけ・文字なし）",
+     "kind": "wall",
+     "rect": [
+      192,
+      48,
+      1088,
+      176
+     ],
+     "use": ""
+    },
+    {
+     "id": "STAGE",
+     "name": "対戦ステージと対戦テーブル",
+     "kind": "furniture",
+     "rect": [
+      384,
+      256,
+      896,
+      576
+     ],
+     "use": "見る"
+    },
+    {
+     "id": "SEATS_L",
+     "name": "観客席（左）",
+     "kind": "furniture",
+     "rect": [
+      64,
+      256,
+      320,
+      768
+     ],
+     "use": ""
+    },
+    {
+     "id": "SEATS_R",
+     "name": "観客席（右）",
+     "kind": "furniture",
+     "rect": [
+      960,
+      256,
+      1216,
+      768
+     ],
+     "use": ""
+    },
+    {
+     "id": "RECEPTIONIST_SPOT",
+     "name": "受付の立ち位置",
+     "kind": "npc",
+     "rect": [
+      592,
+      672,
+      688,
+      768
+     ],
+     "use": ""
+    },
+    {
+     "id": "RECEPTION",
+     "name": "受付カウンター",
+     "kind": "furniture",
+     "rect": [
+      448,
+      768,
+      832,
+      864
+     ],
+     "use": "大会に申し込む"
+    }
+   ]
+  }
+ ]
+}
