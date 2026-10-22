@@ -137,6 +137,11 @@
   border-top: 1px solid var(--color-line);
   background: rgb(0 0 0 / 0.25);
   scrollbar-width: none;
+  /* 指でなぞる・上へはじく操作を画面のスクロールや長押しメニューに取られないように */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .battle__hand::-webkit-scrollbar {
@@ -169,6 +174,46 @@
 .battle__hand-card.is-selected {
   border-color: var(--color-accent);
   transform: translateY(-4px);
+}
+
+/* 指の下にあるカード（なぞっている間） */
+.battle__hand-card.is-touching {
+  border-color: var(--color-accent);
+  transform: translateY(-6px);
+  box-shadow: 0 0 12px rgb(255 214 120 / 0.55);
+}
+
+/* 上へ持ち上げたカードの元の場所（絵は指についていく） */
+.battle__hand-card.is-lifted {
+  opacity: 0.3;
+}
+
+/* 持ち上げたカード：指の少し上に出す */
+.battle__hand-ghost {
+  position: absolute;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 18px)) rotate(-3deg);
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.55));
+}
+
+.battle__hand-ghost-label {
+  padding: 2px 10px;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  background: rgb(8 12 36 / 0.88);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.battle__hand-ghost.is-unusable .battle__hand-ghost-label {
+  border-color: rgb(255 255 255 / 0.4);
+  opacity: 0.85;
 }
 
 .battle__hand-name {
