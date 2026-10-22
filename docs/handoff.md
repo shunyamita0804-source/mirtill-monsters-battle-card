@@ -1,4 +1,4 @@
-# 引き継ぎメモ（2026-10-22 時点・歩く操作の作り直しの公開のあと）
+# 引き継ぎメモ（2026-10-22 時点・セッション引き継ぎ用）
 
 新しいセッションで読むのは `CLAUDE.md` とこのファイルだけ。他の資料は必要になったときに1つずつ読む。
 
@@ -13,7 +13,7 @@
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
 | バトルのルール | **PS版『モンスターファーム バトルカード』準拠。変えるのは3点だけ**：山札60枚・ガッツを「マナ」と表記・全体カードとブリーダー（プレイヤー）カードを「サポート」に集約（ユーザー決定。`docs/battle-rules.md`） |
-| 街デザイン | **資料パック第1版を作成（`main` に取り込み済み）**。`docs/design/seimon-town/`。ChatGPT で部品ごとに描き、Claude が設計図どおりに並べる方式（ユーザー決定）。街は 4800×4800（主人公 108×144）。部屋7つも含む。届いた部品の画像はリポジトリに入れていない（ユーザーの手元とチャットにある） |
+| 街デザイン | 資料パック（`docs/design/seimon-town/`・`main` に取り込み済み）。ChatGPT で**部品ごと**に描き、Claude が設計図どおりに並べる方式（ユーザー決定）。進み具合：1回目の画風見本を採用（`07_画風見本/`。会場のドームは仕様どおり青）→ 2回目の建物10棟が届き合格 → 扉が主人公より小さかったため **B案（建物1.5倍・完成図 4800×4800・扉の高さ＝主人公の背たけ）** に設計図を作り直し済み。**未着：住宅E・噴水・地面の模様3・小物4・部屋の箱7・家具7**。届いた部品の画像はリポジトリに入れていない（ユーザーの手元。再度送ってもらう）。仮組み立ては `tools/design/seimon_town_preview.py` |
 | 序盤イベント | **公開済み（ユーザー OK・2026-10-22）**。ユーザーの「序盤導入・チュートリアル設計パック」どおり：家から街へ → となりの家の女性の声かけ → 北西の練習場 → 練習試合（場面ごとのヒント）→ 自由行動。会話 UI はミスモンの画像（ユーザー指示）。台詞・名前・会話の絵はすべて仮。セーブ version 3（旧セーブは導入を始めない） |
 | 次の作業 | ユーザーの次の指示待ち。iPhone での確認（序盤イベント・なぞって歩く操作）をお願い中。街デザインはデザイン担当の2回目の残り（住宅E・噴水・地面・小物・部屋）待ち |
 
@@ -45,9 +45,11 @@
 9. 街デザイン資料パック（2026-10-22）：ユーザーの ZIP（ChatGPT とのやり取りが行き詰まった街の設計）を受けて作成。
    設計図は `tools/design/seimon_town_pack.py` で作り、自動チェック（全玄関・出口へ歩ける、部屋の家具の前へ歩ける）付き。
    配布用 ZIP には参考画像（旧街・主人公素材）も入れる（リポジトリには画像を入れていない）
-10. 序盤イベント（2026-10-22）：ユーザーの ZIP「Seimon_Opening_Tutorial_DesignPack」（台本 V1・設計案）を実装。仮の街を新設計図に近い並びに作り直し
+10. 序盤イベント（2026-10-22・公開済み）：ユーザーの ZIP「Seimon_Opening_Tutorial_DesignPack」（台本 V1・設計案）を実装。仮の街を新設計図に近い並びに作り直し
    （練習場・となりの家を追加、出入口・欠片・e2e の座標を更新）。会話 UI＝ミスモンの会話画像（`assets/images/ui/talk/`・`docs/audio-credits.md`）。
    通し確認は `tools/e2e/intro.cjs`（`flow.cjs`・`flow2.cjs` も新しい街に合わせて更新）
+11. 歩く操作の作り直し（2026-10-22・公開済み）：画面のどこでも指でなぞると歩く（指を置いた所に半透明のスティック。4方向）。
+   方向キーと下の帯をなくし、街を画面いっぱいに。「しらべる」は右下の半透明の丸（金のふち・虫めがね）。すべらせないタップは従来どおり
 
 ## 3. 大事な約束（詳しくは CLAUDE.md）
 
@@ -61,7 +63,7 @@
 ## 4. 作業環境の手順
 
 クラウドセッションでは開始時に Node 24 と依存関係が自動で入る（`.claude/hooks/session-start.sh`）はずだが、
-**2026-10-22 は動かなかった**（Node 22 のまま・`node_modules` なし・`nvm install 24` も失敗。原因は未調査）。`node -v` が 24 でなければ：
+**2026-10-22 は2つのセッションとも動かなかった**（Node 22 のまま・`node_modules` なし。原因は未調査）。`node -v` が 24 でなければ：
 
 ```bash
 # 作業用フォルダ（スクラッチパッド）に Node 24 を直接入れて使う
@@ -78,10 +80,12 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 
 - ブラウザ確認：Playwright（`/opt/node-tools/node_modules/playwright`、Chromium は `/opt/pw-browsers`）
   - 通し確認：`PLAYWRIGHT_MODULE=/opt/node-tools/node_modules/playwright E2E_OUT=<保存先> node tools/e2e/flow.cjs http://127.0.0.1:4173/`
-    **新ルールで対戦が長くなり 15〜30分かかる**（ボスや決勝で負けるとやり直す）。バックグラウンドで、時間の上限を長く（1時間以上）して動かす
+    **10〜30分かかる**（ボスや決勝で負けるとやり直す）。バックグラウンドで、時間の上限を長く（1時間以上）して動かす
+  - 序盤イベントの確認：`tools/e2e/intro.cjs`（約1分半。日英・男女・「あとで」・スキップ・練習テーブル）
   - 操作・画面サイズ確認：`tools/e2e/flow2.cjs`（約1〜2分）
   - 確認中に `npm run check`／`vite build` を動かさない（表示中のファイルが入れ替わる）
-  - プレビューを止めるときは `pkill -f "vite previe[w]"`（`"vite preview"` と書くと自分のコマンドまで止まる）
+  - プレビューを止めるときは `pkill -f "vite previe[w]"`（`"vite preview"` と書くと自分のコマンドまで止まる）。
+    **同じコマンドの中で pkill とプレビューの起動を書かない**（起動の文字に一致して自分ごと止まる）。起動はバックグラウンド実行で、時間の上限を長く（2時間）する
   - URL に `?qa=1` で QA 用ボタン（バトルのオート・即勝利、所持金追加など）
 - 本編の素材を見るとき：`GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/shunyamita0804-source/mystic-monsters /home/user/shunyamita0804-source/mystic-monsters`（読み取りのみ）
 - PS版の参考サイト：note は読める。tapatalk・gamefaqs・legendcup は相手サイトの制限で読めない（必要ならユーザーに文章を貼ってもらう）
@@ -106,7 +110,9 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 - iPhone のホーム画面版（PWA）は、URL が変わるとセーブが見えない可能性あり → 設定の「セーブをバックアップ」で引き継ぐ（書き出し・復元の iPhone での操作は個別には未確認）
 - 正式アイコンの角の外側は白（原本のまま。透過加工は承認なしではしない）
 - 英語はすべて仮訳（カード・パック・大会・マップ・能力名 POW/INT）。正式な英語名は未決。小さいモンスターカードでは英語名が「Temp Mo…」と省略される
-- 次便の指示書で「次次便に保留」とされた事項・デザイン担当向けの街・主人公制作は、まだ受け取っていない（ユーザーから届いたら対応）
+- 次便の指示書で「次次便に保留」とされた事項は、まだ受け取っていない（ユーザーから届いたら対応）
+- 主人公の新しい歩行素材（216×288・男女32コマ。ユーザーの街 ZIP にあり）はまだゲームに入れていない（いまは QA 試作品 128×144 を 40×45 で表示）。新しい街を組み込むときに一緒に行う想定（街では 108×144 で表示）
+- 歩く操作は、仮の街がマス目のため4方向だけ。正式な街の絵を入れたら斜め（自由移動）にできる。歩く速さ・スティックの反応はユーザーの iPhone 確認しだいで調整
 - 商標の確認は未実施（名称変更＝商標の安全の保証ではない）
 - 演出の簡略化（動きを減らす設定）は未実装（必要なら項目を追加する）
 - PS版で未確認の裁定（ユーザーが実機で確認する約束）：`docs/battle-rules-audit.md` の5章、`docs/battle-rules.md` の「まだ確かめられていないこと」
@@ -131,7 +137,7 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 | カード（仮モンスター・仮技・仮サポート） | `src/data/cards.ts`・`src/game/cards/cardTypes.ts` |
 | バトルのルール本体・相手の思考 | `src/game/battle/engine.ts`・`src/game/battle/ai.ts` |
 | デッキの決まり・スターター・自動構築 | `src/game/deck/deck.ts` |
-| セーブ（形式 version 2・変換） | `src/game/save/saveData.ts` |
+| セーブ（形式 version 3・変換） | `src/game/save/saveData.ts` |
 | バトル画面・コマンドボタン | `src/ui/screens/battleScreen.ts`・`src/ui/components/commandButton.ts`・`src/ui/styles/battle.css` |
 | 効果音の割り当て・出どころ | `src/ui/sound.ts`（`SE_REGISTRY`）・`docs/audio-credits.md` |
 | 素材の置き場と記録 | `assets/README.md` |
@@ -139,5 +145,7 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 | 日英の辞書・英訳表 | `src/i18n/`（`docs/i18n.md`） |
 | 設定画面・バックアップ | `src/ui/screens/optionsScreen.ts`・`src/game/save/backup.ts`・`src/game/settings/settings.ts` |
 | 名称変更の記録 | `docs/rename-migration.md` |
+| 序盤イベント（進み具合・場面・台詞・会話UI・練習試合のヒント） | `src/game/story/`・`src/data/storyScenes.ts`・`src/i18n/messages/story.ts`・`src/ui/components/dialogue.ts`・`src/ui/styles/dialogue.css` |
+| 歩行画面（なぞって歩く・しらべる・案内役の表示） | `src/ui/screens/worldScreen.ts`・`src/ui/styles/world.css`・仮マップ `src/data/maps.ts` |
 | 街・部屋のデザイン資料（設計図・ChatGPT 依頼文・QA） | `docs/design/seimon-town/`（入口は `00_最初に読む_UTF8.txt`）・`tools/design/seimon_town_pack.py` |
 | カードデータ・ID の決まり・点検 | `docs/card-data-policy.md`・`src/game/cards/dataChecks.ts` |
