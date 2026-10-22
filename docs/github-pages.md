@@ -4,7 +4,7 @@
 
 > **現在の状態：2026-10-22 公開済み（ユーザー承認）。** リポジトリを Public にし、Pages の Source を「GitHub Actions」にしたうえで、
 > `.github/workflows/deploy-pages.yml`（手動実行）で `main` を公開する。
-> 公開URL（改名後）：https://shunyamita0804-source.github.io/sacred-monsters-battle-card/
+> 公開URL（2026-10-22 改名・公開済み）：https://shunyamita0804-source.github.io/sacred-monsters-battle-card/
 > 旧URL（https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/）は改名後は転送されない（GitHub Pages の仕様）
 
 ## ⚠ 公開前の注意

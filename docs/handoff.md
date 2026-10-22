@@ -7,13 +7,13 @@
 | 項目 | 状態 |
 | --- | --- |
 | 正式名称 | セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card・短縮「セイクリッドBC」）。旧称ミルティル・ミストリア |
-| 公開URL | 旧：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ （`142470a` のまま）。新：https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （**GitHub 上の改名待ち・未公開**） |
-| リポジトリ | https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Public）。**改名（→ `sacred-monsters-battle-card`）はユーザー操作待ち**（`docs/rename-migration.md`） |
-| 最新版 | `main`（次便の取り込み `2cc6961`。次便：改名・正式アイコン・日英・バックアップ・設定・データ点検。テスト 224件） |
+| 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `7f72020` を公開。2026-10-22）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
+| リポジトリ | https://github.com/shunyamita0804-source/sacred-monsters-battle-card （Public。2026-10-22 ユーザーが改名。旧名 mirtill-monsters-battle-card） |
+| 最新版 | `main` の `7f72020`（次便：改名・正式アイコン・日英・バックアップ・設定・データ点検。テスト 224件） |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
 | バトルのルール | **PS版『モンスターファーム バトルカード』準拠。変えるのは3点だけ**：山札60枚・ガッツを「マナ」と表記・全体カードとブリーダー（プレイヤー）カードを「サポート」に集約（ユーザー決定。`docs/battle-rules.md`） |
-| 次の作業 | ユーザーが GitHub でリポジトリ名を変えたら：接続先の変更 → Pages を `main` で公開 → 新URLで表示確認。それ以外は**指示待ち** |
+| 次の作業 | **ユーザーの次の指示待ち。** 指示が来るまで新しい作業を始めない |
 
 ## 2. これまでの作業（時系列・要点だけ）
 
@@ -93,7 +93,7 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 
 - iPhone 実機での確認はユーザー頼み：効果音（カードを引く・先攻後攻・マナ・ダメージ）が鳴るか・音量、中央の帯のコマンドと右上の「攻撃終了」の押しやすさ、
   マナが飛ぶ演出、旧セーブのデッキが自動で直っているか
-- 改名：GitHub の Settings → General → Repository name を `sacred-monsters-battle-card` に（ユーザー操作）。旧 Pages URL は転送されない
+- 新URLの表示・JS/CSS/画像/効果音の取得は Chromium で確認済み。iPhone Safari の実機は未確認。旧URLは 404（転送なし）
 - iPhone のホーム画面版（PWA）は、URL が変わるとセーブが見えない可能性あり → 設定の「セーブをバックアップ」で引き継ぐ（実機未確認）
 - 正式アイコンの角の外側は白（原本のまま）。iPhone のホーム画面で白い角が見えるかは未確認（透過加工は承認なしではしない）
 - 英語はすべて仮訳（カード・パック・大会・マップ・能力名 POW/INT）。正式な英語名は未決

@@ -22,9 +22,9 @@
 | `.github/workflows/ci.yml`・`deploy-pages.yml` | base は**実際のリポジトリ名**から作る（`VITE_BASE_PATH: /${{ github.event.repository.name }}/`）。改名の前に動かしても旧URLで壊れない |
 | テスト | `tests/viteConfig.test.ts`・`tests/assetPath.test.ts`・`tests/app.test.ts`・`tests/compat.test.ts` |
 
-## GitHub 上の改名（ユーザーの操作が必要）
+## GitHub 上の改名（2026-10-22 ユーザーが実施・完了）
 
-この作業環境からはリポジトリの名前を変えられない（権限・道具がない）。ユーザーに1回だけ操作してもらう：
+新URLへの公開も完了（`main` の `7f72020`）。手順の記録：
 
 1. https://github.com/shunyamita0804-source/mirtill-monsters-battle-card → Settings → General → Repository name を
    `sacred-monsters-battle-card` にして「Rename」
