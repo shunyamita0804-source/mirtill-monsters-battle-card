@@ -4,6 +4,7 @@ import { sanitizeLocation } from '../game/progress/dungeon.ts';
 import type { PracticeResult } from '../game/story/intro.ts';
 import { createNewSave, type SaveData } from '../game/save/saveData.ts';
 import { MemoryStorage, SaveRepository, type KeyValueStorage, type LoadResult } from '../game/save/saveRepository.ts';
+import type { BgmId } from './bgm.ts';
 import { SettingsStore } from './settingsStore.ts';
 
 /** バトル画面に渡す依頼。結果の処理（セーブ更新・画面遷移）は依頼元が持つ */
@@ -14,6 +15,10 @@ export interface BattleRequest {
   readonly allowSurrender: boolean;
   /** 最初の練習試合：場面に合わせてヒントを出す（バトルのルールは変えない） */
   readonly tutorial?: boolean;
+  /** 対戦中の BGM（無ければダンジョン・練習と同じ通常の対戦の曲） */
+  readonly bgm?: BgmId;
+  /** 対戦の背景の絵（無ければ従来の色の背景） */
+  readonly background?: string;
   /** 対戦後に1回だけ呼ばれる */
   readonly onFinish: (winner: BattleWinner) => void;
 }

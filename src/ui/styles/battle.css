@@ -3,6 +3,13 @@
   background: radial-gradient(ellipse at 50% 50%, #2e2556 0%, #17122c 75%);
 }
 
+/* 背景の絵があるとき（ダンジョンの対戦） */
+.battle.has-bg {
+  background:
+    linear-gradient(180deg, rgb(14 10 36 / 0.62) 0%, rgb(14 10 36 / 0.72) 100%),
+    var(--battle-bg) center / cover no-repeat;
+}
+
 .battle__missing {
   margin: 40px 20px 12px;
   text-align: center;

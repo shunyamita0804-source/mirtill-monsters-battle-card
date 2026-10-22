@@ -2,6 +2,7 @@ import { APP_INFO } from '../../config/app.ts';
 import { resolvePublicPath } from '../../core/assetPath.ts';
 import { getLanguage, t } from '../../i18n/i18n.ts';
 import { confirmModal } from '../components/modal.ts';
+import { bgm } from '../bgm.ts';
 import { button, h } from '../dom.ts';
 import type { ScreenDefinition } from './types.ts';
 
@@ -11,6 +12,7 @@ export const titleScreen: ScreenDefinition = {
   create(ctx) {
     const store = ctx.store;
     const element = h('main', { class: 'screen title' });
+    bgm.play('title');
     const start = (): void => {
       if (store.hasSave) {
         confirmModal(

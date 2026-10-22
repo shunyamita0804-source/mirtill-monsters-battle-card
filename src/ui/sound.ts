@@ -103,6 +103,11 @@ class SoundPlayer {
     return this.#ctx;
   }
 
+  /** BGM（bgm.ts）も同じ AudioContext を使う（iPhone で最初のタップに1つだけ鳴らせる状態にするため） */
+  audioContext(): AudioContext | null {
+    return this.#context();
+  }
+
   #source(entry: SoundEntry): string {
     if ('mp3' in entry) return entry.mp3;
     const probe = typeof document !== 'undefined' ? document.createElement('audio') : null;

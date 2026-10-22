@@ -29,6 +29,7 @@ import wineButtonUrl from '@assets/images/ui/button/btn_command_blank_wine.png';
 import { commandButton, confirmCommand } from '../components/commandButton.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
 import { createPlayCard, createSkillCard } from '../components/skillCard.ts';
+import { bgm } from '../bgm.ts';
 import { button, h } from '../dom.ts';
 import { once, type BattleRequest } from '../gameStore.ts';
 import { sound, type SoundId } from '../sound.ts';
@@ -121,6 +122,12 @@ export const battleScreen: ScreenDefinition = {
     }
     ctx.store.pendingBattle = null;
     const req: BattleRequest = request;
+    bgm.play(req.bgm ?? 'battle');
+    if (req.background) {
+      // 対戦の背景の絵（ダンジョン）。上に暗い膜を重ねて、カードや文字を読みやすくする
+      element.classList.add('has-bg');
+      element.style.setProperty('--battle-bg', `url("${req.background}")`);
+    }
     const save = ctx.store.save;
     const seed = randomSeed();
 

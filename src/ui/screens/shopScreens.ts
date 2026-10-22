@@ -10,6 +10,7 @@ import { t } from '../../i18n/i18n.ts';
 import { openCardDetail } from '../components/cardDetail.ts';
 import { createCardView } from '../components/cardView.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
+import { coinIcon } from '../components/coinIcon.ts';
 import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import { newId } from '../gameStore.ts';
@@ -35,7 +36,7 @@ export const shopMenuScreen: ScreenDefinition = {
           h('div', { class: 'shop-menu__clerk-figure', text: t('shop.clerk'), attrs: { 'aria-hidden': 'true' } }),
           h('p', { class: 'shop-menu__bubble', text: t('shop.greeting') }),
         ),
-        h('p', { class: 'shop-menu__coins', text: t('shop.coins', { n: save.coins }) }),
+        h('p', { class: 'shop-menu__coins' }, coinIcon(), t('shop.coins', { n: save.coins })),
         h(
           'nav',
           { class: 'shop-menu__items' },
@@ -222,7 +223,7 @@ export const gachaScreen: ScreenDefinition = {
           h('div', { class: 'gacha__machine-slot' }, h('div', { class: 'gacha__machine-pack' })),
           h('p', { class: 'gacha__machine-note', text: t('gacha.machineNote') }),
         ),
-        h('p', { class: 'gacha__coins', text: t('shop.coins', { n: save.coins }) }),
+        h('p', { class: 'gacha__coins' }, coinIcon(), t('shop.coins', { n: save.coins })),
         h('div', { class: 'gacha__packs' }, ...packs),
       );
     };

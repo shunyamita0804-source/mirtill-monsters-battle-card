@@ -3,13 +3,13 @@ import type { KeyValueStorage } from '../save/saveRepository.ts';
 
 /**
  * 設定（言語・音量）。セーブデータとは別に保存する（セーブの version やカードの記録には触れない）。
- * 音量は 0〜100（%）。BGM は素材が未導入のため、値を覚えておくだけ（将来用）。
+ * 音量は 0〜100（%）。
  */
 export interface GameSettings {
   readonly language: Language;
   /** 効果音の音量（0〜100） */
   readonly seVolume: number;
-  /** BGM の音量（0〜100。BGM 未導入のため将来用） */
+  /** BGM の音量（0〜100） */
   readonly bgmVolume: number;
   /** すべての音を消す */
   readonly muted: boolean;
@@ -38,6 +38,11 @@ export function normalizeSettings(raw: unknown): GameSettings {
     bgmVolume: asVolume(r.bgmVolume, DEFAULT_SETTINGS.bgmVolume),
     muted: typeof r.muted === 'boolean' ? r.muted : DEFAULT_SETTINGS.muted,
   };
+}
+
+/** 実際に鳴らす BGM の大きさ（0〜1） */
+export function effectiveBgmVolume(settings: GameSettings): number {
+  return settings.muted ? 0 : settings.bgmVolume / 100;
 }
 
 /** 実際に鳴らす効果音の大きさ（0〜1） */

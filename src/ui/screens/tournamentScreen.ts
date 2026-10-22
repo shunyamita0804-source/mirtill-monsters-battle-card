@@ -12,6 +12,10 @@ import {
 import { cardName, opponentName, packName, tournamentDescription, tournamentName } from '../../i18n/content.ts';
 import { t as tr } from '../../i18n/i18n.ts';
 import { confirmModal, openModal } from '../components/modal.ts';
+import coinIcon from '@assets/images/icons/coin.png';
+import medalIcon from '@assets/images/icons/prize_medal.webp';
+import pouchIcon from '@assets/images/icons/prize_pouch.webp';
+import { bgm } from '../bgm.ts';
 import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import { newId, once } from '../gameStore.ts';
@@ -29,7 +33,13 @@ const packLabel = (id: string): string => {
   return pack ? packName(pack) : id;
 };
 
-function prizeLines(t: TournamentDefinition): string[] {
+interface PrizeLine {
+  /** 景品のアイコン（ミスモンのアイテムの絵：参加報酬＝金貨、初回優勝＝勲章、再優勝＝小袋） */
+  readonly icon: string;
+  readonly text: string;
+}
+
+function prizeLines(t: TournamentDefinition): PrizeLine[] {
   const fw = t.rewards.firstWin;
   const first = [
     tr('common.coins', { n: fw.coins }),
@@ -38,9 +48,9 @@ function prizeLines(t: TournamentDefinition): string[] {
     ...fw.cards.map((c) => tr('tournament.prizeCard', { name: cardName(c.cardId), n: c.count })),
   ];
   return [
-    tr('tournament.participation', { n: t.rewards.participationCoins }),
-    tr('tournament.firstWin', { rewards: first.join(tr('tournament.prizeSeparator')) }),
-    tr('tournament.repeatWin', { n: t.rewards.repeatWin.coins }),
+    { icon: coinIcon, text: tr('tournament.participation', { n: t.rewards.participationCoins }) },
+    { icon: medalIcon, text: tr('tournament.firstWin', { rewards: first.join(tr('tournament.prizeSeparator')) }) },
+    { icon: pouchIcon, text: tr('tournament.repeatWin', { n: t.rewards.repeatWin.coins }) },
   ];
 }
 
@@ -54,6 +64,7 @@ export const tournamentScreen: ScreenDefinition = {
   create(ctx) {
     const store = ctx.store;
     const element = h('main', { class: 'screen tournament' });
+    bgm.play('tournament');
 
     const startMatch = once((t: TournamentDefinition, round: number) => {
       const opponent = t.rounds[round];
@@ -62,6 +73,7 @@ export const tournamentScreen: ScreenDefinition = {
         title: tr('tournament.battleTitle', { name: tournamentName(t), round: roundLabel(t, round) }),
         opponent,
         allowSurrender: true,
+        bgm: 'tournamentBattle',
         onFinish: (winner) => {
           const won = winner === 'player';
           store.update((s) => ({
@@ -105,7 +117,7 @@ export const tournamentScreen: ScreenDefinition = {
           tr('tournament.enterConfirm', { name: tournamentName(t) }),
           [
             h('p', { class: 'modal__text', text: tr('tournament.enterRule', { n: t.rounds.length, players: t.participants }) }),
-            ...prizeLines(t).map((l) => h('p', { class: 'modal__text', text: l })),
+            ...prizeLines(t).map((l) => h('p', { class: 'modal__text', text: l.text })),
             h('p', { class: 'modal__text modal__text--sub', text: tr('tournament.resumeNote') }),
           ],
           tr('tournament.enter'),
@@ -123,7 +135,13 @@ export const tournamentScreen: ScreenDefinition = {
         h('h2', { class: 'tournament__name', text: tr('tournament.nameTemp', { name: tournamentName(t) }) }),
         h('p', { class: 'tournament__desc', text: tournamentDescription(t) }),
         h('p', { class: 'tournament__cond', text: tr('tournament.condition', { rank: t.requiredRank, n: t.rounds.length }) }),
-        h('ul', { class: 'tournament__prizes' }, ...prizeLines(t).map((l) => h('li', { text: l }))),
+        h(
+          'ul',
+          { class: 'tournament__prizes' },
+          ...prizeLines(t).map((l) =>
+            h('li', {}, h('img', { class: 'tournament__prize-icon', attrs: { src: l.icon, alt: '', draggable: 'false' } }), h('span', { text: l.text })),
+          ),
+        ),
         h('p', {
           class: 'tournament__record',
           text: tr(record.firstWinClaimed ? 'tournament.recordClaimed' : 'tournament.record', { entries: record.entries, wins: record.wins }),

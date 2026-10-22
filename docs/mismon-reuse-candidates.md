@@ -1,6 +1,6 @@
 # ミスモン（mystic-monsters）の素材で使い回せそうなもの（2026-10-22 調査）
 
-本編 `shunyamita0804-source/mystic-monsters`（main `bc3160c`）の `assets/` を読み取りだけで確認した。**まだ何も取り込んでいない**（使うかはユーザーが決める）。
+本編 `shunyamita0804-source/mystic-monsters`（main `bc3160c`）の `assets/` を読み取りだけで確認した。**2026-10-22 ユーザー決定：使うのは「ダンジョン（野外の背景・宝箱）・景品のアイコン・ボタン・金貨・BGM」だけ。ほか（闘技場の背景・NPC・モンスター・技の絵など）は使わない**。取り込んだものは `docs/audio-credits.md`。
 本編は変更しない。使うときは `docs/audio-credits.md`（画像も同じ表の続き）に出どころを書き、ファイルは本編の README の「正式」の版をそのまま使う。
 
 ## 合うもの（バトルカードに足りない所を埋められる）
