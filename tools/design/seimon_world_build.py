@@ -7,7 +7,7 @@
 - 部品のファイル名は docs/design/seimon-town/05_補助資料/02_納品ファイル名一覧 の保存名（town_arena.png など）
 - 配置の正本は tools/design/seimon_town_pack.py の TOWN / ROOMS（設計図と同じ座標）
 - 出力
-  - assets/images/maps/town/town_r{行}c{列}.webp   街の完成図（4800 を 3600 に縮小し 3×3 に分割）
+  - assets/images/maps/town/town_r{行}c{列}.webp   街の完成図（MAP を 3/4 に縮小し 3×3 に分割。いまは 4032 → 3024）
   - assets/images/maps/rooms/{部屋}_shell.webp      部屋の箱（床と壁）
   - assets/images/maps/rooms/{部屋}_{家具}.webp     家具（1つずつ切り出し。人より奥／手前の重なりをゲームで決める）
   - src/data/worldArt.generated.ts                  マス目（歩ける所）・扉・家具の位置（ゲームが読む）
@@ -33,8 +33,8 @@ OUT_ROOMS = os.path.join(ROOT, 'assets/images/maps/rooms')
 OUT_TS = os.path.join(ROOT, 'src/data/worldArt.generated.ts')
 
 CELL = 32                 # 当たり判定のマス（完成図のピクセル）
-MAP = pack.MAP            # 4800
-TOWN_OUT = 3600           # 街の絵の書き出しの大きさ（ゲームでは 2700 論理px で表示＝約1.33倍の細かさ）
+MAP = pack.MAP            # 4032（2026-10-22 に 4800 から詰めた）
+TOWN_OUT = MAP * 3 // 4   # 街の絵の書き出しの大きさ（ゲームでは MAP×0.5625 論理px で表示＝約1.33倍の細かさ）
 TOWN_SPLIT = 3
 WEBP_Q = 82
 
@@ -193,32 +193,31 @@ PROPS = {
 
 # 小物の置き場所（足元の座標＝絵の下辺の中央）。緑地・道のわき・街のまわり。道（歩ける所）には重ねない
 # 自動で置くもの（木立・まわりの木）は place_props() で足す
+CENTER = pack.CX
 PROP_SPOTS = [
     # 東西の通りの北側：街灯（道の外の芝生）
-    ('lamp', 600, 2240), ('lamp', 1100, 2240), ('lamp', 1540, 2240), ('lamp', 3220, 2240), ('lamp', 3880, 2240), ('lamp', 4380, 2240),
+    ('lamp', 520, 1728), ('lamp', 920, 1728), ('lamp', 1360, 1728), ('lamp', 2660, 1728), ('lamp', 3040, 1728), ('lamp', 3440, 1728),
     # 噴水広場の外：ベンチ
-    ('bench', 1720, 2200), ('bench', 3080, 2200),
-    # 大会会場の前庭：旗と花壇
-    ('flag', 1990, 1700), ('flag', 2810, 1700),
-    # 木立（北西）
-    ('tree_small', 1790, 1640), ('tree_small', 1790, 1880),
+    ('bench', 1560, 1700), ('bench', 2480, 1700),
+    # 大会会場の前庭：旗
+    ('flag', 1600, 1380), ('flag', 2430, 1380),
     # 練習場の前
-    ('flowerbed_long', 560, 1260), ('flowerbed_long', 1170, 1260),
+    ('flowerbed_long', 420, 1010), ('flowerbed_long', 1000, 1010),
     # 花壇の小広場（南西）
-    ('flowerbed_long', 560, 2780), ('planter_round', 900, 2800), ('flowerbed_long', 1260, 2780), ('bench', 900, 2980),
-    ('planter_box', 480, 2990), ('planter_box', 1440, 2990),
-    # ショップのわき（樽・木箱）
-    ('barrel', 230, 3820), ('crates', 1210, 3830),
+    ('flowerbed_long', 380, 2220), ('planter_round', 760, 2240), ('flowerbed_long', 1140, 2220), ('bench', 760, 2340),
+    ('planter_box', 200, 2340), ('planter_box', 1340, 2340),
+    # ショップと研究所の間（木箱）
+    ('crates', 920, 3110),
     # 家と家の間の生け垣（南東）
-    ('bush', 3552, 3500), ('bush', 3552, 3780),
+    ('bush', 2976, 2820), ('bush', 2976, 3090),
     # 東の小さな緑地
-    ('planter_round', 3400, 2900), ('bench', 3800, 2880), ('planter_round', 4200, 2900),
-    # 北東の庭
-    ('flowerbed_long', 3000, 1500), ('planter_round', 3250, 1750), ('flowerbed_long', 3000, 1860), ('bench', 3250, 1500),
+    ('planter_round', 2760, 2300), ('bench', 3200, 2280), ('planter_round', 3640, 2300),
+    # 北東（住宅C のまわり）
+    ('flowerbed_long', 2760, 960), ('planter_round', 3700, 980),
     # 草原への出口：標柱と柵
-    ('signpost', 2160, 4520), ('fence', 1980, 4700), ('fence', 2820, 4700),
-    ('rock', 1500, 4500), ('rock', 3400, 4560), ('barrel', 2680, 4380),
-    ('crates', 4620, 2600), ('rock', 160, 2650),
+    ('signpost', CENTER - 240, 3760), ('fence', CENTER - 420, 3990), ('fence', CENTER + 420, 3990),
+    ('rock', 1400, 3700), ('rock', 3000, 3740), ('barrel', CENTER + 280, 3620),
+    ('crates', 3960, 2200), ('rock', 120, 2000),
 ]
 
 
@@ -385,7 +384,7 @@ def build_town(parts: str, check_dir: str | None):
         base.alpha_composite(part, xy)
         buildings.append((b, part, xy))
 
-    # 書き出し（3600 に縮小して 3×3）
+    # 書き出し（3/4 に縮小して 3×3）
     os.makedirs(OUT_TOWN, exist_ok=True)
     small = base.convert('RGB').resize((TOWN_OUT, TOWN_OUT), Image.LANCZOS)
     step = TOWN_OUT // TOWN_SPLIT

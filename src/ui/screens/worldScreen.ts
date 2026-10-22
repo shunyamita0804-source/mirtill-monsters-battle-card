@@ -62,8 +62,8 @@ const REVEAL_TIMEOUT_MS = 3000;
 const STICK_START = 12;
 const STICK_RADIUS = 42;
 const STICK_DEAD = 16;
-/** 歩行速度（論理px/秒・仮。実機で調整） */
-const WALK_PX = 185;
+/** 歩行速度（論理px/秒・仮。実機で調整）。2026-10-22 に街を詰めたとき 185 から 1.25 倍に（ユーザー指示） */
+const WALK_PX = 231;
 /** 歩行のコマ送り（コマ/秒。素材の推奨は約7） */
 const WALK_FPS = 7;
 /** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目で少し体が上がる */

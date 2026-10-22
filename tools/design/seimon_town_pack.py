@@ -6,7 +6,7 @@
       [--sprite 主人公の歩行シート.png]
 
 - 街と部屋の配置はこのファイルの TOWN / ROOMS が正本。ここを直して作り直す
-- 座標の単位は「街の完成図（4800×4800）のピクセル」。原点は左上
+- 座標の単位は「街の完成図（MAP×MAP。いまは 4032）のピクセル」。原点は左上
 - 主人公は 216×288 の素材を半分（108×144）にして置く前提
 """
 from __future__ import annotations
@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 # ───────────── 共通の決まり ─────────────
-MAP = 4800                         # 2026-10-22 B案：扉の高さを主人公の背たけに合わせ、3200 から広げた
+MAP = 4032                         # 2026-10-22 B案で 3200→4800（扉の高さを主人公の背たけに）。同日、移動が長いので 4032 に詰めた
 PLAYER_W, PLAYER_H = 108, 144      # 街・部屋での主人公の大きさ（素材 216×288 の半分）
 PLAYER_FIGURE = 124                # 透明部分を除いた体の高さ（約）
 CELL = 32                          # 当たり判定を作るときのマス
@@ -54,68 +54,71 @@ def vpath(x: int, top: int, bottom: int, w: int) -> list[int]:
 
 
 W_MAIN, W_LANE, W_DOOR = 288, 224, 192
+# 2026-10-22 街を詰めた（ユーザー指示「街が広すぎ・移動が面倒」）：4800 → 4032。建物の大きさは変えず、すき間と道を詰めた。
+# 住宅Dは北東の上の段から、東の通りの北の段（住宅Eのとなり）へ。北東の小道はなくし、住宅Cの道は住宅DとEの間をまっすぐ通りへ
+CX = MAP // 2                      # 南北の軸（大会会場・噴水・南の大通り・草原への出口）
+SY = 1888                          # 東西の通りの中心線・噴水の中心
+LANE = 3360                        # 南の通り（ショップ・研究所・家々の玄関の前）の中心線
 TOWN = {
     'size': [MAP, MAP],
     'buildings': [
-        dict(id='ARENA', name='カードバトル大会会場', zone='北中央', rect=[1680, 240, 3120, 1248], door_w=176,
+        dict(id='ARENA', name='カードバトル大会会場', zone='北中央', rect=[CX - 720, 96, CX + 720, 1104], door_w=176,
              color='#4A6FB0', canvas='1536x1024'),
-        dict(id='TRAINING', name='カード練習場', zone='北西', rect=[288, 552, 1440, 1152], door_w=136,
+        dict(id='TRAINING', name='カード練習場', zone='北西', rect=[128, 288, 1280, 888], door_w=136,
              color='#C98A45', canvas='1536x1024'),
-        dict(id='HOUSE_A', name='住宅A', zone='北西', rect=[1056, 1392, 1632, 1872], door_w=80,
+        dict(id='HOUSE_A', name='住宅A', zone='北西', rect=[848, 1152, 1424, 1632], door_w=80,
              color='#B5866E', canvas='1024x1024'),
-        dict(id='HOUSE_B', name='住宅B', zone='北西', rect=[120, 1392, 696, 1872], door_w=80,
+        dict(id='HOUSE_B', name='住宅B', zone='北西', rect=[16, 1152, 592, 1632], door_w=80,
              color='#B5866E', canvas='1024x1024'),
-        dict(id='HOUSE_C', name='住宅C', zone='北東', rect=[3336, 384, 3912, 864], door_w=80,
+        dict(id='HOUSE_C', name='住宅C', zone='北東', rect=[2912, 288, 3488, 768], door_w=80,
              color='#79A584', canvas='1024x1024'),
-        dict(id='HOUSE_D', name='住宅D', zone='北東', rect=[4104, 384, 4680, 864], door_w=80,
+        dict(id='HOUSE_D', name='住宅D', zone='北東', rect=[2528, 1152, 3104, 1632], door_w=80,
              color='#79A584', canvas='1024x1024'),
-        dict(id='HOUSE_E', name='住宅E', zone='北東', rect=[3864, 1392, 4440, 1872], door_w=80,
+        dict(id='HOUSE_E', name='住宅E', zone='北東', rect=[3296, 1152, 3872, 1632], door_w=80,
              color='#79A584', canvas='1024x1024'),
-        dict(id='SHOP', name='カードショップ', zone='南西', rect=[288, 3264, 1120, 3840], door_w=104,
+        dict(id='SHOP', name='カードショップ', zone='南西', rect=[48, 2544, 880, 3120], door_w=104,
              color='#D9A040', canvas='1536x1024'),
-        dict(id='LAB', name='カード研究所', zone='南西', rect=[1320, 3104, 2160, 3840], door_w=120,
+        dict(id='LAB', name='カード研究所', zone='南西', rect=[960, 2384, 1800, 3120], door_w=120,
              color='#4F9AA3', canvas='1024x1024'),
-        dict(id='PLAYER_HOME', name='主人公の家', zone='南東', rect=[2784, 3216, 3408, 3792], door_w=88,
+        dict(id='PLAYER_HOME', name='主人公の家', zone='南東', rect=[2256, 2544, 2880, 3120], door_w=88,
              color='#C0705A', canvas='1024x1024'),
-        dict(id='GUIDE_HOME', name='案内役の家', zone='南東', rect=[3696, 3216, 4320, 3792], door_w=88,
+        dict(id='GUIDE_HOME', name='案内役の家', zone='南東', rect=[3072, 2544, 3696, 3120], door_w=88,
              color='#B79E62', canvas='1024x1024'),
     ],
-    'fountain': dict(id='FOUNTAIN', name='噴水', center=[2400, 2400], slot=[2064, 2064, 2736, 2736],
+    'fountain': dict(id='FOUNTAIN', name='噴水', center=[CX, SY], slot=[CX - 336, SY - 336, CX + 336, SY + 336],
                      blocked_r=288, canvas='1024x1024'),
-    'plaza': dict(id='PLAZA', name='噴水広場（ぐるっと一周歩ける）', center=[2400, 2400], r=608),
+    'plaza': dict(id='PLAZA', name='噴水広場（ぐるっと一周歩ける）', center=[CX, SY], r=512),
     # 歩ける所（長方形の重ね合わせ＋広場の円）
     'walk': [
-        dict(id='N_FORECOURT', name='大会会場の前庭', rect=[2080, 1248, 2720, 1920]),
-        dict(id='S_STREET', name='南の大通り', rect=vpath(2400, 2900, MAP, W_MAIN)),
-        dict(id='W_STREET', name='西の通り', rect=hlane(480, 1900, 2400, W_MAIN)),
-        dict(id='E_STREET', name='東の通り', rect=hlane(2900, 4320, 2400, W_MAIN)),
-        dict(id='P_TRAINING', name='練習場への道', rect=vpath(864, 1152, 2400, W_DOOR)),
-        dict(id='P_HOUSE_B', name='住宅Bへの道', rect=vpath(408, 1872, 2400, W_DOOR)),
-        dict(id='P_HOUSE_A', name='住宅Aへの道', rect=vpath(1344, 1872, 2400, W_DOOR)),
-        dict(id='P_HOUSE_C', name='住宅Cへの道', rect=vpath(3624, 864, 2400, W_DOOR)),
-        dict(id='P_HOUSE_D', name='住宅Dへの道', rect=vpath(4392, 864, 1176, W_DOOR)),
-        dict(id='NE_LANE', name='北東の小道', rect=hlane(3624, 4392, 1176, W_LANE)),
-        dict(id='P_HOUSE_E', name='住宅Eへの道', rect=vpath(4152, 1872, 2400, W_DOOR)),
-        dict(id='P_SHOP', name='ショップの玄関前', rect=vpath(704, 3840, 4080, W_DOOR)),
-        dict(id='P_LAB', name='研究所の玄関前', rect=vpath(1740, 3840, 4080, W_DOOR)),
-        dict(id='SW_LANE', name='南西の通り', rect=hlane(704, 2400, 4080, W_LANE)),
-        dict(id='P_PLAYER', name='主人公の家の玄関前', rect=vpath(3096, 3792, 4080, W_DOOR)),
-        dict(id='P_GUIDE', name='案内役の家の玄関前', rect=vpath(4008, 3792, 4080, W_DOOR)),
-        dict(id='SE_LANE', name='南東の通り', rect=hlane(2400, 4008, 4080, W_LANE)),
+        dict(id='N_FORECOURT', name='大会会場の前庭', rect=[CX - 320, 1104, CX + 320, SY]),
+        dict(id='S_STREET', name='南の大通り', rect=vpath(CX, SY, MAP, W_MAIN)),
+        dict(id='W_STREET', name='西の通り', rect=hlane(304, CX, SY, W_MAIN)),
+        dict(id='E_STREET', name='東の通り', rect=hlane(CX, 3584, SY, W_MAIN)),
+        dict(id='P_TRAINING', name='練習場への道', rect=vpath(704, 888, SY, W_DOOR)),
+        dict(id='P_HOUSE_B', name='住宅Bへの道', rect=vpath(304, 1632, SY, W_DOOR)),
+        dict(id='P_HOUSE_A', name='住宅Aへの道', rect=vpath(1136, 1632, SY, W_DOOR)),
+        dict(id='P_HOUSE_C', name='住宅Cへの道', rect=vpath(3200, 768, SY, W_DOOR)),
+        dict(id='P_HOUSE_D', name='住宅Dへの道', rect=vpath(2816, 1632, SY, W_DOOR)),
+        dict(id='P_HOUSE_E', name='住宅Eへの道', rect=vpath(3584, 1632, SY, W_DOOR)),
+        dict(id='P_SHOP', name='ショップの玄関前', rect=vpath(464, 3120, LANE, W_DOOR)),
+        dict(id='P_LAB', name='研究所の玄関前', rect=vpath(1380, 3120, LANE, W_DOOR)),
+        dict(id='SW_LANE', name='南西の通り', rect=hlane(464, CX, LANE, W_LANE)),
+        dict(id='P_PLAYER', name='主人公の家の玄関前', rect=vpath(2568, 3120, LANE, W_DOOR)),
+        dict(id='P_GUIDE', name='案内役の家の玄関前', rect=vpath(3384, 3120, LANE, W_DOOR)),
+        dict(id='SE_LANE', name='南東の通り', rect=hlane(CX, 3384, LANE, W_LANE)),
     ],
-    'exit': dict(id='EXIT_SOUTH', name='草原への出口（土の道）', rect=[2256, 4416, 2544, MAP],
-                 trigger=[2256, 4704, 2544, MAP]),
+    'exit': dict(id='EXIT_SOUTH', name='草原への出口（土の道）', rect=[CX - 144, 3648, CX + 144, MAP],
+                 trigger=[CX - 144, MAP - 96, CX + 144, MAP]),
     # 飾りを置いてよい緑地（木・花壇・ベンチなど。歩ける所にははみ出さない）
     'green': [
-        dict(id='GREEN_NW', name='木立', rect=[1712, 1328, 2016, 1856]),
-        dict(id='GARDEN_NE', name='庭（植え込み）', rect=[2784, 1328, 3440, 1888]),
-        dict(id='GARDEN_SW', name='花壇の小広場', rect=[336, 2640, 1680, 3008]),
-        dict(id='GREEN_E', name='小さな緑地', rect=[3104, 2640, 4464, 3120]),
-        dict(id='HEDGE_SE', name='生け垣', rect=[3456, 3264, 3648, 3792]),
-        dict(id='MEADOW_SW', name='草地', rect=[144, 4320, 2160, 4704]),
-        dict(id='MEADOW_SE', name='草地（建物を足さない）', rect=[2640, 4320, 4656, 4704]),
+        dict(id='GREEN_NW', name='木立', rect=[1456, 1152, 1664, 1480]),
+        dict(id='GARDEN_SW', name='花壇の小広場', rect=[96, 2112, 1488, 2336]),
+        dict(id='GREEN_E', name='小さな緑地', rect=[2560, 2112, 3904, 2480]),
+        dict(id='HEDGE_SE', name='生け垣', rect=[2912, 2592, 3040, 3088]),
+        dict(id='MEADOW_SW', name='草地', rect=[96, 3536, 1808, 3936]),
+        dict(id='MEADOW_SE', name='草地（建物を足さない）', rect=[2224, 3536, 3936, 3936]),
     ],
-    'spawn': dict(name='ゲーム開始・家から出た所', point=[3096, 3888]),
+    'spawn': dict(name='ゲーム開始・家から出た所', point=[2568, 3216]),
 }
 
 # ───────────── 部屋の配置（正本） ─────────────
@@ -393,9 +396,9 @@ def draw_town(mask: Image.Image, player: Image.Image, labels=True, grid=True) ->
                 x1, y1, x2, y2 = w['rect']
                 cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
                 if w['id'] == 'S_STREET':
-                    cy = 3600
+                    cy = (SY + LANE) // 2 + 300
                 if w['id'] == 'N_FORECOURT':
-                    cy = 1560
+                    cy = 1240
                 label(d, (cx, cy), w['name'], size=24, box=False, fill=(140, 100, 60))
         label(d, (fx, fy + 350), '噴水（像なし）', size=36)
         label(d, (MAP // 2, MAP - 120), '↓ 草原へ（土の道）', size=36)
@@ -653,8 +656,8 @@ def coordinate_text() -> str:
         '設計図の見方と座標表（このファイルは tools/design/seimon_town_pack.py が自動で作成）',
         '',
         '■ 画像の一覧',
-        '街/T01_全体配置図_固定_4800.png　　　　　街の正本。建物の枠・玄関・歩ける所・緑地・4分割の線',
-        '街/T02_歩ける所マスク_白が歩ける_4800.png　白＝歩ける、黒＝歩けない（当たり判定のもと）',
+        f'街/T01_全体配置図_固定_{MAP}.png　　　　　街の正本。建物の枠・玄関・歩ける所・緑地・4分割の線',
+        f'街/T02_歩ける所マスク_白が歩ける_{MAP}.png　白＝歩ける、黒＝歩けない（当たり判定のもと）',
         '街/T03_主人公と扉の大きさ確認.png　　　　 扉の高さが主人公の背たけと同じくらいか（等倍）',
         '街/T04_建物の部品一覧_同じ倍率.png　　　　 建物と噴水の大きさの関係、玄関の幅、ChatGPT で作る画像の大きさ',
         '街/T05_4分割の管理図_縮小.png　　　　　　 完成図を4つに切る線（A北西・B北東・C南西・D南東）',
@@ -669,7 +672,7 @@ def coordinate_text() -> str:
         '赤の点線＝4分割の線（絵には描かない）',
         '',
         '■ 座標の読み方',
-        '・単位は完成図（4800×4800）のピクセル。左上が 0,0。右へ行くほど x、下へ行くほど y が大きい',
+        f'・単位は完成図（{MAP}×{MAP}）のピクセル。左上が 0,0。右へ行くほど x、下へ行くほど y が大きい',
         '・枠 [左, 上, 右, 下]。玄関は枠の下辺の真ん中',
         f'・主人公は {PLAYER_W}×{PLAYER_H}（素材 216×288 の半分）。1マス＝64',
         '',
@@ -719,9 +722,9 @@ def main() -> None:
 
     player = load_player(args.sprite, PLAYER_H)
     mask = town_mask()
-    mask.save(os.path.join(town_dir, 'T02_歩ける所マスク_白が歩ける_4800.png'), optimize=True)
+    mask.save(os.path.join(town_dir, f'T02_歩ける所マスク_白が歩ける_{MAP}.png'), optimize=True)
     town = draw_town(mask, player)
-    town_sheet(town).convert('RGB').save(os.path.join(town_dir, 'T01_全体配置図_固定_4800.png'), optimize=True)
+    town_sheet(town).convert('RGB').save(os.path.join(town_dir, f'T01_全体配置図_固定_{MAP}.png'), optimize=True)
     plain = draw_town(mask, player, labels=False)
     scale_check(plain, player).convert('RGB').save(os.path.join(town_dir, 'T03_主人公と扉の大きさ確認.png'),
                                                    optimize=True)
@@ -747,7 +750,7 @@ def main() -> None:
     # 座標表（機械が読む用）
     town_json = dict(TOWN)
     town_json['buildings'] = [dict(b, door=door_of(b)) for b in TOWN['buildings']]
-    town_json['note'] = '単位は完成図(4800×4800)のピクセル。rect=[左,上,右,下]。建物 rect は絵を置く枠、玄関は枠の下辺の中央'
+    town_json['note'] = f'単位は完成図({MAP}×{MAP})のピクセル。rect=[左,上,右,下]。建物 rect は絵を置く枠、玄関は枠の下辺の中央'
     town_json['player_size'] = [PLAYER_W, PLAYER_H]
     with open(os.path.join(town_dir, 'town_layout.json'), 'w', encoding='utf-8') as fp:
         json.dump(town_json, fp, ensure_ascii=False, indent=1)

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { APP_INFO } from '../src/config/app.ts';
 import { createBackup, parseBackup, serializeBackup } from '../src/game/save/backup.ts';
 import { createStarterDeck } from '../src/game/deck/deck.ts';
-import { DEFAULT_LOCATION } from '../src/game/save/saveData.ts';
+import { DEFAULT_LOCATION, migrate } from '../src/game/save/saveData.ts';
 import { MemoryStorage, SAVE_KEY } from '../src/game/save/saveRepository.ts';
 import { DEFAULT_SETTINGS, effectiveSeVolume, normalizeSettings, SETTINGS_KEY } from '../src/game/settings/settings.ts';
 import { getLanguage, setLanguage } from '../src/i18n/i18n.ts';
@@ -77,6 +77,16 @@ describe('改名前のセーブを新しい名前のアプリで読む', () => {
     const other = new GameStore(new MemoryStorage());
     expect(other.restoreSave(r.save)).toBe(true);
     expect(other.save).toEqual(before);
+  });
+});
+
+describe('街を詰めた（version 5）', () => {
+  it('街にいたセーブは主人公の家の前へ。部屋・ダンジョンにいたセーブはそのまま', () => {
+    expect(migrate({ version: 4, location: { mapId: 'town', x: 96, y: 121, dir: 'down' } })?.location).toEqual(DEFAULT_LOCATION);
+    const inShop = { mapId: 'shop', x: 5, y: 6, dir: 'up' };
+    expect(migrate({ version: 4, location: inShop })?.location).toEqual(inShop);
+    const inDungeon = { mapId: 'dungeon-01-b2', x: 3, y: 4, dir: 'left' };
+    expect(migrate({ version: 4, location: inDungeon })?.location).toEqual(inDungeon);
   });
 });
 
