@@ -117,8 +117,8 @@ export const BATTLE = {
     en: 'Attacking with {skill}… Waiting for the opponent to defend (damage now {n})',
   },
   'battle.prompt.mana': {
-    ja: 'マナ化：マナにするカードをタップして選び（何枚でも・1枚＝1マナ）、「マナにする」。終わったら「ターン終了」',
-    en: 'Mana phase: tap cards to pick them (any number, 1 card = 1 Mana), then "Make Mana". When done, "End Turn"',
+    ja: 'マナ化：マナにするカードをタップか指でなぞって選び（何枚でも・1枚＝1マナ）、「マナにする」か上へはじく。終わったら「ターン終了」',
+    en: 'Mana phase: tap or swipe across cards to pick them (any number, 1 card = 1 Mana), then "Make Mana" or flick one up. When done, "End Turn"',
   },
   'battle.prompt.manaFirst': {
     ja: '最初のターンはマナ化だけ。あと{n}枚まで選んで「マナにする」。終わったら「ターン終了」',
@@ -136,12 +136,12 @@ export const BATTLE = {
   'battle.prompt.usable': { ja: '使えます', en: 'Usable' },
   'battle.prompt.unusable': { ja: '使えません', en: 'Cannot use' },
   'battle.prompt.hintMain': {
-    ja: '手札のカードをタップすると、説明と「使う」が出ます。攻撃を終えるときは右上の「攻撃終了」',
-    en: 'Tap a card in your hand to see it and "Use". To end your attack, tap "End Attack" at the top right',
+    ja: '手札をタップ（指でなぞると見比べられます）すると、説明と「使う」が出ます。上へはじくとすぐ使えます。攻撃を終えるときは右上の「攻撃終了」',
+    en: 'Tap a card (swipe to compare) to see it and "Use". Flick a card up to use it right away. To end your attack, tap "End Attack" at the top right',
   },
   'battle.prompt.hint': {
-    ja: '手札のカードをタップすると、ここに説明と拡大したカードが出ます。',
-    en: 'Tap a card in your hand to see its details and a larger view here.',
+    ja: '手札のカードをタップするか指でなぞると、ここに説明と拡大したカードが出ます。',
+    en: 'Tap or swipe across your hand to see card details and a larger view here.',
   },
   'battle.detail.empty': { ja: 'カード', en: 'Card' },
 
@@ -149,6 +149,8 @@ export const BATTLE = {
   'battle.hand.aria': { ja: '手札', en: 'Hand' },
   'battle.hand.ariaPicked': { ja: '{name}（マナにする）', en: '{name} (to Mana)' },
   'battle.hand.ariaUnusable': { ja: '{name}（使えない）', en: '{name} (unusable)' },
+  'battle.hand.releaseUse': { ja: '離すと使う', en: 'Release to use' },
+  'battle.hand.releaseMana': { ja: '離すとマナに', en: 'Release for Mana' },
 
   // 守備
   'battle.defense.title': { ja: '相手の攻撃！', en: 'Enemy attack!' },

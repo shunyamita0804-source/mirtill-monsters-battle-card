@@ -467,13 +467,40 @@ describe('効果音のきっかけ（1つの結果につき1回）', () => {
     expect(kinds(s, seq)).toEqual([]);
   });
 
-  it('マナ化（マナが増える）ではマナ消費の音を出さない', () => {
+  it('マナ化は1枚につきマナ化の音を1件。マナ消費の音は出さない', () => {
     let s = battle();
     const seq = s.fxSeq;
-    const card = s.sides.player.hand[0];
-    if (!card) throw new Error('hand');
-    s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: card.uid });
+    const [c0, c1] = s.sides.player.hand;
+    if (!c0 || !c1) throw new Error('hand');
+    s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: c0.uid });
     expect(manaOf(s.sides.player)).toBe(1);
-    expect(kinds(s, seq)).toEqual([]);
+    expect(kinds(s, seq)).toEqual(['manaConvert']);
+    s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: c1.uid });
+    expect(kinds(s, seq)).toEqual(['manaConvert', 'manaConvert']);
+  });
+
+  it('マナ化できなかったとき（手札にないカード・上限を超えた）は音のきっかけを残さない', () => {
+    let s = battle();
+    const before = s.fxSeq;
+    expect(applyAction(s, { type: 'convertToMana', side: 'player', cardUid: 'none' })).toBe(s);
+    for (const c of s.sides.player.hand) s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: c.uid });
+    // 最初のターンは決まった枚数まで。それ以上は記録しない
+    expect(kinds(s, before)).toEqual(Array.from({ length: BATTLE_RULES.firstTurnManaLimit }, () => 'manaConvert'));
+  });
+
+  it('山札からマナが増えたとき（手札5枚のドロー・カードの効果）は、マナ化ではなく従来のマナ獲得', () => {
+    // 手札5枚で相手の番が始まる → 山札の一番上が1枚マナに
+    let s = withHand(battle(), 'opponent', Array.from({ length: BATTLE_RULES.refillHandTo }, () => MANA_CARD), 0);
+    s = { ...s, phase: 'mana', active: 'player' };
+    let seq = s.fxSeq;
+    s = applyAction(s, { type: 'endTurn', side: 'player' });
+    expect(manaOf(s.sides.opponent)).toBe(1);
+    expect(kinds(s, seq)).toEqual(['manaGain']);
+    // 「山札3枚をマナに」の技：支払いの音と、マナ獲得の音が1件ずつ
+    s = withHand(battle(), 'player', [skillId('b', 6)], 1);
+    seq = s.fxSeq;
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0' });
+    expect(manaOf(s.sides.player)).toBe(3);
+    expect(kinds(s, seq)).toEqual(['manaSpend', 'manaGain']);
   });
 });

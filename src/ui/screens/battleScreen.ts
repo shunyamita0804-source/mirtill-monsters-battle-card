@@ -37,6 +37,8 @@ import type { ScreenDefinition } from './types.ts';
 /** ルール上のきっかけ → 効果音 */
 const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
   manaSpend: 'manaSpend',
+  manaConvert: 'manaConvert',
+  manaGain: 'manaGain',
   evade: 'evade',
   hitNormal: 'hitNormal',
   hitStrong: 'hitStrong',
@@ -50,10 +52,16 @@ const DEAL_MS = 110;
 const ORDER_REVEAL_MS = 1300;
 /** マナにするカードが情報箱へ飛んでいく時間（ミリ秒） */
 const MANA_FLY_MS = 620;
-/** 何枚かまとめてマナにするとき、1枚ずつ少しずらして飛ばす（ミリ秒） */
-const MANA_FLY_STAGGER_MS = 70;
+/** 何枚かまとめてマナにするとき、1枚ずつ少しずらして飛ばす（ミリ秒。1枚ごとに着いた所でマナ化の音が鳴るので、音が重なりすぎない間隔） */
+const MANA_FLY_STAGGER_MS = 120;
 /** 場面の表示（あなたのターン・マナ化など）が出ている時間（ミリ秒） */
 const BANNER_MS = 1100;
+/** 手札を上へこれだけ持ち上げると「離すと使う／マナにする」になる（論理 px） */
+const HAND_LIFT_PX = 48;
+/** 手札が横にはみ出しているとき、指が端のこの幅に入ると自動で送る（論理 px） */
+const HAND_EDGE_PX = 32;
+/** 自動で送る速さ（1コマあたり px） */
+const HAND_SCROLL_STEP = 6;
 
 interface Targeting {
   readonly cardUid: string;
@@ -63,6 +71,26 @@ interface Targeting {
 
 /** 先攻・後攻のカード（表示の文字は orderFace() で引く） */
 type OrderLabel = 'first' | 'second';
+
+/** 手札を指でなぞっている間の状態（指を置いてから離すまで） */
+interface HandSwipe {
+  readonly pointerId: number;
+  /** 最初に指を置いたカード */
+  readonly startUid: string;
+  /** いま指の下にあるカード */
+  uid: string;
+  /** いまのカードに入ったときの指の位置（画面の座標）。持ち上げた量はここから測る */
+  anchorX: number;
+  anchorY: number;
+  x: number;
+  y: number;
+  /** 別のカードへなぞった */
+  moved: boolean;
+  /** 手札の列から上へ持ち上げている（離すと使う／マナにする） */
+  lifted: boolean;
+  /** マナ化：なぞったカードを候補に入れる（add）／外す（remove）。マナ化以外は null */
+  readonly paint: 'add' | 'remove' | null;
+}
 
 const orderFace = (label: OrderLabel): string => t(label === 'first' ? 'battle.order.faceFirst' : 'battle.order.faceSecond');
 
@@ -114,6 +142,16 @@ export const battleScreen: ScreenDefinition = {
     let lastFxSeq = 0;
     /** マナ化で選んだ手札（まとめてマナにする） */
     const manaPicks = new Set<string>();
+    /** マナ化で飛んでいる途中の手札（着くまで手札の列では隠しておく） */
+    const manaFlying = new Set<string>();
+    /** 描き直しても外さない演出の層（飛んでいくカード。外すとアニメーションが最初からになる） */
+    const fxLayer = h('div', { class: 'battle__fx-layer', attrs: { 'aria-hidden': 'true' } });
+    /** 画面を描き直す（演出の層だけは外さずに残す） */
+    const replaceView = (...nodes: (Node | string)[]): void => {
+      for (const child of [...element.childNodes]) if (child !== fxLayer) child.remove();
+      element.prepend(...nodes);
+      if (!fxLayer.isConnected) element.append(fxLayer);
+    };
     /** 最後に出した場面の表示（同じ表示を繰り返さない） */
     let bannerKey = '';
     /** 前回出したコマンド（同じなら出てくる動きをつけない） */
@@ -122,6 +160,10 @@ export const battleScreen: ScreenDefinition = {
     let auto = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let destroyed = false;
+    /** 手札をなぞっている間の状態と、持ち上げたカードの絵（指についてくる） */
+    let swipe: HandSwipe | null = null;
+    let swipeGhost: HTMLElement | null = null;
+    let swipeRaf = 0;
     const finish = once((winner: BattleState['winner']) => req.onFinish(winner ?? 'draw'));
     /** 最初の練習試合のヒント（出したものは2度出さない。出ている間は相手も待つ） */
     const seenHints = new Set<BattleHintId>();
@@ -145,7 +187,10 @@ export const battleScreen: ScreenDefinition = {
       return w > 0 ? element.getBoundingClientRect().width / w : 1;
     };
 
-    /** 選んだ手札をまとめてマナにする：カードが情報箱へ飛んでいき、着いたらマナが増える */
+    /**
+     * 選んだ手札をまとめてマナにする：カードが1枚ずつ情報箱へ飛んでいき、
+     * 1枚着くたびにマナが1増えてマナ化の音が1回鳴る（音・絵・マナの数をそろえる）
+     */
     const convertPicked = (): void => {
       if (!state || dealing() || manaPicks.size === 0) return;
       const picks = state.sides.player.hand.filter((c) => manaPicks.has(c.uid)).map((c) => c.uid);
@@ -165,22 +210,27 @@ export const battleScreen: ScreenDefinition = {
           fly.style.setProperty('--dx', `${(g.left + g.width / 2 - (r.left + r.width / 2)) / scale}px`);
           fly.style.setProperty('--dy', `${(g.top + g.height / 2 - (r.top + r.height / 2)) / scale}px`);
           fly.style.setProperty('--delay', `${i * MANA_FLY_STAGGER_MS}ms`);
-          element.append(fly);
+          fxLayer.append(fly);
           setTimeout(() => fly.remove(), MANA_FLY_MS + i * MANA_FLY_STAGGER_MS + 50);
           element.querySelector(`.battle__hand-card[data-uid="${uid}"]`)?.classList.add('is-leaving');
         }
       }
+      for (const uid of picks) manaFlying.add(uid);
       const total = MANA_FLY_MS + (picks.length - 1) * MANA_FLY_STAGGER_MS;
       busyUntil = Math.max(busyUntil, Date.now() + total);
-      setTimeout(() => {
-        if (destroyed || !state) return;
-        let next = state;
-        for (const uid of picks) next = applyAction(next, { type: 'convertToMana', side: 'player', cardUid: uid });
-        manaPicks.clear();
-        selectedUid = null;
-        state = next;
-        render();
-      }, total);
+      for (const [i, uid] of picks.entries()) {
+        setTimeout(() => {
+          manaFlying.delete(uid);
+          if (destroyed || !state) return;
+          // 1枚ずつルールに渡す（できなかった分は何も起きず、音も鳴らない）
+          state = applyAction(state, { type: 'convertToMana', side: 'player', cardUid: uid });
+          if (i === picks.length - 1) {
+            manaPicks.clear();
+            selectedUid = null;
+          }
+          render();
+        }, MANA_FLY_MS + i * MANA_FLY_STAGGER_MS);
+      }
     };
 
     /** マナ化で手札をタップ：マナにする候補に入れる／外す（最初のターンは決まった枚数まで） */
@@ -298,6 +348,191 @@ export const battleScreen: ScreenDefinition = {
         return;
       }
       dispatch({ type: 'useCard', side: 'player', cardUid });
+    };
+
+    /* ---------- 手札を指でなぞる ---------- */
+    // ・なぞる：指の下のカードを選んで中段に大きく出す（マナ化では、なぞったカードをまとめて候補に入れる／外す）
+    // ・上へはじく（持ち上げて離す）：そのカードを使う。マナ化では候補ごとマナにする
+    // ・タップは従来どおり。手札が横にはみ出すときは、指を端へ寄せると送る
+
+    const isMyMana = (s: BattleState): boolean => s.phase === 'mana' && s.active === 'player' && !auto;
+    const isMyMain = (s: BattleState): boolean => s.phase === 'main' && s.active === 'player' && !auto;
+
+    /** 指の位置にある手札（列の高さにあるときだけ。カードの間のすき間は近い方） */
+    const handCardAt = (x: number, y: number): string | null => {
+      const row = element.querySelector<HTMLElement>('.battle__hand');
+      if (!row) return null;
+      const r = row.getBoundingClientRect();
+      if (y < r.top || y > r.bottom) return null;
+      let best: string | null = null;
+      let bestGap = Infinity;
+      for (const el of row.querySelectorAll<HTMLElement>('.battle__hand-card')) {
+        const c = el.getBoundingClientRect();
+        if (c.right < r.left || c.left > r.right) continue;
+        const gap = x < c.left ? c.left - x : x > c.right ? x - c.right : 0;
+        if (gap < bestGap) {
+          bestGap = gap;
+          best = el.dataset.uid ?? null;
+        }
+      }
+      return best;
+    };
+
+    /** マナ化でなぞったカードを、最初のカードに合わせて候補に入れる／外す */
+    const paintManaPick = (uid: string): void => {
+      if (!swipe?.paint || dealing()) return;
+      if (manaPicks.has(uid) !== (swipe.paint === 'add')) toggleManaPick(uid);
+    };
+
+    /** 持ち上げたカードを指の上に出す（描き直しで消えるので、描き直しのたびに付け直す） */
+    const syncSwipeGhost = (): void => {
+      const s = state;
+      const hand = swipe?.lifted && s ? s.sides.player.hand.find((c) => c.uid === swipe?.uid) : undefined;
+      if (!swipe || !s || !hand) {
+        swipeGhost?.remove();
+        swipeGhost = null;
+        return;
+      }
+      if (!swipeGhost || swipeGhost.dataset.uid !== hand.uid) {
+        swipeGhost?.remove();
+        const usability = cardUsability(s, 'player', hand.uid);
+        const label = isMyMana(s) ? t('battle.hand.releaseMana') : usability.usable ? t('battle.hand.releaseUse') : (usability.reason ?? t('battle.prompt.unusable'));
+        swipeGhost = h(
+          'div',
+          { class: `battle__hand-ghost${isMyMana(s) || usability.usable ? '' : ' is-unusable'}`, dataset: { uid: hand.uid }, attrs: { 'aria-hidden': 'true' } },
+          createPlayCard(getPlayCard(hand.cardId), { width: 78, showText: false }),
+          h('span', { class: 'battle__hand-ghost-label', text: label }),
+        );
+      }
+      if (!swipeGhost.isConnected) element.append(swipeGhost);
+      const root = element.getBoundingClientRect();
+      const scale = stageScale();
+      // 端のカードでも絵が画面からはみ出さないように
+      const half = 46;
+      swipeGhost.style.left = `${Math.min(element.offsetWidth - half, Math.max(half, (swipe.x - root.left) / scale))}px`;
+      swipeGhost.style.top = `${(swipe.y - root.top) / scale}px`;
+    };
+
+    /** 指が動いたあと：持ち上げたかどうかと、指の下のカードを調べ直す */
+    const updateSwipe = (): void => {
+      if (!swipe || !state) return;
+      const s = state;
+      const scale = stageScale();
+      const up = (swipe.anchorY - swipe.y) / scale;
+      const across = Math.abs(swipe.x - swipe.anchorX) / scale;
+      // 持ち上げられるのは、使える場面（自分の攻撃・マナ化）で配り終えているときだけ
+      const lift = (isMyMain(s) || isMyMana(s)) && !dealing() && up >= HAND_LIFT_PX && up > across;
+      let changed = lift !== swipe.lifted;
+      swipe.lifted = lift;
+      if (!swipe.lifted) {
+        const uid = handCardAt(swipe.x, swipe.y);
+        if (uid && uid !== swipe.uid) {
+          if (!swipe.moved) {
+            swipe.moved = true;
+            paintManaPick(swipe.startUid);
+          }
+          swipe.uid = uid;
+          swipe.anchorX = swipe.x;
+          swipe.anchorY = swipe.y;
+          selectedUid = uid;
+          paintManaPick(uid);
+          changed = true;
+        }
+      }
+      if (changed) render();
+      else syncSwipeGhost();
+    };
+
+    /** 手札が横にはみ出しているとき、指が端にあれば少しずつ送る（指を置いている間ずっと） */
+    const swipeAutoScroll = (): void => {
+      swipeRaf = 0;
+      if (!swipe) return;
+      const row = element.querySelector<HTMLElement>('.battle__hand');
+      if (row && !swipe.lifted && row.scrollWidth > row.clientWidth) {
+        const r = row.getBoundingClientRect();
+        const edge = HAND_EDGE_PX * stageScale();
+        const dir = swipe.x < r.left + edge ? -1 : swipe.x > r.right - edge ? 1 : 0;
+        if (dir !== 0 && swipe.y >= r.top && swipe.y <= r.bottom) {
+          row.scrollLeft += dir * HAND_SCROLL_STEP;
+          updateSwipe();
+        }
+      }
+      swipeRaf = requestAnimationFrame(swipeAutoScroll);
+    };
+
+    const onSwipeMove = (e: PointerEvent): void => {
+      if (!swipe || e.pointerId !== swipe.pointerId) return;
+      swipe.x = e.clientX;
+      swipe.y = e.clientY;
+      updateSwipe();
+    };
+
+    const stopSwipe = (): HandSwipe | null => {
+      const done = swipe;
+      swipe = null;
+      window.removeEventListener('pointermove', onSwipeMove);
+      window.removeEventListener('pointerup', onSwipeEnd);
+      window.removeEventListener('pointercancel', onSwipeEnd);
+      if (swipeRaf) cancelAnimationFrame(swipeRaf);
+      swipeRaf = 0;
+      swipeGhost?.remove();
+      swipeGhost = null;
+      return done;
+    };
+
+    const onSwipeEnd = (e: PointerEvent): void => {
+      if (!swipe || e.pointerId !== swipe.pointerId) return;
+      const done = stopSwipe();
+      const s = state;
+      if (!done || !s || destroyed) return;
+      if (e.type === 'pointercancel') {
+        render();
+        return;
+      }
+      if (done.lifted && !dealing()) {
+        selectedUid = done.uid;
+        if (isMyMana(s)) {
+          // 上へはじいたカードも候補に入れて、候補をまとめてマナにする
+          if (!manaPicks.has(done.uid)) toggleManaPick(done.uid);
+          render();
+          if (manaPicks.has(done.uid) && canConvertToMana(s, 'player')) convertPicked();
+          return;
+        }
+        if (isMyMain(s) && cardUsability(s, 'player', done.uid).usable) {
+          useCard(done.uid);
+          return;
+        }
+      } else if (!done.moved && isMyMana(s) && !dealing()) {
+        // なぞらずに離した＝タップ：従来どおり候補に入れる／外す
+        toggleManaPick(done.uid);
+      }
+      render();
+    };
+
+    const onHandDown = (e: PointerEvent): void => {
+      if (swipe || !state || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      const uid = (e.target as Element | null)?.closest<HTMLElement>('.battle__hand-card')?.dataset.uid;
+      if (!uid) return;
+      e.preventDefault();
+      swipe = {
+        pointerId: e.pointerId,
+        startUid: uid,
+        uid,
+        anchorX: e.clientX,
+        anchorY: e.clientY,
+        x: e.clientX,
+        y: e.clientY,
+        moved: false,
+        lifted: false,
+        paint: isMyMana(state) ? (manaPicks.has(uid) ? 'remove' : 'add') : null,
+      };
+      selectedUid = uid;
+      targeting = null;
+      window.addEventListener('pointermove', onSwipeMove);
+      window.addEventListener('pointerup', onSwipeEnd);
+      window.addEventListener('pointercancel', onSwipeEnd);
+      swipeRaf = requestAnimationFrame(swipeAutoScroll);
+      render();
     };
 
     const tapMonster = (side: Side, monster: BattleMonster): void => {
@@ -471,16 +706,23 @@ export const battleScreen: ScreenDefinition = {
       let newIndex = 0;
       const row = h(
         'div',
-        { class: 'battle__hand', attrs: { 'aria-label': t('battle.hand.aria') } },
+        {
+          class: 'battle__hand',
+          attrs: { 'aria-label': t('battle.hand.aria') },
+          // なぞる・はじくは指を置いたところから自分で追う（長押しのメニューも出さない）
+          on: { pointerdown: onHandDown, contextmenu: (e) => e.preventDefault() },
+        },
         ...s.sides.player.hand.map((c) => {
           const card = getPlayCard(c.cardId);
           const usable = cardUsability(s, 'player', c.uid).usable;
           const isNew = !shownHand.has(c.uid);
           const picked = myMana && manaPicks.has(c.uid);
+          const touching = swipe?.uid === c.uid ? (swipe.lifted ? ' is-lifted' : ' is-touching') : '';
+          const leaving = manaFlying.has(c.uid) ? ' is-leaving' : '';
           const el = h(
             'button',
             {
-              class: `battle__hand-card${usable ? ' is-usable' : ''}${!usable && myTurnMain ? ' is-unusable' : ''}${selectedUid === c.uid ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${isNew ? ' is-dealt' : ''}`,
+              class: `battle__hand-card${usable ? ' is-usable' : ''}${!usable && myTurnMain ? ' is-unusable' : ''}${selectedUid === c.uid ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${isNew ? ' is-dealt' : ''}${touching}${leaving}`,
               attrs: {
                 type: 'button',
                 'aria-label': picked
@@ -492,7 +734,9 @@ export const battleScreen: ScreenDefinition = {
               },
               dataset: { uid: c.uid },
               on: {
-                click: () => {
+                click: (e) => {
+                  // 指・マウスの操作はなぞる処理（onHandDown）で受ける。ここはキーボードの決定だけ
+                  if (e.detail !== 0) return;
                   selectedUid = c.uid;
                   targeting = null;
                   if (myMana && !dealing()) toggleManaPick(c.uid);
@@ -698,7 +942,7 @@ export const battleScreen: ScreenDefinition = {
       );
     };
 
-    /** マナが増えた・ダメージを受けたときの演出と効果音（前回の描画との差で判断する） */
+    /** マナが増えた演出（前回の描画との差で判断する）と効果音（ルールで確定したきっかけで鳴らす） */
     const playEffects = (s: BattleState): void => {
       for (const side of ['player', 'opponent'] as const) {
         const now = manaOf(s.sides[side]);
@@ -710,9 +954,9 @@ export const battleScreen: ScreenDefinition = {
           box.classList.add('is-mana-up');
           box.append(h('span', { class: 'battle__mana-float', text: `+${now - before}` }), h('span', { class: 'battle__mana-spark', attrs: { 'aria-hidden': 'true' } }));
         }
-        sound.play('manaGain');
       }
-      // 回避成功・命中・マナ消費：ルールで結果が確定した分だけ、1件につき1回（描き直しでは鳴らさない）
+      // 音はマナの数の差では選ばず、ルールで確定したきっかけで鳴らす（1件につき1回。描き直しでは鳴らさない）
+      // マナ化＝manaConvert（1枚1回）、山札からマナ＝manaGain、支払い＝manaSpend、回避・命中
       if (s.fxSeq < lastFxSeq) lastFxSeq = 0;
       for (const fx of s.fx) {
         if (fx.seq <= lastFxSeq) continue;
@@ -750,7 +994,8 @@ export const battleScreen: ScreenDefinition = {
      */
     const commandBand = (s: BattleState, blocked: boolean): HTMLElement | null => {
       const buttons: HTMLButtonElement[] = [];
-      const mine = s.active === 'player' && !auto && !blocked;
+      // 手札をなぞっている間は帯を出さない（指を離すと出る）
+      const mine = s.active === 'player' && !auto && !blocked && !swipe;
       const selected = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
       const anyUsable = s.sides.player.hand.some((c) => cardUsability(s, 'player', c.uid).usable);
       const deselect = (): void => {
@@ -804,7 +1049,7 @@ export const battleScreen: ScreenDefinition = {
     const render = (): void => {
       element.dataset.stage = state ? 'play' : 'order';
       if (!state) {
-        element.replaceChildren(header(), orderView());
+        replaceView(header(), orderView());
         return;
       }
       const s = state;
@@ -820,7 +1065,7 @@ export const battleScreen: ScreenDefinition = {
         s.phase === 'ended'
           ? t('battle.turnBar.ended')
           : t('battle.turnBar', { n: s.turn, who: t(`battle.side.${s.active}`), phase: t(`battle.phase.${s.phase}`) });
-      element.replaceChildren(
+      replaceView(
         header(),
         qaBar() ?? '',
         h(
@@ -838,6 +1083,7 @@ export const battleScreen: ScreenDefinition = {
       element.append(...overlays);
       const handEl = element.querySelector('.battle__hand');
       if (handEl) handEl.scrollLeft = handScroll;
+      syncSwipeGhost();
       playEffects(s);
       for (const side of ['player', 'opponent'] as const) {
         for (const m of s.sides[side].monsters) prevLife.set(m.uid, m.life);
@@ -856,6 +1102,7 @@ export const battleScreen: ScreenDefinition = {
       destroy: () => {
         destroyed = true;
         if (timer) clearTimeout(timer);
+        stopSwipe();
       },
     };
   },
