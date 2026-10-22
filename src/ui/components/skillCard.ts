@@ -116,7 +116,7 @@ export function skillShortText(skill: SkillCard): string {
     case 'heal':
       return `味方1体のライフ+${v}`;
     case 'mana':
-      return `マナ+${v}`;
+      return `山札${v}枚をマナに`;
     case 'draw':
       return `カードを${v}枚引く`;
   }

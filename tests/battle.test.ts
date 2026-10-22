@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { getSkill, monsterId, skillId } from '../src/data/cards.ts';
+import { getSkill, monsterId, skillId, SKILLS } from '../src/data/cards.ts';
 import { BATTLE_RULES } from '../src/data/rules.ts';
 import { chooseAction } from '../src/game/battle/ai.ts';
 import {
   actingSide,
   applyAction,
-  canDiscardForMana,
+  canConvertToMana,
   cardUsability,
   createBattle,
+  manaOf,
   type BattleState,
   type Side,
 } from '../src/game/battle/engine.ts';
@@ -20,13 +21,20 @@ function battle(seed = 1, first: Side = 'player'): BattleState {
   return createBattle({ name: 'P', deck: playerDeck }, { name: 'O', deck: enemyDeck }, seed, first);
 }
 
-/** 手札を差し替えたテスト用の状態 */
+/** マナ用のカード（中身は何でもよい） */
+const MANA_CARD = skillId('a', 1);
+
+/** 手札とマナを差し替えたテスト用の状態 */
 function withHand(state: BattleState, side: Side, cardIds: string[], mana: number): BattleState {
   return {
     ...state,
     sides: {
       ...state.sides,
-      [side]: { ...state.sides[side], hand: cardIds.map((cardId, i) => ({ uid: `t${i}`, cardId })), mana },
+      [side]: {
+        ...state.sides[side],
+        hand: cardIds.map((cardId, i) => ({ uid: `t${i}`, cardId })),
+        manaPile: Array.from({ length: mana }, () => MANA_CARD),
+      },
     },
   };
 }
@@ -48,15 +56,15 @@ function playOut(state: BattleState, maxSteps = 5000): { state: BattleState; ste
 }
 
 describe('バトル開始', () => {
-  it('双方モンスター3体、手札5枚、山札55枚。先攻はマナ1から', () => {
+  it('双方モンスター3体、手札5枚、山札55枚。マナは双方0から', () => {
     const s = battle();
     for (const side of ['player', 'opponent'] as const) {
       expect(s.sides[side].monsters).toHaveLength(3);
       expect(s.sides[side].hand).toHaveLength(BATTLE_RULES.initialHand);
       expect(s.sides[side].deck).toHaveLength(60 - BATTLE_RULES.initialHand);
+      expect(manaOf(s.sides[side])).toBe(0);
     }
-    expect(s.sides.player.mana).toBe(BATTLE_RULES.firstTurnMana);
-    expect(s.sides.opponent.mana).toBe(0);
+    expect(s.phase).toBe('main');
   });
 
   it('同じシードなら同じ展開（再現性）', () => {
@@ -80,7 +88,10 @@ describe('攻撃と防御', () => {
     if (!target) throw new Error('target');
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target.uid });
     expect(s.phase).toBe('defense');
-    expect(s.sides.player.mana).toBe(5 - getSkill(skillId('a', 2)).cost);
+    const cost = getSkill(skillId('a', 2)).cost;
+    expect(manaOf(s.sides.player)).toBe(5 - cost);
+    // 使った技と、支払ったマナのカードは捨て札へ
+    expect(s.sides.player.discard).toHaveLength(1 + cost);
     expect(actingSide(s)).toBe('opponent');
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' });
     expect(s.phase).toBe('main');
@@ -140,25 +151,84 @@ describe('使用不可状態', () => {
   });
 });
 
-describe('ターン進行', () => {
-  it('ターン終了で相手の手番。マナ+2、手札を5枚まで補充、行動済みが戻る', () => {
+describe('ターン進行とマナ化', () => {
+  it('攻撃 → 攻撃終了でマナ化 → ターン終了で相手の手番。マナは自動で増えない', () => {
     let s = battle();
+    // 攻撃中はターン終了できない（先にマナ化へ進む）
+    expect(applyAction(s, { type: 'endTurn', side: 'player' })).toBe(s);
+    s = applyAction(s, { type: 'endAttack', side: 'player' });
+    expect(s.phase).toBe('mana');
+    expect(actingSide(s)).toBe('player');
     const oppDeck = s.sides.opponent.deck.length;
     s = applyAction(s, { type: 'endTurn', side: 'player' });
     expect(s.active).toBe('opponent');
+    expect(s.phase).toBe('main');
     expect(s.turn).toBe(2);
-    expect(s.sides.opponent.mana).toBe(BATTLE_RULES.manaPerTurn);
+    expect(manaOf(s.sides.opponent)).toBe(0);
+    expect(manaOf(s.sides.player)).toBe(0);
     expect(s.sides.opponent.hand).toHaveLength(5);
     expect(s.sides.opponent.deck).toHaveLength(oppDeck);
   });
 
-  it('1ターンに1回だけ、カードを捨ててマナ+1', () => {
+  it('マナ化は攻撃のあとだけ。手札を何枚でもマナにでき、次のターンに持ち越す', () => {
     let s = battle();
-    const uid = s.sides.player.hand[0]?.uid ?? '';
-    s = applyAction(s, { type: 'discardForMana', side: 'player', cardUid: uid });
-    expect(s.sides.player.mana).toBe(BATTLE_RULES.firstTurnMana + 1);
-    expect(s.sides.player.hand).toHaveLength(4);
-    expect(canDiscardForMana(s, 'player')).toBe(false);
+    const uids = s.sides.player.hand.map((c) => c.uid);
+    const first = uids[0] ?? '';
+    // 攻撃中はマナ化できない
+    expect(canConvertToMana(s, 'player')).toBe(false);
+    expect(applyAction(s, { type: 'convertToMana', side: 'player', cardUid: first })).toBe(s);
+    s = applyAction(s, { type: 'endAttack', side: 'player' });
+    // マナ化の間は技を使えない
+    expect(cardUsability(s, 'player', first)).toMatchObject({ usable: false, reason: 'マナ化の間は技を使えません' });
+    for (const uid of uids) s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: uid });
+    expect(manaOf(s.sides.player)).toBe(5);
+    expect(s.sides.player.hand).toHaveLength(0);
+    // マナにしたカードは捨て札ではなくマナの山へ（積んだ順）
+    expect(s.sides.player.discard).toHaveLength(0);
+    expect(canConvertToMana(s, 'player')).toBe(false);
+    s = applyAction(s, { type: 'endTurn', side: 'player' });
+    s = applyAction(s, { type: 'endAttack', side: 'opponent' });
+    s = applyAction(s, { type: 'endTurn', side: 'opponent' });
+    expect(s.active).toBe('player');
+    expect(manaOf(s.sides.player)).toBe(5);
+    expect(s.sides.player.hand).toHaveLength(5);
+  });
+
+  it('マナに上限はない', () => {
+    let s = withHand(battle(), 'player', [], 12);
+    expect(manaOf(s.sides.player)).toBe(12);
+    s = applyAction(s, { type: 'endAttack', side: 'player' });
+    s = { ...s, sides: { ...s.sides, player: { ...s.sides.player, hand: [{ uid: 'x1', cardId: MANA_CARD }] } } };
+    s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: 'x1' });
+    expect(manaOf(s.sides.player)).toBe(13);
+  });
+
+  it('マナは古いカードから支払う（仮）', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 2)], 0);
+    s = { ...s, sides: { ...s.sides, player: { ...s.sides.player, manaPile: ['m1', 'm2', 'm3'] } } };
+    const target = s.sides.opponent.monsters[0]?.uid ?? '';
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target });
+    expect(getSkill(skillId('a', 2)).cost).toBe(2);
+    expect(s.sides.player.manaPile).toEqual(['m3']);
+    expect(s.sides.player.discard).toEqual([skillId('a', 2), 'm1', 'm2']);
+  });
+
+  it('マナの技（仮）は山札の上からカードをマナにする', () => {
+    const manaSkill = SKILLS.find((k) => k.effect.type === 'mana');
+    if (!manaSkill) throw new Error('mana skill');
+    let s = withHand(battle(), 'player', [manaSkill.id], manaSkill.cost);
+    s = {
+      ...s,
+      sides: {
+        ...s.sides,
+        player: { ...s.sides.player, monsters: s.sides.player.monsters.map((m, i) => (i === 0 ? { ...m, cardId: manaSkill.monsterId } : m)) },
+      },
+    };
+    const top = s.sides.player.deck.slice(0, manaSkill.stat.value);
+    const deck = s.sides.player.deck.length;
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0' });
+    expect(s.sides.player.manaPile).toEqual(top);
+    expect(s.sides.player.deck).toHaveLength(deck - manaSkill.stat.value);
   });
 });
 

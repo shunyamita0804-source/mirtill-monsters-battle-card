@@ -4,9 +4,10 @@ import { chooseAction } from '../../game/battle/ai.ts';
 import {
   actingSide,
   applyAction,
-  canDiscardForMana,
+  canConvertToMana,
   cardUsability,
   createBattle,
+  manaOf,
   SIDE_LABEL,
   targetsFor,
   type BattleAction,
@@ -245,14 +246,9 @@ export const battleScreen: ScreenDefinition = {
         h('span', { class: 'battle-info__name', text: side === 'player' ? 'あなた' : st.name }),
         h(
           'div',
-          { class: 'battle-info__mana', attrs: { 'aria-label': `マナ ${st.mana}` } },
+          { class: 'battle-info__mana', attrs: { 'aria-label': `マナ ${manaOf(st)}` } },
           h('span', { class: 'battle-info__mana-label', text: 'マナ' }),
-          h('span', { class: 'battle-info__mana-value', text: String(st.mana) }),
-        ),
-        h(
-          'span',
-          { class: 'battle-info__pips', attrs: { 'aria-hidden': 'true' } },
-          ...Array.from({ length: BATTLE_RULES.maxMana }, (_, i) => h('span', { class: `battle-info__pip${i < st.mana ? ' is-on' : ''}` })),
+          h('span', { class: 'battle-info__mana-value', text: String(manaOf(st)) }),
         ),
         h('span', { class: 'battle-info__count', text: `山札 ×${st.deck.length}` }),
         h('span', { class: 'battle-info__count', text: `手札 ×${st.hand.length}` }),
@@ -316,14 +312,19 @@ export const battleScreen: ScreenDefinition = {
         ];
       } else if (skill && hand) {
         const usability = cardUsability(s, 'player', hand.uid);
+        const convertible = canConvertToMana(s, 'player');
         body = [
           h('p', { class: 'battle-text__name', text: skill.name }),
           h('p', { class: 'battle-text__owner', text: `適合：${getMonster(skill.monsterId).name}` }),
           h('p', { class: 'battle-text__desc', text: describeSkill(skill) }),
-          usability.usable
-            ? h('p', { class: 'battle-text__ok', text: '使えます' })
-            : h('p', { class: 'battle-text__ng', text: usability.reason ?? '使えません' }),
+          convertible
+            ? h('p', { class: 'battle-text__ok', text: 'マナにできます' })
+            : usability.usable
+              ? h('p', { class: 'battle-text__ok', text: '使えます' })
+              : h('p', { class: 'battle-text__ng', text: usability.reason ?? '使えません' }),
         ];
+      } else if (s.phase === 'mana' && s.active === 'player') {
+        body = [h('p', { class: 'battle-text__prompt', text: 'マナ化：手札をタップして「マナにする」。何枚でもOK（1枚＝1マナ）。終わったら「ターン終了」' })];
       } else {
         body = [h('p', { class: 'battle-text__hint', text: '手札のカードをタップすると、ここに説明と拡大したカードが出ます。' })];
       }
@@ -397,7 +398,7 @@ export const battleScreen: ScreenDefinition = {
             class: 'battle__defense-text',
             text: `「${getSkill(pending.cardId).name}」→ ${target ? getMonster(target.cardId).name : ''}に ${STAT_LABEL[pending.stat]}${pending.power}`,
           }),
-          h('p', { class: 'battle__defense-hint', text: `${STAT_LABEL[pending.stat]}の防御カードでダメージを減らせます（マナ ${s.sides.player.mana}）` }),
+          h('p', { class: 'battle__defense-hint', text: `${STAT_LABEL[pending.stat]}の防御カードでダメージを減らせます（マナ ${manaOf(s.sides.player)}）` }),
           h(
             'div',
             { class: 'battle__defense-cards' },
@@ -486,15 +487,20 @@ export const battleScreen: ScreenDefinition = {
       const selected = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
       const useBtn = button('使う', () => selected && useCard(selected.uid), 'btn btn--primary');
       useBtn.disabled = !myTurn || !selected || !cardUsability(s, 'player', selected.uid).usable || targeting !== null;
-      const discardBtn = button(`捨ててマナ+${BATTLE_RULES.discardManaGain}`, () => {
-        if (selected) dispatch({ type: 'discardForMana', side: 'player', cardUid: selected.uid });
+      const myMana = s.phase === 'mana' && s.active === 'player' && !auto && !blocked;
+      const manaBtn = button('マナにする', () => {
+        if (selected) dispatch({ type: 'convertToMana', side: 'player', cardUid: selected.uid });
       }, 'btn');
-      discardBtn.disabled = !myTurn || !selected || !canDiscardForMana(s, 'player');
-      const endBtn = button('ターン終了', () => dispatch({ type: 'endTurn', side: 'player' }), 'btn');
-      endBtn.disabled = !myTurn;
+      manaBtn.disabled = !myMana || !selected || !canConvertToMana(s, 'player');
+      // 攻撃中は「攻撃終了」でマナ化へ、マナ化中は「ターン終了」
+      const endBtn = myMana
+        ? button('ターン終了', () => dispatch({ type: 'endTurn', side: 'player' }), 'btn')
+        : button('攻撃終了', () => dispatch({ type: 'endAttack', side: 'player' }), 'btn');
+      endBtn.disabled = !myTurn && !myMana;
 
+      const phaseText = s.phase === 'mana' ? '・マナ化' : s.phase === 'ended' ? '' : '・攻撃';
       const turnText =
-        s.phase === 'ended' ? '対戦終了' : `${s.turn}手番・${s.active === 'player' ? 'あなたの番' : '相手の番'}`;
+        s.phase === 'ended' ? '対戦終了' : `${s.turn}手番・${s.active === 'player' ? 'あなたの番' : '相手の番'}${phaseText}`;
       element.replaceChildren(
         header(),
         qaBar() ?? '',
@@ -508,7 +514,7 @@ export const battleScreen: ScreenDefinition = {
         monsterRow(s, 'player'),
         detailPanel(s),
         hand,
-        h('footer', { class: 'battle__footer' }, useBtn, discardBtn, endBtn),
+        h('footer', { class: 'battle__footer' }, useBtn, manaBtn, endBtn),
       );
       const overlays = [defenseOverlay(s), resultOverlay(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);

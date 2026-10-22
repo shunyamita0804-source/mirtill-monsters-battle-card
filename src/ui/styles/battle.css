@@ -401,22 +401,6 @@
   line-height: 1;
 }
 
-.battle-info__pips {
-  display: flex;
-  gap: 1px;
-}
-
-.battle-info__pip {
-  width: 8px;
-  height: 10px;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-  background: rgb(127 178 255 / 0.25);
-}
-
-.battle-info__pip.is-on {
-  background: linear-gradient(180deg, #bfe0ff, #3d8bff);
-}
-
 .battle-info__count {
   color: var(--color-sub);
 }

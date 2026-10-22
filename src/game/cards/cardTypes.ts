@@ -109,7 +109,7 @@ export function describeSkill(card: SkillCard): string {
     case 'heal':
       return `味方モンスター1体のライフを${v}回復する。`;
     case 'mana':
-      return `マナを${v}得る。`;
+      return `山札の上から${v}枚をマナにする。`;
     case 'draw':
       return `山札からカードを${v}枚引く。`;
   }

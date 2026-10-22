@@ -3,8 +3,9 @@ import type { SkillCard } from '../cards/cardTypes.ts';
 import {
   aliveMonsters,
   availableUsers,
-  canDiscardForMana,
+  canConvertToMana,
   cardUsability,
+  manaOf,
   otherSide,
   targetsFor,
   type BattleAction,
@@ -40,6 +41,7 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
   }
 
   if (state.active !== side) return null;
+  if (state.phase === 'mana') return chooseManaAction(state, side);
   const options = usableOptions(state, side);
   const mine = state.sides[side];
   const enemies = aliveMonsters(state.sides[otherSide(side)]);
@@ -70,14 +72,28 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
   const support = options.find((o) => o.skill.effect.type === 'mana' || o.skill.effect.type === 'draw');
   if (support) return { type: 'useCard', side, cardUid: support.card.uid };
 
-  // 4. 使えるカードがなければ1枚捨ててマナを得る（防御カードが余っていればそれ、なければ一番重いカード）
-  if (canDiscardForMana(state, side) && mine.hand.length > 0) {
-    const defenses = mine.hand.filter((c) => getSkill(c.cardId).effect.type === 'defense');
-    const pool = defenses.length > 2 ? defenses : mine.hand;
-    const discard = [...pool].sort((a, b) => getSkill(b.cardId).cost - getSkill(a.cardId).cost)[0];
-    if (discard) return { type: 'discardForMana', side, cardUid: discard.uid };
-  }
+  // 4. 使えるカードがなければ攻撃を終えてマナ化へ
+  return { type: 'endAttack', side };
+}
 
+/**
+ * マナ化（仮の思考）：残す手札を最大2枚に絞り、残りをすべてマナにする。
+ * - 防御カード1枚：いまのマナで払える中で一番強いもの（相手の攻撃に備える）
+ * - 技1枚：マナ化し終えたあとのマナで払える中で一番重いもの（次のターンに使う）
+ * マナ化するたびにマナ+1・手札-1 なので「マナ化し終えたあとのマナ」は途中で変わらず、残す札が安定する。
+ */
+function chooseManaAction(state: BattleState, side: Side): BattleAction {
+  const mine = state.sides[side];
+  const mana = manaOf(mine);
+  const byCost = (a: HandCard, b: HandCard): number => getSkill(b.cardId).cost - getSkill(a.cardId).cost;
+  const keepDefense = mine.hand
+    .filter((c) => getSkill(c.cardId).effect.type === 'defense' && getSkill(c.cardId).cost <= mana)
+    .sort((a, b) => getSkill(b.cardId).stat.value - getSkill(a.cardId).stat.value)[0];
+  const others = mine.hand.filter((c) => c !== keepDefense && getSkill(c.cardId).effect.type !== 'defense');
+  const manaAfter = mana + mine.hand.length - (keepDefense ? 1 : 0) - 1;
+  const keepSkill = [...others].sort(byCost).find((c) => getSkill(c.cardId).cost <= manaAfter);
+  const convert = mine.hand.find((c) => c !== keepDefense && c !== keepSkill);
+  if (convert && canConvertToMana(state, side)) return { type: 'convertToMana', side, cardUid: convert.uid };
   return { type: 'endTurn', side };
 }
 

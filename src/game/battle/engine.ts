@@ -39,8 +39,13 @@ export interface BattleSide {
   readonly deck: readonly string[];
   readonly hand: readonly HandCard[];
   readonly discard: readonly string[];
-  readonly mana: number;
-  readonly discardedForMana: boolean;
+  /** マナにしたカード（積んだ順。先頭が一番古い）。マナの量＝枚数 */
+  readonly manaPile: readonly string[];
+}
+
+/** いまのマナの量 */
+export function manaOf(side: BattleSide): number {
+  return side.manaPile.length;
 }
 
 /** 防御待ちの攻撃 */
@@ -53,7 +58,8 @@ export interface PendingAttack {
   readonly power: number;
 }
 
-export type BattlePhase = 'main' | 'defense' | 'ended';
+/** main＝技を使う（攻撃）、defense＝相手の防御待ち、mana＝攻撃のあとのマナ化 */
+export type BattlePhase = 'main' | 'defense' | 'mana' | 'ended';
 export type BattleWinner = Side | 'draw';
 
 export interface LogEntry {
@@ -87,7 +93,10 @@ export type BattleAction =
       readonly targetUid?: string;
     }
   | { readonly type: 'defend'; readonly side: Side; readonly cardUid: string | null }
-  | { readonly type: 'discardForMana'; readonly side: Side; readonly cardUid: string }
+  /** 攻撃を終えてマナ化へ進む */
+  | { readonly type: 'endAttack'; readonly side: Side }
+  /** マナ化：手札1枚をマナにする（マナ化の間は何回でも） */
+  | { readonly type: 'convertToMana'; readonly side: Side; readonly cardUid: string }
   | { readonly type: 'endTurn'; readonly side: Side };
 
 export interface CombatantSetup {
@@ -137,8 +146,7 @@ export function createBattle(
     deck,
     hand: [],
     discard: [],
-    mana: 0,
-    discardedForMana: false,
+    manaPile: [],
   });
   let uid = 1;
   const p = drawCards(base(player, 'p', pShuffle.items), BATTLE_RULES.initialHand, uid);
@@ -146,7 +154,7 @@ export function createBattle(
   const o = drawCards(base(opponent, 'o', oShuffle.items), BATTLE_RULES.initialHand, uid);
   uid = o.nextUid;
   const sides: Record<Side, BattleSide> = { player: p.side, opponent: o.side };
-  sides[firstSide] = { ...sides[firstSide], mana: Math.min(BATTLE_RULES.maxMana, BATTLE_RULES.firstTurnMana) };
+  // 先攻・後攻ともマナ0から（先攻初手の特例は PS版の確認待ちのため入れていない）
   return {
     seed: s,
     turn: 1,
@@ -208,13 +216,14 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
     if (!pending || pending.attacker === side) return NO('相手の防御を待っています');
     if (skill.effect.type !== 'defense') return NO('いまは防御カードしか使えません');
     if (skill.stat.type !== pending.stat) return NO(`${STAT_LABEL[pending.stat]}攻撃は防げません`);
-    if (state.sides[side].mana < skill.cost) return NO('マナが足りません');
+    if (manaOf(state.sides[side]) < skill.cost) return NO('マナが足りません');
     return YES;
   }
 
   if (state.active !== side) return NO('相手のターンです');
+  if (state.phase === 'mana') return NO('マナ化の間は技を使えません');
   if (skill.effect.type === 'defense') return NO('防御カードは相手の攻撃を受けたときに使います');
-  if (state.sides[side].mana < skill.cost) return NO('マナが足りません');
+  if (manaOf(state.sides[side]) < skill.cost) return NO('マナが足りません');
   if (availableUsers(state, side, skill).length === 0) return NO('使えるモンスターは行動済みです');
   if (skill.effect.type === 'attack' && aliveMonsters(state.sides[otherSide(side)]).length === 0) {
     return NO('攻撃できる相手がいません');
@@ -229,15 +238,9 @@ export function targetsFor(state: BattleState, side: Side, skill: SkillCard): Ba
   return [];
 }
 
-export function canDiscardForMana(state: BattleState, side: Side): boolean {
-  const s = state.sides[side];
-  return (
-    state.phase === 'main' &&
-    state.active === side &&
-    !s.discardedForMana &&
-    s.hand.length > 0 &&
-    s.mana < BATTLE_RULES.maxMana
-  );
+/** 手札をマナにできるか（攻撃のあとのマナ化の間だけ。枚数の制限なし） */
+export function canConvertToMana(state: BattleState, side: Side): boolean {
+  return state.phase === 'mana' && state.active === side && state.sides[side].hand.length > 0;
 }
 
 /* ---------- 進行 ---------- */
@@ -265,6 +268,16 @@ function removeFromHand(state: BattleState, side: Side, cardUid: string): Battle
     hand: s.hand.filter((c) => c.uid !== cardUid),
     discard: [...s.discard, card.cardId],
   });
+}
+
+/** マナを支払う。支払ったカードはマナから捨て札へ移す（呼ぶ前に足りることを確認しておく） */
+function payMana(state: BattleState, side: Side, cost: number): BattleState {
+  const s = state.sides[side];
+  const n = Math.max(0, Math.min(cost, s.manaPile.length));
+  const oldest = BATTLE_RULES.manaPayOrder === 'oldest';
+  const paid = oldest ? s.manaPile.slice(0, n) : s.manaPile.slice(s.manaPile.length - n);
+  const manaPile = oldest ? s.manaPile.slice(n) : s.manaPile.slice(0, s.manaPile.length - n);
+  return updateSide(state, side, { manaPile, discard: [...s.discard, ...paid] });
 }
 
 const nameOf = (cardId: string): string => cardCatalog.get(cardId)?.name ?? cardId;
@@ -298,9 +311,8 @@ function resolvePending(state: BattleState, reduction: number): BattleState {
 function startTurn(state: BattleState, side: Side): BattleState {
   const s = state.sides[side];
   const monsters = s.monsters.map((m) => ({ ...m, acted: false }));
-  const mana = Math.min(BATTLE_RULES.maxMana, s.mana + BATTLE_RULES.manaPerTurn);
   const need = Math.max(0, BATTLE_RULES.refillHandTo - s.hand.length);
-  const drawn = drawCards({ ...s, monsters, mana, discardedForMana: false }, need, state.nextUid);
+  const drawn = drawCards({ ...s, monsters }, need, state.nextUid);
   let next: BattleState = { ...state, active: side, phase: 'main', nextUid: drawn.nextUid };
   next = updateSide(next, side, drawn.side);
   return addLog(next, `${SIDE_LABEL[side]}のターン。`);
@@ -326,20 +338,23 @@ export function applyAction(state: BattleState, action: BattleAction): BattleSta
       return useCard(state, action.side, action.cardUid, action.userUid, action.targetUid);
     case 'defend':
       return defend(state, action.side, action.cardUid);
-    case 'discardForMana': {
-      if (!canDiscardForMana(state, action.side)) return state;
-      const card = findHandCard(state, action.side, action.cardUid);
+    case 'endAttack': {
+      if (state.phase !== 'main' || state.active !== action.side) return state;
+      return addLog({ ...state, phase: 'mana' }, `${SIDE_LABEL[action.side]}のマナ化。`);
+    }
+    case 'convertToMana': {
+      if (!canConvertToMana(state, action.side)) return state;
+      const s = state.sides[action.side];
+      const card = s.hand.find((c) => c.uid === action.cardUid);
       if (!card) return state;
-      let next = removeFromHand(state, action.side, action.cardUid);
-      const s = next.sides[action.side];
-      next = updateSide(next, action.side, {
-        mana: Math.min(BATTLE_RULES.maxMana, s.mana + BATTLE_RULES.discardManaGain),
-        discardedForMana: true,
+      const next = updateSide(state, action.side, {
+        hand: s.hand.filter((c) => c.uid !== action.cardUid),
+        manaPile: [...s.manaPile, card.cardId],
       });
-      return addLog(next, `${SIDE_LABEL[action.side]}は${nameOf(card.cardId)}を捨ててマナ+${BATTLE_RULES.discardManaGain}。`);
+      return addLog(next, `${SIDE_LABEL[action.side]}は${nameOf(card.cardId)}をマナにした（マナ${manaOf(next.sides[action.side])}）。`);
     }
     case 'endTurn': {
-      if (state.phase !== 'main' || state.active !== action.side) return state;
+      if (state.phase !== 'mana' || state.active !== action.side) return state;
       const turn = state.turn + 1;
       if (turn > BATTLE_RULES.turnLimit) return judgeByLife({ ...state, turn });
       return startTurn({ ...state, turn }, otherSide(action.side));
@@ -371,8 +386,7 @@ function useCard(
   }
 
   let next = removeFromHand(state, side, cardUid);
-  const s = next.sides[side];
-  next = updateSide(next, side, { mana: s.mana - skill.cost });
+  next = payMana(next, side, skill.cost);
   next = updateMonster(next, user.uid, { acted: true });
   next = addLog(next, `${nameOf(user.cardId)}の「${skill.name}」！`);
 
@@ -400,8 +414,11 @@ function useCard(
       return addLog(next, `${nameOf(target.cardId)}のライフが${healed - target.life}回復。`);
     }
     case 'mana': {
-      const mana = Math.min(BATTLE_RULES.maxMana, next.sides[side].mana + skill.stat.value);
-      return addLog(updateSide(next, side, { mana }), `マナが${mana - next.sides[side].mana}増えた。`);
+      // 仮カードの効果：山札の上から数枚をそのままマナにする（マナは必ずカード1枚＝1マナ）
+      const s = next.sides[side];
+      const moved = s.deck.slice(0, skill.stat.value);
+      next = updateSide(next, side, { deck: s.deck.slice(moved.length), manaPile: [...s.manaPile, ...moved] });
+      return addLog(next, `山札の上から${moved.length}枚をマナにした。`);
     }
     case 'draw': {
       const drawn = drawCards(next.sides[side], skill.stat.value, next.nextUid);
@@ -422,7 +439,7 @@ function defend(state: BattleState, side: Side, cardUid: string | null): BattleS
   if (!hand) return state;
   const skill = getSkill(hand.cardId);
   let next = removeFromHand(state, side, cardUid);
-  next = updateSide(next, side, { mana: next.sides[side].mana - skill.cost });
+  next = payMana(next, side, skill.cost);
   next = addLog(next, `${SIDE_LABEL[side]}は「${skill.name}」で防御！ダメージ-${skill.stat.value}。`);
   return resolvePending(next, skill.stat.value);
 }
