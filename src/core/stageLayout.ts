@@ -4,7 +4,7 @@ import { DESIGN_RESOLUTION } from '../config/app.ts';
 export interface StageLayout {
   /** 拡大縮小率（論理px → 実px） */
   readonly scale: number;
-  /** ステージの論理幅（常に基準幅） */
+  /** ステージの論理幅（基準幅以上。基準より横長の端末では余った分だけ伸ばす。上限 MAX_STAGE_WIDTH） */
   readonly width: number;
   /** ステージの論理高さ（基準高さ以上。縦長の端末では余った分だけ伸ばす） */
   readonly height: number;
@@ -23,8 +23,11 @@ export interface BaseResolution {
  *
  * - 基準の 390×844 が必ず全部見えるように縮小・拡大する（UIが欠けない）
  * - 基準より縦長の端末では、余白を作らずステージの論理高さを伸ばす
- * - 基準より横長の端末（タブレット・PC・横持ち）では左右に余白を作り中央寄せ
+ * - 基準より横長の端末（iPhone のセーフエリア内など）では、左右に余白を作らずステージの論理幅を伸ばす（MAX_STAGE_WIDTH まで）。
+ *   それ以上に横長の画面（タブレット・PC・横持ち）は左右に余白を作り中央寄せ
  */
+export const MAX_STAGE_WIDTH = 480;
+
 export function computeStageLayout(
   availableWidth: number,
   availableHeight: number,
@@ -34,7 +37,7 @@ export function computeStageLayout(
     return { scale: 1, width: base.width, height: base.height, offsetX: 0, offsetY: 0 };
   }
   const scale = Math.min(availableWidth / base.width, availableHeight / base.height);
-  const width = base.width;
+  const width = Math.min(Math.max(base.width, Math.floor(availableWidth / scale)), Math.max(base.width, MAX_STAGE_WIDTH));
   const height = Math.max(base.height, Math.floor(availableHeight / scale));
   return {
     scale,

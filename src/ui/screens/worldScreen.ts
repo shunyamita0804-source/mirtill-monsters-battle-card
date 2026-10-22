@@ -56,8 +56,16 @@ import type { ScreenContext, ScreenDefinition } from './types.ts';
 
 /** 仮マップ（ダンジョン）の1マスの大きさ（論理px） */
 const TILE = 40;
-/** 正式な絵の街・部屋：設計図の 1 単位 → 論理px（主人公 108×144 が 61×81 になる） */
+/** 正式な絵の街：設計図の 1 単位 → 論理px（主人公 108×144 が 61×81 になる） */
 const ART_SCALE = 0.5625;
+/** 部屋は画面の高さに合わせて少し大きく見せる（街の何倍までか。人物の絵がぼやけない範囲） */
+const ROOM_ZOOM_MAX = 1.35;
+/** 部屋の絵が画面の高さのどれくらいを占めるか */
+const ROOM_FILL = 0.9;
+/** 場所を移るときの暗転（ミリ秒） */
+const FADE_OUT_MS = 170;
+/** 絵の読み込みを待つ上限（ミリ秒）。遅い回線でも操作できなくならないように */
+const REVEAL_TIMEOUT_MS = 3000;
 /** スティック：これ以上指を動かしたら移動の操作にする／スティックの半径／方向を決める最小の距離（論理px） */
 const STICK_START = 12;
 const STICK_RADIUS = 42;
@@ -142,7 +150,18 @@ class WorldView {
   #viewport!: HTMLElement;
   #player!: HTMLElement;
   #objectEls = new Map<string, HTMLElement>();
+  /** 人物の足元の影（人物の要素 → 影） */
+  #shadows = new Map<HTMLElement, HTMLElement>();
+  /** 正式な絵の地図の表示倍率（設計図の単位 → 論理px） */
+  #scale = ART_SCALE;
+  /** 暗転の幕 */
+  #fade: HTMLElement | null = null;
+  /** 他の部屋の絵を先に読み込んだか（アプリを開いている間に1回） */
+  static #preloaded = false;
   #stick!: HTMLElement;
+  #examineBtn: HTMLElement | null = null;
+  /** しらべるボタンを光らせているマス（同じマスでは計算し直さない） */
+  #nearKey = '';
   /** スティック操作中の指（1本だけ） */
   #touch: { id: number; x: number; y: number; dragging: boolean } | null = null;
   /** 一度スティックを使ったら操作の説明を出さない（アプリを開いている間） */
@@ -170,12 +189,12 @@ class WorldView {
 
   /** 1マスの大きさ（論理px） */
   get #cell(): number {
-    return this.#map.art ? this.#map.art.cell * ART_SCALE : TILE;
+    return this.#map.art ? this.#map.art.cell * this.#scale : TILE;
   }
 
   /** 人物の絵の高さ（論理px）。街・部屋は設計図どおり 144 単位、仮マップは小さめ */
   get #figureH(): number {
-    return this.#map.art ? 144 * ART_SCALE : 54;
+    return this.#map.art ? 144 * this.#scale : 54;
   }
 
   /** マス (x, y) に立つ人の足元（論理px） */
@@ -190,6 +209,17 @@ class WorldView {
     const f = this.#foot(p);
     el.style.transform = `translate(${f.x - (FOOT_X / 2) * k}px, ${f.y - (FOOT_Y / 2) * k}px)`;
     el.style.zIndex = String(10 + Math.round(f.y));
+    const shadow = this.#shadows.get(el);
+    if (shadow) shadow.style.transform = `translate(${f.x}px, ${f.y}px)`;
+  }
+
+  /** 人物の足元の影（地面に置く。家具・人物より奥） */
+  #addShadow(el: HTMLElement): void {
+    const shadow = h('div', { class: 'world__shadow', attrs: { 'aria-hidden': 'true' } });
+    const w = this.#figureH * 0.5;
+    Object.assign(shadow.style, { width: `${w}px`, height: `${w * 0.32}px`, marginLeft: `${-w / 2}px`, marginTop: `${-w * 0.16}px` });
+    this.#shadows.set(el, shadow);
+    this.#mapLayer.append(shadow);
   }
 
   #sizeFigure(el: HTMLElement): void {
@@ -211,7 +241,8 @@ class WorldView {
     this.#path = [];
     this.#afterPath = null;
     this.#busy = false;
-    this.#build();
+    this.#scale = this.#artScale(map);
+    this.#build(true);
     cancelAnimationFrame(this.#raf);
     this.#last = performance.now();
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
@@ -223,6 +254,56 @@ class WorldView {
     } else if (scene) {
       this.#playScene(scene);
     }
+  }
+
+  /** 正式な絵の表示倍率。部屋は画面の高さに合わせて大きくする（街の ROOM_ZOOM_MAX 倍まで） */
+  #artScale(map: MapDefinition): number {
+    if (!map.art || map.area !== 'interior') return ART_SCALE;
+    const vh = (this.#root.clientHeight || 844) - 8;
+    return Math.min(ART_SCALE * ROOM_ZOOM_MAX, Math.max(ART_SCALE, (vh * ROOM_FILL) / map.art.height));
+  }
+
+  /** 絵を読み込み終えてから幕を開ける（入った瞬間に家具だけ・背景だけが見えないように） */
+  #reveal(): void {
+    const fade = this.#fade;
+    if (!fade) return;
+    const imgs = [...this.#mapLayer.querySelectorAll('img')];
+    const ready = Promise.all(imgs.map((img) => (img.decode ? img.decode().catch(() => undefined) : Promise.resolve())));
+    const timeout = new Promise((r) => setTimeout(r, REVEAL_TIMEOUT_MS));
+    void Promise.race([ready, timeout]).then(() => {
+      if (this.#destroyed || this.#fade !== fade) return;
+      fade.classList.remove('is-on');
+      this.#preloadOthers();
+    });
+  }
+
+  /** 他の街・部屋の絵を、あいている時間に読み込んでおく（入ったときにすぐ出るように） */
+  #preloadOthers(): void {
+    if (WorldView.#preloaded || typeof Image === 'undefined') return;
+    WorldView.#preloaded = true;
+    setTimeout(() => {
+      const urls = new Set<string>();
+      for (const id of ['town', 'home', 'neighbor', 'shop', 'lab', 'hall', 'practice', 'house-a']) {
+        const art = getMap(id)?.art;
+        for (const img of [...(art?.tiles ?? []), ...(art?.sprites ?? [])]) urls.add(img.file);
+      }
+      for (const url of urls) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+      }
+    }, 600);
+  }
+
+  /** 暗転してから別の場所へ */
+  #goTo(next: () => void): void {
+    this.#busy = true;
+    this.#path = [];
+    this.#held = null;
+    this.#fade?.classList.add('is-on');
+    setTimeout(() => {
+      if (!this.#destroyed) next();
+    }, FADE_OUT_MS);
   }
 
   /** このマップに来たときに始まる会話（練習試合のあと・最初に街へ出たとき・練習場に着いたとき） */
@@ -246,8 +327,9 @@ class WorldView {
 
   #blocked = (x: number, y: number): boolean => isBlocked(this.#map, x, y, this.#isVisible);
 
-  #build(): void {
+  #build(fade = false): void {
     this.#touch = null;
+    this.#shadows.clear();
     this.#held = null;
     this.#keys.clear();
     const map = this.#map;
@@ -264,7 +346,7 @@ class WorldView {
       // 正式な絵：背景（街は分割した絵・部屋は部屋の箱）＋家具（人と前後を比べて重ねる）
       for (const img of map.art.tiles) this.#mapLayer.append(this.#artImage(img.file, img, 'world__bg', 0));
       for (const img of map.art.sprites) {
-        const z = img.z ? 10 + Math.round(img.z * ART_SCALE) : 1;
+        const z = img.z ? 10 + Math.round(img.z * this.#scale) : 1;
         this.#mapLayer.append(this.#artImage(img.file, img, 'world__furniture', z));
       }
     } else {
@@ -286,6 +368,7 @@ class WorldView {
     }
     this.#player = h('div', { class: 'world__player', attrs: { 'aria-label': t('world.player') } });
     this.#sizeFigure(this.#player);
+    this.#addShadow(this.#player);
     this.#playerLook = '';
     this.#mapLayer.append(this.#player);
 
@@ -314,28 +397,33 @@ class WorldView {
     this.#viewport.addEventListener('pointerup', (e) => this.#pointerUp(e, true));
     this.#viewport.addEventListener('pointercancel', (e) => this.#pointerUp(e, false));
 
-    const examine = h(
+    const examine = (this.#examineBtn = h(
       'button',
       { class: 'world__action', attrs: { type: 'button', 'aria-label': t('world.examine') }, on: { click: () => this.#examine() } },
       h('span', { class: 'world__action-icon', attrs: { 'aria-hidden': 'true' } }),
       h('span', { class: 'world__action-label', text: t('world.examine') }),
-    );
+    ));
     const hint = WorldView.#stickUsed ? null : h('div', { class: 'world__hint', text: t('world.hint') });
 
     const goal = showsPracticeGoal(save, map.id) ? h('div', { class: 'world__goal', text: t('story.goal.practice') }) : null;
-    this.#root.replaceChildren(hud, this.#viewport, examine, hint ?? '', goal ?? '');
+    // 暗転の幕：場所に入ったときは閉じた状態から、絵を読み込み終えたら開ける
+    const keepClosed = !fade && this.#fade?.classList.contains('is-on');
+    this.#fade = h('div', { class: `world__fade${fade || keepClosed ? ' is-on' : ''}`, attrs: { 'aria-hidden': 'true' } });
+    this.#nearKey = '';
+    this.#root.replaceChildren(this.#viewport, hud, examine, hint ?? '', goal ?? '', this.#fade);
     this.#root.dataset.map = map.id;
     this.#root.dataset.intro = save.story.intro;
     this.#render();
+    if (fade) this.#reveal();
   }
 
   #artImage(src: string, r: { x: number; y: number; w: number; h: number }, cls: string, z: number): HTMLElement {
     const img = h('img', { class: cls, attrs: { src, alt: '', draggable: 'false', decoding: 'async' } });
     Object.assign(img.style, {
-      left: `${r.x * ART_SCALE}px`,
-      top: `${r.y * ART_SCALE}px`,
-      width: `${r.w * ART_SCALE}px`,
-      height: `${r.h * ART_SCALE}px`,
+      left: `${r.x * this.#scale}px`,
+      top: `${r.y * this.#scale}px`,
+      width: `${r.w * this.#scale}px`,
+      height: `${r.h * this.#scale}px`,
       zIndex: String(z),
     });
     return img;
@@ -350,7 +438,7 @@ class WorldView {
       for (const sign of TOWN_SIGNS) {
         const goal = sign.label === 'practice' && showsPracticeGoal(save, map.id);
         const el = h('div', { class: `world__sign${goal ? ' is-goal' : ''}`, text: t(`world.building.${sign.label}` as MessageKey) });
-        Object.assign(el.style, { left: `${sign.x * ART_SCALE}px`, top: `${sign.y * ART_SCALE}px` });
+        Object.assign(el.style, { left: `${sign.x * this.#scale}px`, top: `${sign.y * this.#scale}px` });
         this.#mapLayer.append(el);
       }
       return;
@@ -359,7 +447,9 @@ class WorldView {
       if (obj.type !== 'interact' && obj.type !== 'warp') continue;
       // 正式な絵の部屋では、使える家具（調べると画面が開く物）と出口だけに名前を出す
       if (map.art && obj.type === 'interact' && obj.action === 'message') continue;
-      const el = h('div', { class: `world__label world__label--${obj.type}`, text: objectLabel(obj) });
+      const el = map.art
+        ? h('div', { class: `world__label world__label--${obj.type}` }, h('span', { class: 'world__label-text', text: objectLabel(obj) }))
+        : h('div', { class: `world__label world__label--${obj.type}`, text: objectLabel(obj) });
       Object.assign(el.style, { left: `${obj.x * cell}px`, top: `${obj.y * cell}px`, width: `${obj.w * cell}px`, height: `${obj.h * cell}px` });
       this.#mapLayer.append(el);
     }
@@ -386,6 +476,7 @@ class WorldView {
       // 人物の歩行の絵（待機の向き）。足元のマスに立つ
       const el = h('div', { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': t('story.speaker.neighborGuide') } });
       this.#sizeFigure(el);
+      this.#addShadow(el);
       el.style.backgroundImage = `url("${NPC_SHEET[obj.npcId]}")`;
       this.#faceNpc(el, 'down');
       this.#placeFigure(el, obj);
@@ -492,10 +583,10 @@ class WorldView {
       const target = warp.target;
       if (target.kind === 'map') {
         this.#store.update((s) => ({ ...s, location: { mapId: target.mapId, x: target.x, y: target.y, dir: target.dir } }));
-        this.load();
+        this.#goTo(() => this.load());
       } else if (target.kind === 'floor') {
         this.#store.update((s) => changeFloor(s, target.delta));
-        this.load();
+        this.#goTo(() => this.load());
       } else if (target.kind === 'dungeonGate') {
         // 入口の1マス手前（北）に戻してから選択画面へ。戻ってきたとき入口の上に立ったままにならないように
         const back: Location = { mapId: this.#map.id, x: this.#tile.x, y: this.#tile.y - 1, dir: 'up' };
@@ -547,6 +638,7 @@ class WorldView {
     this.#mapLayer.style.transform = `translate(${Math.round(cx)}px, ${Math.round(cy)}px)`;
     this.#root.dataset.px = String(this.#tile.x);
     this.#root.dataset.py = String(this.#tile.y);
+    if (!this.#move) this.#updateNear();
   }
 
   /* ---------- 操作 ---------- */
@@ -679,12 +771,35 @@ class WorldView {
     this.#afterPath = null;
   }
 
-  /** 正面（と足元）を調べる */
+  /** 話しかけ・調べることができる、となりのマス（正面を先に） */
+  #nearTarget(): Point | null {
+    const order: Direction[] = [this.#dir, 'up', 'down', 'left', 'right'];
+    for (const dir of order) {
+      const d = DIR_DELTA[dir];
+      const p = { x: this.#tile.x + d.x, y: this.#tile.y + d.y };
+      if (objectsAt(this.#map, p.x, p.y, this.#isVisible).some((o) => o.type !== 'warp')) return p;
+    }
+    return null;
+  }
+
+  /** 調べられる物のとなりにいる間、しらべるボタンを光らせる */
+  #updateNear(): void {
+    const key = `${this.#map.id}:${this.#tile.x},${this.#tile.y}`;
+    if (key === this.#nearKey) return;
+    this.#nearKey = key;
+    this.#examineBtn?.classList.toggle('is-ready', this.#nearTarget() !== null);
+  }
+
+  /** 正面（なければ、となり）と足元を調べる */
   #examine(): void {
     if (this.#busy || this.#move) return;
     const d = DIR_DELTA[this.#dir];
     const front = { x: this.#tile.x + d.x, y: this.#tile.y + d.y };
-    if (this.#interactAt(front.x, front.y)) return;
+    const near = this.#nearTarget();
+    if (near) {
+      this.#dir = this.#dirTo(near);
+      if (this.#interactAt(near.x, near.y)) return;
+    }
     // 欠片：正式な絵の街ではマスが細かいので、まわり2マスまで
     const range = this.#map.art ? 2 : 0;
     for (const p of [this.#tile, front]) {
