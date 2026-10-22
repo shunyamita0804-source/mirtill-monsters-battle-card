@@ -8,7 +8,7 @@ import type { CardReward } from './tournaments.ts';
  * 歩行・当たり判定・入口の確認用に、地形を記号で表した仮マップで実装している。
  * 正式背景が届いたら、背景画像を敷き、この記号マップは当たり判定用として位置を合わせ直す。
  *
- * 記号（TILE_INFO）：# 壁 / . 床 / , 草 / = 道 / T 木 / ~ 水 / H 大会会場 / A 家 / B ショップ / D 入口 / d 出口
+ * 記号（TILE_INFO）：# 壁 / . 床 / , 草 / = 道 / T 木 / ~ 水 / H 大会会場 / A 家 / B ショップ / D 入口 / d 出口 / G ダンジョン入口
  *                  F 噴水 / S 下り階段 / U 上り階段・出口 / b ベッド / M 壁の地図 / h 本棚 / k 机 / s 棚・客席
  *                  c カウンター / n 人 / g ガチャマシン / x 対戦テーブル / r じゅうたん
  */
@@ -32,6 +32,7 @@ export const TILE_INFO: Readonly<Record<string, TileInfo>> = {
   F: { solid: true, name: '噴水' },
   S: { solid: false, name: '下り階段' },
   U: { solid: false, name: '上り階段' },
+  G: { solid: false, name: 'ダンジョン入口' },
   b: { solid: true, name: 'ベッド' },
   M: { solid: true, name: '壁の地図' },
   h: { solid: true, name: '本棚' },
@@ -57,7 +58,9 @@ export type InteractAction =
 export type WarpTarget =
   | { readonly kind: 'map'; readonly mapId: string; readonly x: number; readonly y: number; readonly dir: Direction }
   | { readonly kind: 'floor'; readonly delta: 1 | -1 }
-  | { readonly kind: 'leaveDungeon' };
+  | { readonly kind: 'leaveDungeon' }
+  /** ダンジョン選択画面を開く（街のダンジョン入口） */
+  | { readonly kind: 'dungeonGate' };
 
 interface Rect {
   readonly x: number;
@@ -181,10 +184,12 @@ export const TOWN: MapDefinition = {
     'T,,~~,,==,,,,,,T',
     'T,,~~,,==,,,,,,T',
     'T,,,,,,==,,,,,,T',
-    'TTTTTTTTTTTTTTTT',
+    'TTTTTTTGGTTTTTTT',
   ],
   objects: [
     warp('door-hall', 7, 5, 2, '大会会場', { kind: 'map', mapId: 'hall', x: 5, y: 10, dir: 'up' }),
+    // 中央の道を南へまっすぐ進んだ突き当たり。踏むと既存のダンジョン選択（家の壁の地図と同じ画面）へ
+    warp('door-dungeon', 7, 25, 2, 'ダンジョン入口', { kind: 'dungeonGate' }),
     warp('door-home', 3, 11, 1, '家', { kind: 'map', mapId: 'home', x: 4, y: 7, dir: 'up' }),
     warp('door-shop', 13, 11, 1, 'カードショップ', { kind: 'map', mapId: 'shop', x: 4, y: 7, dir: 'up' }),
     interact('sign-fountain', 7, 15, 2, 2, '噴水', 'message', '街の中央の噴水。（仮マップ：正式な街背景は未着手）'),

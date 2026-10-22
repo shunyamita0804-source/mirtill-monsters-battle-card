@@ -41,7 +41,7 @@ const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, 
 
 const TILE_CLASS: Readonly<Record<string, string>> = {
   '#': 'wall', '.': 'floor', ',': 'grass', '=': 'road', T: 'tree', '~': 'water', H: 'bld-hall', A: 'bld-home',
-  B: 'bld-shop', D: 'door', d: 'exit', F: 'fountain', S: 'stairs-down', U: 'stairs-up', b: 'bed', M: 'wallmap',
+  B: 'bld-shop', D: 'door', d: 'exit', G: 'dungeon-gate', F: 'fountain', S: 'stairs-down', U: 'stairs-up', b: 'bed', M: 'wallmap',
   h: 'bookshelf', k: 'desk', s: 'shelf', c: 'counter', n: 'npc', g: 'gacha', x: 'table', r: 'rug',
 };
 
@@ -331,6 +331,12 @@ class WorldView {
       } else if (target.kind === 'floor') {
         this.#store.update((s) => changeFloor(s, target.delta));
         this.load();
+      } else if (target.kind === 'dungeonGate') {
+        // 入口の1マス手前（北）に戻してから選択画面へ。戻ってきたとき入口の上に立ったままにならないように
+        const back: Location = { mapId: this.#map.id, x: this.#tile.x, y: this.#tile.y - 1, dir: 'down' };
+        this.#store.update((s) => ({ ...s, location: back }));
+        this.#busy = true;
+        this.#ctx.navigate('dungeonSelect');
       } else {
         this.#confirmLeave(true);
       }
