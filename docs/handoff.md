@@ -6,11 +6,11 @@
 
 | 項目 | 状態 |
 | --- | --- |
-| 公開URL | https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ （`main` の `60bae3f` を公開中） |
+| 公開URL | https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ （`main` の `142470a` を公開。2026-10-22） |
 | リポジトリ | https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Public。ユーザー承認済み） |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
-| 次の作業 | **ユーザーの次の指示待ち。** バトルは「PS版ルール＋3点だけ変更（山札60枚・マナ表記・サポートカード）」とユーザーが決定・承認（`docs/battle-rules.md`）。改修1「マナ」・2「ドロー」・3「守備」・4「サポート」を作業ブランチ `claude/cool-gauss-emyae1` で実装済み（`main` 未マージ・未公開）。操作は「必要なときだけ画面中央に帯＋縦並びのコマンド」に改修済み（ユーザー提供の UI 素材）。次の指示待ち |
+| 次の作業 | **ユーザーの次の指示待ち。** バトルは「PS版ルール＋3点だけ変更（山札60枚・マナ表記・サポートカード）」（`docs/battle-rules.md`）。改修1〜5（マナ・ドロー・守備・サポート・デッキ）と演出・操作の作り直しを `main` に取り込み公開済み。通し確認（`tools/e2e/flow.cjs`）合格。残りは正式カード待ちの効果（反射・肩代わり・コンボ等）と実機確認 |
 
 ## 2. これまでの作業（時系列）
 
