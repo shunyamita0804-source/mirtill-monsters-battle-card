@@ -46,6 +46,10 @@ import type { ScreenContext, ScreenDefinition } from './types.ts';
 
 /** 1マスの大きさ（論理px） */
 const TILE = 40;
+/** スティック：これ以上指を動かしたら移動の操作にする／スティックの半径／方向を決める最小の距離（論理px） */
+const STICK_START = 12;
+const STICK_RADIUS = 42;
+const STICK_DEAD = 16;
 /** 歩行速度（マス/秒・仮。実機で調整） */
 const WALK_SPEED = 4.5;
 /** 歩行素材：128×144 を 40×45 に縮小。行＝方向（front/back/left/right）、列＝4コマ */
@@ -108,6 +112,11 @@ class WorldView {
   #viewport!: HTMLElement;
   #player!: HTMLElement;
   #objectEls = new Map<string, HTMLElement>();
+  #stick!: HTMLElement;
+  /** スティック操作中の指（1本だけ） */
+  #touch: { id: number; x: number; y: number; dragging: boolean } | null = null;
+  /** 一度スティックを使ったら操作の説明を出さない（アプリを開いている間） */
+  static #stickUsed = false;
   readonly #onKeyDown = (e: KeyboardEvent): void => this.#key(e, true);
   readonly #onKeyUp = (e: KeyboardEvent): void => this.#key(e, false);
 
@@ -178,6 +187,8 @@ class WorldView {
   #blocked = (x: number, y: number): boolean => isBlocked(this.#map, x, y, this.#isVisible);
 
   #build(): void {
+    this.#touch = null;
+    this.#held = null;
     const map = this.#map;
     const { width, height } = mapSize(map);
     const save = this.#store.save;
@@ -206,7 +217,7 @@ class WorldView {
     this.#player.style.backgroundImage = `url("${save.player.gender === 'female' ? femaleSheet : maleSheet}")`;
     this.#mapLayer.append(this.#player);
 
-    this.#viewport = h('div', { class: 'world__viewport', on: { click: (e) => this.#tap(e) } }, this.#mapLayer);
+    this.#viewport = h('div', { class: 'world__viewport' }, this.#mapLayer);
 
     const hud = h(
       'header',
@@ -217,36 +228,25 @@ class WorldView {
       button(t('world.menu'), () => this.#menu(), 'btn btn--small'),
     );
 
-    const pad = h('div', { class: 'world__pad', attrs: { 'aria-label': t('world.movePad') } });
-    for (const dir of ['up', 'left', 'right', 'down'] as const) {
-      const label = { up: '▲', down: '▼', left: '◀', right: '▶' }[dir];
-      const b = h('button', { class: `world__pad-btn world__pad-btn--${dir}`, text: label, attrs: { type: 'button', 'aria-label': t('world.moveDir', { dir }) } });
-      const press = (e: Event): void => {
-        e.preventDefault();
-        this.#path = [];
-        this.#afterPath = null;
-        this.#held = dir;
-      };
-      const release = (): void => {
-        if (this.#held === dir) this.#held = null;
-      };
-      b.addEventListener('pointerdown', press);
-      b.addEventListener('pointerup', release);
-      b.addEventListener('pointerleave', release);
-      b.addEventListener('pointercancel', release);
-      pad.append(b);
-    }
+    // 移動：画面のどこでも指を置いてすべらせると、その方向へ歩く（指を置いた所に半透明のスティックが出る）。
+    // すべらせずに離したら、これまでどおりタップ（その場所へ歩く・人や家具に話す・調べる）
+    this.#stick = h('div', { class: 'world__stick', attrs: { 'aria-hidden': 'true' } }, h('div', { class: 'world__stick-knob' }));
+    this.#viewport.append(this.#stick);
+    this.#viewport.addEventListener('pointerdown', (e) => this.#pointerDown(e));
+    this.#viewport.addEventListener('pointermove', (e) => this.#pointerMove(e));
+    this.#viewport.addEventListener('pointerup', (e) => this.#pointerUp(e, true));
+    this.#viewport.addEventListener('pointercancel', (e) => this.#pointerUp(e, false));
 
-    const controls = h(
-      'div',
-      { class: 'world__controls' },
-      pad,
-      h('div', { class: 'world__hint', text: t('world.hint') }),
-      button(t('world.examine'), () => this.#examine(), 'world__action'),
+    const examine = h(
+      'button',
+      { class: 'world__action', attrs: { type: 'button', 'aria-label': t('world.examine') }, on: { click: () => this.#examine() } },
+      h('span', { class: 'world__action-icon', attrs: { 'aria-hidden': 'true' } }),
+      h('span', { class: 'world__action-label', text: t('world.examine') }),
     );
+    const hint = WorldView.#stickUsed ? null : h('div', { class: 'world__hint', text: t('world.hint') });
 
     const goal = showsPracticeGoal(save, map.id) ? h('div', { class: 'world__goal', text: t('story.goal.practice') }) : null;
-    this.#root.replaceChildren(hud, this.#viewport, controls, goal ?? '');
+    this.#root.replaceChildren(hud, this.#viewport, examine, hint ?? '', goal ?? '');
     this.#root.dataset.map = map.id;
     this.#root.dataset.intro = save.story.intro;
     this.#render();
@@ -419,6 +419,63 @@ class WorldView {
   }
 
   /* ---------- 操作 ---------- */
+
+  /* ---------- スティック（指を置いた所に出る） ---------- */
+
+  #pointerDown(e: PointerEvent): void {
+    if (this.#busy || this.#touch) return;
+    this.#touch = { id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false };
+    try {
+      this.#viewport.setPointerCapture(e.pointerId);
+    } catch {
+      // 取れなくても動く
+    }
+  }
+
+  #pointerMove(e: PointerEvent): void {
+    const touch = this.#touch;
+    if (!touch || touch.id !== e.pointerId) return;
+    // ステージは拡大縮小されているので、論理pxに直して判断する
+    const scale = this.#stageScale();
+    const dx = (e.clientX - touch.x) / scale;
+    const dy = (e.clientY - touch.y) / scale;
+    const dist = Math.hypot(dx, dy);
+    if (!touch.dragging) {
+      if (dist < STICK_START) return;
+      touch.dragging = true;
+      this.#path = [];
+      this.#afterPath = null;
+      const v = this.#viewport.getBoundingClientRect();
+      this.#stick.style.left = `${(touch.x - v.left) / scale}px`;
+      this.#stick.style.top = `${(touch.y - v.top) / scale}px`;
+      this.#stick.classList.add('is-on');
+      if (!WorldView.#stickUsed) {
+        WorldView.#stickUsed = true;
+        this.#root.querySelector('.world__hint')?.remove();
+      }
+    }
+    const k = Math.min(1, STICK_RADIUS / Math.max(dist, 1));
+    const knob = this.#stick.firstElementChild as HTMLElement | null;
+    if (knob) knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+    this.#held = this.#busy || dist < STICK_DEAD ? null : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+  }
+
+  #pointerUp(e: PointerEvent, tap: boolean): void {
+    const touch = this.#touch;
+    if (!touch || touch.id !== e.pointerId) return;
+    this.#touch = null;
+    this.#stick.classList.remove('is-on');
+    if (touch.dragging) {
+      this.#held = null;
+      return;
+    }
+    if (tap) this.#tap(e);
+  }
+
+  #stageScale(): number {
+    const w = this.#root.offsetWidth;
+    return w > 0 ? this.#root.getBoundingClientRect().width / w : 1;
+  }
 
   #key(e: KeyboardEvent, down: boolean): void {
     if (this.#busy || this.#root.querySelector('.modal')) return;

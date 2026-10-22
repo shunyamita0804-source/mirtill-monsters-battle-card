@@ -133,7 +133,9 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
     await page.click('.world__action');
     log('examine front:', (await page.textContent('.modal')).replace(/\s+/g, ' '));
     await page.click('.modal .btn--primary');
-    await page.click('.world__pad-btn--up', { delay: 260 }).catch(() => {});
+    // 上へ1マス（指でなぞる操作：下から上へすべらせる）
+    { const v = await page.evaluate(() => { const r = document.querySelector('.world__viewport').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+      await page.mouse.move(v.x, v.y); await page.mouse.down(); await page.mouse.move(v.x, v.y - 40, { steps: 4 }); await page.waitForTimeout(220); await page.mouse.up(); }
     await page.waitForTimeout(600);
     log('pos', await page.evaluate(() => [document.querySelector('.world').dataset.px, document.querySelector('.world').dataset.py]));
     await page.click('.world__action');

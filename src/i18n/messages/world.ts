@@ -18,11 +18,9 @@ export const WORLD = {
   'world.escape': { ja: '脱出', en: 'Escape' },
   'world.menu': { ja: 'メニュー', en: 'Menu' },
   'world.player': { ja: 'プレイヤー', en: 'Player' },
-  'world.movePad': { ja: '移動パッド', en: 'Movement pad' },
-  'world.moveDir': { ja: '{dir}へ移動', en: 'Move {dir}' },
   'world.hint': {
-    ja: '地面をタップでその場所へ移動\n人や家具をタップで話す・調べる',
-    en: 'Tap the ground to walk there\nTap people or furniture to talk or check',
+    ja: '画面をなぞって移動・タップでその場所へ\n人や家具をタップで話す・調べる',
+    en: 'Slide to walk · tap to go there\nTap people or furniture to talk or check',
   },
   'world.examine': { ja: 'しらべる', en: 'Check' },
 

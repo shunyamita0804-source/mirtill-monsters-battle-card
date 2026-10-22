@@ -202,69 +202,118 @@
   pointer-events: none;
 }
 
-.world__controls {
-  flex: none;
-  display: grid;
-  grid-template-columns: 150px 1fr 96px;
-  align-items: center;
-  gap: 8px;
-  height: 170px;
-  padding: 8px 12px 12px;
-  background: rgb(0 0 0 / 0.55);
-  border-top: 1px solid var(--color-line);
-}
-
-.world__pad {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  touch-action: none;
-}
-
-.world__pad-btn {
+/* 移動のスティック：指を置いた所に、触っている間だけ半透明で出る */
+.world__stick {
   position: absolute;
-  width: 52px;
-  height: 52px;
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-  background: var(--color-panel-strong);
-  color: var(--color-text);
-  font-size: 18px;
-  touch-action: none;
-  cursor: pointer;
-}
-
-.world__pad-btn:active {
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-}
-
-.world__pad-btn--up { left: 49px; top: 0; }
-.world__pad-btn--down { left: 49px; bottom: 0; }
-.world__pad-btn--left { left: 0; top: 49px; }
-.world__pad-btn--right { right: 0; top: 49px; }
-
-.world__hint {
-  font-size: 10px;
-  line-height: 1.5;
-  color: var(--color-sub);
-  white-space: pre-line;
-}
-
-.world__action {
-  width: 88px;
-  height: 88px;
-  border: none;
+  width: 104px;
+  height: 104px;
+  margin: -52px 0 0 -52px;
   border-radius: 50%;
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-  font-size: 15px;
-  font-weight: 800;
-  box-shadow: 0 4px 0 #a07a20;
+  border: 2px solid rgb(255 255 255 / 0.55);
+  background: radial-gradient(circle, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.2));
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15), inset 0 0 12px rgb(0 0 0 / 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.world__stick.is-on {
+  opacity: 1;
+}
+
+.world__stick-knob {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.5);
+  border: 2px solid rgb(255 255 255 / 0.75);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+
+/* 操作の説明（一度スティックを使ったら消える） */
+.world__hint {
+  position: absolute;
+  left: 12px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  max-width: 280px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.4);
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgb(255 255 255 / 0.9);
+  white-space: pre-line;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* しらべる：右下の半透明の丸（金のふち・虫めがねの印） */
+.world__action {
+  position: absolute;
+  right: 14px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 3;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid rgb(201 162 74 / 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, rgb(40 60 110 / 0.55), rgb(10 18 44 / 0.55));
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.35), inset 0 0 0 1px rgb(255 255 255 / 0.15);
+  color: #f6f1e2;
   cursor: pointer;
+}
+
+.world__action-icon {
+  position: relative;
+  width: 22px;
+  height: 22px;
+}
+
+/* 虫めがね（輪と柄） */
+.world__action-icon::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 13px;
+  height: 13px;
+  border: 3px solid #f3dc8a;
+  border-radius: 50%;
+}
+
+.world__action-icon::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 14px;
+  width: 4px;
+  height: 9px;
+  border-radius: 2px;
+  background: #f3dc8a;
+  transform: rotate(-45deg);
+  transform-origin: top center;
+}
+
+.world__action-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
 }
 
 .world__action:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 #a07a20;
+  transform: scale(0.95);
+  background: radial-gradient(circle at 50% 35%, rgb(60 90 150 / 0.7), rgb(20 30 70 / 0.7));
 }
