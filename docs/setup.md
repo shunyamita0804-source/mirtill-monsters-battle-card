@@ -54,5 +54,10 @@ docs/     開発ドキュメント
 
 ## 独立性について
 
-本プロジェクトは「ミスティックモンスターズ」（`shunyamita0804-source/mystic-monsters`）とは完全に独立しています。
-既存リポジトリのファイルのコピー・ソースの流用は行いません。
+本プロジェクトは「ミスティックモンスターズ」（`shunyamita0804-source/mystic-monsters`）とは独立しています。
+ソースの流用は行いません。素材は 2026-10-22 のユーザー許可により読み取りで利用しています（`docs/audio-credits.md`）。
+
+## クラウドセッション（Claude Code）
+
+`.claude/hooks/session-start.sh` がセッション開始時に Node 24 と依存関係を自動で用意します。
+手で `nvm install 24` や `npm ci` をする必要はありません。
