@@ -41,6 +41,26 @@ import { button, h } from '../dom.ts';
 import maleSheet from '@assets/images/characters/player_male_sheet.png';
 import femaleSheet from '@assets/images/characters/player_female_sheet.png';
 import guideSheet from '@assets/images/characters/npc_neighbor_guide_walk.png';
+import chestWood from '@assets/images/maps/dungeon/chest_01_base.webp';
+import chestWood1 from '@assets/images/maps/dungeon/chest_01_anim_01.webp';
+import chestWood2 from '@assets/images/maps/dungeon/chest_01_anim_02.webp';
+import chestWood3 from '@assets/images/maps/dungeon/chest_01_anim_03.webp';
+import chestWood4 from '@assets/images/maps/dungeon/chest_01_anim_04.webp';
+import chestIron from '@assets/images/maps/dungeon/chest_02_base.webp';
+import chestIron1 from '@assets/images/maps/dungeon/chest_02_anim_01.webp';
+import chestIron2 from '@assets/images/maps/dungeon/chest_02_anim_02.webp';
+import chestIron3 from '@assets/images/maps/dungeon/chest_02_anim_03.webp';
+import chestIron4 from '@assets/images/maps/dungeon/chest_02_anim_04.webp';
+import chestGold from '@assets/images/maps/dungeon/chest_03_base.webp';
+import chestGold1 from '@assets/images/maps/dungeon/chest_03_anim_01.webp';
+import chestGold2 from '@assets/images/maps/dungeon/chest_03_anim_02.webp';
+import chestGold3 from '@assets/images/maps/dungeon/chest_03_anim_03.webp';
+import chestGold4 from '@assets/images/maps/dungeon/chest_03_anim_04.webp';
+import fieldMeadow from '@assets/images/backgrounds/battle_field_meadow.webp';
+import fieldCoast from '@assets/images/backgrounds/battle_field_coast.webp';
+import fieldVolcano from '@assets/images/backgrounds/battle_field_volcano.webp';
+import { bgm } from '../bgm.ts';
+import { coinIcon } from '../components/coinIcon.ts';
 import { t, type Params } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
 import { cardName, dungeonName, mapName, objectLabel, objectMessage, opponentName } from '../../i18n/content.ts';
@@ -68,6 +88,20 @@ const WALK_PX = 185;
 const WALK_FPS = 7;
 /** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目で少し体が上がる */
 const WALK_BOB = 0.03;
+/** 宝箱の絵（ミスモンの正式素材）：閉じた絵と、開く動きの4コマ（4コマ目が開いたあとの絵） */
+const CHEST_ART: Readonly<Record<ChestObject['look'], { readonly closed: string; readonly opening: readonly string[] }>> = {
+  wood: { closed: chestWood, opening: [chestWood1, chestWood2, chestWood3, chestWood4] },
+  iron: { closed: chestIron, opening: [chestIron1, chestIron2, chestIron3, chestIron4] },
+  gold: { closed: chestGold, opening: [chestGold1, chestGold2, chestGold3, chestGold4] },
+};
+/** 宝箱が開く動きの1コマの時間（ミリ秒） */
+const CHEST_FRAME_MS = 110;
+/** ダンジョンの階ごとの対戦の背景（ミスモンの野外のバトル背景。仮の割り当て） */
+const DUNGEON_BATTLE_BG: Readonly<Record<string, string>> = {
+  'dungeon-01-b1': fieldMeadow,
+  'dungeon-01-b2': fieldCoast,
+  'dungeon-01-b3': fieldVolcano,
+};
 /** 施設の看板を上の帯の下に保つ位置（論理px） */
 const SIGN_MIN_BOTTOM = 98;
 /**
@@ -245,6 +279,7 @@ class WorldView {
     this.#afterPath = null;
     this.#busy = false;
     this.#scale = this.#artScale(map);
+    bgm.play(map.area === 'dungeon' ? 'dungeon' : 'town');
     this.#build(true);
     cancelAnimationFrame(this.#raf);
     this.#last = performance.now();
@@ -397,7 +432,7 @@ class WorldView {
         h('span', { class: 'world__place-name', text: title }),
         map.art ? null : h('span', { class: 'world__place-note', text: t('world.placeNote') }),
       ),
-      h('span', { class: 'world__coins', text: coins(save.coins) }),
+      h('span', { class: 'world__coins' }, coinIcon(), coins(save.coins)),
       map.area === 'dungeon' ? button(t('world.escape'), () => this.#confirmLeave(), 'btn btn--small') : null,
       button(t('world.menu'), () => this.#menu(), 'btn btn--small'),
     );
@@ -504,7 +539,10 @@ class WorldView {
     if (obj.type === 'chest') {
       const save = this.#store.save;
       const opened = save.activeDungeon ? isChestOpened(save, save.activeDungeon.dungeonId, obj.id) : false;
-      return place(h('div', { class: `world__chest${opened ? ' is-open' : ''}`, attrs: { 'aria-label': opened ? t('world.chestEmptyLabel') : t('world.chest') } }), obj.x, obj.y);
+      const art = CHEST_ART[obj.look];
+      const el = h('div', { class: `world__chest${opened ? ' is-open' : ''}`, attrs: { 'aria-label': opened ? t('world.chestEmptyLabel') : t('world.chest') } });
+      el.style.backgroundImage = `url("${opened ? art.opening[art.opening.length - 1] : art.closed}")`;
+      return place(el, obj.x, obj.y);
     }
     return null;
   }
@@ -935,7 +973,14 @@ class WorldView {
       return;
     }
     this.#store.update(() => r.save);
-    this.#objectEls.get(chest.id)?.classList.add('is-open');
+    const el = this.#objectEls.get(chest.id);
+    if (el) {
+      // 開く動き（4コマ）。最後のコマ（開いたあと）で止める
+      el.classList.add('is-open');
+      for (const [i, frame] of CHEST_ART[chest.look].opening.entries()) {
+        setTimeout(() => (el.style.backgroundImage = `url("${frame}")`), i * CHEST_FRAME_MS);
+      }
+    }
     const parts: string[] = [];
     if (chest.reward.coins > 0) parts.push(coins(chest.reward.coins));
     for (const c of chest.reward.cards) parts.push(t(c.cardId.startsWith('skl') ? 'world.chestCardSkill' : 'world.chestCardMonster', { n: c.count }));
@@ -960,6 +1005,8 @@ class WorldView {
       title: enemy.boss ? t('world.bossBattle') : t('world.dungeonBattle'),
       opponent,
       allowSurrender: true,
+      bgm: enemy.boss ? 'bossBattle' : 'battle',
+      ...(DUNGEON_BATTLE_BG[this.#map.id] ? { background: DUNGEON_BATTLE_BG[this.#map.id] } : {}),
       onFinish: (winner) => {
         if (winner === 'player') {
           const r = defeatEnemy(store.save, enemy.id, enemy.boss);

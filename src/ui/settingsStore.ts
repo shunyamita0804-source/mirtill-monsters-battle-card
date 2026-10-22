@@ -1,10 +1,11 @@
 import { setLanguage } from '../i18n/i18n.ts';
-import { effectiveSeVolume, SettingsRepository, type GameSettings } from '../game/settings/settings.ts';
+import { effectiveBgmVolume, effectiveSeVolume, SettingsRepository, type GameSettings } from '../game/settings/settings.ts';
 import type { KeyValueStorage } from '../game/save/saveRepository.ts';
+import { bgm } from './bgm.ts';
 import { sound } from './sound.ts';
 
 /**
- * 設定（言語・音量）の保持。変更するとすぐ保存し、言語と効果音の音量に反映する。
+ * 設定（言語・音量）の保持。変更するとすぐ保存し、言語と効果音・BGM の音量に反映する。
  * 保存できない環境（プライベートモードなど）でも、今回の起動の間は効く。
  */
 export class SettingsStore {
@@ -33,5 +34,6 @@ export class SettingsStore {
   #apply(): void {
     setLanguage(this.#settings.language);
     sound.setVolume(effectiveSeVolume(this.#settings));
+    bgm.setVolume(effectiveBgmVolume(this.#settings));
   }
 }

@@ -684,10 +684,27 @@
 }
 
 .tournament__prizes {
+  display: grid;
+  gap: 2px;
   margin: 0;
-  padding-left: 1.2em;
+  padding: 0;
+  list-style: none;
   font-size: 12px;
   line-height: 1.6;
+}
+
+/* 景品のアイコン（金貨・勲章・小袋）を文の頭に */
+.tournament__prizes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tournament__prize-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .tournament__ng {
@@ -776,6 +793,7 @@
 
 .settings__note {
   font-size: 12px;
+  white-space: pre-line;
   color: var(--color-sub);
 }
 

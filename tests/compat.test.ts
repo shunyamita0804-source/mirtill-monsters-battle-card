@@ -5,7 +5,7 @@ import { createBackup, parseBackup, serializeBackup } from '../src/game/save/bac
 import { createStarterDeck } from '../src/game/deck/deck.ts';
 import { DEFAULT_LOCATION } from '../src/game/save/saveData.ts';
 import { MemoryStorage, SAVE_KEY } from '../src/game/save/saveRepository.ts';
-import { DEFAULT_SETTINGS, effectiveSeVolume, normalizeSettings, SETTINGS_KEY } from '../src/game/settings/settings.ts';
+import { DEFAULT_SETTINGS, effectiveBgmVolume, effectiveSeVolume, normalizeSettings, SETTINGS_KEY } from '../src/game/settings/settings.ts';
 import { getLanguage, setLanguage } from '../src/i18n/i18n.ts';
 import { GameStore } from '../src/ui/gameStore.ts';
 import { sound } from '../src/ui/sound.ts';
@@ -111,6 +111,8 @@ describe('設定（言語・音量）', () => {
     expect(effectiveSeVolume({ ...DEFAULT_SETTINGS, muted: true })).toBe(0);
     expect(effectiveSeVolume({ ...DEFAULT_SETTINGS, seVolume: 0 })).toBe(0);
     expect(effectiveSeVolume({ ...DEFAULT_SETTINGS, seVolume: 50 })).toBe(0.5);
+    expect(effectiveBgmVolume({ ...DEFAULT_SETTINGS, muted: true })).toBe(0);
+    expect(effectiveBgmVolume({ ...DEFAULT_SETTINGS, bgmVolume: 40 })).toBe(0.4);
   });
 
   it('言語を変えても進行は変わらない', () => {

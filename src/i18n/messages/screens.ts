@@ -89,8 +89,8 @@ export const SCREENS = {
   'options.se': { ja: '効果音', en: 'Sound effects' },
   'options.bgm': { ja: 'BGM', en: 'Music' },
   'options.bgmNote': {
-    ja: 'BGM はまだ入っていません（将来用の設定です）。',
-    en: 'There is no music yet (this setting is for the future).',
+    ja: '場所や対戦に合わせて曲が流れます（最初に画面をタップしてから）。',
+    en: 'Music changes with the place and the battle (after your first tap).',
   },
   'options.volume': { ja: '{n}%', en: '{n}%' },
   'options.muteState': { ja: 'すべての音を消す：{state}', en: 'Mute all sound: {state}' },
@@ -165,8 +165,8 @@ export const SCREENS = {
   },
   'options.credits': { ja: '素材のクレジット', en: 'Credits' },
   'options.creditsText': {
-    ja: '効果音：OtoLogic（https://otologic.jp/）・効果音ラボ（https://soundeffect-lab.info/）',
-    en: 'Sound effects: OtoLogic (https://otologic.jp/), Sound Effect Lab (https://soundeffect-lab.info/)',
+    ja: '効果音：OtoLogic（https://otologic.jp/）・効果音ラボ（https://soundeffect-lab.info/）\nBGM：「冒険への誘い」のる／「Battle - スタンバイフェイズ」「通常戦闘曲 - α」lei／「戦いの旅路を征く」MATSU／「中ボスくらいの戦闘風」Motoyuki（OpenTracks〔旧 DOVA-SYNDROME〕）・「Bon Voyage!」HarumachiMusic（Pixabay）・「Spirits Forest」HydroGene',
+    en: 'Sound effects: OtoLogic (https://otologic.jp/), Sound Effect Lab (https://soundeffect-lab.info/)\nMusic: "Bouken e no Izanai" by Noru / "Battle - Standby Phase", "Normal Battle - α" by lei / "Tatakai no Tabiji wo Yuku" by MATSU / "Chu-boss Battle" by Motoyuki (OpenTracks, formerly DOVA-SYNDROME), "Bon Voyage!" by HarumachiMusic (Pixabay), "Spirits Forest" by HydroGene',
   },
   'options.battleLocked': { ja: '対戦中は言語を変えられません。', en: 'You cannot change the language during a battle.' },
 

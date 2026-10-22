@@ -72,13 +72,10 @@
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.7);
 }
 
-.world__coins::before {
-  content: '';
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff3b0 0 18%, #f5c542 40%, #b8841c 100%);
-  box-shadow: inset 0 0 0 1.5px #8a5e10, 0 1px 2px rgb(0 0 0 / 0.5);
+.world__coins .coin-icon {
+  width: 22px;
+  height: 22px;
+  margin-right: 0;
 }
 
 .world__hud .btn--small {
@@ -308,27 +305,10 @@
   position: absolute;
   width: 40px;
   height: 40px;
-  background:
-    linear-gradient(180deg, #a0672a 0 45%, #6a3f14 45% 52%, #a0672a 52%) 4px 8px / 32px 26px no-repeat;
-  box-shadow: inset 0 0 0 0 transparent;
-}
-
-.world__chest::after {
-  content: '';
-  position: absolute;
-  left: 17px;
-  top: 17px;
-  width: 6px;
-  height: 7px;
-  background: #ffcf5a;
-}
-
-.world__chest.is-open {
-  opacity: 0.55;
-}
-
-.world__chest.is-open::after {
-  display: none;
+  /* 宝箱の絵（ミスモンの正式素材）。マスの下にそろえ、少し上にはみ出す */
+  background: center bottom / contain no-repeat;
+  transform: scale(1.25);
+  transform-origin: 50% 100%;
 }
 
 /* 人物（主人公・案内役）。大きさ・位置・前後（z-index）は worldScreen.ts が足元に合わせて決める */

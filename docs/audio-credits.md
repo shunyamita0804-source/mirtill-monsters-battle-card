@@ -49,6 +49,37 @@
 - 再生は Web Audio。OGG を再生できるブラウザは OGG、できないブラウザ（iPhone Safari の一部など）は M4A を使う（正式採用の4音は MP3 をどのブラウザでも使う）
 - iPhone は最初のタップまで音を出せないため、最初のタップで音を使えるようにしてから読み込む
 
+## BGM（2026-10-22 追加・ミスモンの曲）
+
+ユーザー指示「BGM を使って。曲の規約は確認済み OK」（2026-10-22）。ミスモン（本編）で使っている曲から選んだ。本編のリポジトリは読み取りだけ。
+`tools/audio/make_bgm_loops.py` が本編の OGG から「ループする範囲だけを切り出し、終わりを頭へつないだ」MP3（128kbps）を作る（範囲は本編の audio-registry.js と同じ）。
+鳴らし方は `src/ui/bgm.ts`（`BGM_REGISTRY`）。ゲーム内のクレジット（設定 → 素材のクレジット）にも曲名・作者を出す。
+
+| 場面（BGM_REGISTRY） | ファイル | 曲名 / 作者 | 出典 | 本編のファイル |
+| --- | --- | --- | --- | --- |
+| `title`：タイトル | bgm_title.mp3 | Bon Voyage! / HarumachiMusic | Pixabay | licensed_20261007/06_prologue_departure.ogg |
+| `town`：街・部屋（ショップなどの画面も続けて） | bgm_town.mp3 | 冒険への誘い / のる | OpenTracks（旧 DOVA-SYNDROME） | licensed_20261008/town_bouken_e_no_izanai.ogg |
+| `tournament`：大会の受付 | bgm_tournament.mp3 | Battle - スタンバイフェイズ / lei | DOVA-SYNDROME | licensed_20261007/08_tournament_table_start17s.ogg（17秒から） |
+| `tournamentBattle`：大会の対戦 | bgm_tournament_battle.mp3 | 戦いの旅路を征く / MATSU | DOVA-SYNDROME | licensed_20261007/14_official_rank_battle.ogg |
+| `dungeon`：ダンジョンの探索 | bgm_dungeon.mp3 | Spirits Forest / HydroGene（CC0） | itch.io | hydrogene_16bit_rpg/07_spirits_forest_full.ogg（前奏を除いたループ部） |
+| `battle`：ダンジョン・練習の対戦 | bgm_battle.mp3 | 通常戦闘曲 - α / lei | DOVA-SYNDROME | licensed_20261007/12_wild_battle.ogg |
+| `bossBattle`：ダンジョンのボス | bgm_boss_battle.mp3 | 中ボスくらいの戦闘風 / Motoyuki | DOVA-SYNDROME | licensed_20261007/13_rare_monster_battle.ogg |
+
+- 本編の作品固有の曲（タイトル曲・本編の正式 BGM・作者不明の「公式ランク」）は使っていない
+- 切れ目：MP3 は頭と終わりにごく短い無音が入るため、ループの継ぎ目でほんの一瞬切れることがある（気になれば形式を変える）
+
+## ミスモンの画像（2026-10-22 追加）
+
+ユーザー指示「ダンジョンと景品のアイコン、ボタン、金貨を使って。残りは使わない」（2026-10-22）。本編の正式素材をそのまま（大きさの縮小だけ）。
+
+| 使う所 | ファイル | 本編のファイル | 加工 |
+| --- | --- | --- | --- |
+| ダンジョンの対戦の背景（B1F 草原・B2F 海岸・B3F 火山。仮の割り当て） | `assets/images/backgrounds/battle_field_{meadow,coast,volcano}.webp` | battle/field_1012/ch1_meadow・ch2_coast・ch4_volcano.webp | なし |
+| ダンジョンの宝箱（木・鉄・金）と開く動き | `assets/images/maps/dungeon/chest_0{1,2,3}_{base,anim_01〜04}.webp` | chests/chest_0{1,2,3}_*.webp | 高さ 160px に縮小 |
+| 大会の景品のアイコン（初回優勝＝勲章・再優勝＝小袋） | `assets/images/icons/prize_{medal,pouch}.webp` | items/body_1012/27・15.webp | 128px に縮小 |
+| 金貨（所持金・参加報酬） | `assets/images/icons/coin.png` | ui/gold/coin.png | なし |
+| ボタン（行う＝青・やめる＝赤） | `assets/images/ui/button/mm_btn_blue_ornate.png`・`mm_btn_red.webp` | ui/a_group/a19・a04 | なし（両端の飾りはのばさない表示） |
+
 ## 本編の画像素材（会話の UI）
 
 2026-10-22：ユーザー指示「セリフの UI はミスモンのものを使う。NPC の名前の UI も同様」により、ミスティックモンスターズの会話 UI の画像を利用。

@@ -105,6 +105,8 @@ export interface ChestObject {
   readonly x: number;
   readonly y: number;
   readonly reward: { readonly coins: number; readonly cards: readonly CardReward[] };
+  /** 宝箱の見た目（ミスモンの宝箱の絵：wood＝木・iron＝鉄・gold＝金）。中身とは関係ない（仮の割り当て） */
+  readonly look: 'wood' | 'iron' | 'gold';
 }
 
 /**
@@ -167,12 +169,20 @@ const enemy = (id: string, x: number, y: number, encounterId: string, boss = fal
 
 const npc = (id: string, x: number, y: number, npcId: NpcObject['npcId']): NpcObject => ({ type: 'npc', id, x, y, w: 1, h: 1, npcId });
 
-const chest = (id: string, x: number, y: number, coins: number, cards: readonly CardReward[] = []): ChestObject => ({
+const chest = (
+  id: string,
+  x: number,
+  y: number,
+  coins: number,
+  cards: readonly CardReward[] = [],
+  look: ChestObject['look'] = cards.length > 0 ? 'iron' : 'wood',
+): ChestObject => ({
   type: 'chest',
   id,
   x,
   y,
   reward: { coins, cards },
+  look,
 });
 
 /* ---------- 街・部屋（正式な絵。worldArt.generated.ts の座標を使う） ---------- */
@@ -455,7 +465,7 @@ export const DUNGEON_B3: MapDefinition = {
     enemy('b3-enemy-1', 5, 6, 'enc-b3-a'),
     enemy('b3-enemy-2', 3, 4, 'enc-b3-b'),
     enemy('b3-boss', 5, 2, 'enc-b3-boss', true),
-    chest('b3-chest-1', 10, 9, 0, [{ cardId: 'skl-b-5', count: 2 }]),
+    chest('b3-chest-1', 10, 9, 0, [{ cardId: 'skl-b-5', count: 2 }], 'gold'),
   ],
   spawn: { x: 6, y: 14, dir: 'up' },
 };
