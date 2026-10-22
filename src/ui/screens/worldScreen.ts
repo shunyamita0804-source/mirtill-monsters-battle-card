@@ -38,16 +38,8 @@ import {
 import { playScene } from '../components/dialogue.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
 import { button, h } from '../dom.ts';
-import maleSheet from '@assets/images/characters/player_male_walk.png';
-import femaleSheet from '@assets/images/characters/player_female_walk.png';
-import maleIdleFront from '@assets/images/characters/player_male_idle_front.png';
-import maleIdleBack from '@assets/images/characters/player_male_idle_back.png';
-import maleIdleLeft from '@assets/images/characters/player_male_idle_left.png';
-import maleIdleRight from '@assets/images/characters/player_male_idle_right.png';
-import femaleIdleFront from '@assets/images/characters/player_female_idle_front.png';
-import femaleIdleBack from '@assets/images/characters/player_female_idle_back.png';
-import femaleIdleLeft from '@assets/images/characters/player_female_idle_left.png';
-import femaleIdleRight from '@assets/images/characters/player_female_idle_right.png';
+import maleSheet from '@assets/images/characters/player_male_sheet.png';
+import femaleSheet from '@assets/images/characters/player_female_sheet.png';
 import guideSheet from '@assets/images/characters/npc_neighbor_guide_walk.png';
 import { t, type Params } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
@@ -90,10 +82,15 @@ const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, 
 /** 待機の絵が歩行シートの何列目と同じか（案内役の待機は2コマ目と同じ絵） */
 const NPC_IDLE_COL = 1;
 
-const PLAYER_ART: Readonly<Record<'male' | 'female', { sheet: string; idle: Readonly<Record<Direction, string>> }>> = {
-  male: { sheet: maleSheet, idle: { down: maleIdleFront, up: maleIdleBack, left: maleIdleLeft, right: maleIdleRight } },
-  female: { sheet: femaleSheet, idle: { down: femaleIdleFront, up: femaleIdleBack, left: femaleIdleLeft, right: femaleIdleRight } },
-};
+/**
+ * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×4行。tools/art/walk_passing.py が作る）。
+ * 歩く・止まるで別の画像に切り替えると、iPhone で読み込み直しの間だけ人物が消えるので、1枚の中で位置だけ動かす。
+ * 横向きの2・4コマ目は、届いた絵（4コマとも足を開いた形）から足を寄せて作った「足がそろう」コマ（描き直しが届くまでの応急処置）
+ */
+const PLAYER_SHEET: Readonly<Record<'male' | 'female', string>> = { male: maleSheet, female: femaleSheet };
+const PLAYER_SHEET_COLS = 5;
+/** シートの立ち止まりの列 */
+const IDLE_COL = 4;
 
 const NPC_SHEET: Readonly<Record<NpcObject['npcId'], string>> = { neighbor_guide: guideSheet };
 
@@ -273,7 +270,15 @@ class WorldView {
   #reveal(): void {
     const fade = this.#fade;
     if (!fade) return;
-    const imgs = [...this.#mapLayer.querySelectorAll('img')];
+    const imgs: HTMLImageElement[] = [...this.#mapLayer.querySelectorAll('img')];
+    // 人物の絵（背景画像で表示しているもの）も読み込み終えてから見せる
+    for (const el of [this.#player, ...this.#objectEls.values()]) {
+      const m = /url\("(.+)"\)/.exec(el.style.backgroundImage);
+      if (!m?.[1] || typeof Image === 'undefined') continue;
+      const img = new Image();
+      img.src = m[1];
+      imgs.push(img);
+    }
     const ready = Promise.all(imgs.map((img) => (img.decode ? img.decode().catch(() => undefined) : Promise.resolve())));
     const timeout = new Promise((r) => setTimeout(r, REVEAL_TIMEOUT_MS));
     void Promise.race([ready, timeout]).then(() => {
@@ -374,6 +379,9 @@ class WorldView {
     }
     this.#player = h('div', { class: 'world__player', attrs: { 'aria-label': t('world.player') } });
     this.#sizeFigure(this.#player);
+    // 絵は最初に1回だけ設定する（あとは位置だけ動かす）
+    this.#player.style.backgroundImage = `url("${PLAYER_SHEET[save.player.gender === 'female' ? 'female' : 'male']}")`;
+    this.#player.style.backgroundSize = `${parseFloat(this.#player.style.width) * PLAYER_SHEET_COLS}px ${parseFloat(this.#player.style.height) * 4}px`;
     this.#addShadow(this.#player);
     this.#playerLook = '';
     this.#mapLayer.append(this.#player);
@@ -614,24 +622,13 @@ class WorldView {
     const p = this.#pos;
     // 歩いている間（と、歩き続けている途中のマスの切り替わり）は歩行シート、止まったら待機の絵
     const walking = this.#move !== null || time - this.#lastMoving < 90;
-    const art = PLAYER_ART[this.#store.save.player.gender === 'female' ? 'female' : 'male'];
     const w = parseFloat(this.#player.style.width);
     const hgt = parseFloat(this.#player.style.height);
-    const look = walking ? `walk:${this.#dir}:${Math.floor(this.#walkTime * WALK_FPS) % 4}` : `idle:${this.#dir}`;
+    if (!walking) this.#walkTime = 0;
+    const col = walking ? Math.floor(this.#walkTime * WALK_FPS) % 4 : IDLE_COL;
+    const look = `${this.#dir}:${col}`;
     if (look !== this.#playerLook) {
-      if (walking) {
-        const frame = Math.floor(this.#walkTime * WALK_FPS) % 4;
-        if (!this.#playerLook.startsWith('walk')) {
-          this.#player.style.backgroundImage = `url("${art.sheet}")`;
-          this.#player.style.backgroundSize = `${w * 4}px ${hgt * 4}px`;
-        }
-        this.#player.style.backgroundPosition = `${-frame * w}px ${-DIR_ROW[this.#dir] * hgt}px`;
-      } else {
-        this.#walkTime = 0;
-        this.#player.style.backgroundImage = `url("${art.idle[this.#dir]}")`;
-        this.#player.style.backgroundSize = '100% 100%';
-        this.#player.style.backgroundPosition = '0 0';
-      }
+      this.#player.style.backgroundPosition = `${-col * w}px ${-DIR_ROW[this.#dir] * hgt}px`;
       this.#playerLook = look;
     }
     const step = Math.floor(this.#walkTime * WALK_FPS) % 4;
