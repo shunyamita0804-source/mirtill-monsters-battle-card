@@ -86,11 +86,13 @@ export interface LogEntry {
 /**
  * 効果音を鳴らすきっかけ（ルール上の結果が確定した瞬間に1件ずつ記録する。画面は seq で「まだ鳴らしていない分」だけ鳴らす）
  * - manaSpend：マナを支払った（1回の支払いで1件。何枚でも1件）
+ * - manaConvert：手札のカードをマナにした（マナ化。1枚につき1件）
+ * - manaGain：山札からマナが増えた（手札5枚のときのドロー・カードの効果。1回で1件）
  * - evade：回避が成功してダメージ0が確定した
  * - hit：攻撃が命中してダメージを与えた（strong＝強攻撃。いまは仮に「必要マナ3以上の技」）
  * 防御でダメージ0になったときは記録しない（防御の音は未承認のため無音）
  */
-export type BattleFxKind = 'manaSpend' | 'evade' | 'hitNormal' | 'hitStrong';
+export type BattleFxKind = 'manaSpend' | 'manaConvert' | 'manaGain' | 'evade' | 'hitNormal' | 'hitStrong';
 export interface BattleFx {
   readonly seq: number;
   readonly kind: BattleFxKind;
@@ -458,7 +460,7 @@ function startTurn(state: BattleState, side: Side): BattleState {
   const top = s.deck[0];
   if (top === undefined) return loseByDeckOut(next, side);
   next = updateSide(next, side, { deck: s.deck.slice(1), manaPile: [...s.manaPile, top] });
-  return addLog(next, t('battle.log.fullHandMana', { n: BATTLE_RULES.refillHandTo }));
+  return addLog(addFx(next, 'manaGain', side), t('battle.log.fullHandMana', { n: BATTLE_RULES.refillHandTo }));
 }
 
 /**
@@ -487,7 +489,7 @@ export function applyAction(state: BattleState, action: BattleAction): BattleSta
         manaPile: [...s.manaPile, card.cardId],
       });
       return addLog(
-        next,
+        addFx(next, 'manaConvert', action.side),
         t('battle.log.convert', { side: sideLabel(action.side), card: nameOf(card.cardId), n: manaOf(next.sides[action.side]) }),
       );
     }
@@ -574,7 +576,7 @@ function deckToMana(state: BattleState, side: Side, count: number): BattleState 
   if (s.deck.length < count) return loseByDeckOut(state, side);
   const moved = s.deck.slice(0, count);
   const next = updateSide(state, side, { deck: s.deck.slice(moved.length), manaPile: [...s.manaPile, ...moved] });
-  return addLog(next, t('battle.log.deckToMana', { n: moved.length }));
+  return addLog(moved.length > 0 ? addFx(next, 'manaGain', side) : next, t('battle.log.deckToMana', { n: moved.length }));
 }
 
 /** 効果のドロー。指示された枚数を引けなければ負け */
