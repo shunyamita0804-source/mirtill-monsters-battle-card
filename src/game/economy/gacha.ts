@@ -1,6 +1,7 @@
 import { cardCatalog } from '../../data/cards.ts';
 import { getPack, NEVER_IN_PACKS, type PackDefinition } from '../../data/economy.ts';
 import type { Rarity } from '../cards/cardTypes.ts';
+import { t } from '../../i18n/i18n.ts';
 import { nextRandom } from '../rng.ts';
 import { addCards, hasProcessed, markProcessed, type SaveData } from '../save/saveData.ts';
 
@@ -83,9 +84,9 @@ export type PurchaseResult =
 export function purchasePack(save: SaveData, packId: string, transactionId: string, seed: number): PurchaseResult {
   if (hasProcessed(save, transactionId)) return { status: 'duplicate', save };
   const pack = getPack(packId);
-  if (!pack) return { status: 'error', save, message: 'パックが見つかりません' };
-  if (!save.unlockedPacks.includes(packId)) return { status: 'error', save, message: 'このパックはまだ解放されていません' };
-  if (save.coins < pack.price) return { status: 'error', save, message: '所持金が足りません' };
+  if (!pack) return { status: 'error', save, message: t('gacha.error.noPack') };
+  if (!save.unlockedPacks.includes(packId)) return { status: 'error', save, message: t('gacha.error.locked') };
+  if (save.coins < pack.price) return { status: 'error', save, message: t('gacha.error.coins') };
   const { cards } = drawPack(pack, seed);
   let next = addCards(
     { ...save, coins: save.coins - pack.price },

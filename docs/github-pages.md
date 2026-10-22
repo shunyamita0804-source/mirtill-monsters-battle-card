@@ -1,10 +1,11 @@
 # GitHub Pages 公開準備
 
-> 名称変更（Mistria）に伴うリポジトリ改名後は URL・base パスが変わります。[rename-migration.md](rename-migration.md) を参照。
+> 2026-10-22 正式名称への改名で、リポジトリ名・URL・base パスが `sacred-monsters-battle-card` に変わります。[rename-migration.md](rename-migration.md) を参照。
 
 > **現在の状態：2026-10-22 公開済み（ユーザー承認）。** リポジトリを Public にし、Pages の Source を「GitHub Actions」にしたうえで、
 > `.github/workflows/deploy-pages.yml`（手動実行）で `main` を公開する。
-> 公開URL：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/
+> 公開URL（改名後）：https://shunyamita0804-source.github.io/sacred-monsters-battle-card/
+> 旧URL（https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/）は改名後は転送されない（GitHub Pages の仕様）
 
 ## ⚠ 公開前の注意
 
@@ -16,7 +17,7 @@
 
 | 項目 | 内容 |
 | --- | --- |
-| base パス | `npm run build:pages` で `/mirtill-monsters-battle-card/` を base にビルド（`vite.config.ts`） |
+| base パス | `npm run build:pages` で `/sacred-monsters-battle-card/` を base にビルド（`vite.config.ts`）。GitHub Actions では実際のリポジトリ名から base を作る（`VITE_BASE_PATH`） |
 | 上書き | 環境変数 `VITE_BASE_PATH` で任意の base に変更可能（独自ドメイン等） |
 | 素材パス | `assets/` は `import` で自動対応、`public/` は `resolvePublicPath()` を使用 |
 | `.nojekyll` | `public/.nojekyll` を dist に出力（Jekyll 処理の無効化） |
@@ -29,7 +30,7 @@
 2. `docs/github-pages/deploy-pages.yml.example` を `.github/workflows/deploy-pages.yml` にコピーして push
 3. GitHub のリポジトリ → Settings → Pages → Source を「GitHub Actions」に設定
 4. Actions タブから「Deploy to GitHub Pages」を手動実行
-5. 公開URL：`https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/`
+5. 公開URL：`https://shunyamita0804-source.github.io/sacred-monsters-battle-card/`
 
 ## 公開を止める場合
 

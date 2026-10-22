@@ -1,3 +1,4 @@
+import { t } from '../../i18n/i18n.ts';
 import { button, h, type Child } from '../dom.ts';
 
 /**
@@ -66,7 +67,7 @@ export function confirmModal(
   body: readonly Child[],
   yesLabel: string,
   onYes: () => void,
-  noLabel = 'やめる',
+  noLabel = t('common.cancel'),
   onClose?: () => void,
 ): ModalHandle {
   let done = false;
@@ -96,7 +97,7 @@ export function messageModal(parent: HTMLElement, text: string, onClose?: () => 
   const handle = openModal(parent, {
     ...(title ? { title } : {}),
     body: text.split('\n').map((line) => h('p', { class: 'modal__text', text: line })),
-    actions: [{ label: 'OK', primary: true, onTap: () => handle.close() }],
+    actions: [{ label: t('common.ok'), primary: true, onTap: () => handle.close() }],
     ...(onClose ? { onClose } : {}),
   });
   return handle;

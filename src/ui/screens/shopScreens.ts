@@ -1,10 +1,12 @@
 import { cardCatalog, getMonster, HIDDEN_MONSTER_ID } from '../../data/cards.ts';
-import { CURRENCY, PACKS, type PackDefinition } from '../../data/economy.ts';
+import { PACKS, type PackDefinition } from '../../data/economy.ts';
 import { FRAGMENT_TOTAL } from '../../data/fragments.ts';
-import { RARITY_LABEL } from '../../game/cards/cardTypes.ts';
+import { kindLabel, rarityLabel } from '../../game/cards/cardTypes.ts';
 import { packCardRates, purchasePack } from '../../game/economy/gacha.ts';
 import { canRestoreHidden, fragmentCount, restoreHidden } from '../../game/progress/fragments.ts';
 import { randomSeed } from '../../game/rng.ts';
+import { cardName, packDescription, packName, packUnlockHint } from '../../i18n/content.ts';
+import { t } from '../../i18n/i18n.ts';
 import { openCardDetail } from '../components/cardDetail.ts';
 import { createCardView } from '../components/cardView.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
@@ -16,31 +18,31 @@ import type { ScreenDefinition } from './types.ts';
 /** ショップの店員メニュー：カードを見る／売る（価格未確定のため無効）／ガチャ／特別復元（欠片を持っているときだけ） */
 export const shopMenuScreen: ScreenDefinition = {
   id: 'shopMenu',
-  title: 'カードショップ',
+  titleKey: 'shop.title',
   create(ctx) {
     const store = ctx.store;
     const element = h('main', { class: 'screen shop-menu' });
     const render = (): void => {
       const save = store.save;
       const fragments = fragmentCount(save);
-      const sell = button('売る', () => undefined, 'shop-menu__item');
+      const sell = button(t('shop.sell'), () => undefined, 'shop-menu__item');
       sell.disabled = true;
       element.replaceChildren(
-        createScreenHeader({ title: 'カードショップ', back: { label: '戻る', onTap: () => ctx.back('world') } }),
+        createScreenHeader({ title: t('shop.title'), back: { label: t('common.back'), onTap: () => ctx.back('world') } }),
         h(
           'div',
           { class: 'shop-menu__clerk' },
-          h('div', { class: 'shop-menu__clerk-figure', text: '店員', attrs: { 'aria-hidden': 'true' } }),
-          h('p', { class: 'shop-menu__bubble', text: 'いらっしゃいませ！ご用件は何でしょう？' }),
+          h('div', { class: 'shop-menu__clerk-figure', text: t('shop.clerk'), attrs: { 'aria-hidden': 'true' } }),
+          h('p', { class: 'shop-menu__bubble', text: t('shop.greeting') }),
         ),
-        h('p', { class: 'shop-menu__coins', text: `所持金 ${save.coins}${CURRENCY.unit}` }),
+        h('p', { class: 'shop-menu__coins', text: t('shop.coins', { n: save.coins }) }),
         h(
           'nav',
           { class: 'shop-menu__items' },
-          button('カードを見る', () => ctx.navigate('cardList'), 'shop-menu__item'),
-          h('div', { class: 'shop-menu__disabled' }, sell, h('span', { class: 'shop-menu__note', text: '買取価格が未確定のため、まだ利用できません' })),
-          button('カードガチャ', () => ctx.navigate('gacha'), 'shop-menu__item'),
-          fragments > 0 || save.hiddenRestored ? button(`特別復元（欠片 ${fragments}/${FRAGMENT_TOTAL}）`, () => openRestore(), 'shop-menu__item shop-menu__item--special') : null,
+          button(t('shop.viewCards'), () => ctx.navigate('cardList'), 'shop-menu__item'),
+          h('div', { class: 'shop-menu__disabled' }, sell, h('span', { class: 'shop-menu__note', text: t('shop.sellNote') })),
+          button(t('shop.gacha'), () => ctx.navigate('gacha'), 'shop-menu__item'),
+          fragments > 0 || save.hiddenRestored ? button(t('shop.restore', { n: fragments, total: FRAGMENT_TOTAL }), () => openRestore(), 'shop-menu__item shop-menu__item--special') : null,
         ),
       );
     };
@@ -48,27 +50,27 @@ export const shopMenuScreen: ScreenDefinition = {
     const openRestore = (): void => {
       const save = store.save;
       if (save.hiddenRestored) {
-        messageModal(element, '隠しモンスターはすでに復元済みです。');
+        messageModal(element, t('shop.restoreDone'));
         return;
       }
       if (!canRestoreHidden(save)) {
-        messageModal(element, `ふしぎな欠片が ${fragmentCount(save)}/${FRAGMENT_TOTAL} 個。\n10個集めると、欠片に眠るモンスターを1体だけ復元できます。\n（欠片は街やダンジョンのどこかに隠れています）`, undefined, '特別復元');
+        messageModal(element, t('shop.restoreNotReady', { n: fragmentCount(save), total: FRAGMENT_TOTAL }), undefined, t('shop.restoreTitle'));
         return;
       }
       const tx = newId('restore');
-      confirmModal(element, '特別復元', [h('p', { class: 'modal__text', text: '欠片10個を使って、隠しモンスターのカードを1枚復元しますか？（技カードは付きません）' })], '復元する', () => {
+      confirmModal(element, t('shop.restoreTitle'), [h('p', { class: 'modal__text', text: t('shop.restoreConfirm') })], t('shop.restoreYes'), () => {
         const r = restoreHidden(store.save, tx);
         if (r.status !== 'ok') return;
         store.update(() => r.save);
         const monster = getMonster(HIDDEN_MONSTER_ID);
         const handle = openModal(element, {
-          title: '復元成功！',
+          title: t('shop.restoreSuccess'),
           body: [
             h('div', { class: 'card-detail__card' }, createCardView(monster, 150, true)),
-            h('p', { class: 'modal__text', text: `${monster.name} のカードを1枚手に入れた。` }),
-            h('p', { class: 'modal__text modal__text--sub', text: '正式な名称・画像・能力は未確定です。技カードは第3弾パックから入手できます。' }),
+            h('p', { class: 'modal__text', text: t('shop.restoreGot', { name: cardName(monster) }) }),
+            h('p', { class: 'modal__text modal__text--sub', text: t('shop.restoreNote') }),
           ],
-          actions: [{ label: '閉じる', primary: true, onTap: () => handle.close() }],
+          actions: [{ label: t('common.close'), primary: true, onTap: () => handle.close() }],
           onClose: render,
         });
       });
@@ -82,7 +84,7 @@ export const shopMenuScreen: ScreenDefinition = {
 /** カードガチャマシン（カプセルではなくカードパックが出る） */
 export const gachaScreen: ScreenDefinition = {
   id: 'gacha',
-  title: 'カードガチャ',
+  titleKey: 'shop.gacha',
   create(ctx) {
     const store = ctx.store;
     const element = h('main', { class: 'screen gacha' });
@@ -91,16 +93,16 @@ export const gachaScreen: ScreenDefinition = {
       const rates = packCardRates(pack);
       const total = rates.reduce((s, r) => s + r.rate, 0);
       const handle = openModal(element, {
-        title: `${pack.name}：収録カードと提供割合`,
+        title: t('gacha.ratesTitle', { pack: packName(pack) }),
         className: 'gacha-rates',
         body: [
-          h('p', { class: 'modal__text modal__text--warn', text: '※ 提供割合・収録内容・価格は仮の値です（未承認）' }),
-          h('p', { class: 'modal__text', text: `1パック${pack.cardsPerPack}枚。1枚ごとに次の割合で排出します。` }),
-          h('p', { class: 'modal__text', text: `レアリティ別：${(['C', 'U', 'R'] as const).map((r) => `${RARITY_LABEL[r]} ${pack.rarityRates[r]}%`).join(' / ')}` }),
+          h('p', { class: 'modal__text modal__text--warn', text: t('gacha.ratesWarn') }),
+          h('p', { class: 'modal__text', text: t('gacha.ratesPerCard', { n: pack.cardsPerPack }) }),
+          h('p', { class: 'modal__text', text: t('gacha.ratesByRarity', { rates: (['C', 'U', 'R'] as const).map((r) => `${rarityLabel(r)} ${pack.rarityRates[r]}%`).join(' / ') }) }),
           h(
             'table',
             { class: 'gacha-rates__table' },
-            h('thead', {}, h('tr', {}, h('th', { text: 'カード' }), h('th', { text: '分類' }), h('th', { text: 'レア' }), h('th', { text: '割合' }))),
+            h('thead', {}, h('tr', {}, h('th', { text: t('gacha.colCard') }), h('th', { text: t('gacha.colKind') }), h('th', { text: t('gacha.colRarity') }), h('th', { text: t('gacha.colRate') }))),
             h(
               'tbody',
               {},
@@ -109,37 +111,37 @@ export const gachaScreen: ScreenDefinition = {
                 return h(
                   'tr',
                   {},
-                  h('td', { text: card?.name ?? r.cardId }),
-                  h('td', { text: card?.kind === 'monster' ? 'モンスター' : '技' }),
+                  h('td', { text: card ? cardName(card) : r.cardId }),
+                  h('td', { text: card ? kindLabel(card.kind) : '' }),
                   h('td', { text: r.rarity }),
                   h('td', { text: `${r.rate.toFixed(3)}%` }),
                 );
               }),
             ),
-            h('tfoot', {}, h('tr', {}, h('td', { text: '合計', attrs: { colspan: '3' } }), h('td', { text: `${total.toFixed(3)}%` }))),
+            h('tfoot', {}, h('tr', {}, h('td', { text: t('gacha.total'), attrs: { colspan: '3' } }), h('td', { text: `${total.toFixed(3)}%` }))),
           ),
         ],
-        actions: [{ label: '閉じる', primary: true, onTap: () => handle.close() }],
+        actions: [{ label: t('common.close'), primary: true, onTap: () => handle.close() }],
       });
     };
 
     const buy = (pack: PackDefinition): void => {
       const save = store.save;
       if (save.coins < pack.price) {
-        messageModal(element, `所持金が足りません（${pack.price}${CURRENCY.unit} 必要）。\nダンジョンや大会で稼ぎましょう。`);
+        messageModal(element, t('gacha.notEnough', { price: pack.price }));
         return;
       }
       // 購入確認を開いた時点で購入IDを1つ作る。同じIDの購入は1回しか処理されない（二重決済防止）
       const tx = newId('purchase');
       confirmModal(
         element,
-        '購入確認',
+        t('gacha.confirmTitle'),
         [
-          h('p', { class: 'modal__text', text: `${pack.name} を ${pack.price}${CURRENCY.unit} で購入しますか？` }),
-          h('p', { class: 'modal__text', text: `所持金 ${save.coins}${CURRENCY.unit} → ${save.coins - pack.price}${CURRENCY.unit}` }),
-          h('p', { class: 'modal__text modal__text--sub', text: '※ ゲーム内通貨のみ。価格は仮の値です。' }),
+          h('p', { class: 'modal__text', text: t('gacha.confirmText', { pack: packName(pack), price: pack.price }) }),
+          h('p', { class: 'modal__text', text: t('gacha.confirmCoins', { before: save.coins, after: save.coins - pack.price }) }),
+          h('p', { class: 'modal__text modal__text--sub', text: t('gacha.confirmNote') }),
         ],
-        '購入する',
+        t('gacha.buy'),
         () => {
           const before = store.save.collection;
           const r = purchasePack(store.save, pack.id, tx, randomSeed());
@@ -171,15 +173,15 @@ export const gachaScreen: ScreenDefinition = {
           { class: 'pack-open__card', attrs: { type: 'button' }, on: { click: () => card && openCardDetail(overlay, card, { owned: store.save.collection[id] ?? 0 }) } },
           h('div', { class: 'pack-open__back' }),
           h('div', { class: 'pack-open__face' }, face),
-          h('span', { class: 'pack-open__name', text: card?.name ?? id }),
-          isNew ? h('span', { class: 'pack-open__new', text: 'NEW' }) : null,
+          h('span', { class: 'pack-open__name', text: card ? cardName(card) : id }),
+          isNew ? h('span', { class: 'pack-open__new', text: t('gacha.new') }) : null,
         );
       });
-      const packEl = h('div', { class: 'pack-open__pack', text: pack.name });
+      const packEl = h('div', { class: 'pack-open__pack', text: packName(pack) });
       const cardsEl = h('div', { class: 'pack-open__cards' }, ...slots);
-      const done = button('閉じる', () => overlay.remove(), 'btn btn--primary');
+      const done = button(t('common.close'), () => overlay.remove(), 'btn btn--primary');
       done.disabled = true;
-      overlay.append(packEl, cardsEl, h('p', { class: 'pack-open__hint', text: 'カードは所持に追加されました。タップで詳細。' }), done);
+      overlay.append(packEl, cardsEl, h('p', { class: 'pack-open__hint', text: t('gacha.openHint') }), done);
       element.append(overlay);
       setTimeout(() => packEl.classList.add('is-opening'), 50);
       setTimeout(() => {
@@ -195,32 +197,32 @@ export const gachaScreen: ScreenDefinition = {
       const save = store.save;
       const packs = PACKS.map((pack) => {
         const unlocked = save.unlockedPacks.includes(pack.id);
-        const buyBtn = button(`購入 ${pack.price}${CURRENCY.unit}`, () => buy(pack), 'btn btn--primary btn--small');
+        const buyBtn = button(t('gacha.buyPrice', { price: pack.price }), () => buy(pack), 'btn btn--primary btn--small');
         buyBtn.disabled = !unlocked;
         return h(
           'div',
           { class: `gacha__pack${unlocked ? '' : ' is-locked'}`, dataset: { id: pack.id } },
-          h('div', { class: 'gacha__pack-art', text: unlocked ? pack.name.replace('（仮）', '') : '？' }),
+          h('div', { class: 'gacha__pack-art', text: unlocked ? packName(pack).replace(/（仮）| \(Temp\)/, '') : '？' }),
           h(
             'div',
             { class: 'gacha__pack-info' },
-            h('p', { class: 'gacha__pack-name', text: pack.name }),
-            h('p', { class: 'gacha__pack-desc', text: unlocked ? pack.description : `未解放：${pack.unlockHint}` }),
-            h('p', { class: 'gacha__pack-meta', text: `${pack.cardsPerPack}枚入り・${unlocked ? '解放済' : '未解放'}` }),
-            h('div', { class: 'gacha__pack-actions' }, button('収録・提供割合', () => showRates(pack), 'btn btn--small'), buyBtn),
+            h('p', { class: 'gacha__pack-name', text: packName(pack) }),
+            h('p', { class: 'gacha__pack-desc', text: unlocked ? packDescription(pack) : t('gacha.locked', { hint: packUnlockHint(pack) }) }),
+            h('p', { class: 'gacha__pack-meta', text: t('gacha.meta', { n: pack.cardsPerPack, state: t(unlocked ? 'gacha.unlocked' : 'gacha.lockedState') }) }),
+            h('div', { class: 'gacha__pack-actions' }, button(t('gacha.rates'), () => showRates(pack), 'btn btn--small'), buyBtn),
           ),
         );
       });
       element.replaceChildren(
-        createScreenHeader({ title: 'カードガチャ', back: { label: '戻る', onTap: () => ctx.back('shopMenu') } }),
+        createScreenHeader({ title: t('shop.gacha'), back: { label: t('common.back'), onTap: () => ctx.back('shopMenu') } }),
         h(
           'div',
           { class: 'gacha__machine', attrs: { 'aria-hidden': 'true' } },
-          h('div', { class: 'gacha__machine-top', text: 'カードガチャマシン' }),
+          h('div', { class: 'gacha__machine-top', text: t('gacha.machine') }),
           h('div', { class: 'gacha__machine-slot' }, h('div', { class: 'gacha__machine-pack' })),
-          h('p', { class: 'gacha__machine-note', text: 'カードパックが出てきます（仮の見た目）' }),
+          h('p', { class: 'gacha__machine-note', text: t('gacha.machineNote') }),
         ),
-        h('p', { class: 'gacha__coins', text: `所持金 ${save.coins}${CURRENCY.unit}` }),
+        h('p', { class: 'gacha__coins', text: t('shop.coins', { n: save.coins }) }),
         h('div', { class: 'gacha__packs' }, ...packs),
       );
     };

@@ -1,9 +1,12 @@
+import { t } from '../i18n/i18n.ts';
+import type { MessageKey } from '../i18n/messages/index.ts';
+
 /**
  * 【仮ルール】デッキとバトルのルール設定値。
  *
  * このリポジトリには正式なルール資料がないため、指示書に明記された点（デッキ60枚・モンスター3体・適合技・
  * マナ・攻撃/防御・対象選択・勝敗）以外はすべて仮の値。正式ルールが届いたらここを変更する。
- * 仮であることは画面のルール説明にも表示する（PROVISIONAL_RULE_NOTES）。
+ * 仮であることは画面のルール説明にも表示する（PROVISIONAL_RULE_NOTES・provisionalRuleNotes()）。
  */
 export const DECK_RULES = {
   /** モンスターの数（指示書：モンスター3体） */
@@ -33,16 +36,22 @@ export const BATTLE_RULES = {
   actionsPerMonsterPerTurn: 1,
 } as const;
 
-export const PROVISIONAL_RULE_NOTES: readonly string[] = [
-  'デッキ：モンスター3体＋山札60枚（技カードは3体いずれかの適合技のみ。サポートはどのデッキにも入る。同じカードは3枚まで）',
-  '最初に手札5枚を引くのは先攻だけ。先攻の1ターン目は攻撃なしで、マナ化だけ（2枚まで）。後攻は自分の最初のドローで5枚引く',
-  'ドロー：手札を5枚まで引く。5枚あるときは山札の一番上を1枚マナにする',
-  'マナは自動では増えない。攻撃のあとの「マナ化」で手札を何枚でもマナにできる（1枚＝1マナ、上限なし、次のターンに持ち越し）',
-  '使ったマナは新しくマナにしたカードから捨て札へ',
-  '各モンスターは1ターンに技を1回まで。技は使うモンスターの適合技のみ',
-  '攻撃を受けたら、狙われたモンスターの同じ能力（ちから/かしこさ）の防御・回避カードを、マナが足りる限り何枚でも使える',
-  '防御はダメージを減らす、回避はダメージを0にする。守備がすべて終わってからダメージを計算する',
-  '相手モンスター3体のライフをすべて0にしたら勝ち。同時に全滅したら攻撃側の勝ち',
-  '引くべきカードを引けない（山札切れ）と負け。カードの効果で引くときも同じ',
-  'サポート：すぐ効果が出るもの（旧ブリーダー）は、あわせて1ターンに1回まで。全体（場に残る）は場に1枚だけで、新しく出すと入れ替わる',
+/** ルール説明（仮）の文のキー。文そのものは src/i18n/messages/battle.ts にある（日本語・英語） */
+export const PROVISIONAL_RULE_NOTES: readonly MessageKey[] = [
+  'battle.ruleNote.deck',
+  'battle.ruleNote.opening',
+  'battle.ruleNote.draw',
+  'battle.ruleNote.mana',
+  'battle.ruleNote.pay',
+  'battle.ruleNote.skill',
+  'battle.ruleNote.defend',
+  'battle.ruleNote.damage',
+  'battle.ruleNote.win',
+  'battle.ruleNote.deckOut',
+  'battle.ruleNote.support',
 ];
+
+/** ルール説明（仮）を、いまの言語の文で返す */
+export function provisionalRuleNotes(): string[] {
+  return PROVISIONAL_RULE_NOTES.map((key) => t(key));
+}

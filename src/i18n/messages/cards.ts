@@ -1,0 +1,99 @@
+import type { MessageEntry } from '../i18n.ts';
+
+/**
+ * カードまわりの文字（分類・能力・レアリティ・効果説明・カード詳細・一覧）。
+ * 英語の能力名（POW・INT）・効果説明は仮訳。正式な英語表記は未決。
+ */
+export const CARDS = {
+  'card.kind.monster': { ja: 'モンスター', en: 'Monster' },
+  'card.kind.skill': { ja: '技', en: 'Skill' },
+  'card.kind.support': { ja: 'サポート', en: 'Support' },
+  'card.kindCard': { ja: '{kind}カード', en: '{kind} card' },
+  'card.stat.force': { ja: 'ちから', en: 'POW' },
+  'card.stat.wisdom': { ja: 'かしこさ', en: 'INT' },
+  'card.stat.all': { ja: 'すべての', en: 'all ' },
+  'card.rarity.C': { ja: 'コモン', en: 'Common' },
+  'card.rarity.U': { ja: 'アンコモン', en: 'Uncommon' },
+  'card.rarity.R': { ja: 'レア', en: 'Rare' },
+  'card.effect.attack': { ja: '攻撃', en: 'Attack' },
+  'card.effect.defense': { ja: '防御', en: 'Guard' },
+  'card.effect.evade': { ja: '回避', en: 'Dodge' },
+  'card.effect.heal': { ja: '回復', en: 'Heal' },
+  'card.effect.mana': { ja: 'マナ', en: 'Mana' },
+  'card.effect.draw': { ja: 'ドロー', en: 'Draw' },
+  'card.supportKind.field': { ja: '全体', en: 'Field' },
+
+  // 技の効果説明（ゲーム側で描く文字）
+  'card.skill.attack': { ja: '相手モンスター1体に{stat}で{v}ダメージ。{note}', en: 'Deal {v} {stat} damage to 1 enemy monster. {note}' },
+  'card.skill.defense': {
+    ja: 'このモンスターが{stat}攻撃を受けたときに使う。ダメージを{v}減らす。',
+    en: 'Use when this monster takes a {stat} attack. Reduce the damage by {v}.',
+  },
+  'card.skill.evade': {
+    ja: 'このモンスターが{stat}攻撃を受けたときに使う。回避してダメージを0にする。',
+    en: 'Use when this monster takes a {stat} attack. Dodge it and take 0 damage.',
+  },
+  'card.skill.heal': { ja: '味方モンスター1体のライフを{v}回復する。', en: 'Restore {v} life to 1 ally monster.' },
+  'card.skill.mana': { ja: '山札の上から{v}枚をマナにする。', en: 'Turn the top {v} {v|card|cards} of your deck into mana.' },
+  'card.skill.draw': { ja: '山札からカードを{v}枚引く。', en: 'Draw {v} {v|card|cards}.' },
+  'card.attackNote.both': { ja: '防御・回避されない。', en: 'Cannot be guarded or dodged.' },
+  'card.attackNote.unblockable': { ja: '防御されない。', en: 'Cannot be guarded.' },
+  'card.attackNote.undodgeable': { ja: '回避されない。', en: 'Cannot be dodged.' },
+  'card.attackNote.halfOnEvade': { ja: '回避されても半分のダメージ。', en: 'Deals half damage even if dodged.' },
+
+  // サポートの効果説明
+  'card.support.limit': {
+    ja: '（このようなサポートは、あわせて1ターンに{n}回まで）',
+    en: ' (Supports like this: {n} {n|time|times} per turn in total)',
+  },
+  'card.support.heal': { ja: '味方モンスター1体のライフを{v}回復する。{limit}', en: 'Restore {v} life to 1 ally monster.{limit}' },
+  'card.support.draw': { ja: '山札からカードを{v}枚引く。{limit}', en: 'Draw {v} {v|card|cards}.{limit}' },
+  'card.support.mana': { ja: '山札の上から{v}枚をマナにする。{limit}', en: 'Turn the top {v} {v|card|cards} of your deck into mana.{limit}' },
+  'card.support.field': {
+    ja: '場に残る。{stat}攻撃のダメージを{sign}する（双方）。場のカードは1枚だけで、新しく出すと入れ替わる。',
+    en: 'Stays on the field. {stat}attack damage {sign} (both players). Only 1 field card at a time; a new one replaces it.',
+  },
+
+  // カード面の短い説明
+  'card.short.attack': { ja: '相手1体に{v}ダメージ', en: '{v} dmg to 1 enemy' },
+  'card.short.attackSure': { ja: '{v}ダメージ（守備されない）', en: '{v} dmg (no guard)' },
+  'card.short.defense': { ja: '防御：ダメージ-{v}', en: 'Guard: dmg -{v}' },
+  'card.short.evade': { ja: '回避：ダメージ0', en: 'Dodge: dmg 0' },
+  'card.short.heal': { ja: '味方1体のライフ+{v}', en: '1 ally life +{v}' },
+  'card.short.mana': { ja: '山札{v}枚をマナに', en: '{v} deck {v|card|cards} → mana' },
+  'card.short.draw': { ja: 'カードを{v}枚引く', en: 'Draw {v}' },
+  'card.short.field': { ja: '場：{stat}攻撃{sign}', en: 'Field: {stat}atk {sign}' },
+  'card.short.fieldPrefix': { ja: '場：', en: 'Field: ' },
+
+  // カード面の絵の代わりの文字・読み上げ
+  'card.art.skill': { ja: '技', en: 'SK' },
+  'card.art.field': { ja: '場', en: 'FD' },
+  'card.art.support': { ja: '援', en: 'SP' },
+  'card.aria.skill': { ja: '技カード {name} マナ{cost} {stat}{v}', en: 'Skill card {name}, mana {cost}, {stat} {v}' },
+  'card.aria.support': { ja: 'サポートカード {name} マナ{cost}', en: 'Support card {name}, mana {cost}' },
+  'card.aria.monster': { ja: 'モンスターカード {name}', en: 'Monster card {name}' },
+  'card.aria.monsterLife': { ja: 'モンスターカード {name} ライフ{life}/{max}', en: 'Monster card {name}, life {life}/{max}' },
+  'card.life': { ja: 'ライフ {n}', en: 'Life {n}' },
+  'card.down': { ja: '戦闘不能', en: 'Down' },
+
+  // カード詳細
+  'card.detail.kind': { ja: '分類', en: 'Type' },
+  'card.detail.monster': { ja: '適合モンスター', en: 'Monster' },
+  'card.detail.effect': { ja: '種類', en: 'Effect' },
+  'card.detail.mana': { ja: 'マナ', en: 'Mana' },
+  'card.detail.supportKind': { ja: '区分', en: 'Category' },
+  'card.detail.supportField': { ja: '全体（場に残る）', en: 'Field (stays in play)' },
+  'card.detail.supportInstant': { ja: 'すぐ効果（1ターンに1回まで）', en: 'Instant (once per turn)' },
+  'card.detail.life': { ja: 'ライフ', en: 'Life' },
+  'card.detail.rarity': { ja: 'レアリティ', en: 'Rarity' },
+  'card.detail.source': { ja: '入手', en: 'Found in' },
+  'card.detail.sourceHidden': { ja: 'ショップの特別復元（欠片10個）', en: 'Special restore at the shop (10 shards)' },
+  'card.detail.owned': { ja: '所持枚数', en: 'Owned' },
+  'card.detail.placeholderNote': {
+    ja: '※ 仮カード（正式データ・正式画像ではありません）',
+    en: '* Temporary card (not official data or artwork)',
+  },
+
+  // カード一覧
+  'card.grid.unknown': { ja: '未入手のカード', en: 'Card not yet found' },
+} as const satisfies Readonly<Record<string, MessageEntry>>;

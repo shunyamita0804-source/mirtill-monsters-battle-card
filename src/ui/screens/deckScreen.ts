@@ -1,6 +1,8 @@
 import { cardCatalog, getMonster, MONSTERS, skillsOf, SUPPORTS } from '../../data/cards.ts';
 import { DECK_RULES } from '../../data/rules.ts';
-import { EFFECT_LABEL, STAT_LABEL, type PlayCard } from '../../game/cards/cardTypes.ts';
+import { effectLabel, statLabel, type PlayCard } from '../../game/cards/cardTypes.ts';
+import { cardName } from '../../i18n/content.ts';
+import { t } from '../../i18n/i18n.ts';
 import { buildDeckFromCollection, countCards, validateDeck, type Deck } from '../../game/deck/deck.ts';
 import { openCardDetail } from '../components/cardDetail.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
@@ -19,7 +21,7 @@ const SUPPORT_TAB = '__support';
  */
 export const deckScreen: ScreenDefinition = {
   id: 'deck',
-  title: 'デッキ編集',
+  titleKey: 'deck.title',
   create(ctx) {
     const store = ctx.store;
     const element = h('main', { class: 'screen deck' });
@@ -40,11 +42,11 @@ export const deckScreen: ScreenDefinition = {
       if (draft.monsters.includes(id)) {
         const removed = draft.skills.filter((s) => cardCatalog.get(s)?.kind === 'skill' && skillsOf(id).some((k) => k.id === s)).length;
         setDraft({ monsters: draft.monsters.filter((m) => m !== id), skills: draft.skills.filter((s) => !skillsOf(id).some((k) => k.id === s)) });
-        if (removed > 0) messageModal(element, `${getMonster(id).name}を外したので、その技カード${removed}枚もデッキから外しました。`);
+        if (removed > 0) messageModal(element, t('deck.removedSkills', { name: cardName(getMonster(id)), n: removed }));
         return;
       }
       if (draft.monsters.length >= DECK_RULES.monsterCount) {
-        messageModal(element, `モンスターは${DECK_RULES.monsterCount}体までです。先に1体外してください。`);
+        messageModal(element, t('deck.monsterLimit', { n: DECK_RULES.monsterCount }));
         return;
       }
       setDraft({ ...draft, monsters: [...draft.monsters, id] });
@@ -64,13 +66,13 @@ export const deckScreen: ScreenDefinition = {
 
     const auto = (): void => {
       if (draft.monsters.length !== DECK_RULES.monsterCount) {
-        messageModal(element, `先にモンスターを${DECK_RULES.monsterCount}体選んでください。`);
+        messageModal(element, t('deck.chooseMonstersFirst', { n: DECK_RULES.monsterCount }));
         return;
       }
       const built = buildDeckFromCollection(draft.monsters, collection());
       setDraft(built);
       if (built.skills.length < DECK_RULES.skillCount) {
-        messageModal(element, `所持している適合技・サポートが足りず、${built.skills.length}枚しか入れられませんでした。\nショップでカードを集めましょう。`);
+        messageModal(element, t('deck.autoShort', { n: built.skills.length }));
       }
     };
 
@@ -82,19 +84,19 @@ export const deckScreen: ScreenDefinition = {
       }
       store.update((s) => ({ ...s, deck: draft }));
       dirty = false;
-      messageModal(element, 'デッキを保存しました。');
+      messageModal(element, t('deck.saved'));
       render();
     };
 
     const showIssues = (): void => {
       const issues = validateDeck(draft, collection());
       const handle = openModal(element, {
-        title: issues.length === 0 ? 'デッキは使用可能です' : 'デッキの問題',
+        title: t(issues.length === 0 ? 'deck.valid' : 'deck.problems'),
         body:
           issues.length === 0
-            ? [h('p', { class: 'modal__text', text: '保存して大会・ダンジョンで使えます。' })]
+            ? [h('p', { class: 'modal__text', text: t('deck.validText') })]
             : [h('ul', { class: 'rule-list' }, ...issues.slice(0, 12).map((i) => h('li', { text: i.message })))],
-        actions: [{ label: '閉じる', primary: true, onTap: () => handle.close() }],
+        actions: [{ label: t('common.close'), primary: true, onTap: () => handle.close() }],
       });
     };
 
@@ -103,7 +105,7 @@ export const deckScreen: ScreenDefinition = {
         ctx.back('world');
         return;
       }
-      confirmModal(element, '保存せずに戻りますか？', [h('p', { class: 'modal__text', text: '変更は破棄されます。' })], '破棄して戻る', () => ctx.back('world'));
+      confirmModal(element, t('deck.leaveConfirm'), [h('p', { class: 'modal__text', text: t('deck.leaveConfirmText') })], t('deck.leaveYes'), () => ctx.back('world'));
     };
 
     const render = (): void => {
@@ -116,9 +118,9 @@ export const deckScreen: ScreenDefinition = {
       const status = h(
         'button',
         { class: `deck__status${issues.length === 0 ? ' is-ok' : ' is-ng'}`, attrs: { type: 'button' }, on: { click: showIssues } },
-        h('span', { text: `モンスター ${draft.monsters.length}/${DECK_RULES.monsterCount}` }),
-        h('span', { text: `山札 ${draft.skills.length}/${DECK_RULES.skillCount}` }),
-        h('span', { class: 'deck__status-state', text: issues.length === 0 ? '✓ 使用可能' : `✕ 問題${issues.length}件` }),
+        h('span', { text: t('deck.statusMonsters', { n: draft.monsters.length, max: DECK_RULES.monsterCount }) }),
+        h('span', { text: t('deck.statusDeck', { n: draft.skills.length, max: DECK_RULES.skillCount }) }),
+        h('span', { class: 'deck__status-state', text: issues.length === 0 ? t('deck.statusOk') : t('deck.statusNg', { n: issues.length }) }),
       );
 
       const monsters = h(
@@ -142,7 +144,7 @@ export const deckScreen: ScreenDefinition = {
         'div',
         { class: 'deck__tabs' },
         ...[null, ...draft.monsters, SUPPORT_TAB].map((id) =>
-          button(id === SUPPORT_TAB ? 'サポート' : id ? getMonster(id).name : 'すべて', () => {
+          button(id === SUPPORT_TAB ? t('card.kind.support') : id ? cardName(getMonster(id)) : t('common.all'), () => {
             tab = id;
             listScroll = 0;
             render();
@@ -157,8 +159,8 @@ export const deckScreen: ScreenDefinition = {
         tab === SUPPORT_TAB ? supports : [...(tab ? [tab] : draft.monsters).flatMap((mid) => skillsOf(mid)), ...(tab ? [] : supports)];
       const meta = (card: PlayCard): string =>
         card.kind === 'skill'
-          ? `${EFFECT_LABEL[card.effect.type]}・マナ${card.cost}・${STAT_LABEL[card.stat.type]}${card.stat.value}`
-          : `${card.duration === 'field' ? '全体' : 'サポート'}・マナ${card.cost}`;
+          ? t('deck.metaSkill', { effect: effectLabel(card.effect.type), cost: card.cost, stat: statLabel(card.stat.type), v: card.stat.value })
+          : t('deck.metaSupport', { kind: t(card.duration === 'field' ? 'card.supportKind.field' : 'card.kind.support'), cost: card.cost });
       const skillRows = listed.map((skill) => {
         const owned = coll[skill.id] ?? 0;
         const inDeck = counts[skill.id] ?? 0;
@@ -169,13 +171,13 @@ export const deckScreen: ScreenDefinition = {
         return h(
           'div',
           { class: `deck__row${owned === 0 ? ' is-unowned' : ''}`, dataset: { id: skill.id } },
-          h('button', { class: 'deck__row-card', attrs: { type: 'button', 'aria-label': `${skill.name}の詳細` }, on: { click: () => openCardDetail(element, skill, { owned }) } }, createPlayCard(skill, { width: 44, showText: false })),
+          h('button', { class: 'deck__row-card', attrs: { type: 'button', 'aria-label': t('deck.detail', { name: cardName(skill) }) }, on: { click: () => openCardDetail(element, skill, { owned }) } }, createPlayCard(skill, { width: 44, showText: false })),
           h(
             'div',
             { class: 'deck__row-info' },
-            h('span', { class: 'deck__row-name', text: skill.name }),
+            h('span', { class: 'deck__row-name', text: cardName(skill) }),
             h('span', { class: 'deck__row-meta', text: meta(skill) }),
-            h('span', { class: 'deck__row-owned', text: `所持${owned}` }),
+            h('span', { class: 'deck__row-owned', text: t('deck.owned', { n: owned }) }),
           ),
           minus,
           h('span', { class: 'deck__row-count', text: String(inDeck) }),
@@ -183,23 +185,23 @@ export const deckScreen: ScreenDefinition = {
         );
       });
 
-      const saveBtn = button('保存', save, 'btn btn--primary btn--small');
+      const saveBtn = button(t('deck.save'), save, 'btn btn--primary btn--small');
       saveBtn.disabled = !dirty;
       element.replaceChildren(
-        createScreenHeader({ title: 'デッキ編集', back: { label: '戻る', onTap: leave }, right: saveBtn }),
+        createScreenHeader({ title: t('deck.title'), back: { label: t('common.back'), onTap: leave }, right: saveBtn }),
         status,
-        h('p', { class: 'deck__caption', text: `モンスター（${DECK_RULES.monsterCount}体選ぶ）` }),
+        h('p', { class: 'deck__caption', text: t('deck.captionMonsters', { n: DECK_RULES.monsterCount }) }),
         monsters,
-        h('p', { class: 'deck__caption', text: `山札：技カード（適合技のみ）とサポート・同じカード${DECK_RULES.maxCopies}枚まで` }),
+        h('p', { class: 'deck__caption', text: t('deck.captionDeck', { n: DECK_RULES.maxCopies }) }),
         tabs,
         h(
           'div',
           { class: 'deck__skills' },
           ...(skillRows.length > 0
             ? skillRows
-            : [h('p', { class: 'deck__empty', text: tab === SUPPORT_TAB ? 'サポートカードを持っていません（パックで手に入ります）' : 'モンスターを選ぶと適合技が表示されます' })]),
+            : [h('p', { class: 'deck__empty', text: t(tab === SUPPORT_TAB ? 'deck.noSupports' : 'deck.chooseMonsters') })]),
         ),
-        h('footer', { class: 'deck__footer' }, button('おまかせ', auto, 'btn'), h('span', { class: 'deck__note', text: 'ルールは仮です' })),
+        h('footer', { class: 'deck__footer' }, button(t('deck.auto'), auto, 'btn'), h('span', { class: 'deck__note', text: t('deck.rulesNote') })),
       );
       const list = element.querySelector('.deck__skills');
       if (list) list.scrollTop = listScroll;

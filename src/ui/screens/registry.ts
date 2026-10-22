@@ -4,6 +4,7 @@ import { cardListScreen, collectionScreen } from './collectionScreens.ts';
 import { deckScreen } from './deckScreen.ts';
 import { dungeonSelectScreen } from './dungeonSelectScreen.ts';
 import { newGameScreen } from './newGameScreen.ts';
+import { optionsScreen } from './optionsScreen.ts';
 import { settingsScreen } from './settingsScreen.ts';
 import { gachaScreen, shopMenuScreen } from './shopScreens.ts';
 import { titleScreen } from './titleScreen.ts';
@@ -28,4 +29,5 @@ export const SCREENS: Readonly<Record<ScreenId, ScreenDefinition>> = {
   tournament: tournamentScreen,
   battle: battleScreen,
   settings: settingsScreen,
+  options: optionsScreen,
 };

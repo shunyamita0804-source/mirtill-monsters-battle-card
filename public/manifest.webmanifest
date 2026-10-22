@@ -1,7 +1,7 @@
 {
-  "name": "ミストリアモンスターズ バトルカード",
-  "short_name": "ミストリアBC",
-  "description": "ミストリアモンスターズ バトルカード（開発版）",
+  "name": "セイクリッドモンスターズ バトルカード",
+  "short_name": "セイクリッドBC",
+  "description": "セイクリッドモンスターズ バトルカード（開発版） / Sacred Monsters Battle Card",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",

@@ -17,6 +17,7 @@ export const SCREEN_IDS = [
   'tournament',
   'battle',
   'settings',
+  'options',
 ] as const;
 
 export type ScreenId = (typeof SCREEN_IDS)[number];

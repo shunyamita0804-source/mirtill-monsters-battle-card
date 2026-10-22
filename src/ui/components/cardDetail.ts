@@ -1,14 +1,8 @@
 import { getMonster } from '../../data/cards.ts';
 import { PACKS } from '../../data/economy.ts';
-import {
-  CARD_KIND_LABEL,
-  describeSkill,
-  describeSupport,
-  EFFECT_LABEL,
-  RARITY_LABEL,
-  STAT_LABEL,
-  type CardDefinition,
-} from '../../game/cards/cardTypes.ts';
+import { describeSkill, describeSupport, effectLabel, kindLabel, rarityLabel, statLabel, type CardDefinition } from '../../game/cards/cardTypes.ts';
+import { cardDescription, cardName, packName } from '../../i18n/content.ts';
+import { t } from '../../i18n/i18n.ts';
 import { h } from '../dom.ts';
 import { createCardView } from './cardView.ts';
 import { openModal, type ModalHandle } from './modal.ts';
@@ -22,30 +16,33 @@ export interface CardDetailOptions {
 
 /** カードの拡大表示と詳細（分類・効果・数値・所持枚数・収録パック） */
 export function openCardDetail(parent: HTMLElement, card: CardDefinition, options: CardDetailOptions = {}): ModalHandle {
-  const rows: [string, string][] = [['分類', `${CARD_KIND_LABEL[card.kind]}カード`]];
+  const rows: [string, string][] = [[t('card.detail.kind'), t('card.kindCard', { kind: kindLabel(card.kind) })]];
   if (card.kind === 'skill') {
-    rows.push(['適合モンスター', getMonster(card.monsterId).name]);
-    rows.push(['種類', EFFECT_LABEL[card.effect.type]]);
-    rows.push(['マナ', String(card.cost)]);
-    rows.push([STAT_LABEL[card.stat.type], String(card.stat.value)]);
+    rows.push([t('card.detail.monster'), cardName(getMonster(card.monsterId))]);
+    rows.push([t('card.detail.effect'), effectLabel(card.effect.type)]);
+    rows.push([t('card.detail.mana'), String(card.cost)]);
+    rows.push([statLabel(card.stat.type), String(card.stat.value)]);
   } else if (card.kind === 'support') {
-    rows.push(['区分', card.duration === 'field' ? '全体（場に残る）' : 'すぐ効果（1ターンに1回まで）']);
-    rows.push(['マナ', String(card.cost)]);
+    rows.push([t('card.detail.supportKind'), t(card.duration === 'field' ? 'card.detail.supportField' : 'card.detail.supportInstant')]);
+    rows.push([t('card.detail.mana'), String(card.cost)]);
   } else {
-    rows.push(['ライフ', String(card.life)]);
+    rows.push([t('card.detail.life'), String(card.life)]);
   }
-  rows.push(['レアリティ', RARITY_LABEL[card.rarity]]);
-  const packs = PACKS.filter((p) => p.cardIds.includes(card.id)).map((p) => p.name);
-  rows.push(['入手', card.kind === 'monster' && card.hidden ? 'ショップの特別復元（欠片10個）' : packs.join('、') || '—']);
-  if (options.owned !== undefined) rows.push(['所持枚数', `${options.owned}枚`]);
+  rows.push([t('card.detail.rarity'), rarityLabel(card.rarity)]);
+  const packs = PACKS.filter((p) => p.cardIds.includes(card.id)).map(packName);
+  rows.push([
+    t('card.detail.source'),
+    card.kind === 'monster' && card.hidden ? t('card.detail.sourceHidden') : packs.join(t('common.listSeparator')) || t('common.none'),
+  ]);
+  if (options.owned !== undefined) rows.push([t('card.detail.owned'), t('common.cardCount', { n: options.owned })]);
 
-  const description = card.kind === 'skill' ? describeSkill(card) : card.kind === 'support' ? describeSupport(card) : card.description;
+  const description = card.kind === 'skill' ? describeSkill(card) : card.kind === 'support' ? describeSupport(card) : cardDescription(card);
 
   const handle = openModal(parent, {
     className: 'card-detail',
     body: [
       h('div', { class: 'card-detail__card' }, createCardView(card, 180, true)),
-      h('h2', { class: 'card-detail__name', text: card.name }),
+      h('h2', { class: 'card-detail__name', text: cardName(card) }),
       ...(options.extra ?? []).map((t) => h('p', { class: 'card-detail__extra', text: t })),
       h('p', { class: 'card-detail__description', text: description }),
       h(
@@ -53,9 +50,9 @@ export function openCardDetail(parent: HTMLElement, card: CardDefinition, option
         { class: 'card-detail__rows' },
         ...rows.flatMap(([k, v]) => [h('dt', { text: k }), h('dd', { text: v })]),
       ),
-      card.isPlaceholder ? h('p', { class: 'card-detail__note', text: '※ 仮カード（正式データ・正式画像ではありません）' }) : null,
+      card.isPlaceholder ? h('p', { class: 'card-detail__note', text: t('card.detail.placeholderNote') }) : null,
     ],
-    actions: [{ label: '閉じる', primary: true, onTap: () => handle.close() }],
+    actions: [{ label: t('common.close'), primary: true, onTap: () => handle.close() }],
   });
   return handle;
 }

@@ -2,7 +2,7 @@
 
 ゲームで使う画像・音声・フォント・データを置く場所です。
 ここに置いたファイルはコードから `import` して使い、Vite がビルド時にハッシュ付きファイル名で出力し、
-GitHub Pages のサブパス（`/mirtill-monsters-battle-card/`）にも自動で対応します。
+GitHub Pages のサブパス（`/sacred-monsters-battle-card/`）にも自動で対応します。
 
 ```ts
 import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
@@ -39,7 +39,10 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 
 | `audio/se/card_draw.*`・`turn_order_select.*`・`mana_gain.*`・`damage_hit.*` | 効果音（カードを引く・先攻後攻を選ぶ・マナが増える・ダメージ）。OGG と M4A | ミスティックモンスターズの素材を許可により利用（`docs/audio-credits.md`） |
 
-アプリアイコンは `public/icons/`（同梱の公式アイコン原本を縮小のみで変換）。
+アプリアイコンは `public/icons/`。2026-10-22 にユーザー承認の正式アイコンへ差し替え：
+原本 `images/icons/sacred-monsters-bc-official-icon.png`（1254×1254 RGBA。受け取ったファイル「セイクリッドモンスターズBC_正式アイコン.png」をそのまま保管・改変なし）から、
+高品質縮小（Lanczos）だけで 512・192・180（apple-touch-icon）・48・32・16 を作成。透過加工・切り抜き・加筆はしていない（原本の角の外側は白）。
+原本はビルドに含めない（画面では `public/icons/icon-512.png` を使う）。
 
 ## 命名規則
 

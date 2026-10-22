@@ -1,0 +1,260 @@
+import type { MessageEntry } from '../i18n.ts';
+
+/** バトル画面・バトルのルール本体（engine.ts）の文字・ルール説明 */
+export const BATTLE = {
+  'battle.title': { ja: 'カードバトル', en: 'Card Battle' },
+  'battle.missing': { ja: '対戦の情報がありません。', en: 'No battle data.' },
+
+  // 陣営の呼び名（文の主語にも使う）
+  'battle.side.player': { ja: 'あなた', en: 'You' },
+  'battle.side.opponent': { ja: '相手', en: 'Opponent' },
+
+  // バトルの記録（engine.ts）
+  'battle.log.start.player': { ja: 'あなたの先攻で始まった。', en: 'You go first.' },
+  'battle.log.start.opponent': { ja: '相手の先攻で始まった。', en: 'Opponent goes first.' },
+  'battle.log.firstTurnMana': {
+    ja: '最初のターンはマナ化だけ（{n}枚まで）。',
+    en: 'First turn: Mana phase only (up to {n} {n|card|cards}).',
+  },
+  'battle.log.win.player': { ja: 'あなたの勝ち！', en: 'You win!' },
+  'battle.log.win.opponent': { ja: '相手の勝ち！', en: 'Opponent wins!' },
+  'battle.log.deckOut.player': { ja: 'あなたは山札が足りない！ 相手の勝ち！', en: 'You are out of cards! Opponent wins!' },
+  'battle.log.deckOut.opponent': { ja: '相手は山札が足りない！ あなたの勝ち！', en: 'Opponent is out of cards! You win!' },
+  'battle.log.damage': { ja: '{name}に{n}ダメージ。', en: '{name} takes {n} damage.' },
+  'battle.log.damageDown': { ja: '{name}に{n}ダメージ。倒れた！', en: '{name} takes {n} damage. Down!' },
+  'battle.log.turn.player': { ja: 'あなたのターン。', en: 'Your turn.' },
+  'battle.log.turn.opponent': { ja: '相手のターン。', en: "Opponent's turn." },
+  'battle.log.fullHandMana': {
+    ja: '手札が{n}枚あるので、山札の一番上をマナにした。',
+    en: 'Hand has {n} {n|card|cards}, so the top card of the deck became mana.',
+  },
+  'battle.log.manaPhase.player': { ja: 'あなたのマナ化。', en: 'Your Mana phase.' },
+  'battle.log.manaPhase.opponent': { ja: '相手のマナ化。', en: "Opponent's Mana phase." },
+  'battle.log.convert': { ja: '{side}は{card}をマナにした（マナ{n}）。', en: '{side} turned {card} into mana (Mana {n}).' },
+  'battle.log.skill': { ja: '{name}の「{skill}」！', en: '{name} used {skill}!' },
+  'battle.log.heal': { ja: '{name}のライフが{n}回復。', en: '{name} recovered {n} Life.' },
+  'battle.log.deckToMana': { ja: '山札の上から{n}枚をマナにした。', en: 'Turned the top {n} deck {n|card|cards} into mana.' },
+  'battle.log.draw': { ja: 'カードを{n}枚引いた。', en: 'Drew {n} {n|card|cards}.' },
+  'battle.log.support': { ja: '{side}はサポート「{card}」を使った！', en: '{side} used Support: {card}!' },
+  'battle.log.fieldDiscard': { ja: '場の「{card}」は捨て札へ。', en: '{card} left the field for the discard pile.' },
+  'battle.log.fieldEnter': { ja: '「{card}」が場に出た。', en: '{card} entered the field.' },
+  'battle.log.noDefense': { ja: '{side}は守備しなかった。', en: '{side} did not defend.' },
+  'battle.log.defenseDone': { ja: '{side}は守備を終えた。', en: '{side} finished defending.' },
+  'battle.log.evade': { ja: '{side}は「{skill}」で回避！', en: '{side} dodged with {skill}!' },
+  'battle.log.guard': { ja: '{side}は「{skill}」で防御（ダメージ-{v}）！', en: '{side} guarded with {skill} (dmg -{v})!' },
+
+  // 使えない理由（engine.ts の cardUsability）
+  'battle.ng.defenseOnly': { ja: 'いまは防御・回避カードしか使えません', en: 'Only Guard/Dodge cards now' },
+  'battle.ng.opponentTurn': { ja: '相手のターンです', en: "It's the opponent's turn" },
+  'battle.ng.manaPhase': { ja: 'マナ化の間はカードを使えません', en: "Can't use cards in the Mana phase" },
+  'battle.ng.noMana': { ja: 'マナが足りません', en: 'Not enough Mana' },
+  'battle.ng.usedThisTurn': { ja: 'このターンはもう使えません（1ターンに1回）', en: 'Already used this turn (once per turn)' },
+  'battle.ng.noHealTarget': { ja: '回復できる味方がいません', en: 'No ally to heal' },
+  'battle.ng.ended': { ja: '対戦は終了しました', en: 'The battle is over' },
+  'battle.ng.notInHand': { ja: '手札にありません', en: 'Not in your hand' },
+  'battle.ng.noOwner': { ja: 'このカードを使えるモンスターがいません', en: 'No monster can use this card' },
+  'battle.ng.ownerDown': { ja: '使えるモンスターが倒れています', en: 'The monster for this card is down' },
+  'battle.ng.waitDefense': { ja: '相手の守備を待っています', en: 'Waiting for the opponent to defend' },
+  'battle.ng.notTarget': { ja: '狙われたモンスターの守備カードではありません', en: "Not a defense card for the targeted monster" },
+  'battle.ng.wrongStat': { ja: '{stat}攻撃には使えません', en: "Can't be used against {stat} attacks" },
+  'battle.ng.unblockable': { ja: 'この攻撃は防御できません', en: "This attack can't be guarded" },
+  'battle.ng.undodgeable': { ja: 'この攻撃は回避できません', en: "This attack can't be dodged" },
+  'battle.ng.defenseOnAttack': {
+    ja: '防御・回避カードは相手の攻撃を受けたときに使います',
+    en: 'Guard/Dodge cards are used when you are attacked',
+  },
+  'battle.ng.acted': { ja: '使えるモンスターは行動済みです', en: 'The monster has already acted' },
+  'battle.ng.noAttackTarget': { ja: '攻撃できる相手がいません', en: 'No enemy to attack' },
+
+  // 先攻・後攻を決める
+  'battle.order.faceFirst': { ja: '先攻', en: '1st' },
+  'battle.order.faceSecond': { ja: '後攻', en: '2nd' },
+  'battle.order.title': { ja: '先攻・後攻を決めよう', en: 'Who goes first?' },
+  'battle.order.hint': { ja: '伏せられたカードを1枚選んでください', en: 'Pick one face-down card' },
+  'battle.order.resultFirst': { ja: 'あなたは先攻！', en: 'You go first!' },
+  'battle.order.resultSecond': { ja: 'あなたは後攻！', en: 'You go second!' },
+  'battle.order.startPlayer': { ja: 'あなたから始めます', en: 'You start' },
+  'battle.order.startOpponent': { ja: '相手から始めます', en: 'The opponent starts' },
+  'battle.order.cardAria': { ja: 'カード{n}', en: 'Card {n}' },
+  'battle.order.vs': { ja: 'VS {name}', en: 'VS {name}' },
+
+  // 見出し・ルール・降参
+  'battle.surrender': { ja: '降参', en: 'Give Up' },
+  'battle.surrenderTitle': { ja: '降参しますか？', en: 'Give up?' },
+  'battle.surrenderText': { ja: '負けとして扱われます。', en: 'It will count as a loss.' },
+  'battle.surrenderOk': { ja: '降参する', en: 'Give Up' },
+  'battle.rules': { ja: 'ルール', en: 'Rules' },
+  'battle.rulesTitle': { ja: 'ルール（仮）', en: 'Rules (Temp)' },
+  'battle.rulesLead': {
+    ja: '正式なルール資料が未着手のため、以下は仮のルールです。',
+    en: 'The official rules are not ready yet, so these rules are temporary.',
+  },
+  'battle.qa.auto': { ja: 'QA:オート', en: 'QA: Auto' },
+  'battle.qa.autoStop': { ja: 'QA:オート停止', en: 'QA: Stop Auto' },
+  'battle.qa.win': { ja: 'QA:即勝利', en: 'QA: Win Now' },
+
+  // 情報箱・モンスター
+  'battle.info.manaAria': { ja: 'マナ {n}', en: 'Mana {n}' },
+  'battle.info.deck': { ja: '山札 ×{n}', en: 'Deck ×{n}' },
+  'battle.info.hand': { ja: '手札 ×{n}', en: 'Hand ×{n}' },
+  'battle.monster.aria': { ja: '{name} ライフ{life}', en: '{name}, Life {life}' },
+  'battle.monster.acted': { ja: '行動済', en: 'Acted' },
+  'battle.monster.owner.player': { ja: 'あなたのモンスター', en: 'Your monster' },
+  'battle.monster.owner.opponent': { ja: '相手のモンスター', en: "Opponent's monster" },
+  'battle.monster.life': { ja: 'ライフ {life}/{max}', en: 'Life {life}/{max}' },
+  'battle.monster.lifeActed': { ja: 'ライフ {life}/{max}（このターンは行動済み）', en: 'Life {life}/{max} (already acted this turn)' },
+
+  // 説明欄
+  'battle.prompt.attackTarget': { ja: '攻撃する相手モンスターをタップしてください', en: 'Tap an enemy monster to attack' },
+  'battle.prompt.healTarget': { ja: '回復する味方モンスターをタップしてください', en: 'Tap an ally monster to heal' },
+  'battle.prompt.incoming': { ja: '相手の「{skill}」！ {stat}{power}の攻撃', en: "Opponent's {skill}! {stat} {power} attack" },
+  'battle.prompt.incomingNoDefense': {
+    ja: '相手の「{skill}」！ {stat}{power}の攻撃（守備できるカードなし）',
+    en: "Opponent's {skill}! {stat} {power} attack (no cards to defend)",
+  },
+  'battle.prompt.attacking': {
+    ja: '「{skill}」で攻撃中… 相手の守備を待っています（いまのダメージ {n}）',
+    en: 'Attacking with {skill}… Waiting for the opponent to defend (damage now {n})',
+  },
+  'battle.prompt.mana': {
+    ja: 'マナ化：マナにするカードをタップして選び（何枚でも・1枚＝1マナ）、「マナにする」。終わったら「ターン終了」',
+    en: 'Mana phase: tap cards to pick them (any number, 1 card = 1 Mana), then "Make Mana". When done, "End Turn"',
+  },
+  'battle.prompt.manaFirst': {
+    ja: '最初のターンはマナ化だけ。あと{n}枚まで選んで「マナにする」。終わったら「ターン終了」',
+    en: 'First turn is Mana only. Pick up to {n} more {n|card|cards}, then "Make Mana". When done, "End Turn"',
+  },
+  'battle.prompt.manaFirstDone': {
+    ja: '最初のターンにマナにできる枚数に達しました。「ターン終了」を押してください',
+    en: 'You reached the first-turn Mana limit. Press "End Turn"',
+  },
+  'battle.prompt.picked': { ja: '選んだカード {n}枚', en: 'Picked: {n} {n|card|cards}' },
+  'battle.prompt.nameDesc': { ja: '{name}：{desc}', en: '{name}: {desc}' },
+  'battle.prompt.owner': { ja: '適合：{name}', en: 'For: {name}' },
+  'battle.prompt.supportField': { ja: 'サポート（全体・場に残る）', en: 'Support (Field, stays in play)' },
+  'battle.prompt.supportLeft': { ja: 'サポート（このターンあと{n}回）', en: 'Support ({n} left this turn)' },
+  'battle.prompt.usable': { ja: '使えます', en: 'Usable' },
+  'battle.prompt.unusable': { ja: '使えません', en: 'Cannot use' },
+  'battle.prompt.hintMain': {
+    ja: '手札のカードをタップすると、説明と「使う」が出ます。攻撃を終えるときは右上の「攻撃終了」',
+    en: 'Tap a card in your hand to see it and "Use". To end your attack, tap "End Attack" at the top right',
+  },
+  'battle.prompt.hint': {
+    ja: '手札のカードをタップすると、ここに説明と拡大したカードが出ます。',
+    en: 'Tap a card in your hand to see its details and a larger view here.',
+  },
+  'battle.detail.empty': { ja: 'カード', en: 'Card' },
+
+  // 手札
+  'battle.hand.aria': { ja: '手札', en: 'Hand' },
+  'battle.hand.ariaPicked': { ja: '{name}（マナにする）', en: '{name} (to Mana)' },
+  'battle.hand.ariaUnusable': { ja: '{name}（使えない）', en: '{name} (unusable)' },
+
+  // 守備
+  'battle.defense.title': { ja: '相手の攻撃！', en: 'Enemy attack!' },
+  'battle.defense.text': { ja: '「{skill}」→ {name}に {stat}{power}', en: '{skill} → {name}: {stat} {power}' },
+  'battle.defense.textNoTarget': { ja: '「{skill}」→ に {stat}{power}', en: '{skill}: {stat} {power}' },
+  'battle.defense.hint': {
+    ja: '狙われたモンスターの{stat}の防御・回避カードを何枚でも使えます（マナ {n}）',
+    en: "Use any number of the targeted monster's {stat} Guard/Dodge cards (Mana {n})",
+  },
+  'battle.defense.damage': { ja: 'いまのダメージ {n}', en: 'Damage now: {n}' },
+  'battle.defense.damageUsed': { ja: 'いまのダメージ {n}（使った守備：{used}）', en: 'Damage now: {n} (used: {used})' },
+  'battle.defense.cardAria': { ja: '{name}で守備', en: 'Defend with {name}' },
+  'battle.defense.pass': { ja: '守備しない', en: 'Pass' },
+  'battle.defense.done': { ja: '守備を終える', en: 'Done' },
+
+  // 結果
+  'battle.result.win': { ja: '勝利！', en: 'Victory!' },
+  'battle.result.lose': { ja: '敗北…', en: 'Defeat…' },
+  'battle.result.draw': { ja: '引き分け', en: 'Draw' },
+  'battle.result.deckOutOpponent': { ja: '相手の山札切れ', en: 'Opponent ran out of cards' },
+  'battle.result.deckOutPlayer': { ja: 'あなたの山札切れ', en: 'You ran out of cards' },
+  'battle.result.sub': { ja: '{title}・{n}手番', en: '{title} · Turn {n}' },
+  'battle.result.next': { ja: 'つづける', en: 'Next' },
+
+  // 場面の表示・上の帯
+  'battle.banner.turn.player': { ja: 'あなたのターン', en: 'Your Turn' },
+  'battle.banner.turn.opponent': { ja: '相手のターン', en: "Opponent's Turn" },
+  'battle.banner.mana.player': { ja: 'あなたのマナ化', en: 'Your Mana Phase' },
+  'battle.banner.mana.opponent': { ja: '相手のマナ化', en: "Opponent's Mana Phase" },
+  'battle.banner.subFirst': { ja: '先攻1ターン目：マナ化だけ（{n}枚まで）', en: 'First turn: Mana only (up to {n})' },
+  'battle.banner.subMana': { ja: 'マナ化', en: 'Mana Phase' },
+  'battle.banner.subMain': { ja: 'ドロー → 攻撃', en: 'Draw → Attack' },
+  'battle.turnBar': { ja: '{n}手番・{who}・{phase}', en: 'Turn {n} · {who} · {phase}' },
+  'battle.turnBar.ended': { ja: '対戦終了', en: 'Battle Over' },
+  'battle.phase.main': { ja: '攻撃', en: 'Attack' },
+  'battle.phase.mana': { ja: 'マナ化', en: 'Mana' },
+  'battle.phase.defense': { ja: '守備', en: 'Defense' },
+  'battle.field.first': { ja: 'あなたが先攻', en: 'You go first' },
+  'battle.field.second': { ja: 'あなたが後攻', en: 'You go second' },
+  'battle.field.aria': { ja: '場のカード {name}', en: 'Field card {name}' },
+  'battle.field.label': { ja: '場', en: 'Field' },
+  'battle.field.by.player': { ja: 'あなたが出した場のカード', en: 'Field card played by you' },
+  'battle.field.by.opponent': { ja: '相手が出した場のカード', en: 'Field card played by the opponent' },
+
+  // コマンド
+  'battle.cmd.use': { ja: '使う', en: 'Use' },
+  'battle.cmd.endAttack': { ja: '攻撃終了', en: 'End Attack' },
+  'battle.cmd.makeMana': { ja: 'マナにする（{n}枚）', en: 'Make Mana ({n})' },
+  'battle.cmd.endTurn': { ja: 'ターン終了', en: 'End Turn' },
+  'battle.cmd.aria': { ja: '操作', en: 'Commands' },
+  'battle.confirm.endAttack': {
+    ja: 'まだ使えるカードがあります。攻撃を終えてマナ化へ進みますか？',
+    en: 'You still have usable cards. End your attack and go to the Mana phase?',
+  },
+  'battle.confirm.toMana': { ja: 'マナ化へ進む', en: 'To Mana' },
+  'battle.confirm.keepAttacking': { ja: '攻撃を続ける', en: 'Keep Attacking' },
+  'battle.confirm.endTurn': {
+    ja: '選んだカードをまだマナにしていません。このままターンを終えますか？',
+    en: "You haven't turned the picked cards into mana. End your turn anyway?",
+  },
+  'battle.confirm.endAnyway': { ja: 'このまま終える', en: 'End Anyway' },
+  'battle.confirm.backToMana': { ja: 'マナ化にもどる', en: 'Back' },
+
+  // ルール説明（仮。src/data/rules.ts の PROVISIONAL_RULE_NOTES）
+  'battle.ruleNote.deck': {
+    ja: 'デッキ：モンスター3体＋山札60枚（技カードは3体いずれかの適合技のみ。サポートはどのデッキにも入る。同じカードは3枚まで）',
+    en: 'Deck: 3 monsters + a 60-card deck (skill cards must match one of the 3 monsters; Supports fit any deck; up to 3 copies of a card)',
+  },
+  'battle.ruleNote.opening': {
+    ja: '最初に手札5枚を引くのは先攻だけ。先攻の1ターン目は攻撃なしで、マナ化だけ（2枚まで）。後攻は自分の最初のドローで5枚引く',
+    en: "Only the player who goes first draws 5 cards at the start. Their first turn has no attack, only the Mana phase (up to 2 cards). The player who goes second draws 5 on their first draw",
+  },
+  'battle.ruleNote.draw': {
+    ja: 'ドロー：手札を5枚まで引く。5枚あるときは山札の一番上を1枚マナにする',
+    en: 'Draw: draw until you have 5 cards in hand. If you already have 5, the top card of your deck becomes mana',
+  },
+  'battle.ruleNote.mana': {
+    ja: 'マナは自動では増えない。攻撃のあとの「マナ化」で手札を何枚でもマナにできる（1枚＝1マナ、上限なし、次のターンに持ち越し）',
+    en: 'Mana does not grow on its own. In the Mana phase after attacking, turn any number of hand cards into mana (1 card = 1 Mana, no cap, carries over)',
+  },
+  'battle.ruleNote.pay': {
+    ja: '使ったマナは新しくマナにしたカードから捨て札へ',
+    en: 'Spent mana goes to the discard pile, newest first',
+  },
+  'battle.ruleNote.skill': {
+    ja: '各モンスターは1ターンに技を1回まで。技は使うモンスターの適合技のみ',
+    en: 'Each monster can use 1 skill per turn, and only skills that match it',
+  },
+  'battle.ruleNote.defend': {
+    ja: '攻撃を受けたら、狙われたモンスターの同じ能力（ちから/かしこさ）の防御・回避カードを、マナが足りる限り何枚でも使える',
+    en: "When attacked, you can use as many of the targeted monster's Guard/Dodge cards of the same stat (POW/INT) as your Mana allows",
+  },
+  'battle.ruleNote.damage': {
+    ja: '防御はダメージを減らす、回避はダメージを0にする。守備がすべて終わってからダメージを計算する',
+    en: 'Guard reduces damage; Dodge makes it 0. Damage is calculated after all defending is done',
+  },
+  'battle.ruleNote.win': {
+    ja: '相手モンスター3体のライフをすべて0にしたら勝ち。同時に全滅したら攻撃側の勝ち',
+    en: "Win by bringing all 3 enemy monsters' Life to 0. If both sides are wiped out at once, the attacker wins",
+  },
+  'battle.ruleNote.deckOut': {
+    ja: '引くべきカードを引けない（山札切れ）と負け。カードの効果で引くときも同じ',
+    en: 'If you cannot draw a card you must draw (deck out), you lose. This also applies to draws from card effects',
+  },
+  'battle.ruleNote.support': {
+    ja: 'サポート：すぐ効果が出るもの（旧ブリーダー）は、あわせて1ターンに1回まで。全体（場に残る）は場に1枚だけで、新しく出すと入れ替わる',
+    en: 'Support: instant ones (formerly Breeder) are limited to 1 per turn in total. Field cards stay in play; only 1 can be on the field, and a new one replaces it',
+  },
+} as const satisfies Readonly<Record<string, MessageEntry>>;
