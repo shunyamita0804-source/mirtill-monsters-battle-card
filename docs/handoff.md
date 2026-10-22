@@ -7,9 +7,9 @@
 | 項目 | 状態 |
 | --- | --- |
 | 正式名称 | セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card・短縮「セイクリッドBC」）。旧称ミルティル・ミストリア |
-| 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の最新を公開。2026-10-22。正式な街・部屋・人物・効果音の統合版。**iPhone での確認はまだ**）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
+| 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `ff0b7ed` を公開。2026-10-22。正式な街・部屋・人物・効果音の統合版。公開後に作業環境から表示 OK。**iPhone での確認はまだ**）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
 | リポジトリ | https://github.com/shunyamita0804-source/sacred-monsters-battle-card （Public。2026-10-22 ユーザーが改名。旧名 mirtill-monsters-battle-card） |
-| 最新版 | `main`（正式な街・部屋・人物・効果音の統合。テスト 280件） |
+| 最新版 | `main` の `ff0b7ed`（正式な街・部屋・人物・効果音の統合。テスト 280件） |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
 | バトルのルール | **PS版『モンスターファーム バトルカード』準拠。変えるのは3点だけ**：山札60枚・ガッツを「マナ」と表記・全体カードとブリーダー（プレイヤー）カードを「サポート」に集約（ユーザー決定。`docs/battle-rules.md`） |
