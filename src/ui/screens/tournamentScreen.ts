@@ -1,5 +1,5 @@
-import { cardCatalog, getMonster } from '../../data/cards.ts';
-import { CURRENCY, getPack } from '../../data/economy.ts';
+import { getMonster } from '../../data/cards.ts';
+import { getPack } from '../../data/economy.ts';
 import { getTournament, TOURNAMENTS, type TournamentDefinition } from '../../data/tournaments.ts';
 import {
   claimTournamentRewards,
@@ -9,6 +9,8 @@ import {
   tournamentRecord,
   withdraw,
 } from '../../game/progress/tournament.ts';
+import { cardName, opponentName, packName, tournamentDescription, tournamentName } from '../../i18n/content.ts';
+import { t as tr } from '../../i18n/i18n.ts';
 import { confirmModal, openModal } from '../components/modal.ts';
 import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
@@ -17,23 +19,28 @@ import type { ScreenDefinition } from './types.ts';
 
 function roundLabel(t: TournamentDefinition, i: number): string {
   const left = t.rounds.length - i;
-  if (left === 1) return '決勝';
-  if (left === 2) return '準決勝';
-  return `${i + 1}回戦`;
+  if (left === 1) return tr('tournament.roundFinal');
+  if (left === 2) return tr('tournament.roundSemi');
+  return tr('tournament.roundN', { n: i + 1 });
 }
+
+const packLabel = (id: string): string => {
+  const pack = getPack(id);
+  return pack ? packName(pack) : id;
+};
 
 function prizeLines(t: TournamentDefinition): string[] {
   const fw = t.rewards.firstWin;
   const first = [
-    `${fw.coins}${CURRENCY.unit}`,
-    ...fw.unlockPacks.map((p) => `「${getPack(p)?.name ?? p}」解放`),
-    ...(fw.rankUp ? [`${fw.rankUp}ランクに昇格`] : []),
-    ...fw.cards.map((c) => `${cardCatalog.get(c.cardId)?.name ?? c.cardId}×${c.count}`),
+    tr('common.coins', { n: fw.coins }),
+    ...fw.unlockPacks.map((p) => tr('tournament.prizePack', { pack: packLabel(p) })),
+    ...(fw.rankUp ? [tr('tournament.prizeRank', { rank: fw.rankUp })] : []),
+    ...fw.cards.map((c) => tr('tournament.prizeCard', { name: cardName(c.cardId), n: c.count })),
   ];
   return [
-    `参加報酬：${t.rewards.participationCoins}${CURRENCY.unit}`,
-    `初回優勝：${first.join('、')}`,
-    `再優勝：${t.rewards.repeatWin.coins}${CURRENCY.unit}`,
+    tr('tournament.participation', { n: t.rewards.participationCoins }),
+    tr('tournament.firstWin', { rewards: first.join(tr('tournament.prizeSeparator')) }),
+    tr('tournament.repeatWin', { n: t.rewards.repeatWin.coins }),
   ];
 }
 
@@ -43,7 +50,7 @@ function prizeLines(t: TournamentDefinition): string[] {
  */
 export const tournamentScreen: ScreenDefinition = {
   id: 'tournament',
-  title: '大会受付',
+  titleKey: 'tournament.title',
   create(ctx) {
     const store = ctx.store;
     const element = h('main', { class: 'screen tournament' });
@@ -52,7 +59,7 @@ export const tournamentScreen: ScreenDefinition = {
       const opponent = t.rounds[round];
       if (!opponent) return;
       store.pendingBattle = {
-        title: `${t.name} ${roundLabel(t, round)}`,
+        title: tr('tournament.battleTitle', { name: tournamentName(t), round: roundLabel(t, round) }),
         opponent,
         allowSurrender: true,
         onFinish: (winner) => {
@@ -76,15 +83,15 @@ export const tournamentScreen: ScreenDefinition = {
       store.update(() => r.save);
       const s = r.summary;
       const lines = [
-        `${s.coins}${CURRENCY.unit} を受け取った。`,
-        ...s.unlockedPacks.map((p) => `新パック「${getPack(p)?.name ?? p}」が解放された！（ショップのガチャで購入できます）`),
-        ...(s.rankUp ? [`ランクが ${s.rankUp} に上がった！`] : []),
-        ...s.cards.map((c) => `${cardCatalog.get(c.cardId)?.name ?? c.cardId} ×${c.count} を手に入れた。`),
+        tr('tournament.received', { n: s.coins }),
+        ...s.unlockedPacks.map((p) => tr('tournament.packUnlocked', { pack: packLabel(p) })),
+        ...(s.rankUp ? [tr('tournament.rankUp', { rank: s.rankUp })] : []),
+        ...s.cards.map((c) => tr('tournament.cardGot', { name: cardName(c.cardId), n: c.count })),
       ];
       const handle = openModal(element, {
-        title: s.won ? (s.firstWin ? '初優勝の景品' : '優勝の景品') : '参加報酬',
+        title: tr(s.won ? (s.firstWin ? 'tournament.rewardFirst' : 'tournament.rewardWin') : 'tournament.rewardEntry'),
         body: lines.map((t) => h('p', { class: 'modal__text', text: t })),
-        actions: [{ label: 'OK', primary: true, onTap: () => handle.close() }],
+        actions: [{ label: tr('common.ok'), primary: true, onTap: () => handle.close() }],
         onClose: render,
       });
     });
@@ -92,32 +99,36 @@ export const tournamentScreen: ScreenDefinition = {
     const tournamentCard = (t: TournamentDefinition): HTMLElement => {
       const check = entryCheck(store.save, t);
       const record = tournamentRecord(store.save, t.id);
-      const join = button('参加する', () => {
+      const join = button(tr('tournament.enter'), () => {
         confirmModal(
           element,
-          `${t.name}に参加しますか？`,
+          tr('tournament.enterConfirm', { name: tournamentName(t) }),
           [
-            h('p', { class: 'modal__text', text: `${t.rounds.length}連勝で優勝（参加${t.participants}人・仮）` }),
+            h('p', { class: 'modal__text', text: tr('tournament.enterRule', { n: t.rounds.length, players: t.participants }) }),
             ...prizeLines(t).map((l) => h('p', { class: 'modal__text', text: l })),
-            h('p', { class: 'modal__text modal__text--sub', text: '途中でやめても、次回ここから再開できます。' }),
+            h('p', { class: 'modal__text modal__text--sub', text: tr('tournament.resumeNote') }),
           ],
-          '参加する',
+          tr('tournament.enter'),
           () => {
             store.update((s) => enterTournament(s, t.id, newId('entry')));
             render();
           },
+          tr('common.cancel'),
         );
       }, 'btn btn--primary');
       join.disabled = !check.ok;
       return h(
         'div',
         { class: `tournament__item${check.ok ? '' : ' is-locked'}`, dataset: { id: t.id } },
-        h('h2', { class: 'tournament__name', text: `${t.name}（仮）` }),
-        h('p', { class: 'tournament__desc', text: t.description }),
-        h('p', { class: 'tournament__cond', text: `参加条件：${t.requiredRank}ランク以上・正しいデッキ／対戦数 ${t.rounds.length}（仮）` }),
+        h('h2', { class: 'tournament__name', text: tr('tournament.nameTemp', { name: tournamentName(t) }) }),
+        h('p', { class: 'tournament__desc', text: tournamentDescription(t) }),
+        h('p', { class: 'tournament__cond', text: tr('tournament.condition', { rank: t.requiredRank, n: t.rounds.length }) }),
         h('ul', { class: 'tournament__prizes' }, ...prizeLines(t).map((l) => h('li', { text: l }))),
-        h('p', { class: 'tournament__record', text: `参加${record.entries}回・優勝${record.wins}回${record.firstWinClaimed ? '（初回景品受取済）' : ''}` }),
-        check.ok ? null : h('p', { class: 'tournament__ng', text: check.reasons.join(' / ') }),
+        h('p', {
+          class: 'tournament__record',
+          text: tr(record.firstWinClaimed ? 'tournament.recordClaimed' : 'tournament.record', { entries: record.entries, wins: record.wins }),
+        }),
+        check.ok ? null : h('p', { class: 'tournament__ng', text: check.reasons.join(tr('tournament.issueSeparator')) }),
         join,
       );
     };
@@ -129,13 +140,13 @@ export const tournamentScreen: ScreenDefinition = {
       const body: (HTMLElement | null)[] = [];
       if (!active || !t) {
         body.push(
-          h('div', { class: 'tournament__desk' }, h('div', { class: 'tournament__clerk', text: '受付', attrs: { 'aria-hidden': 'true' } }), h('p', { class: 'shop-menu__bubble', text: `大会会場へようこそ！あなたのランクは ${save.rank} です。` })),
+          h('div', { class: 'tournament__desk' }, h('div', { class: 'tournament__clerk', text: tr('tournament.clerk'), attrs: { 'aria-hidden': 'true' } }), h('p', { class: 'shop-menu__bubble', text: tr('tournament.welcome', { rank: save.rank }) })),
           ...TOURNAMENTS.map(tournamentCard),
         );
       } else if (active.status === 'inProgress') {
         const opponent = t.rounds[active.round];
         body.push(
-          h('h2', { class: 'tournament__name', text: `${t.name} 参加中` }),
+          h('h2', { class: 'tournament__name', text: tr('tournament.inProgress', { name: tournamentName(t) }) }),
           h(
             'ol',
             { class: 'tournament__bracket' },
@@ -144,35 +155,35 @@ export const tournamentScreen: ScreenDefinition = {
                 'li',
                 { class: `tournament__round${i < active.round ? ' is-won' : i === active.round ? ' is-next' : ''}` },
                 h('span', { class: 'tournament__round-label', text: roundLabel(t, i) }),
-                h('span', { class: 'tournament__round-name', text: r.name }),
-                h('span', { class: 'tournament__round-state', text: i < active.round ? '勝利' : i === active.round ? '次の対戦' : '—' }),
+                h('span', { class: 'tournament__round-name', text: opponentName(r) }),
+                h('span', { class: 'tournament__round-state', text: i < active.round ? tr('tournament.stateWon') : i === active.round ? tr('tournament.stateNext') : tr('common.none') }),
               ),
             ),
           ),
           opponent
-            ? h('p', { class: 'tournament__opponent', text: `相手のモンスター：${opponent.monsters.map((m) => getMonster(m).name).join('・')}` })
+            ? h('p', { class: 'tournament__opponent', text: tr('tournament.opponents', { names: opponent.monsters.map((m) => cardName(getMonster(m))).join(tr('common.listSeparator')) }) })
             : null,
-          button(`${roundLabel(t, active.round)}を戦う`, () => startMatch(t, active.round), 'btn btn--primary btn--large'),
-          h('p', { class: 'notice', text: '途中で会場を出ても、次回この続きから再開できます。対戦の途中でアプリを閉じた場合は、その回戦の最初からやり直しになります。' }),
-          button('棄権する', () => {
-            confirmModal(element, '棄権しますか？', [h('p', { class: 'modal__text', text: '大会は敗退扱いになります（参加報酬は受け取れます）。' })], '棄権する', () => {
+          button(tr('tournament.fight', { round: roundLabel(t, active.round) }), () => startMatch(t, active.round), 'btn btn--primary btn--large'),
+          h('p', { class: 'notice', text: tr('tournament.leaveNote') }),
+          button(tr('tournament.withdraw'), () => {
+            confirmModal(element, tr('tournament.withdrawConfirm'), [h('p', { class: 'modal__text', text: tr('tournament.withdrawText') })], tr('tournament.withdraw'), () => {
               store.update(withdraw);
               render();
-            });
+            }, tr('common.cancel'));
           }, 'btn btn--ghost'),
         );
       } else {
         const won = active.status === 'won';
         body.push(
           h('div', { class: `tournament__result${won ? ' is-won' : ''}` },
-            h('p', { class: 'tournament__result-title', text: won ? `${t.name} 優勝！` : `${t.name} 敗退` }),
-            h('p', { class: 'tournament__result-sub', text: won ? 'おめでとうございます！' : `${roundLabel(t, active.round)}で敗退しました。また挑戦しましょう。` }),
+            h('p', { class: 'tournament__result-title', text: tr(won ? 'tournament.won' : 'tournament.lost', { name: tournamentName(t) }) }),
+            h('p', { class: 'tournament__result-sub', text: won ? tr('tournament.wonSub') : tr('tournament.lostSub', { round: roundLabel(t, active.round) }) }),
           ),
-          button('景品を受け取る', claim, 'btn btn--primary btn--large'),
+          button(tr('tournament.claim'), claim, 'btn btn--primary btn--large'),
         );
       }
       element.replaceChildren(
-        createScreenHeader({ title: '大会受付', back: { label: '戻る', onTap: () => ctx.back('world') } }),
+        createScreenHeader({ title: tr('tournament.title'), back: { label: tr('common.back'), onTap: () => ctx.back('world') } }),
         h('div', { class: 'tournament__body' }, ...body),
       );
     };

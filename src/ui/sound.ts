@@ -15,6 +15,7 @@ import damageHitM4a from '@assets/audio/se/damage_hit.m4a';
  *   最初の pointerdown で AudioContext を再開してから読み込む
  * - 同じ音を短い間隔で何度でも重ねて鳴らせる（カードを1枚ずつ配る音）
  * - 音が鳴らせない環境では何もしない（ゲームは止めない）
+ * - 設定の効果音の音量（0〜1）を SE_REGISTRY の gain に掛ける。0（ミュート含む）なら鳴らさない
  */
 export type SoundId = 'cardDraw' | 'turnOrderSelect' | 'manaGain' | 'damageHit';
 
@@ -44,6 +45,16 @@ class SoundPlayer {
   #buffers = new Map<SoundId, AudioBuffer>();
   #loading = new Map<SoundId, Promise<void>>();
   #unlockInstalled = false;
+  /** 設定の効果音の音量（0〜1） */
+  #volume = 1;
+
+  setVolume(volume: number): void {
+    this.#volume = Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : 1;
+  }
+
+  get volume(): number {
+    return this.#volume;
+  }
 
   /** 最初のタップで音を使えるようにする（何度呼んでもよい） */
   installUnlock(): void {
@@ -110,6 +121,7 @@ class SoundPlayer {
 
   /** delayMs 後に鳴らす（カードを1枚ずつ配るときの時間差に使う） */
   play(id: SoundId, delayMs = 0): void {
+    if (this.#volume <= 0) return;
     const ctx = this.#context();
     if (!ctx) return;
     if (ctx.state === 'suspended') void ctx.resume().catch(() => undefined);
@@ -122,7 +134,7 @@ class SoundPlayer {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       const gain = ctx.createGain();
-      gain.gain.value = SE_REGISTRY[id].gain;
+      gain.gain.value = SE_REGISTRY[id].gain * this.#volume;
       source.connect(gain).connect(ctx.destination);
       source.start(ctx.currentTime + Math.max(0, delayMs) / 1000);
     } catch {

@@ -1,5 +1,7 @@
 import { cardCatalog, monsterId, skillId, skillsOf, supportId, SUPPORTS } from '../../data/cards.ts';
 import { DECK_RULES } from '../../data/rules.ts';
+import { cardName } from '../../i18n/content.ts';
+import { t } from '../../i18n/i18n.ts';
 
 export interface Deck {
   readonly monsters: readonly string[];
@@ -37,49 +39,49 @@ export interface DeckIssue {
  */
 export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
   const issues: DeckIssue[] = [];
-  const nameOf = (id: string): string => cardCatalog.get(id)?.name ?? id;
+  const nameOf = (id: string): string => cardName(id);
 
   if (deck.monsters.length !== DECK_RULES.monsterCount) {
     issues.push({
       code: 'monsterCount',
-      message: `モンスターは${DECK_RULES.monsterCount}体必要です（現在${deck.monsters.length}体）`,
+      message: t('deck.issue.monsterCount', { n: DECK_RULES.monsterCount, current: deck.monsters.length }),
     });
   }
   if (!DECK_RULES.allowDuplicateMonsters && new Set(deck.monsters).size !== deck.monsters.length) {
-    issues.push({ code: 'duplicateMonster', message: '同じモンスターは1体までです' });
+    issues.push({ code: 'duplicateMonster', message: t('deck.issue.duplicateMonster') });
   }
   for (const id of deck.monsters) {
     const card = cardCatalog.get(id);
-    if (!card) issues.push({ code: 'unknownCard', message: `存在しないカードです: ${id}` });
-    else if (card.kind !== 'monster') issues.push({ code: 'notMonster', message: `${card.name} はモンスターではありません` });
+    if (!card) issues.push({ code: 'unknownCard', message: t('deck.issue.unknownCard', { id }) });
+    else if (card.kind !== 'monster') issues.push({ code: 'notMonster', message: t('deck.issue.notMonster', { name: cardName(card) }) });
   }
 
   if (deck.skills.length !== DECK_RULES.skillCount) {
     issues.push({
       code: 'skillCount',
-      message: `山札（技カード＋サポート）は${DECK_RULES.skillCount}枚必要です（現在${deck.skills.length}枚）`,
+      message: t('deck.issue.deckCount', { n: DECK_RULES.skillCount, current: deck.skills.length }),
     });
   }
   const skillCounts = countCards(deck.skills);
   for (const [id, count] of Object.entries(skillCounts)) {
     const card = cardCatalog.get(id);
     if (!card) {
-      issues.push({ code: 'unknownCard', message: `存在しないカードです: ${id}` });
+      issues.push({ code: 'unknownCard', message: t('deck.issue.unknownCard', { id }) });
       continue;
     }
     if (card.kind === 'monster') {
-      issues.push({ code: 'notSkill', message: `${card.name} は山札に入れられません（技カード・サポートのみ）` });
+      issues.push({ code: 'notSkill', message: t('deck.issue.notSkill', { name: cardName(card) }) });
       continue;
     }
     if (count > DECK_RULES.maxCopies) {
       issues.push({
         code: 'tooManyCopies',
-        message: `${card.name} は${DECK_RULES.maxCopies}枚までです（現在${count}枚）`,
+        message: t('deck.issue.tooMany', { name: cardName(card), n: DECK_RULES.maxCopies, current: count }),
       });
     }
     // サポートはどのモンスターのデッキにも入れられる。技はデッキのモンスターの適合技だけ
     if (card.kind === 'skill' && !deck.monsters.includes(card.monsterId)) {
-      issues.push({ code: 'notCompatible', message: `${card.name} はデッキのモンスターの技ではありません` });
+      issues.push({ code: 'notCompatible', message: t('deck.issue.notCompatible', { name: cardName(card) }) });
     }
   }
 
@@ -88,7 +90,7 @@ export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
     for (const [id, count] of Object.entries(all)) {
       const owned = collection[id] ?? 0;
       if (owned < count) {
-        issues.push({ code: 'notOwned', message: `${nameOf(id)} の所持枚数が足りません（所持${owned}・必要${count}）` });
+        issues.push({ code: 'notOwned', message: t('deck.issue.notOwned', { name: nameOf(id), owned, count }) });
       }
     }
   }

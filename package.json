@@ -1,8 +1,8 @@
 {
-  "name": "mistria-monsters-battle-card",
-  "version": "0.3.0",
+  "name": "sacred-monsters-battle-card",
+  "version": "0.4.0",
   "private": true,
-  "description": "ミストリアモンスターズ バトルカード — スマートフォン向け2Dカードゲーム（ミストリアモンスターズシリーズ）",
+  "description": "セイクリッドモンスターズ バトルカード — スマートフォン向け2Dカードゲーム（セイクリッドモンスターズシリーズ）",
   "type": "module",
   "engines": {
     "node": ">=24"

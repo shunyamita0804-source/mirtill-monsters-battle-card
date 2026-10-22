@@ -1,4 +1,5 @@
 import type { ScreenId } from '../../config/screens.ts';
+import type { MessageKey } from '../../i18n/messages/index.ts';
 import type { GameStore } from '../gameStore.ts';
 
 /** 画面から使える遷移操作とゲーム状態 */
@@ -20,7 +21,7 @@ export interface ScreenInstance {
 
 export interface ScreenDefinition {
   readonly id: ScreenId;
-  /** ブラウザのタブ等に出す画面名 */
-  readonly title: string;
+  /** ブラウザのタブ等に出す画面名（辞書のキー） */
+  readonly titleKey: MessageKey;
   create(context: ScreenContext): ScreenInstance;
 }

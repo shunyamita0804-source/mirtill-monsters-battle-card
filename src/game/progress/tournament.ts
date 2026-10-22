@@ -1,5 +1,6 @@
 import { rankAtLeast } from '../../data/economy.ts';
 import { getTournament, type CardReward, type TournamentDefinition } from '../../data/tournaments.ts';
+import { t } from '../../i18n/i18n.ts';
 import { isDeckValid } from '../deck/deck.ts';
 import { addCards, addCoins, unlockPacks, type SaveData, type TournamentRecord } from '../save/saveData.ts';
 
@@ -17,11 +18,11 @@ export function tournamentRecord(save: SaveData, id: string): TournamentRecord {
 export function entryCheck(save: SaveData, tournament: TournamentDefinition): { ok: boolean; reasons: string[] } {
   const reasons: string[] = [];
   if (!rankAtLeast(save.rank, tournament.requiredRank)) {
-    reasons.push(`${tournament.requiredRank}ランク以上が必要です（現在${save.rank}ランク）`);
+    reasons.push(t('tournament.issue.rank', { required: tournament.requiredRank, rank: save.rank }));
   }
-  if (!isDeckValid(save.deck, save.collection)) reasons.push('デッキの構成が正しくありません（家の机で確認）');
+  if (!isDeckValid(save.deck, save.collection)) reasons.push(t('tournament.issue.deck'));
   if (save.activeTournament && save.activeTournament.tournamentId !== tournament.id) {
-    reasons.push('別の大会に参加中です');
+    reasons.push(t('tournament.issue.other'));
   }
   return { ok: reasons.length === 0, reasons };
 }

@@ -1,5 +1,4 @@
 import { getDungeon, ENCOUNTERS } from '../../data/dungeons.ts';
-import { CURRENCY } from '../../data/economy.ts';
 import { FRAGMENT_TOTAL } from '../../data/fragments.ts';
 import { getMap, type ChestObject, type EnemyObject, type MapDefinition, type MapObject } from '../../data/maps.ts';
 import { getMonster } from '../../data/cards.ts';
@@ -28,6 +27,9 @@ import { confirmModal, messageModal, openModal } from '../components/modal.ts';
 import { button, h } from '../dom.ts';
 import maleSheet from '@assets/images/characters/player_male_walk_qa.png';
 import femaleSheet from '@assets/images/characters/player_female_walk_qa.png';
+import { t, type Params } from '../../i18n/i18n.ts';
+import type { MessageKey } from '../../i18n/messages/index.ts';
+import { cardName, dungeonName, mapName, objectLabel, objectMessage, opponentName } from '../../i18n/content.ts';
 import type { ScreenContext, ScreenDefinition } from './types.ts';
 
 /** 1マスの大きさ（論理px） */
@@ -46,11 +48,13 @@ const TILE_CLASS: Readonly<Record<string, string>> = {
 };
 
 /** 建物（同じ記号のかたまり）の名前ラベル */
-const BUILDING_LABEL: Readonly<Record<string, string>> = { H: '大会会場', A: '家', B: 'カードショップ' };
+const BUILDING_LABEL: Readonly<Record<string, MessageKey>> = { H: 'world.building.hall', A: 'world.building.home', B: 'world.building.shop' };
+
+const coins = (n: number): string => t('common.coins', { n } satisfies Params);
 
 export const worldScreen: ScreenDefinition = {
   id: 'world',
-  title: '街',
+  titleKey: 'world.title',
   create(ctx) {
     const element = h('main', { class: 'screen world' });
     const world = new WorldView(ctx, element);
@@ -142,7 +146,7 @@ class WorldView {
     const { width, height } = mapSize(map);
     const save = this.#store.save;
     const dungeon = save.activeDungeon ? getDungeon(save.activeDungeon.dungeonId) : undefined;
-    const title = map.area === 'dungeon' && dungeon ? `${dungeon.name} ${map.name}` : map.name;
+    const title = map.area === 'dungeon' && dungeon ? t('world.placeDungeon', { dungeon: dungeonName(dungeon), floor: mapName(map) }) : mapName(map);
 
     const tiles = h('div', { class: 'world__tiles' });
     tiles.style.gridTemplateColumns = `repeat(${width}, ${TILE}px)`;
@@ -162,7 +166,7 @@ class WorldView {
         this.#mapLayer.append(el);
       }
     }
-    this.#player = h('div', { class: 'world__player', attrs: { 'aria-label': 'プレイヤー' } });
+    this.#player = h('div', { class: 'world__player', attrs: { 'aria-label': t('world.player') } });
     this.#player.style.backgroundImage = `url("${save.player.gender === 'female' ? femaleSheet : maleSheet}")`;
     this.#mapLayer.append(this.#player);
 
@@ -171,16 +175,16 @@ class WorldView {
     const hud = h(
       'header',
       { class: 'world__hud' },
-      h('div', { class: 'world__place' }, h('span', { class: 'world__place-name', text: title }), h('span', { class: 'world__place-note', text: '仮マップ・歩行素材QA試作' })),
-      h('span', { class: 'world__coins', text: `${save.coins}${CURRENCY.unit}` }),
-      map.area === 'dungeon' ? button('脱出', () => this.#confirmLeave(), 'btn btn--small') : null,
-      button('メニュー', () => this.#menu(), 'btn btn--small'),
+      h('div', { class: 'world__place' }, h('span', { class: 'world__place-name', text: title }), h('span', { class: 'world__place-note', text: t('world.placeNote') })),
+      h('span', { class: 'world__coins', text: coins(save.coins) }),
+      map.area === 'dungeon' ? button(t('world.escape'), () => this.#confirmLeave(), 'btn btn--small') : null,
+      button(t('world.menu'), () => this.#menu(), 'btn btn--small'),
     );
 
-    const pad = h('div', { class: 'world__pad', attrs: { 'aria-label': '移動パッド' } });
+    const pad = h('div', { class: 'world__pad', attrs: { 'aria-label': t('world.movePad') } });
     for (const dir of ['up', 'left', 'right', 'down'] as const) {
       const label = { up: '▲', down: '▼', left: '◀', right: '▶' }[dir];
-      const b = h('button', { class: `world__pad-btn world__pad-btn--${dir}`, text: label, attrs: { type: 'button', 'aria-label': `${dir}へ移動` } });
+      const b = h('button', { class: `world__pad-btn world__pad-btn--${dir}`, text: label, attrs: { type: 'button', 'aria-label': t('world.moveDir', { dir }) } });
       const press = (e: Event): void => {
         e.preventDefault();
         this.#path = [];
@@ -201,8 +205,8 @@ class WorldView {
       'div',
       { class: 'world__controls' },
       pad,
-      h('div', { class: 'world__hint', text: '地面をタップでその場所へ移動\n人や家具をタップで話す・調べる' }),
-      button('しらべる', () => this.#examine(), 'world__action'),
+      h('div', { class: 'world__hint', text: t('world.hint') }),
+      button(t('world.examine'), () => this.#examine(), 'world__action'),
     );
 
     this.#root.replaceChildren(hud, this.#viewport, controls);
@@ -219,13 +223,13 @@ class WorldView {
         minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
       }));
       if (maxX < 0) continue;
-      const el = h('div', { class: 'world__label world__label--building', text: label });
+      const el = h('div', { class: 'world__label world__label--building', text: t(label) });
       Object.assign(el.style, { left: `${minX * TILE}px`, top: `${minY * TILE}px`, width: `${(maxX - minX + 1) * TILE}px`, height: `${(maxY - minY + 1) * TILE}px` });
       this.#mapLayer.append(el);
     }
     for (const obj of map.objects) {
       if (obj.type !== 'interact' && obj.type !== 'warp') continue;
-      const el = h('div', { class: `world__label world__label--${obj.type}`, text: obj.label });
+      const el = h('div', { class: `world__label world__label--${obj.type}`, text: objectLabel(obj) });
       Object.assign(el.style, { left: `${obj.x * TILE}px`, top: `${obj.y * TILE}px`, width: `${obj.w * TILE}px`, height: `${obj.h * TILE}px` });
       this.#mapLayer.append(el);
     }
@@ -241,15 +245,15 @@ class WorldView {
       const enc = ENCOUNTERS[obj.encounterId];
       const el = h('div', {
         class: `world__enemy${obj.boss ? ' world__enemy--boss' : ''}`,
-        text: obj.boss ? 'BOSS' : '敵',
-        attrs: { 'aria-label': enc ? enc.name : '敵' },
+        text: obj.boss ? t('world.boss') : t('world.enemy'),
+        attrs: { 'aria-label': enc ? opponentName(enc) : t('world.enemy') },
       });
       return place(el, obj.x, obj.y);
     }
     if (obj.type === 'chest') {
       const save = this.#store.save;
       const opened = save.activeDungeon ? isChestOpened(save, save.activeDungeon.dungeonId, obj.id) : false;
-      return place(h('div', { class: `world__chest${opened ? ' is-open' : ''}`, attrs: { 'aria-label': opened ? '空の宝箱' : '宝箱' } }), obj.x, obj.y);
+      return place(h('div', { class: `world__chest${opened ? ' is-open' : ''}`, attrs: { 'aria-label': opened ? t('world.chestEmptyLabel') : t('world.chest') } }), obj.x, obj.y);
     }
     return null;
   }
@@ -420,12 +424,12 @@ class WorldView {
         const r = collectFragment(this.#store.save, fragment.id);
         if (r.collected) {
           this.#store.update(() => r.save);
-          this.#message(`ふしぎな欠片を見つけた！（${fragmentCount(r.save)}/${FRAGMENT_TOTAL}）\n10個集めるとショップで特別な復元ができるらしい。`);
+          this.#message(t('world.fragmentFound', { n: fragmentCount(r.save), total: FRAGMENT_TOTAL }));
           return;
         }
       }
     }
-    this.#message('とくに何もない。');
+    this.#message(t('world.nothingHere'));
   }
 
   /** そのマスの物に話しかける・調べる。何かあれば true */
@@ -441,7 +445,7 @@ class WorldView {
         return true;
       }
       if (obj.type === 'interact') {
-        this.#action(obj.action, obj.message);
+        this.#action(obj.action, objectMessage(obj));
         return true;
       }
     }
@@ -465,15 +469,15 @@ class WorldView {
   #openChest(chest: ChestObject): void {
     const r = openChest(this.#store.save, chest);
     if (!r.opened) {
-      this.#message('宝箱は空っぽだ。');
+      this.#message(t('world.chestAlreadyEmpty'));
       return;
     }
     this.#store.update(() => r.save);
     this.#objectEls.get(chest.id)?.classList.add('is-open');
     const parts: string[] = [];
-    if (chest.reward.coins > 0) parts.push(`${chest.reward.coins}${CURRENCY.unit}`);
-    for (const c of chest.reward.cards) parts.push(`カード（${c.cardId.startsWith('skl') ? '技' : 'モンスター'}）×${c.count}`);
-    this.#message(`宝箱を開けた！\n${parts.join('、')} を手に入れた。`);
+    if (chest.reward.coins > 0) parts.push(coins(chest.reward.coins));
+    for (const c of chest.reward.cards) parts.push(t(c.cardId.startsWith('skl') ? 'world.chestCardSkill' : 'world.chestCardMonster', { n: c.count }));
+    this.#message(t('world.chestOpened', { items: parts.join(t('world.rewardSeparator')) }));
   }
 
   #encounter(enemy: EnemyObject): void {
@@ -482,16 +486,16 @@ class WorldView {
     if (!opponent) return;
     const store = this.#store;
     if (!isDeckValid(store.save.deck, store.save.collection)) {
-      this.#message('デッキの構成が正しくないため戦えない。家の机でデッキを確認しよう。');
+      this.#message(t('world.deckInvalidBattle'));
       return;
     }
     this.#busy = true;
     this.#held = null;
     this.#path = [];
     const ctx = this.#ctx;
-    const names = opponent.monsters.map((m) => getMonster(m).name).join('・');
+    const names = opponent.monsters.map((m) => cardName(getMonster(m))).join(t('common.listSeparator'));
     store.pendingBattle = {
-      title: enemy.boss ? 'ボス戦' : 'ダンジョン戦',
+      title: enemy.boss ? t('world.bossBattle') : t('world.dungeonBattle'),
       opponent,
       allowSurrender: true,
       onFinish: (winner) => {
@@ -500,32 +504,32 @@ class WorldView {
           store.update((s) => ({ ...r.save, stats: { ...s.stats, battlesWon: s.stats.battlesWon + 1 } }));
           if (r.cleared) {
             store.update((s) => leaveDungeon(s));
-            store.flashMessage = `ボスを倒した！ダンジョンクリア！\n${r.coins}${CURRENCY.unit} を手に入れた。${r.firstClear ? '（初回クリア報酬）' : ''}\n家に帰ってきた。`;
+            store.flashMessage = t(r.firstClear ? 'world.dungeonClearedFirst' : 'world.dungeonCleared', { coins: coins(r.coins) });
           } else {
-            store.flashMessage = `勝利！ ${r.coins}${CURRENCY.unit} を手に入れた。`;
+            store.flashMessage = t('world.victory', { coins: coins(r.coins) });
           }
         } else {
           store.update((s) => ({ ...leaveDungeon(s), stats: { ...s.stats, battlesLost: s.stats.battlesLost + 1 } }));
-          store.flashMessage = '負けてしまった…。\n家に戻ってきた。（ダンジョンには何度でも挑戦できます）';
+          store.flashMessage = t('world.defeat');
         }
         ctx.reset('world');
       },
     };
-    this.#message(`${opponent.name}が現れた！\n（${names}）`, () => ctx.navigate('battle'));
+    this.#message(t('world.encounter', { name: opponentName(opponent), monsters: names }), () => ctx.navigate('battle'));
   }
 
   #confirmLeave(fromStairs = false): void {
     this.#busy = true;
     confirmModal(
       this.#root,
-      '街へ帰りますか？',
-      [h('p', { class: 'modal__text', text: '探索を終えて家に戻ります。倒した敵は次の探索で復活します。' })],
-      '帰る',
+      t('world.leaveTitle'),
+      [h('p', { class: 'modal__text', text: t('world.leaveText') })],
+      t('world.leaveOk'),
       () => {
         this.#store.update((s) => leaveDungeon(s));
         this.load();
       },
-      fromStairs ? 'まだ探索する' : 'やめる',
+      fromStairs ? t('world.keepExploring') : t('common.cancel'),
       () => {
         this.#busy = false;
       },
@@ -547,16 +551,16 @@ class WorldView {
     const fragments = fragmentCount(save);
     this.#busy = true;
     const handle = openModal(this.#root, {
-      title: 'メニュー',
+      title: t('world.menu'),
       body: [
-        h('p', { class: 'modal__text', text: `ランク：${save.rank}　所持金：${save.coins}${CURRENCY.unit}` }),
-        h('p', { class: 'modal__text', text: `デッキ：${deckOk ? '使用可能' : '構成に問題あり（家の机で確認）'}` }),
-        fragments > 0 ? h('p', { class: 'modal__text', text: `ふしぎな欠片：${fragments}/${FRAGMENT_TOTAL}` }) : null,
-        h('p', { class: 'modal__text modal__text--sub', text: `進行状況は自動で保存されます${this.#store.lastSaveOk ? '' : '（※保存に失敗しています）'}` }),
+        h('p', { class: 'modal__text', text: t('world.menuStatus', { rank: save.rank, coins: coins(save.coins) }) }),
+        h('p', { class: 'modal__text', text: t(deckOk ? 'world.menuDeckOk' : 'world.menuDeckNg') }),
+        fragments > 0 ? h('p', { class: 'modal__text', text: t('world.menuFragments', { n: fragments, total: FRAGMENT_TOTAL }) }) : null,
+        h('p', { class: 'modal__text modal__text--sub', text: t(this.#store.lastSaveOk ? 'world.autoSave' : 'world.autoSaveFailed') }),
       ],
       actions: [
-        { label: 'タイトルへ', onTap: () => { handle.close(); this.#ctx.reset('title'); } },
-        { label: '閉じる', primary: true, onTap: () => handle.close() },
+        { label: t('common.toTitle'), onTap: () => { handle.close(); this.#ctx.reset('title'); } },
+        { label: t('common.close'), primary: true, onTap: () => handle.close() },
       ],
       onClose: () => {
         this.#busy = false;

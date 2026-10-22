@@ -1,5 +1,7 @@
 import { getMonster } from '../../data/cards.ts';
-import { supportShortText, type PlayCard, type SkillCard, type SupportCard } from '../../game/cards/cardTypes.ts';
+import { skillShortText, statLabel, supportShortText, type PlayCard, type SkillCard, type SupportCard } from '../../game/cards/cardTypes.ts';
+import { cardName } from '../../i18n/content.ts';
+import { t } from '../../i18n/i18n.ts';
 import { resolveCardArt } from '../cardArtSources.ts';
 import { h } from '../dom.ts';
 import masterUrl from '@assets/images/ui/skillcard/skillcard_master_v4.png';
@@ -68,8 +70,8 @@ export function createSkillCard(skill: SkillCard, options: SkillCardOptions): HT
       : h(
           'div',
           { class: 'skill-card__art skill-card__art--placeholder' },
-          h('span', { class: 'skill-card__art-mark', text: '技' }),
-          h('span', { class: 'skill-card__art-note', text: '仮' }),
+          h('span', { class: 'skill-card__art-mark', text: t('card.art.skill') }),
+          h('span', { class: 'skill-card__art-note', text: t('common.placeholderTag') }),
         ),
     LAYOUT.art,
   );
@@ -88,7 +90,7 @@ export function createSkillCard(skill: SkillCard, options: SkillCardOptions): HT
     'div',
     {
       class: 'skill-card',
-      attrs: { role: 'img', 'aria-label': `技カード ${skill.name} マナ${skill.cost} ${skill.stat.type === 'force' ? 'ちから' : 'かしこさ'}${skill.stat.value}` },
+      attrs: { role: 'img', 'aria-label': t('card.aria.skill', { name: cardName(skill), cost: skill.cost, stat: statLabel(skill.stat.type), v: skill.stat.value }) },
     },
     art,
     tint,
@@ -97,7 +99,7 @@ export function createSkillCard(skill: SkillCard, options: SkillCardOptions): HT
     img(numberUrl('mana', skill.cost), 'skill-card__number', LAYOUT.manaNumber),
     img(statBar, 'skill-card__bar', LAYOUT.stat),
     img(numberUrl(skill.stat.type, skill.stat.value), 'skill-card__number', LAYOUT.statNumber),
-    showText ? place(h('div', { class: 'skill-card__title', text: skill.name }), LAYOUT.title) : null,
+    showText ? place(h('div', { class: 'skill-card__title', text: cardName(skill) }), LAYOUT.title) : null,
     showText ? place(h('div', { class: 'skill-card__desc', text: skillShortText(skill) }), LAYOUT.description) : null,
   );
   card.style.width = `${options.width}px`;
@@ -120,8 +122,8 @@ export function createSupportCard(card: SupportCard, options: SkillCardOptions):
       : h(
           'div',
           { class: 'skill-card__art skill-card__art--placeholder skill-card__art--support' },
-          h('span', { class: 'skill-card__art-mark', text: card.duration === 'field' ? '場' : '援' }),
-          h('span', { class: 'skill-card__art-note', text: '仮' }),
+          h('span', { class: 'skill-card__art-mark', text: t(card.duration === 'field' ? 'card.art.field' : 'card.art.support') }),
+          h('span', { class: 'skill-card__art-note', text: t('common.placeholderTag') }),
         ),
     LAYOUT.art,
   );
@@ -130,17 +132,17 @@ export function createSupportCard(card: SupportCard, options: SkillCardOptions):
   tint.style.setProperty('-webkit-mask-image', `url("${maskUrl}")`);
   tint.style.maskImage = `url("${maskUrl}")`;
   const manaNumber = numberUrl('mana', card.cost);
-  const kindLabel = card.duration === 'field' ? '全体' : 'サポート';
+  const kindLabel = t(card.duration === 'field' ? 'card.supportKind.field' : 'card.kind.support');
   const el = h(
     'div',
-    { class: 'skill-card skill-card--support', attrs: { role: 'img', 'aria-label': `サポートカード ${card.name} マナ${card.cost}` } },
+    { class: 'skill-card skill-card--support', attrs: { role: 'img', 'aria-label': t('card.aria.support', { name: cardName(card), cost: card.cost }) } },
     art,
     tint,
     h('img', { class: 'skill-card__master', attrs: { src: masterUrl, alt: '', draggable: 'false' } }),
     place(h('img', { class: 'skill-card__bar', attrs: { src: barManaUrl, alt: '', draggable: 'false' } }), LAYOUT.mana),
     manaNumber ? place(h('img', { class: 'skill-card__number', attrs: { src: manaNumber, alt: '', draggable: 'false' } }), LAYOUT.manaNumber) : null,
     place(h('div', { class: 'skill-card__kind', text: kindLabel }), LAYOUT.stat),
-    showText ? place(h('div', { class: 'skill-card__title', text: card.name }), LAYOUT.title) : null,
+    showText ? place(h('div', { class: 'skill-card__title', text: cardName(card) }), LAYOUT.title) : null,
     showText ? place(h('div', { class: 'skill-card__desc', text: supportShortText(card) }), LAYOUT.description) : null,
   );
   el.style.width = `${options.width}px`;
@@ -151,23 +153,4 @@ export function createSupportCard(card: SupportCard, options: SkillCardOptions):
 /** 技・サポートどちらでも描く */
 export function createPlayCard(card: PlayCard, options: SkillCardOptions): HTMLElement {
   return card.kind === 'skill' ? createSkillCard(card, options) : createSupportCard(card, options);
-}
-
-/** カード面に書く短い説明 */
-export function skillShortText(skill: SkillCard): string {
-  const v = skill.stat.value;
-  switch (skill.effect.type) {
-    case 'attack':
-      return skill.effect.unblockable && skill.effect.undodgeable ? `${v}ダメージ（守備されない）` : `相手1体に${v}ダメージ`;
-    case 'defense':
-      return `防御：ダメージ-${v}`;
-    case 'evade':
-      return '回避：ダメージ0';
-    case 'heal':
-      return `味方1体のライフ+${v}`;
-    case 'mana':
-      return `山札${v}枚をマナに`;
-    case 'draw':
-      return `カードを${v}枚引く`;
-  }
 }

@@ -1,50 +1,45 @@
-# 名称変更（Mirtill → Mistria）の移行計画
+# 名称変更の移行（→ セイクリッドモンスターズ）
 
-## 現在の状態（2026-10-22 夜間作業後）
+## 正式名称（2026-10-22 ユーザー決定）
 
-| 項目 | 状態 |
+| 項目 | 値 |
 | --- | --- |
-| シリーズ名・ゲーム名（画面・HTML title・manifest・README・設定） | **変更済み**：ミストリアモンスターズ／Mistria Monsters、ミストリアモンスターズ バトルカード |
-| npm パッケージ名 | **変更済み**：`mistria-monsters-battle-card` |
-| アイコン（favicon / apple-touch-icon / PWA） | **作成済み**：同梱の公式アイコンを縮小のみで変換（`public/icons/`） |
-| GitHub リポジトリ名 | **未実施**（`mirtill-monsters-battle-card` のまま） |
-| GitHub Pages | **未公開**（公開の承認なし） |
-| base パス | 現在のリポジトリ名 `/mirtill-monsters-battle-card/` のまま（改名と同時に切り替える） |
+| シリーズ名 | セイクリッドモンスターズ（英語：Sacred Monsters） |
+| ゲーム名 | セイクリッドモンスターズ バトルカード（英語：Sacred Monsters Battle Card） |
+| ホーム画面などの短縮表示 | セイクリッドBC（勝手に変えない） |
+| 旧称 | ミルティル（Mirtill）→ ミストリア（Mistria）→ いまの名前。画面・アプリ情報からは除いた。過去の報告・記録の旧称は当時の記録として残す |
 
-リポジトリの改名は GitHub 上の設定変更で、この作業環境からは実行できず、ユーザーの承認もないため実施していません。
-コード側は、改名後に1か所を変えるだけで移行できるように準備しています。
+※ 名称を変えたことは、商標として安全であることの保証ではない（商標の確認は未実施）。
 
-## 改名後の想定URL
+## コード側（このブランチで完了）
 
-| 用途 | 現在 | 改名後（想定） |
-| --- | --- | --- |
-| リポジトリ | https://github.com/shunyamita0804-source/mirtill-monsters-battle-card | https://github.com/shunyamita0804-source/mistria-monsters-battle-card |
-| Pages（公開した場合） | https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ | https://shunyamita0804-source.github.io/mistria-monsters-battle-card/ |
-| Pages の base パス | `/mirtill-monsters-battle-card/` | `/mistria-monsters-battle-card/` |
+| 場所 | 内容 |
+| --- | --- |
+| `src/config/app.ts` | 正式名称・英語名・短縮表示。バージョン 0.4.0 |
+| `package.json`・`package-lock.json` | `sacred-monsters-battle-card` |
+| `index.html`・`public/manifest.webmanifest` | 題名・ホーム画面名（セイクリッドBC）・正式アイコン |
+| `vite.config.ts` | `REPO_NAME = 'sacred-monsters-battle-card'`（Pages の base `/sacred-monsters-battle-card/`） |
+| `.github/workflows/ci.yml`・`deploy-pages.yml` | base は**実際のリポジトリ名**から作る（`VITE_BASE_PATH: /${{ github.event.repository.name }}/`）。改名の前に動かしても旧URLで壊れない |
+| テスト | `tests/viteConfig.test.ts`・`tests/assetPath.test.ts`・`tests/app.test.ts`・`tests/compat.test.ts` |
 
-## コード側で準備済みのこと
+## GitHub 上の改名（ユーザーの操作が必要）
 
-- `vite.config.ts`：`CURRENT_REPO_NAME`（現在）と `PLANNED_REPO_NAME`（改名後）を定義。`REPO_NAME = CURRENT_REPO_NAME` を切り替えるだけで base パスが変わる
-- `public/manifest.webmanifest`：`start_url` と `scope` は `./`、アイコンも相対パス。base パスが変わっても書き換え不要
-- `index.html`：アイコン・manifest は `/icons/...` 形式で書き、Vite がビルド時に base パスを付ける（Pages 用ビルドで確認済み）
-- 画像などの素材：`assets/` は import、`public/` は `resolvePublicPath()` 経由。リポジトリ名を直書きしていない
-- セーブデータのキー（`mistria-battle-card/save`）：パスに依存しないので、同じドメイン（`shunyamita0804-source.github.io`）なら改名後もそのまま読める
-- canonical：開発版のため `noindex` で、canonical は設定していない（公開時に検討）
+この作業環境からはリポジトリの名前を変えられない（権限・道具がない）。ユーザーに1回だけ操作してもらう：
 
-## 改名の手順（ユーザーの承認後）
+1. https://github.com/shunyamita0804-source/mirtill-monsters-battle-card → Settings → General → Repository name を
+   `sacred-monsters-battle-card` にして「Rename」
+2. そのあと Claude が：手元の接続先を新しい URL に変更（`git remote set-url origin https://github.com/shunyamita0804-source/sacred-monsters-battle-card`）、
+   Actions の「Deploy to GitHub Pages」を `main` で実行、新URLで表示を確認
+3. 新しい公開URL：https://shunyamita0804-source.github.io/sacred-monsters-battle-card/
 
-1. GitHub のリポジトリ → Settings → General → Repository name を `mistria-monsters-battle-card` に変更
-2. 手元のクローンの接続先を変更：`git remote set-url origin https://github.com/shunyamita0804-source/mistria-monsters-battle-card.git`
-3. コードを切り替え
-   - `vite.config.ts`：`export const REPO_NAME = PLANNED_REPO_NAME;`
-   - `.github/workflows/ci.yml`：最後の確認を `grep -q '/mistria-monsters-battle-card/static/' dist/index.html` に
-   - `tests/viteConfig.test.ts`・`tests/assetPath.test.ts` の期待値を新しいパスに
-   - README・CLAUDE.md・docs/setup.md・docs/github-pages.md の URL（過去の完了報告は当時の記録として残す）
-4. `npm run check` と `npm run build:pages` を実行し、CI が通ることを確認
-5. GitHub Pages の公開は、改名とは別にユーザーの承認を得てから（`docs/github-pages.md`）
+- 旧リポジトリの Web・git の URL は GitHub が新 URL へ転送する
+- **旧 Pages の URL（…/mirtill-monsters-battle-card/）は転送されない**（404 になる）。別のリポジトリで旧URLを残すことはしない
+- 旧リポジトリの削除・新しいリポジトリの作成はしない
 
-## 注意
+## セーブの引き継ぎ
 
-- GitHub はリポジトリ改名後、旧リポジトリURL（Web・git）を新URLへ転送するが、**GitHub Pages の旧URLは転送されない**（旧URLは 404 になる）。旧URLのリダイレクトは保証できない
-- 改名で過去の Issue・PR・コミットは失われない
-- Actions のワークフローは改名後もそのまま動く（リポジトリ名を直書きしている箇所は上記3のみ）
+- セーブのキー `mistria-battle-card/save`（読めなかったときの退避 `…/save-unreadable-backup`、復元前の退避 `…/save-before-restore`、設定 `…/settings`）は**変えない**
+- localStorage はドメインごと（`shunyamita0804-source.github.io`）なので、**Safari で開く場合**はパスが変わっても同じセーブを読める見込み（実機は未確認）
+- **ホーム画面に追加したアプリ（PWA）**：iPhone ではホーム画面のアプリごとに保存領域が別になることがあり、
+  新しい URL でホーム画面に追加し直すと、前のセーブが見えない可能性がある。旧URLのアイコンは開けなくなる
+- 引き継ぎを保証しないため、設定画面の「セーブをバックアップ（書き出し）」→ 新しい URL で「バックアップから復元」を案内する

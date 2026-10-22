@@ -24,7 +24,12 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run typecheck
       - run: npm test
+      # base パスは実際のリポジトリ名から作る（改名前に動かしても旧URLで壊れない）
       - run: npm run build:pages
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+      - name: base パス確認
+        run: grep -q "/${{ github.event.repository.name }}/static/" dist/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

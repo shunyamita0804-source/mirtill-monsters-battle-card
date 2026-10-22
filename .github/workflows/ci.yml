@@ -37,8 +37,11 @@ jobs:
       - name: ビルド（通常）
         run: .github/scripts/run-step.sh build npm run build
 
+      # base パスは実際のリポジトリ名から作る（GitHub 上の改名の前後どちらでも正しいパスになる）
       - name: ビルド（GitHub Pages 用 base パス）
         run: .github/scripts/run-step.sh build-pages npm run build:pages
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Pages 用ビルドの base パス確認
-        run: grep -q '/mirtill-monsters-battle-card/static/' dist/index.html
+        run: grep -q "/${{ github.event.repository.name }}/static/" dist/index.html

@@ -9,8 +9,8 @@
 ## 初回
 
 ```bash
-git clone https://github.com/shunyamita0804-source/mirtill-monsters-battle-card.git
-cd mirtill-monsters-battle-card
+git clone https://github.com/shunyamita0804-source/sacred-monsters-battle-card.git
+cd sacred-monsters-battle-card
 npm ci
 ```
 
@@ -38,7 +38,7 @@ URL の末尾に `?qa=1` を付けると QA 用のボタン（バトルのオー
 | `npm run typecheck` | TypeScript 型チェック |
 | `npm test` | Vitest によるテスト |
 | `npm run build` | 本番ビルド（base = `/`） |
-| `npm run build:pages` | GitHub Pages 用ビルド（base = `/mirtill-monsters-battle-card/`） |
+| `npm run build:pages` | GitHub Pages 用ビルド（base = `/sacred-monsters-battle-card/`） |
 | `npm run preview` | ビルド結果の確認 |
 | `npm run check` | 型チェック＋テスト＋ビルドをまとめて実行 |
 

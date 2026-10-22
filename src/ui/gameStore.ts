@@ -3,6 +3,7 @@ import type { BattleWinner } from '../game/battle/engine.ts';
 import { sanitizeLocation } from '../game/progress/dungeon.ts';
 import { createNewSave, type SaveData } from '../game/save/saveData.ts';
 import { MemoryStorage, SaveRepository, type KeyValueStorage, type LoadResult } from '../game/save/saveRepository.ts';
+import { SettingsStore } from './settingsStore.ts';
 
 /** バトル画面に渡す依頼。結果の処理（セーブ更新・画面遷移）は依頼元が持つ */
 export interface BattleRequest {
@@ -30,8 +31,12 @@ export class GameStore {
   readonly qa: boolean;
   /** 最後に保存できたか */
   lastSaveOk = true;
+  /** 設定（言語・音量）。セーブとは別に保存する */
+  readonly settings: SettingsStore;
 
   constructor(storage: KeyValueStorage, qa = false) {
+    // 言語を先に決める（読み込みのお知らせなどをその言語で出すため）
+    this.settings = new SettingsStore(storage);
     this.#repo = new SaveRepository(storage);
     this.qa = qa;
     this.loadResult = this.#repo.load();
@@ -75,6 +80,21 @@ export class GameStore {
 
   persist(): void {
     if (this.#save) this.lastSaveOk = this.#repo.save(this.#save);
+  }
+
+  /**
+   * バックアップから読んだセーブに入れ替える。先にいまのセーブを退避し、書き込めたときだけ入れ替える。
+   * 失敗したら false（いまのセーブはそのまま）。
+   */
+  restoreSave(save: SaveData): boolean {
+    if (!this.#repo.stashBeforeRestore()) return false;
+    const next = sanitizeLocation(save);
+    if (!this.#repo.save(next)) return false;
+    this.#save = next;
+    this.pendingBattle = null;
+    this.flashMessage = null;
+    this.lastSaveOk = true;
+    return true;
   }
 
   deleteSave(): void {

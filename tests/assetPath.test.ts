@@ -8,9 +8,9 @@ describe('resolvePublicPath', () => {
   });
 
   it('GitHub Pages のサブパス配信', () => {
-    const base = '/mirtill-monsters-battle-card/';
-    expect(resolvePublicPath('/favicon.svg', base)).toBe('/mirtill-monsters-battle-card/favicon.svg');
-    expect(resolvePublicPath('./data/a.json', base)).toBe('/mirtill-monsters-battle-card/data/a.json');
+    const base = '/sacred-monsters-battle-card/';
+    expect(resolvePublicPath('/favicon.svg', base)).toBe('/sacred-monsters-battle-card/favicon.svg');
+    expect(resolvePublicPath('./data/a.json', base)).toBe('/sacred-monsters-battle-card/data/a.json');
   });
 
   it('末尾スラッシュのない base も補正する', () => {

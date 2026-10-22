@@ -3,9 +3,11 @@ import { APP_INFO, DESIGN_RESOLUTION } from '../src/config/app.ts';
 
 describe('APP_INFO', () => {
   it('正式名称が設定されている', () => {
-    expect(APP_INFO.seriesName).toBe('ミストリアモンスターズ');
-    expect(APP_INFO.seriesNameEn).toBe('Mistria Monsters');
-    expect(APP_INFO.gameName).toBe('ミストリアモンスターズ バトルカード');
+    expect(APP_INFO.seriesName).toBe('セイクリッドモンスターズ');
+    expect(APP_INFO.seriesNameEn).toBe('Sacred Monsters');
+    expect(APP_INFO.gameName).toBe('セイクリッドモンスターズ バトルカード');
+    expect(APP_INFO.gameNameEn).toBe('Sacred Monsters Battle Card');
+    expect(APP_INFO.shortName).toBe('セイクリッドBC');
   });
 
   it('夜間一括指示の段階である', () => {

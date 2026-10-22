@@ -1,11 +1,15 @@
-import { APP_INFO } from '../config/app.ts';
+import { localizedGameName } from '../config/app.ts';
 import { INITIAL_SCREEN, type ScreenId } from '../config/screens.ts';
 import { Router } from '../core/router.ts';
+import { getLanguage, onLanguageChange, t } from '../i18n/i18n.ts';
 import { GameStore } from './gameStore.ts';
 import { SCREENS } from './screens/registry.ts';
 import type { ScreenContext, ScreenInstance } from './screens/types.ts';
 import { sound } from './sound.ts';
 import { mountStage } from './stage.ts';
+
+/** セーブがなくても開ける画面 */
+const NO_SAVE_SCREENS: readonly ScreenId[] = ['title', 'newGame', 'options'];
 
 /** アプリ全体の組み立て：ステージを用意し、ルーターの変化に合わせて画面を差し替える */
 export function startApp(root: HTMLElement, store: GameStore = GameStore.fromBrowser()): void {
@@ -30,14 +34,22 @@ export function startApp(root: HTMLElement, store: GameStore = GameStore.fromBro
 
   const show = (id: ScreenId): void => {
     current?.destroy?.();
-    // セーブがない状態で遊ぶ画面に来たらタイトルへ
-    const target: ScreenId = !store.hasSave && id !== 'title' && id !== 'newGame' ? 'title' : id;
+    // セーブがない状態で遊ぶ画面に来たらタイトルへ（設定はセーブがなくても開ける）
+    const target: ScreenId = !store.hasSave && !NO_SAVE_SCREENS.includes(id) ? 'title' : id;
     const screen = SCREENS[target];
     current = screen.create(context);
     stage.element.dataset.screen = target;
     stage.element.replaceChildren(current.element);
-    document.title = `${screen.title}｜${APP_INFO.gameName}`;
+    updateDocument();
   };
+
+  /** タブの題名と <html lang> を、いまの画面と言語に合わせる */
+  const updateDocument = (): void => {
+    const screen = SCREENS[(stage.element.dataset.screen as ScreenId | undefined) ?? router.current];
+    document.title = `${t(screen.titleKey)}${t('common.titleSeparator')}${localizedGameName(getLanguage())}`;
+    document.documentElement.lang = getLanguage();
+  };
+  onLanguageChange(updateDocument);
 
   router.subscribe(({ to }) => show(to));
   show(router.current);

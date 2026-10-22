@@ -1,7 +1,8 @@
-# CLAUDE.md — ミストリアモンスターズ バトルカード
+# CLAUDE.md — セイクリッドモンスターズ バトルカード
 
 スマホ縦持ち 2D カードゲーム（モンスターファームバトルカード風。街・ダンジョンは GB版風、バトルは PS版風）。
-旧名「ミルティル」。リポジトリ名は未改名（`mirtill-monsters-battle-card`）。
+正式名称：セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card、短縮表示「セイクリッドBC」）。旧名「ミルティル」「ミストリア」。
+リポジトリ名は `sacred-monsters-battle-card`（旧 `mirtill-monsters-battle-card`。GitHub 上の改名状況は `docs/handoff.md`）。セーブのキー `mistria-battle-card/…` は互換のため変えない。
 
 ## 資料の読み方（時間短縮のため必ず守る）
 
@@ -15,6 +16,8 @@
 | 効果音・本編素材を使う | `docs/audio-credits.md` |
 | 素材を置く | `assets/README.md` |
 | 名称変更 | `docs/rename-migration.md` |
+| 画面の文字・英語 | `docs/i18n.md` |
+| カードデータ・ID の決まり | `docs/card-data-policy.md` |
 | 過去の経緯を確認したい（ふだんは読まない） | `docs/nightbatch-2026-10-22-report.md`・`docs/phase-*-report.md` |
 
 - ソースも全体を読まず、`grep` で該当箇所を探してから読む
@@ -46,4 +49,5 @@
 - 画面追加：`config/screens.ts` → `ui/screens/` → `registry.ts`
 - セーブ変更は `GameStore.update(純粋関数)`。形式を変えたら `SAVE_VERSION` と `MIGRATIONS`
 - 一度きりの処理（購入・景品など）は ID で1回だけ処理する
-- 仮カードは `isPlaceholder: true`・名前「仮」始まり。画面にも「仮」と出す
+- 仮カードは `isPlaceholder: true`・名前「仮」始まり。画面にも「仮」と出す（英語では「Temp」）
+- 画面の文字は直書きせず `t('キー')`（`src/i18n/messages/`）。カード名などは `cardName()` など（`src/i18n/content.ts`）。日英両方を書く
