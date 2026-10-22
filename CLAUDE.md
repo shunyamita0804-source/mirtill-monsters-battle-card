@@ -29,12 +29,15 @@
 
 ## 現在の状態（2026-10-22 時点）
 
+**新しいセッションは `docs/handoff.md`（引き継ぎメモ）を最初に読むこと。**
+
 - 第1段階（開発環境構築）：完了・承認済み
-- 第2段階（スマホ向けゲーム基盤構築）：`main` に push 済み・承認待ち
-- **夜間一括指示（2026-10-22）：実装済み。ユーザーの公開承認により `main` に取り込み済み**（ブランチ `nightbatch/2026-10-22` も残している）
+- 第2段階（スマホ向けゲーム基盤構築）：完了
+- 夜間一括指示（2026-10-22）：実装済み・`main` に取り込み済み（報告：`docs/nightbatch-2026-10-22-report.md`）
   - 最小縦断体験：街 → 家でデッキ確認 → ショップでパック → ダンジョン B1〜B3 ボス → 大会受付 → 対戦 → 報酬
-  - 報告は `docs/nightbatch-2026-10-22-report.md`、設計は `docs/architecture.md`、名称移行は `docs/rename-migration.md`
-  - 次の指示が届くまで新しい作業を始めない
+- その後の修正（どちらも公開済み）：街からダンジョン入口へ歩いて行ける／バトル画面の新配置・先攻後攻のカード選択・手札を配る演出と効果音
+- 公開中：`main`（`60bae3f`）を GitHub Pages で公開
+- **次の指示が届くまで新しい作業を始めない**
 - **仮データ・仮ルール**：カード・ルール値・価格・提供割合・大会・敵編成・マップはすべて仮（`src/data/`）。正式仕様として扱わない
 - 育成ゲーム本編（`mystic-monsters`）の正式仕様は参照していない。素材は 2026-10-22 から許可の範囲で利用（効果音2つ。`docs/audio-credits.md`）
 
@@ -118,7 +121,7 @@ docs/                     開発ドキュメント
 ## GitHub
 
 - リポジトリ：https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （2026-10-22 から Public）
-- ブランチ：`main`（公開する版。夜間一括作業を取り込み済み）、`nightbatch/2026-10-22`（夜間一括作業の作業ブランチ）
+- ブランチ：`main`（公開する版）。作業はブランチで行い、確認後に `main` へマージしてから公開する（手順は `docs/handoff.md`）
 - 公開URL：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ （2026-10-22 公開。更新は Actions の「Deploy to GitHub Pages」を手動実行）
 - 最初のコミット `87de809 Initial commit` は GitHub が自動生成したもの（上書きせず残している）
 
