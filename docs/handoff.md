@@ -10,7 +10,7 @@
 | リポジトリ | https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Public。ユーザー承認済み） |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
-| 次の作業 | **ユーザーの次の指示待ち。** バトルルール改修の1段階目「マナの仕組み」を作業ブランチ `claude/cool-gauss-emyae1` で実装済み（`main` 未マージ・未公開）。次の候補は2段階目「ドロー」（`docs/battle-rules-audit.md` の3章）。承認まで始めない |
+| 次の作業 | **ユーザーの次の指示待ち。** バトルは「PS版ルール＋3点だけ変更（山札60枚・マナ表記・サポートカード）」とユーザーが決定。ルール案 `docs/battle-rules.md` の承認待ち。改修1段階目「マナの仕組み」は作業ブランチ `claude/cool-gauss-emyae1` で実装済み（`main` 未マージ・未公開） |
 
 ## 2. これまでの作業（時系列）
 
@@ -86,6 +86,7 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 | 作業ルール・構成 | `CLAUDE.md` |
 | 設計（画面・ロジック・セーブ） | `docs/architecture.md` |
 | バトルルール監査（PS版との差分・改修順） | `docs/battle-rules-audit.md` |
+| バトルルール案（PS版準拠・承認待ち） | `docs/battle-rules.md` |
 | 夜間作業の報告 | `docs/nightbatch-2026-10-22-report.md` |
 | 効果音の出どころ | `docs/audio-credits.md` |
 | 公開の手順 | `docs/github-pages.md` |
