@@ -1,5 +1,48 @@
 # 設計（2026-10-22 夜間作業後）
 
+## 技術構成
+
+| 項目 | 内容 |
+| --- | --- |
+| 言語 | TypeScript 6（strict、`noUncheckedIndexedAccess`、`exactOptionalPropertyTypes`、`verbatimModuleSyntax`） |
+| ビルド | Vite 7 |
+| テスト | Vitest 4（`tests/**/*.test.ts`、environment: node） |
+| Node.js | **24 以上**（`.nvmrc`）。Node 22 付属の npm 10 では依存解決が内部エラー（`edgesOut`）になる |
+| CI | `.github/workflows/ci.yml`：push/PR で インストール→型チェック→テスト→ビルド→Pages用ビルド。デプロイはしない |
+
+CI 実績での解決バージョン：Node 24.21.0 / TypeScript 6.0.3 / Vite 7.3.7 / Vitest 4.1.12 / @types/node 22.20.5
+
+## ディレクトリ
+
+```
+src/
+  main.ts                 エントリ（CSS 読み込みと startApp）
+  style.css               ベーススタイル（色、#app / .viewport / .stage、safe-area、ズーム抑止）
+  config/                 正式名称・論理解像度（390×844 縦）・画面ID一覧
+  data/                   【仮データ】カード・ルール値・パック/価格・大会・マップ・ダンジョン・欠片
+  core/                   DOM 非依存の基盤（画面の拡大縮小、Router、素材パス）
+  game/                   DOM 非依存のゲームロジック
+    battle/               バトルのルール（engine.ts）と AI（ai.ts）
+    deck/                 デッキ検証・スターター・NPC デッキ
+    economy/              ガチャ（提供割合・抽選・購入の二重処理防止）
+    progress/             大会・ダンジョン・欠片の進行
+    save/                 セーブデータ（版管理・移行・安全な読み込み）と保存先
+    world/                歩行マップの当たり判定・経路探索
+  ui/                     DOM を扱う層
+    app.ts / stage.ts     画面の組み立て・拡大縮小
+    gameStore.ts          セーブの読み書きと画面をまたぐ一時情報（バトル依頼など）
+    sound.ts              効果音（SE_REGISTRY）
+    components/           技カード（V4）・モンスターカード・カード詳細・一覧・ダイアログ
+    screens/              各画面と registry.ts
+    styles/               CSS
+public/                   アイコン（icons/）・manifest・.nojekyll
+assets/                   素材（技カードテンプレートV4、主人公歩行QA素材、効果音 など。assets/README.md）
+tests/                    Vitest（ロジック・データ整合性・進行不能チェック）
+tools/e2e/                Playwright の通し確認スクリプト（npm 依存外・CI 外）
+docs/                     開発ドキュメント
+.claude/                  クラウドセッション開始時の自動準備（Node 24 と依存関係）
+```
+
 ## 層の分け方
 
 | 層 | 場所 | 内容 | DOM |
