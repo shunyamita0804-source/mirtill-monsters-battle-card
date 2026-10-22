@@ -190,9 +190,9 @@
   z-index: 15;
   display: flex;
   justify-content: center;
-  padding: 14px 0;
+  padding: 10px 0;
   transform: translateY(-50%);
-  background: linear-gradient(90deg, rgb(6 10 34 / 0) 0%, rgb(6 10 34 / 0.92) 14%, rgb(10 18 52 / 0.95) 50%, rgb(6 10 34 / 0.92) 86%, rgb(6 10 34 / 0) 100%);
+  background: linear-gradient(90deg, rgb(6 10 30 / 0) 0%, rgb(6 10 30 / 0.78) 18%, rgb(8 12 36 / 0.82) 50%, rgb(6 10 30 / 0.78) 82%, rgb(6 10 30 / 0) 100%);
   pointer-events: none;
 }
 
@@ -201,10 +201,10 @@
 .battle__command-band::after {
   content: '';
   position: absolute;
-  left: 6%;
-  right: 6%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #e4c46a 20%, #f6e3a1 50%, #e4c46a 80%, transparent);
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(201 162 74 / 0.7) 25%, rgb(201 162 74 / 0.7) 75%, transparent);
 }
 
 .battle__command-band::before {
@@ -226,13 +226,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   pointer-events: auto;
 }
 
 .battle__command-list .command-btn {
-  width: 172px;
-  height: 58px;
+  width: 150px;
+  height: 51px;
 }
 
 .battle__command-band.is-enter {

@@ -532,8 +532,10 @@ export const battleScreen: ScreenDefinition = {
             }),
           ),
           (() => {
-            const end = commandButton(pending.responses.length === 0 ? '守備しない' : '守備を終える', () =>
-              dispatch({ type: 'defend', side: 'player', cardUid: null }),
+            const end = commandButton(
+              pending.responses.length === 0 ? '守備しない' : '守備を終える',
+              () => dispatch({ type: 'defend', side: 'player', cardUid: null }),
+              'cancel',
             );
             end.classList.add('battle__defense-end');
             return end;
@@ -661,31 +663,41 @@ export const battleScreen: ScreenDefinition = {
         render();
       };
       const endAttack = (): HTMLButtonElement =>
-        commandButton('攻撃終了', () => {
-          const end = (): void => dispatch({ type: 'endAttack', side: 'player' });
-          // まだ使えるカードがあるときは確かめる（押しまちがい防止）
-          if (anyUsable) confirmCommand(element, 'まだ使えるカードがあります。攻撃を終えてマナ化へ進みますか？', end);
-          else end();
-        });
+        commandButton(
+          '攻撃終了',
+          () => {
+            const end = (): void => dispatch({ type: 'endAttack', side: 'player' });
+            // まだ使えるカードがあるときは確かめる（押しまちがい防止）
+            if (anyUsable) {
+              confirmCommand(element, 'まだ使えるカードがあります。攻撃を終えてマナ化へ進みますか？', { ok: 'マナ化へ進む', cancel: '攻撃を続ける' }, end);
+            } else end();
+          },
+          'cancel',
+        );
       let low = false;
       if (mine && s.phase === 'main') {
         if (targeting) {
-          buttons.push(commandButton('やめる', deselect));
+          buttons.push(commandButton('やめる', deselect, 'cancel'));
           low = true;
         } else if (selected) {
           if (cardUsability(s, 'player', selected.uid).usable) buttons.push(commandButton('使う', () => useCard(selected.uid)));
-          buttons.push(endAttack(), commandButton('やめる', deselect));
+          buttons.push(endAttack(), commandButton('やめる', deselect, 'cancel'));
         } else if (!anyUsable) {
           buttons.push(endAttack());
         }
       } else if (mine && s.phase === 'mana') {
         if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(`マナにする（${manaPicks.size}枚）`, convertPicked));
         buttons.push(
-          commandButton('ターン終了', () => {
-            const end = (): void => dispatch({ type: 'endTurn', side: 'player' });
-            if (manaPicks.size > 0) confirmCommand(element, '選んだカードをまだマナにしていません。このままターンを終えますか？', end);
-            else end();
-          }),
+          commandButton(
+            'ターン終了',
+            () => {
+              const end = (): void => dispatch({ type: 'endTurn', side: 'player' });
+              if (manaPicks.size > 0) {
+                confirmCommand(element, '選んだカードをまだマナにしていません。このままターンを終えますか？', { ok: 'このまま終える', cancel: 'マナ化にもどる' }, end);
+              } else end();
+            },
+            'cancel',
+          ),
         );
       }
       if (buttons.length === 0) {
