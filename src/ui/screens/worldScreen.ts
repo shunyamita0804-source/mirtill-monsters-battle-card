@@ -74,6 +74,10 @@ const STICK_DEAD = 16;
 const WALK_PX = 185;
 /** 歩行のコマ送り（コマ/秒。素材の推奨は約7） */
 const WALK_FPS = 7;
+/** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目で少し体が上がる */
+const WALK_BOB = 0.03;
+/** 施設の看板を上の帯の下に保つ位置（論理px） */
+const SIGN_MIN_BOTTOM = 98;
 /**
  * 人物の歩行素材：1コマ 216×288、足元 (108, 270)。行＝方向（front/back/left/right）、列＝4コマ（シート 864×1152）。
  * 街・部屋では 108×144 単位（設計図どおり）、ダンジョン（仮マップ）では少し小さく描く
@@ -160,6 +164,8 @@ class WorldView {
   static #preloaded = false;
   #stick!: HTMLElement;
   #examineBtn: HTMLElement | null = null;
+  /** 施設の看板（上の帯に隠れないように位置を直す） */
+  #signs: { el: HTMLElement; top: number; maxShift: number; shift: number }[] = [];
   /** しらべるボタンを光らせているマス（同じマスでは計算し直さない） */
   #nearKey = '';
   /** スティック操作中の指（1本だけ） */
@@ -203,11 +209,11 @@ class WorldView {
     return { x: (p.x + 0.5) * c, y: this.#map.art ? (p.y + 0.5) * c : (p.y + 0.9) * c };
   }
 
-  /** 人物の絵の位置と大きさ（足元を合わせる） */
-  #placeFigure(el: HTMLElement, p: Point): void {
+  /** 人物の絵の位置と大きさ（足元を合わせる）。lift は歩くときの弾み（影は地面に残す） */
+  #placeFigure(el: HTMLElement, p: Point, lift = 0): void {
     const k = this.#figureH / (FRAME_H / 2);
     const f = this.#foot(p);
-    el.style.transform = `translate(${f.x - (FOOT_X / 2) * k}px, ${f.y - (FOOT_Y / 2) * k}px)`;
+    el.style.transform = `translate(${f.x - (FOOT_X / 2) * k}px, ${f.y - (FOOT_Y / 2) * k - lift}px)`;
     el.style.zIndex = String(10 + Math.round(f.y));
     const shadow = this.#shadows.get(el);
     if (shadow) shadow.style.transform = `translate(${f.x}px, ${f.y}px)`;
@@ -433,12 +439,17 @@ class WorldView {
     const map = this.#map;
     const cell = this.#cell;
     const save = this.#store.save;
+    this.#signs = [];
     if (map.id === 'town') {
       // 施設の名前（建物の絵の上端）
       for (const sign of TOWN_SIGNS) {
         const goal = sign.label === 'practice' && showsPracticeGoal(save, map.id);
         const el = h('div', { class: `world__sign${goal ? ' is-goal' : ''}`, text: t(`world.building.${sign.label}` as MessageKey) });
         Object.assign(el.style, { left: `${sign.x * this.#scale}px`, top: `${sign.y * this.#scale}px` });
+        const door = map.art?.doors?.[sign.building];
+        const top = sign.y * this.#scale;
+        const maxShift = door ? Math.max(0, door.y * cell - 3 * this.#figureH * 0.5 - top) : 0;
+        this.#signs.push({ el, top, maxShift, shift: 0 });
         this.#mapLayer.append(el);
       }
       return;
@@ -623,7 +634,8 @@ class WorldView {
       }
       this.#playerLook = look;
     }
-    this.#placeFigure(this.#player, p);
+    const step = Math.floor(this.#walkTime * WALK_FPS) % 4;
+    this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * WALK_BOB : 0);
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
     const vw = this.#viewport.clientWidth || 390;
@@ -636,6 +648,14 @@ class WorldView {
     const cx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(f.x - vw / 2, 0), mw - vw);
     const cy = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fy - vh / 2, 0), mh - vh);
     this.#mapLayer.style.transform = `translate(${Math.round(cx)}px, ${Math.round(cy)}px)`;
+    // 施設の看板が上の帯に隠れるときは、建物の上を少し下へずらす（玄関の上までは下げない）
+    for (const sign of this.#signs) {
+      const shift = Math.max(0, Math.min(SIGN_MIN_BOTTOM - (sign.top + cy), sign.maxShift));
+      if (shift !== sign.shift) {
+        sign.shift = shift;
+        sign.el.style.transform = `translate(-50%, calc(-100% + ${shift.toFixed(1)}px))`;
+      }
+    }
     this.#root.dataset.px = String(this.#tile.x);
     this.#root.dataset.py = String(this.#tile.y);
     if (!this.#move) this.#updateNear();

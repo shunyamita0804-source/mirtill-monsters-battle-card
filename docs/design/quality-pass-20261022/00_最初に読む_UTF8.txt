@@ -23,6 +23,7 @@ A（最優先）　01 NPC の歩行の絵　・　03 地面の飾り・植え込
 B　　　　　　05 縦長の部屋の箱　・　02 NPC の会話の絵
 C　　　　　　06 UI の部品　・　07 ダンジョン
 D（任意）　　08 斜め歩き
+※ 2026-10-22 追加：09 歩行の描き直し（横向きの足が動かない・背中の帽子の飾り）と会話の絵の髪 は優先 A
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ■ ChatGPT での進め方（いつもと同じ）
@@ -82,3 +83,6 @@ D（任意）　　08 斜め歩き
 　dungeon_tiles.png　dungeon_props.png　dungeon_enemies.png
 08 斜め歩き（任意）
 　player_male_walk_diag.png　player_female_walk_diag.png　npc_guide_walk_diag.png
+09 歩行の描き直し・会話の絵の髪（優先 A。2026-10-22 追加）
+　player_male_walk_side.png　player_female_walk_side.png　npc_guide_walk_side.png　player_male_walk_back.png
+　talk_guide_01_normal.png 〜 talk_guide_06_happy.png

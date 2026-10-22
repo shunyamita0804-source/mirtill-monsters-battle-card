@@ -38,6 +38,9 @@
   object-fit: contain;
   object-position: bottom center;
   filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.35));
+  /* 元の絵の左右で髪が切れているので、両端をやわらかく消す（まっすぐの切れ目に見せない） */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, rgb(0 0 0 / 0.55) 6%, #000 16%, #000 86%, rgb(0 0 0 / 0.55) 94%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, rgb(0 0 0 / 0.55) 6%, #000 16%, #000 86%, rgb(0 0 0 / 0.55) 94%, transparent 100%);
 }
 /* 絵が無い表情のときだけ「仮」の札 */
 .talk__portrait.is-temp {
