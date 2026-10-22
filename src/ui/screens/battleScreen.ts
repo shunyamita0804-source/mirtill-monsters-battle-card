@@ -22,6 +22,7 @@ import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
 import { openCardDetail } from '../components/cardDetail.ts';
 import { confirmModal, openModal } from '../components/modal.ts';
+import { commandButton, confirmCommand } from '../components/commandButton.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
 import { createPlayCard, createSkillCard } from '../components/skillCard.ts';
 import { button, h } from '../dom.ts';
@@ -90,6 +91,8 @@ export const battleScreen: ScreenDefinition = {
     const manaPicks = new Set<string>();
     /** 最後に出した場面の表示（同じ表示を繰り返さない） */
     let bannerKey = '';
+    /** 前回出したコマンド（同じなら出てくる動きをつけない） */
+    let lastCommandKey = '';
     let targeting: Targeting | null = null;
     let auto = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -361,13 +364,7 @@ export const battleScreen: ScreenDefinition = {
       const logs = s.log.slice(-2).map((l) => h('p', { class: 'battle-text__log', text: l.text }));
       let body: (HTMLElement | null)[];
       if (targeting) {
-        body = [
-          h('p', { class: 'battle-text__prompt', text: targeting.prompt }),
-          button('キャンセル', () => {
-            targeting = null;
-            render();
-          }, 'btn btn--small'),
-        ];
+        body = [h('p', { class: 'battle-text__prompt', text: targeting.prompt })];
       } else if (s.phase === 'defense' && s.pending) {
         const p = s.pending;
         body = [
@@ -412,7 +409,15 @@ export const battleScreen: ScreenDefinition = {
             : h('p', { class: 'battle-text__ng', text: usability.reason ?? '使えません' }),
         ];
       } else {
-        body = [h('p', { class: 'battle-text__hint', text: '手札のカードをタップすると、ここに説明と拡大したカードが出ます。' })];
+        body = [
+          h('p', {
+            class: 'battle-text__hint',
+            text:
+              s.phase === 'main' && s.active === 'player'
+                ? '手札のカードをタップすると、説明とコマンド（使う・攻撃終了）が出ます。'
+                : '手札のカードをタップすると、ここに説明と拡大したカードが出ます。',
+          }),
+        ];
       }
       return h(
         'div',
@@ -526,11 +531,13 @@ export const battleScreen: ScreenDefinition = {
               return b;
             }),
           ),
-          button(
-            pending.responses.length === 0 ? '守備しない' : '守備を終える',
-            () => dispatch({ type: 'defend', side: 'player', cardUid: null }),
-            'btn battle__defense-end',
-          ),
+          (() => {
+            const end = commandButton(pending.responses.length === 0 ? '守備しない' : '守備を終える', () =>
+              dispatch({ type: 'defend', side: 'player', cardUid: null }),
+            );
+            end.classList.add('battle__defense-end');
+            return end;
+          })(),
         ),
       );
     };
@@ -540,10 +547,10 @@ export const battleScreen: ScreenDefinition = {
       const w = s.winner;
       const title = w === 'player' ? '勝利！' : w === 'opponent' ? '敗北…' : '引き分け';
       const reason = s.endReason === 'deckOut' ? `${w === 'player' ? '相手' : 'あなた'}の山札切れ` : '';
-      const go = button('つづける', () => {
+      const go = commandButton('つづける', () => {
         go.disabled = true;
         finish(s.winner);
-      }, 'btn btn--primary btn--large');
+      });
       return h(
         'div',
         { class: `battle__result battle__result--${w ?? 'draw'}` },
@@ -636,6 +643,67 @@ export const battleScreen: ScreenDefinition = {
       if (element.querySelector('.battle__monster.is-hit')) sound.play('damageHit');
     };
 
+    /**
+     * コマンドの帯。必要なときだけ、画面中央に帯を敷いてコマンドを縦に並べる（下に常に並べない）。
+     * - 攻撃：カードを選ぶと「使う（使えるときだけ）／攻撃終了／やめる」。使えるカードが1枚もなければ「攻撃終了」だけ出す
+     * - 対象選択中：モンスターを隠さないよう、低い位置の帯に「やめる」
+     * - マナ化：「マナにする（N枚）」（選んだとき）／「ターン終了」
+     * - 相手の番・配っている間・オート中は出さない
+     */
+    const commandBand = (s: BattleState, blocked: boolean): HTMLElement | null => {
+      const buttons: HTMLButtonElement[] = [];
+      const mine = s.active === 'player' && !auto && !blocked;
+      const selected = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
+      const anyUsable = s.sides.player.hand.some((c) => cardUsability(s, 'player', c.uid).usable);
+      const deselect = (): void => {
+        selectedUid = null;
+        targeting = null;
+        render();
+      };
+      const endAttack = (): HTMLButtonElement =>
+        commandButton('攻撃終了', () => {
+          const end = (): void => dispatch({ type: 'endAttack', side: 'player' });
+          // まだ使えるカードがあるときは確かめる（押しまちがい防止）
+          if (anyUsable) confirmCommand(element, 'まだ使えるカードがあります。攻撃を終えてマナ化へ進みますか？', end);
+          else end();
+        });
+      let low = false;
+      if (mine && s.phase === 'main') {
+        if (targeting) {
+          buttons.push(commandButton('やめる', deselect));
+          low = true;
+        } else if (selected) {
+          if (cardUsability(s, 'player', selected.uid).usable) buttons.push(commandButton('使う', () => useCard(selected.uid)));
+          buttons.push(endAttack(), commandButton('やめる', deselect));
+        } else if (!anyUsable) {
+          buttons.push(endAttack());
+        }
+      } else if (mine && s.phase === 'mana') {
+        if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(`マナにする（${manaPicks.size}枚）`, convertPicked));
+        buttons.push(
+          commandButton('ターン終了', () => {
+            const end = (): void => dispatch({ type: 'endTurn', side: 'player' });
+            if (manaPicks.size > 0) confirmCommand(element, '選んだカードをまだマナにしていません。このままターンを終えますか？', end);
+            else end();
+          }),
+        );
+      }
+      if (buttons.length === 0) {
+        lastCommandKey = '';
+        return null;
+      }
+      const key = buttons.map((b) => b.getAttribute('aria-label')).join('|');
+      const band = h(
+        'div',
+        { class: `battle__command-band${low ? ' is-low' : ''}`, attrs: { role: 'group', 'aria-label': '操作' } },
+        h('div', { class: 'battle__command-list' }, ...buttons),
+      );
+      // 中身が変わったときだけ帯が開く動きをつける
+      if (key !== lastCommandKey) band.classList.add('is-enter');
+      lastCommandKey = key;
+      return band;
+    };
+
     const render = (): void => {
       element.dataset.stage = state ? 'play' : 'order';
       if (!state) {
@@ -649,24 +717,7 @@ export const battleScreen: ScreenDefinition = {
       const handScroll = element.querySelector('.battle__hand')?.scrollLeft ?? 0;
       const hand = handRow(s);
       const blocked = dealing();
-      const myTurn = s.phase === 'main' && s.active === 'player' && !auto && !blocked;
-      const myMana = s.phase === 'mana' && s.active === 'player' && !auto && !blocked;
-      const selected = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
-
-      // 操作ボタンは場面ごとに2つだけ（スマホで押しやすく）：攻撃中＝使う／攻撃終了、マナ化中＝マナにする／ターン終了
-      let primary: HTMLButtonElement;
-      let secondary: HTMLButtonElement;
-      if (s.phase === 'mana' && s.active === 'player') {
-        primary = button(manaPicks.size > 0 ? `マナにする（${manaPicks.size}枚）` : 'マナにする', convertPicked, 'btn btn--primary');
-        primary.disabled = !myMana || manaPicks.size === 0 || !canConvertToMana(s, 'player');
-        secondary = button('ターン終了', () => dispatch({ type: 'endTurn', side: 'player' }), 'btn');
-        secondary.disabled = !myMana;
-      } else {
-        primary = button('使う', () => selected && useCard(selected.uid), 'btn btn--primary');
-        primary.disabled = !myTurn || !selected || !cardUsability(s, 'player', selected.uid).usable || targeting !== null;
-        secondary = button('攻撃終了', () => dispatch({ type: 'endAttack', side: 'player' }), 'btn');
-        secondary.disabled = !myTurn;
-      }
+      const commands = commandBand(s, blocked);
 
       const phaseText = s.phase === 'mana' ? '・マナ化' : s.phase === 'ended' ? '' : s.phase === 'defense' ? '・守備' : '・攻撃';
       const turnText =
@@ -684,9 +735,8 @@ export const battleScreen: ScreenDefinition = {
         monsterRow(s, 'player'),
         detailPanel(s),
         hand,
-        h('footer', { class: 'battle__footer' }, primary, secondary),
       );
-      const overlays = [defenseOverlay(s), resultOverlay(s), phaseBanner(s)].filter((o): o is HTMLElement => o !== null);
+      const overlays = [commands, defenseOverlay(s), resultOverlay(s), phaseBanner(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);
       const handEl = element.querySelector('.battle__hand');
       if (handEl) handEl.scrollLeft = handScroll;

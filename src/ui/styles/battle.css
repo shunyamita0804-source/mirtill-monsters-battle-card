@@ -181,19 +181,94 @@
   text-overflow: ellipsis;
 }
 
-.battle__footer {
-  flex: none;
+/* コマンドの帯：必要なときだけ画面中央に帯を敷き、コマンドを縦に並べる */
+.battle__command-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  z-index: 15;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  height: 56px;
-  padding: 0 10px;
-  background: var(--color-panel);
+  justify-content: center;
+  padding: 14px 0;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgb(6 10 34 / 0) 0%, rgb(6 10 34 / 0.92) 14%, rgb(10 18 52 / 0.95) 50%, rgb(6 10 34 / 0.92) 86%, rgb(6 10 34 / 0) 100%);
+  pointer-events: none;
 }
 
-.battle__footer .btn--primary {
-  min-width: 140px;
+/* 帯の上下の金の線 */
+.battle__command-band::before,
+.battle__command-band::after {
+  content: '';
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #e4c46a 20%, #f6e3a1 50%, #e4c46a 80%, transparent);
+}
+
+.battle__command-band::before {
+  top: 0;
+}
+
+.battle__command-band::after {
+  bottom: 0;
+}
+
+/* 対象を選んでいる間は、モンスターを隠さないよう低い位置に出す */
+.battle__command-band.is-low {
+  top: auto;
+  bottom: 150px;
+  transform: none;
+}
+
+.battle__command-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.battle__command-list .command-btn {
+  width: 172px;
+  height: 58px;
+}
+
+.battle__command-band.is-enter {
+  animation: band-open 200ms ease-out both;
+}
+
+.battle__command-band.is-enter .command-btn {
+  animation: command-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.battle__command-band.is-enter .command-btn:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.battle__command-band.is-enter .command-btn:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+@keyframes band-open {
+  from {
+    clip-path: inset(50% 0 50% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes command-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* 拡大表示 */
@@ -519,10 +594,7 @@
   font-size: 12px;
 }
 
-.battle__footer .btn {
-  flex: 1;
-  padding: 0 8px;
-}
+
 
 /* 手札を1枚ずつ配る */
 .battle__hand-card.is-dealt {
