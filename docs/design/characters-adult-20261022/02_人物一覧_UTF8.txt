@@ -1,0 +1,65 @@
+【人物一覧】12人（2026-10-22。年齢はユーザー決定：主人公・案内役は20代前半、ほかは20代〜50代）
+
+・プロンプトの【人物】にそのまま入れる段落（日本語／English）
+・服の色は、その人がいる建物の屋根の色に合わせてある（街で見分けやすいように）
+・保存名の ○○ は下の ID。手順1＝○○_design.png、手順2＝○○_stand.png、手順3＝○○_walk_front.png／○○_walk_back.png／○○_walk_left.png
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 主人公・案内役（20代前半）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ID：player_male　主人公（男性）※手順1は不要（22歳版の全身の立ち絵を添付）
+22歳の男性。黒い短めの髪（少し無造作）。青い帽子（正面に小さな金の紋章）。青い袖なしの長いベストに金の縁取り、白いシャツは袖をまくる。
+茶色の革のたすき掛けのベルト、腰に茶色のかばん。濃い灰色のズボン、茶色のロングブーツ、指なしの革手袋。明るく頼れる雰囲気
+EN: A 22-year-old man. Short, slightly messy black hair. Blue cap with a small gold emblem on the front. Long sleeveless blue vest with gold trim over a white shirt with rolled-up sleeves. Brown leather cross-body straps, brown satchel at the hip. Dark gray trousers, tall brown boots, fingerless leather gloves. Bright and dependable.
+
+ID：player_female　主人公（女性）※手順1は不要（22歳版の全身の立ち絵を添付）
+22歳の女性。明るい茶色の長い髪（ゆるいウェーブ）。赤い帽子（リボン付き）。白いブラウス（ふくらんだ短い袖）に、金の刺しゅうの赤いベスト、茶色の革ベルト。
+白いフリルの上に赤と金のスカート、黒いタイツ、茶色の編み上げのロングブーツ、腰に小さな革のかばん、指なしの革手袋。明るく前向きな雰囲気
+EN: A 22-year-old woman. Long, softly wavy light-brown hair. Red cap with a ribbon. White blouse with short puffed sleeves, red vest with gold embroidery, brown leather belts. Red-and-gold skirt over white frills, black tights, tall brown lace-up boots, small leather pouch at the hip, fingerless leather gloves. Cheerful and positive.
+
+ID：npc_guide　案内役（となりの家の女性。名前は仮「隣家の女性」）
+24歳くらいの女性。金色の長いウェーブの髪、頭に編み込み、緑のリボン。緑の目。白いフリルのブラウスに緑の宝石のブローチ、金の刺しゅうの緑のケープ。
+白いスカート、短い茶色のブーツ。手に茶色の本を1冊。やさしく面倒見のよいお姉さん。添付の会話の絵（neighbor_guide_talk_normal）と同じ顔・髪型・服
+EN: A woman around 24. Long wavy golden hair with a braided crown and a green ribbon. Green eyes. White frilled blouse with an emerald brooch, green cape with gold embroidery. White skirt, short brown boots. Holds one brown book. Kind, caring older-sister type. Same face, hair and outfit as the attached conversation portrait.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 店・施設の人
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ID：npc_clerk　カードショップの店員
+20代後半の女性。短めの茶色の髪。白いブラウスにオレンジのエプロン。胸にカードの形の小さなバッジ（文字なし）。親しみやすい笑顔
+EN: A woman in her late 20s. Short brown hair. White blouse with an orange apron. Small card-shaped badge on the chest (no text). Friendly smile.
+
+ID：npc_researcher　カード研究所の研究員
+30代の男性。落ち着いた雰囲気。丸めがね。青緑のローブに金の縁取り。手に分厚い本
+EN: A calm man in his 30s. Round glasses. Teal robe with gold trim. Holds a thick book.
+
+ID：npc_receptionist　大会会場の受付
+20代の女性。紺と金の制服（ジャケットとスカート）。帽子に星とカードの紋章（文字なし）。きちんとした笑顔
+EN: A woman in her 20s. Navy-and-gold uniform (jacket and skirt). Cap with a star-and-card emblem (no text). Neat, polite smile.
+
+ID：npc_teacher　カード練習場の先生
+50代の男性。やさしそうな顔。白髪まじりの短い髪と、短く整えた灰色のひげ。赤いベストに白いシャツ。手に指し棒
+EN: A kind-looking man in his 50s. Short graying hair and a short, neat gray beard. Red vest over a white shirt. Holds a pointer stick.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 住人（民家A〜E）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ID：npc_resident_a　住人A
+50代の女性。白髪まじりの髪をまとめる。茶色のショール。手に花かご。穏やかな雰囲気
+EN: A woman in her 50s. Graying hair tied up. Brown shawl. Holds a flower basket. Gentle.
+
+ID：npc_resident_b　住人B
+20代前半の男性。カードが大好きな若者。短い髪。青いパーカー風の上着。手にカードを1枚
+EN: A man in his early 20s who loves card games. Short hair. Blue hooded jacket. Holds one card.
+
+ID：npc_resident_c　住人C
+30代の男性。大工。がっしりした体。緑のシャツに作業用の前かけ。腰に道具袋
+EN: A sturdy man in his 30s, a carpenter. Green shirt with a work apron. Tool pouch at the waist.
+
+ID：npc_resident_d　住人D
+20代の女性。赤いワンピース。長めの黒髪をひとつに結ぶ
+EN: A woman in her 20s. Red dress. Longish black hair in a ponytail.
+
+ID：npc_resident_e　住人E
+50代の男性。紺のベストに白いシャツ。口ひげ。手に新聞
+EN: A man in his 50s. Navy vest over a white shirt. Mustache. Holds a newspaper.

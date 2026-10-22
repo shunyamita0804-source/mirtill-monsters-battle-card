@@ -1,0 +1,108 @@
+【プロンプト】人物の設定画・ゲーム用の立ち姿・歩きの絵（2026-10-22）
+
+使い方：
+・ChatGPT などの画像を作るAIに、▼〜▲ の間をそのまま貼り付ける。【人物】の所に 02_人物一覧 の段落を入れる
+・日本語でうまくいかないときは、English version を使う（人物の段落も英語版を使う）
+・1人ごとに新しい会話で始め、同じ人の手順1→2→3 は同じ会話の中で続けると、ぶれにくい
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（手順1〜3 の最初に毎回付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の人物の絵を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本と同じ。筆で塗り重ねた手描きの質感（色のむら、ハイライト、影のグラデーション、細かい描き込み）。輪郭は濃い茶色系の線。ベクター風・フラット・3DCG風は禁止。
+【年齢】人物は大人（年齢は【人物】のとおり）。子どもに見える顔・体型・服にしない。
+【禁止】文字・数字・ロゴ・透かし・サイン。実在の作品のキャラクターや紋章に似せること。地面・影・背景・枠・ほかの人物。
+【形式】背景は透明（できなければマゼンタ一色 #FF00FF）。PNG。
+▲ここまで
+
+▼English version
+Draw a character for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Match the attached style sample: hand-painted look with layered brush strokes, color variation, highlights, soft shading and fine detail; dark-brown outlines. NO flat vector art, NO 3D render look.
+[Age] The character is an ADULT (age as written in [Character]). Do NOT make the face, body or clothes look like a child.
+[Forbidden] Any text, numbers, logos, watermarks, signatures. Resemblance to existing IP characters or emblems. Ground, shadows, background, frames, other people.
+[Format] Transparent background (if impossible, solid magenta #FF00FF). PNG.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 手順1　設定画（全身・大人の体型）　縦長 1024×1536
+　※主人公（男性・女性）は不要（22歳版の全身の立ち絵を設定画として使う）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png
+▼ここからコピー（共通ルールのあとに続ける）
+この人物の設定画を1枚描いてください。縦長 1024×1536。
+・正面を向いて立つ全身。頭から靴の先まで全部入れる（どこも切れない）。手足は体の横の自然な位置
+・大人の体型（7頭身くらい）。顔・髪型・服・持ち物の色と形がはっきりわかるように
+・持ち物は体の前か横に1つまで。左右で大きく違う飾りは控えめに（あとで左右反転して使うため）
+【人物】（02_人物一覧 の段落を入れる）
+▲ここまで
+
+▼English version
+Draw ONE character design sheet of this person. Portrait 1024x1536.
+- Full body, standing, facing front. Include everything from head to the tips of the shoes (nothing cropped). Arms relaxed at the sides.
+- Adult proportions (about 7 heads tall). Make the face, hairstyle, clothes and items clearly readable.
+- At most one hand-held item. Keep left/right asymmetric decorations small (the sprite will be mirrored later).
+[Character] (paste the English paragraph from 02)
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 手順2　ゲーム用の正面の立ち姿（3.5頭身）　正方形 1024×1024
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、手順1の設定画（主人公は22歳版の全身の立ち絵）、T1_正面の立ち姿の枠
+▼ここからコピー（共通ルールのあとに続ける）
+添付の設定画の人物を、ゲームの街を歩く小さなキャラクター用に描き直してください。正方形 1024×1024。
+・正面を向いて、まっすぐ立つ。斜め上から少し見下ろす視点
+・3.5頭身のミニキャラ。ただし大人に見えるように：顔は小さめ・あごはすっきり、目は小さめで落ち着いた形、首と脚は少し長め、肩幅は少し広め
+・添付の枠に合わせる：頭の上・あご・股・足元の線の高さ、体の中心は点線。枠の線と文字は描かない
+・顔・髪型・服・持ち物・色は設定画とまったく同じ。小さくしても見分けられるように、細かすぎる飾りは省いてよい
+【人物】（02_人物一覧 の段落を入れる）
+▲ここまで
+
+▼English version
+Redraw the character from the attached design sheet as a small sprite for walking around the game town. Square 1024x1024.
+- Standing straight, facing front. Seen slightly from above.
+- Chibi of about 3.5 heads tall, but it must look like an ADULT: small face with a clean jawline, smaller calm eyes, slightly longer neck and legs, slightly broader shoulders.
+- Follow the attached guide frame: top of head, chin, crotch and feet on the drawn lines; body centered on the dotted line. Do NOT draw the guide lines or text.
+- Face, hair, clothes, items and colors exactly the same as the design sheet. Tiny decorations may be simplified so it reads at small size.
+[Character] (paste the English paragraph from 02)
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 手順3　歩きの絵（1枚に3ポーズ）　横長 1536×1024　×3枚（正面・背中・左向き）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、手順2の立ち姿（いちばん大事）、T2_歩きの3ポーズの枠
+▼ここからコピー（共通ルールのあとに続ける。【向き】だけ3回変えて頼む）
+添付の立ち姿の人物が歩く絵を描いてください。横長 1536×1024。
+・添付の枠のとおり、横に3つ並べる。左から「1 立つ」「2 右足を前に出す」「3 左足を前に出す」
+・3つとも、添付の立ち姿と同じ人物・同じ頭身・同じ大きさ。頭の上と足元を枠の線にそろえる。体の中心は点線
+・2と3は足の形をはっきり変える（前に出した足と後ろの足が見分けられるように）。腕は足と反対に軽く振る
+・枠の線と文字は描かない。3人が重ならない
+【向き】正面（こちらへ歩いてくる）
+【人物】（02_人物一覧 の段落を入れる）
+▲ここまで
+
+【向き】の差し替え：
+・正面（こちらへ歩いてくる）　　　→ 保存名 ○○_walk_front.png
+・背中（奥へ歩いていく。顔は見えない）→ 保存名 ○○_walk_back.png
+・左向き（画面の左へ歩いていく。体の左側が見える横向き）→ 保存名 ○○_walk_left.png
+
+▼English version
+Draw this character (the attached standing sprite) walking. Landscape 1536x1024.
+- Three poses side by side, as in the attached guide frame. From left: "1 standing", "2 right foot forward", "3 left foot forward".
+- All three are the same character with the same proportions and size as the attached standing sprite. Top of head and feet on the guide lines; body centered on the dotted line.
+- Poses 2 and 3 must clearly show different leg positions (front foot and back foot easy to tell apart). Arms swing lightly opposite to the legs.
+- Do NOT draw the guide lines or text. The three figures must not overlap.
+[Direction] Front view, walking toward the viewer
+[Character] (paste the English paragraph from 02)
+▲
+[Direction] options: "Front view, walking toward the viewer" / "Back view, walking away (face not visible)" / "Side view facing LEFT, walking to the left of the screen"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ うまくいかないとき（続けて送る一言）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・子どもっぽい →「もっと大人に。顔を小さく、目を小さく落ち着いた形に、脚を長く」
+・3人の大きさがばらばら →「3人とも頭の上と足元を枠の線にそろえて、同じ大きさに」
+・2と3の足が同じ →「2は右足を大きく前、3は左足を大きく前に。足の形をはっきり変えて」
+・人物が変わった →「添付の立ち姿とまったく同じ顔・髪型・服・色に」
+・線や文字が描かれた →「枠の線と文字は消して、人物だけに」
+・背景がついた →「背景を透明に（できなければマゼンタ一色 #FF00FF）」

@@ -22,8 +22,8 @@ export const SCREENS = {
   // 主人公の選択
   'newGame.title': { ja: '主人公の選択', en: 'Choose Your Hero' },
   'newGame.heading': { ja: '主人公を選んでください', en: 'Choose your hero' },
-  'newGame.male': { ja: '男の子', en: 'Boy' },
-  'newGame.female': { ja: '女の子', en: 'Girl' },
+  'newGame.male': { ja: '男性', en: 'Man' },
+  'newGame.female': { ja: '女性', en: 'Woman' },
   'newGame.maleNote': { ja: '黒髪・青い帽子と服', en: 'Black hair, blue cap and clothes' },
   'newGame.femaleNote': { ja: '赤い帽子と服', en: 'Red cap and clothes' },
   'newGame.back': { ja: 'タイトルへ戻る', en: 'Back to Title' },
