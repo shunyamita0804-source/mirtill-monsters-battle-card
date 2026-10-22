@@ -1,0 +1,54 @@
+【04】UI の部品（優先 C）　5枚
+
+■ 目的
+上の帯・場所の名前・所持金・看板・ボタンが、いまはプログラムで作った仮の見た目。ゲーム専用の絵にして統一感を出す。
+いまのコマンドボタンと会話の枠（添付）の金の質感に合わせる。中に文字を入れない（文字はゲームが重ねる）。
+添付：style_master.png、btn_command_blank.png、dialogue_window_blank.png
+
+【U1】場所の名前の札　保存名：ui_hud_plate.png
+▼ここからコピー
+ゲーム画面の左上に出す「場所の名前の札」の無地の絵を描いてください。横長 1536×1024 の中央に、横長の札を1つ（横:縦＝5:1くらい）。
+・紺色の地に金の細い縁取り、左端に小さな宝石の飾り。中は無地。添付のボタン・会話の枠と同じ金の質感
+▲ここまで
+▼English
+A blank location-name plate for the top-left of the game screen. One horizontal plate (about 5:1) centered on a 1536x1024 canvas.
+Navy base with a thin gold border and a small gem ornament on the left end; the inside is blank (text is added by the game). Same gold finish as the attached button and dialogue window. Transparent background.
+▲
+
+【U2】看板（建物の名前）　保存名：ui_sign_wood.png
+▼ここからコピー
+建物の名前を書く木の看板の無地の絵を描いてください。横長 1536×1024 の中央に1つ。
+・横長の木の板に、金具と小さな飾り。上の2本の鎖で吊るす形。板の中は無地（文字なし）
+▲ここまで
+▼English
+A blank wooden hanging sign for building names, centered on 1536x1024. A horizontal wooden board with metal fittings and small ornaments, hanging from two chains. The board face is blank (no text). Transparent background.
+▲
+
+【U3】金貨　保存名：ui_coin.png
+▼ここからコピー
+所持金の横に出す金貨のアイコンを描いてください。正方形 1024×1024 の中央に大きく1つ。
+・少し斜めから見た金貨。表にカードと星の紋章（文字なし）。光沢と縁のきざみ
+▲ここまで
+▼English
+A gold coin icon, large and centered on 1024x1024, seen at a slight angle. A card-and-star emblem on its face (no text), shiny highlights and a reeded edge. Transparent background.
+▲
+
+【U4】アイコン一式　保存名：ui_icon_set.png
+▼ここからコピー
+ゲームで使う小さなアイコンを、正方形 1024×1024 に3列×3行で9個描いてください。文字なし。
+・虫めがね（しらべる）、巻物（メニュー）、下向きの矢印の付いた扉（外へ）、吹き出し（話す）、カードの束（デッキ）、地図、本（図鑑）、歯車（設定）、光る結晶のかけら
+・すべて同じ太さの輪郭、金と紺を基調。小さく表示しても形が分かること
+▲ここまで
+▼English
+Nine small UI icons in a 3x3 grid on 1024x1024, no text: magnifying glass (inspect), scroll (menu), door with a down arrow (exit), speech bubble (talk), stack of cards (deck), map, book (card catalog), gear (settings), glowing crystal shard.
+Consistent outline weight, gold and navy palette, readable at small sizes. Transparent background.
+▲
+
+【U5】丸ボタン　保存名：ui_button_round.png
+▼ここからコピー
+画面右下に置く丸いボタンの無地の絵を描いてください。正方形 1024×1024 の中央に1つ。
+・紺色のガラスのような丸に、金の縁取り。中は無地（アイコンはゲームが重ねる）
+▲ここまで
+▼English
+A blank round button for the lower-right of the screen, centered on 1024x1024: a navy glass-like disc with a gold rim, blank inside (the game overlays an icon). Transparent background.
+▲

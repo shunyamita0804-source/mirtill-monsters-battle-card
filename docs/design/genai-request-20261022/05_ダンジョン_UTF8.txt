@@ -1,0 +1,40 @@
+【05】ダンジョン（優先 C）　3枚
+
+■ 目的
+ダンジョン（街の南の草原の先・3階まで）が、いまは色の四角だけの仮マップ。正式な絵にする。
+世界観：聖獣（モンスター）を直接戦わせず、カードで対戦する世界。ダンジョンは「古い遺跡の地下」。洞窟・海・船・骨・血は描かない。
+添付：style_master.png、town_now.jpg、player_male_walk.png（大きさの基準）
+
+【F1】床と壁　保存名：dungeon_tiles.png
+▼ここからコピー
+古い石の遺跡の地下の、床と壁の部品を、正方形 1024×1024 に4列×4行で16個描いてください。真上に近い斜め上からの視点。
+・床（つなげて敷ける正方形）2種、ひびの入った床、苔の床、壁の上面、壁の正面（つなげられる）2種、壁の角4種、下り階段、上り階段（出口）、たいまつの付いた壁
+・落ち着いた青みの灰色の石と、たいまつのあたたかい光
+▲ここまで
+▼English
+Floor and wall pieces for an ancient underground stone ruin, 4x4 grid (16 pieces) on 1024x1024, near top-down three-quarter view:
+2 tileable square floors, cracked floor, mossy floor, wall top, 2 tileable wall fronts, 4 wall corners, stairs down, stairs up (exit), wall with a torch.
+Calm bluish-grey stone with warm torchlight. No bones, no blood, no caves, no sea.
+▲
+
+【F2】小物　保存名：dungeon_props.png
+▼ここからコピー
+遺跡の地下に置く小物を、正方形 1024×1024 に3列×3行で9個描いてください。
+・宝箱（閉じた・開いた）、壊れた柱、像のない石の台座、つぼ、木箱、光る結晶、石の祭壇、古い本棚
+・骨・血など怖い物は描かない
+▲ここまで
+▼English
+Nine props for an underground ruin, 3x3 grid on 1024x1024: treasure chest (closed), treasure chest (open), broken pillar, empty stone pedestal (no statue), pot, wooden crate, glowing crystal, stone altar, old bookshelf. No bones or blood. Transparent background.
+▲
+
+【F3】敵（カードバトルの相手）　保存名：dungeon_enemies.png
+▼ここからコピー
+ダンジョンでカードバトルを挑んでくる相手を、正方形 1024×1024 に2列×2行で4人描いてください。
+・主人公（添付）と同じ画風・頭身・大きさ。正面を向いて立つ1コマずつ
+・フードをかぶった怪しいカード使い（2種・色違い）、遺跡の番人の騎士、ボス：仮面のカード使い（紫と金のマント）
+・手にカードの束。文字なし
+▲ここまで
+▼English
+Four card-battle opponents met in the dungeon, 2x2 grid on 1024x1024, same art style, head-to-body ratio and size as the attached protagonist, each standing facing front:
+two hooded mysterious card users (different colors), a ruin-guardian knight, and the boss: a masked card user with a purple-and-gold cloak. Each holds a deck of cards. No text. Transparent background.
+▲

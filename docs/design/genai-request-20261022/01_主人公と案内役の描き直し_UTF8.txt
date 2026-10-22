@@ -1,0 +1,65 @@
+【01】主人公・案内役の描き直し（優先 A）
+
+■ 問題（試遊で見えたこと）
+・横向きの歩き：4コマとも「足を前後に開いた同じ形」で、足が動いていないように見える
+・男の子の背中の歩き：帽子の正面の金の飾りが一部のコマにだけ見えて、ちらつく
+・案内役の会話の絵：長い髪が画像の左右の端で切れている
+（いまはゲーム側で応急処置をしているが、描き直しが必要）
+
+■ 共通
+・人物・顔・髪型・服・持ち物・頭身・大きさは、添付のいまの絵とまったく同じ。変えるのは「足の動き」「見えてはいけない飾り」「髪の収まり」だけ
+・背景透明。影・地面・文字は描かない
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【A1】横向きの歩き（3人ぶん。1人1枚）
+保存名：player_male_walk_side.png（男の子）・player_female_walk_side.png（女の子）・npc_guide_walk_side.png（案内役）
+添付：その人のいまの歩行の絵（player_male_walk.png など）
+▼ここからコピー
+添付の歩行の絵とまったく同じ人物・画風・大きさで、「左向きに歩く」4コマを描き直してください。横長 1536×1024 に、横に4コマを等間隔で並べる。
+4コマは歩きの基本の4つの形にする（いまの絵は4コマとも足を開いた同じ形なので、足が動いて見えない）：
+　1コマ目：前の足のかかとが地面に着く（足を大きく前後に開く）
+　2コマ目：体が少し沈み、後ろの足のつま先が地面から離れる
+　3コマ目：足が交差する（浮いた足が体の下を通り、両足がほぼ重なる）。体はいちばん高い
+　4コマ目：浮いた足が前へ出はじめる
+・腕は足と反対に前後に振る
+・すべてのコマで、体の大きさ・足元の高さをそろえる（3コマ目だけ頭が少し高い）
+・髪・服・持ち物（かばん）は、いまの絵とまったく同じ
+▲ここまで
+▼English
+Using exactly the same character, art style and size as the attached walk sheet, redraw the 4-frame "walking left" cycle. Landscape 1536x1024, 4 frames evenly spaced in one row.
+The 4 frames must be the classic walk key poses (currently all 4 frames show the same wide stride, so the legs look frozen):
+ 1: contact - front heel touches the ground, legs wide apart
+ 2: down - body slightly lower, back toe leaves the ground
+ 3: passing - the lifted leg passes under the body, legs almost overlap; body at its highest
+ 4: up - the lifted leg starts moving forward
+Arms swing opposite to the legs. Same body size and foot baseline in every frame (head slightly higher only in frame 3). Hair, outfit and bag exactly as in the attached sheet.
+Transparent background, no shadow, no ground, no text.
+▲
+※ 右向きは Claude が左右反転して作る。かばんの位置が逆になって困る場合は、同じ依頼文の「左」を「右」にして別に描いてもらう
+
+【A2】男の子の背中の歩き　保存名：player_male_walk_back.png
+▼ここからコピー
+添付の歩行の絵とまったく同じ人物・画風・大きさで、「奥へ歩く（背中）」4コマを描き直してください。横長 1536×1024 に、横に4コマを等間隔で並べる。
+・帽子の正面の金の飾りは背中からは見えないので、4コマとも描かない（どのコマも同じ見え方にする）
+・足は「右足を出す→そろう→左足を出す→そろう」。腕も足と反対に振る
+・すべてのコマで体の大きさ・足元の高さをそろえる
+▲ここまで
+▼English
+Same character, style and size as the attached sheet. Redraw the 4-frame "walking away (back view)" cycle, landscape 1536x1024, 4 frames in one row.
+The gold badge on the FRONT of the cap must NOT be visible from behind in any frame (all frames consistent).
+Legs: right foot forward -> together -> left foot forward -> together; arms swing opposite. Same size and foot baseline in all frames. Transparent background, no shadow, no text.
+▲
+
+【A3】案内役の会話の絵（6表情）　保存名：talk_guide_01_normal.png 〜 talk_guide_06_happy.png
+添付：neighbor_guide_talk_01〜06.png
+▼ここからコピー
+添付の会話の絵（6表情）と同じ人物・同じ表情・同じ構図（胸から上）で、髪の毛が画像の左右の端で切れないように描き直してください。縦長 1024×1536。
+・人物を今より少し小さくして、長い髪の先まで全部が画像の中に入るようにする（左右と上に余白を少し）
+・6表情（通常・笑顔・説明・驚き・困り・喜び）とも、位置・大きさ・髪・服・手・本は完全に同じで、表情だけ変える
+・手描きの塗りの質感は添付と同じ
+▲ここまで
+▼English
+Redraw the attached 6-expression bust-up portraits (same character, same expressions, same chest-up composition) so that her long hair is NOT cut off at the left/right image edges. Portrait 1024x1536.
+Make the figure slightly smaller so the whole hair fits inside the canvas with a small margin on the left, right and top.
+All 6 expressions (normal, smile, explaining, surprised, worried, happy) must have identical position, size, hair, outfit, hands and book; only the face changes. Same hand-painted rendering as the attached images. Transparent background, no text.
+▲

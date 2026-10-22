@@ -1,0 +1,70 @@
+【02】街の環境素材の描き直し（優先 A）　5枚
+
+■ なぜ描き直すか
+前回の岩・噴水広場の輪・会場前の飾り石・縁石は、図形を平らに塗った絵で、手描きの街から浮いてしまい使えなかった（参考画像「不採用の例」）。
+植え込みは使ったが、色が暗く黒いかたまりに見える所がある。
+添付：style_master.png、town_now.jpg、tex_stone.png、town_fountain.png、不採用の例
+
+【E1】岩　保存名：props_rock_v3.png
+▼ここからコピー
+草地に置く岩を、正方形 1024×1024 に2列×2行で4個描いてください。斜め上から見下ろす視点。
+・大きな岩、小さな岩の集まり、苔の付いた岩、平たい岩
+・手描きの塗り：ごつごつした面の明暗、苔の緑、ひび、根元に草が少しかかる。図形を平らに塗った岩（ローポリ風）は禁止
+・大きさの目安：大きな岩でも人の腰くらい
+▲ここまで
+▼English
+Four rocks for a grassy town, 2x2 grid on a 1024x1024 canvas, three-quarter top-down view: a large boulder, a cluster of small rocks, a mossy rock, a flat rock.
+Hand-painted rendering: rough faces with clear light and dark planes, green moss, cracks, a few grass blades at the base. NOT low-poly, NOT flat vector. Transparent background.
+▲
+
+【E2】噴水広場の石の輪　保存名：plaza_ring_v2.png
+▼ここからコピー
+円い噴水広場の石畳に敷く、模様の入った石の輪を描いてください。正方形 1024×1024。真上から見た視点。
+・ドーナツ形。輪の幅は外側の半径の 15% くらい。輪の内側と外側は透明
+・添付の石畳（tex_stone.png）と同じ石の質感・色（クリーム色の石）で、2色の石を組み合わせた放射状の模様。ところどころに小さな金色の星の飾り石
+・石のすき間・欠け・すり減り・色のむらを手描きで。平らな図形の輪は禁止
+▲ここまで
+▼English
+A decorative stone ring laid into a round cobblestone plaza around a fountain. 1024x1024, straight top-down view. Donut shape, ring width about 15% of the outer radius; inside and outside transparent.
+Same stone texture and cream color as the attached cobblestones (tex_stone.png), radial pattern of two stone tones with a few small gold star inlays.
+Hand-painted: grout gaps, chips, wear, color variation. NOT a flat vector ring.
+▲
+
+【E3】会場前の飾り石の帯　保存名：plaza_carpet_v2.png
+▼ここからコピー
+大会会場の前の広い石畳に埋め込む、飾り石の帯を描いてください。縦長 1024×1536。真上から見た視点。
+・縦に長い帯（幅は画像の 30% くらい）。紺色と金色の石を組み合わせ、カードと星の形の模様を等間隔に（文字なし）
+・上下の端は、つなげて長くできるように模様を合わせる
+・石を敷きつめた質感（石のすき間・すり減り・光沢）。布のじゅうたんや平たい長方形にしない
+▲ここまで
+▼English
+A decorative inlaid stone runner set into the cobblestone plaza in front of a tournament hall. Portrait 1024x1536, straight top-down view.
+A long vertical strip (about 30% of the image width) made of navy and gold stones with evenly spaced card-and-star motifs (no text). Top and bottom edges tile seamlessly.
+It must look like inlaid stone (grout lines, wear, slight sheen), NOT a fabric carpet and NOT a flat rectangle.
+▲
+
+【E4】縁石　保存名：edge_curb_v2.png
+▼ここからコピー
+石畳の道のふちに並べる縁石を描いてください。横長 1536×1024。斜め上から見下ろす視点。
+・上半分：横にまっすぐの縁石の帯（左右の端がつながるように）。帯の太さは画像の高さの 8% くらい
+・下半分：角の部品（外側の角・内側の角）を2つずつ
+・添付の石畳より少し濃い、灰色がかったベージュの石。上の面は明るく、側面は暗く。石の継ぎ目・欠け・苔を手描きで。単色の帯は禁止
+▲ここまで
+▼English
+Curb stones for the edge of a cobblestone road. Landscape 1536x1024, three-quarter top-down view.
+Top half: a straight horizontal curb strip that tiles left-right seamlessly, thickness about 8% of the image height. Bottom half: corner pieces (2 outer corners, 2 inner corners).
+Slightly darker greyish-beige stone than the attached cobblestones; bright top face, darker side face; hand-painted joints, chips and a little moss. NOT a single flat-color strip.
+▲
+
+【E5】植え込み（明るめ）　保存名：props_bush_v3.png
+▼ここからコピー
+草地に置く植え込みを、正方形 1024×1024 に2列×2行で4個描いてください。斜め上から見下ろす視点。
+・丸くこんもりした植え込み（大・小）、花の咲いた植え込み（ピンク・白）
+・色は街の芝生（あざやかな黄緑）になじむ明るい緑。葉のかたまりがいくつも重なり、上は日が当たって明るく、下は少し暗い。根元に小さな影
+・暗すぎる緑・黒っぽいかたまりにしない。円を重ねただけの平たい絵は禁止
+▲ここまで
+▼English
+Four bushes, 2x2 grid on 1024x1024, three-quarter top-down view: round bushes (large, small), flowering bushes (pink, white).
+Bright fresh green that matches the vivid yellow-green lawn; many overlapping leaf clusters, sunlit top, slightly darker bottom, small contact shadow.
+Do NOT make them dark or blackish. NOT flat overlapping circles.
+▲
