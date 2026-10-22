@@ -390,8 +390,12 @@
 }
 
 .battle-turn__text {
+  min-width: 0;
+  overflow: hidden;
   font-size: 14px;
   font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .battle-turn--player .battle-turn__text {
@@ -915,4 +919,68 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* 上の帯の右端：場の全体カードと、自分の攻撃中だけの小さな「攻撃終了」 */
+.battle-turn__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.battle-turn__right {
+  flex: none;
+}
+
+.battle-turn__right .battle-turn__field {
+  min-width: 0;
+  max-width: 104px;
+}
+
+/* 攻撃終了が出ているときは「あなたが先攻」の表示を省く（場所をあける） */
+.battle-turn__right:has(.battle-turn__end) .battle-turn__first {
+  display: none;
+}
+
+/* 見た目は 84×28 の小さなワインレッドのボタン。押せる範囲は高さ40px（帯の高さは変えない） */
+.battle-turn__end {
+  position: relative;
+  flex: none;
+  width: 84px;
+  height: 40px;
+  margin: -6px -8px -6px 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.battle-turn__end-img {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 84px;
+  height: 28px;
+  pointer-events: none;
+  filter: saturate(0.78) brightness(0.92) drop-shadow(0 1px 2px rgb(0 0 0 / 0.4));
+}
+
+.battle-turn__end-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #fff;
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.8);
+}
+
+.battle-turn__end:active .battle-turn__end-img {
+  filter: brightness(1.12);
 }

@@ -22,6 +22,7 @@ import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
 import { openCardDetail } from '../components/cardDetail.ts';
 import { confirmModal, openModal } from '../components/modal.ts';
+import wineButtonUrl from '@assets/images/ui/button/btn_command_blank_wine.png';
 import { commandButton, confirmCommand } from '../components/commandButton.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
 import { createPlayCard, createSkillCard } from '../components/skillCard.ts';
@@ -414,7 +415,7 @@ export const battleScreen: ScreenDefinition = {
             class: 'battle-text__hint',
             text:
               s.phase === 'main' && s.active === 'player'
-                ? '手札のカードをタップすると、説明とコマンド（使う・攻撃終了）が出ます。'
+                ? '手札のカードをタップすると、説明と「使う」が出ます。攻撃を終えるときは右上の「攻撃終了」'
                 : '手札のカードをタップすると、ここに説明と拡大したカードが出ます。',
           }),
         ];
@@ -645,9 +646,29 @@ export const battleScreen: ScreenDefinition = {
       if (element.querySelector('.battle__monster.is-hit')) sound.play('damageHit');
     };
 
+    /** 攻撃終了。まだ使えるカードがあるときは確かめる（押しまちがい防止） */
+    const requestEndAttack = (s: BattleState): void => {
+      const end = (): void => dispatch({ type: 'endAttack', side: 'player' });
+      if (s.sides.player.hand.some((c) => cardUsability(s, 'player', c.uid).usable)) {
+        confirmCommand(element, 'まだ使えるカードがあります。攻撃を終えてマナ化へ進みますか？', { ok: 'マナ化へ進む', cancel: '攻撃を続ける' }, end);
+      } else end();
+    };
+
+    /** 上の帯の右端の小さな「攻撃終了」（自分の攻撃中だけ。画面中央をふさがずにいつでも押せる） */
+    const turnEndButton = (s: BattleState, blocked: boolean): HTMLElement | null => {
+      if (s.phase !== 'main' || s.active !== 'player' || auto || blocked || targeting) return null;
+      return h(
+        'button',
+        { class: 'battle-turn__end', attrs: { type: 'button', 'aria-label': '攻撃終了' }, on: { click: () => requestEndAttack(s) } },
+        h('img', { class: 'battle-turn__end-img', attrs: { src: wineButtonUrl, alt: '', draggable: 'false' } }),
+        h('span', { class: 'battle-turn__end-label', text: '攻撃終了' }),
+      );
+    };
+
     /**
      * コマンドの帯。必要なときだけ、画面中央に帯を敷いてコマンドを縦に並べる（下に常に並べない）。
-     * - 攻撃：カードを選ぶと「使う（使えるときだけ）／攻撃終了／やめる」。使えるカードが1枚もなければ「攻撃終了」だけ出す
+     * - 攻撃：カードを選ぶと「使う（使えるときだけ）／やめる」。使えるカードが1枚もなければ「攻撃終了」を出す
+     *   （ふだんの攻撃終了は上の帯の右端の小さなボタン）
      * - 対象選択中：モンスターを隠さないよう、低い位置の帯に「やめる」
      * - マナ化：「マナにする（N枚）」（選んだとき）／「ターン終了」
      * - 相手の番・配っている間・オート中は出さない
@@ -662,18 +683,6 @@ export const battleScreen: ScreenDefinition = {
         targeting = null;
         render();
       };
-      const endAttack = (): HTMLButtonElement =>
-        commandButton(
-          '攻撃終了',
-          () => {
-            const end = (): void => dispatch({ type: 'endAttack', side: 'player' });
-            // まだ使えるカードがあるときは確かめる（押しまちがい防止）
-            if (anyUsable) {
-              confirmCommand(element, 'まだ使えるカードがあります。攻撃を終えてマナ化へ進みますか？', { ok: 'マナ化へ進む', cancel: '攻撃を続ける' }, end);
-            } else end();
-          },
-          'cancel',
-        );
       let low = false;
       if (mine && s.phase === 'main') {
         if (targeting) {
@@ -681,9 +690,10 @@ export const battleScreen: ScreenDefinition = {
           low = true;
         } else if (selected) {
           if (cardUsability(s, 'player', selected.uid).usable) buttons.push(commandButton('使う', () => useCard(selected.uid)));
-          buttons.push(endAttack(), commandButton('やめる', deselect, 'cancel'));
+          buttons.push(commandButton('やめる', deselect, 'cancel'));
         } else if (!anyUsable) {
-          buttons.push(endAttack());
+          // 使えるカードが1枚もなければ、することは攻撃終了だけなので帯で出す
+          buttons.push(commandButton('攻撃終了', () => requestEndAttack(s), 'cancel'));
         }
       } else if (mine && s.phase === 'mana') {
         if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(`マナにする（${manaPicks.size}枚）`, convertPicked));
@@ -733,7 +743,7 @@ export const battleScreen: ScreenDefinition = {
 
       const phaseText = s.phase === 'mana' ? '・マナ化' : s.phase === 'ended' ? '' : s.phase === 'defense' ? '・守備' : '・攻撃';
       const turnText =
-        s.phase === 'ended' ? '対戦終了' : `${s.turn}手番・${s.active === 'player' ? 'あなたの番' : '相手の番'}${phaseText}`;
+        s.phase === 'ended' ? '対戦終了' : `${s.turn}手番・${s.active === 'player' ? 'あなた' : '相手'}${phaseText}`;
       element.replaceChildren(
         header(),
         qaBar() ?? '',
@@ -741,7 +751,7 @@ export const battleScreen: ScreenDefinition = {
           'div',
           { class: `battle-turn battle-turn--${s.phase === 'ended' ? 'ended' : s.active}` },
           h('span', { class: 'battle-turn__text', text: turnText }),
-          fieldChip(s),
+          h('div', { class: 'battle-turn__right' }, fieldChip(s), turnEndButton(s, blocked)),
         ),
         monsterRow(s, 'opponent'),
         monsterRow(s, 'player'),

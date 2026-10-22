@@ -86,7 +86,7 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
       const unusable = await page.$('.battle__hand-card.is-unusable');
       if (unusable && !sawUnusable) { sawUnusable = true; await unusable.click(); await page.screenshot({ path: `${OUT}/manual-unusable.png` }); log('unusable reason:', await page.textContent('.battle-text__ng')); }
       const card = await page.$('.battle__hand-card.is-usable');
-      if (!card) { await page.click('.battle__command-band >> text=攻撃終了'); manualActions++; continue; }
+      if (!card) { await page.click('.battle-turn__end'); manualActions++; continue; }
       await card.click(); sawPreview = true;
       if (manualActions < 2) await page.screenshot({ path: `${OUT}/manual-preview-${manualActions}.png` });
       await page.click('.battle__command-band >> text=使う'); manualActions++;
