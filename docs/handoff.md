@@ -1,4 +1,4 @@
-# 引き継ぎメモ（2026-10-22 時点）
+# 引き継ぎメモ（2026-10-22 時点・次便のあと）
 
 新しいセッションで読むのは `CLAUDE.md` とこのファイルだけ。他の資料は必要になったときに1つずつ読む。
 
@@ -6,12 +6,14 @@
 
 | 項目 | 状態 |
 | --- | --- |
-| 公開URL | https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ （`main` の `142470a` を公開。2026-10-22） |
-| リポジトリ | https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Public。ユーザー承認済み） |
+| 正式名称 | セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card・短縮「セイクリッドBC」）。旧称ミルティル・ミストリア |
+| 公開URL | 旧：https://shunyamita0804-source.github.io/mirtill-monsters-battle-card/ （`142470a` のまま）。新：https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （**GitHub 上の改名待ち・未公開**） |
+| リポジトリ | https://github.com/shunyamita0804-source/mirtill-monsters-battle-card （Public）。**改名（→ `sacred-monsters-battle-card`）はユーザー操作待ち**（`docs/rename-migration.md`） |
+| 最新版 | `main` の `@@MAIN_SHA@@`（次便：改名・正式アイコン・日英・バックアップ・設定・データ点検。テスト 224件） |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
 | バトルのルール | **PS版『モンスターファーム バトルカード』準拠。変えるのは3点だけ**：山札60枚・ガッツを「マナ」と表記・全体カードとブリーダー（プレイヤー）カードを「サポート」に集約（ユーザー決定。`docs/battle-rules.md`） |
-| 次の作業 | **ユーザーの次の指示待ち。** 指示が来るまで新しい作業を始めない |
+| 次の作業 | ユーザーが GitHub でリポジトリ名を変えたら：接続先の変更 → Pages を `main` で公開 → 新URLで表示確認。それ以外は**指示待ち** |
 
 ## 2. これまでの作業（時系列・要点だけ）
 
@@ -36,6 +38,9 @@
    - カードを選ぶと「使う／やめる」、使えるカードがなければ帯に「攻撃終了」。ふだんの「攻撃終了」は上の帯の右端の小さなボタン（自分の攻撃中だけ）
    - マナ化は手札をタップで選んで「マナにする（N枚）」→「ターン終了」
 
+8. 次便（2026-10-22）：正式名称へ改名・正式アイコン（`public/icons/`。原本は `assets/images/icons/`）・日英切り替え（`docs/i18n.md`）・
+   セーブの JSON 書き出し／復元・設定画面（言語・効果音・BGM〔将来用〕・ミュート・遊び方。タイトルとベッドから）・データ点検（`docs/card-data-policy.md`）
+
 ## 3. 大事な約束（詳しくは CLAUDE.md）
 
 - 指示書の範囲だけを実装する。終わったら止めて報告し、承認を待つ
@@ -58,8 +63,9 @@ export PATH=$PWD/node-$V-linux-x64/bin:$PATH && npm install --no-audit --no-fund
 ```
 
 ```bash
-npm run check            # 型チェック＋テスト（176件）＋ビルド
+npm run check            # 型チェック＋テスト（224件）＋ビルド
 npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後。バックグラウンドで動かす）
+# 公開と同じ base で確かめるとき：npm run build:pages → npx vite preview --mode pages … → http://127.0.0.1:4173/sacred-monsters-battle-card/
 ```
 
 - ブラウザ確認：Playwright（`/opt/node-tools/node_modules/playwright`、Chromium は `/opt/pw-browsers`）
@@ -87,6 +93,11 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 
 - iPhone 実機での確認はユーザー頼み：効果音（カードを引く・先攻後攻・マナ・ダメージ）が鳴るか・音量、中央の帯のコマンドと右上の「攻撃終了」の押しやすさ、
   マナが飛ぶ演出、旧セーブのデッキが自動で直っているか
+- 改名：GitHub の Settings → General → Repository name を `sacred-monsters-battle-card` に（ユーザー操作）。旧 Pages URL は転送されない
+- iPhone のホーム画面版（PWA）は、URL が変わるとセーブが見えない可能性あり → 設定の「セーブをバックアップ」で引き継ぐ（実機未確認）
+- 正式アイコンの角の外側は白（原本のまま）。iPhone のホーム画面で白い角が見えるかは未確認（透過加工は承認なしではしない）
+- 英語はすべて仮訳（カード・パック・大会・マップ・能力名 POW/INT）。正式な英語名は未決
+- 演出の簡略化（動きを減らす設定）は未実装（必要なら項目を追加する）
 - PS版で未確認の裁定（ユーザーが実機で確認する約束）：`docs/battle-rules-audit.md` の5章、`docs/battle-rules.md` の「まだ確かめられていないこと」
 - 正式カード待ちで未実装：防御の「0にする・はね返す・効果だけ消す・肩代わり」、全体カードを打ち消すカード、コンボ、派生モンスター（MAIN/SUB）の技、モンスターの特徴（地上・空中）
 - 新ルールでは1戦が長め（自動対戦で1〜2分）。テンポ調整はユーザーの判断待ち
@@ -112,4 +123,6 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 | 効果音の割り当て・出どころ | `src/ui/sound.ts`（`SE_REGISTRY`）・`docs/audio-credits.md` |
 | 素材の置き場と記録 | `assets/README.md` |
 | 公開の手順 | `docs/github-pages.md` |
+| 日英の辞書・英訳表 | `src/i18n/`（`docs/i18n.md`） |
+| 設定画面・バックアップ | `src/ui/screens/optionsScreen.ts`・`src/game/save/backup.ts`・`src/game/settings/settings.ts` |
 | 名称変更の計画 | `docs/rename-migration.md` |
