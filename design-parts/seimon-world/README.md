@@ -22,9 +22,15 @@
 | town_house_c.png | 住宅C（緑） | 同上 |
 | town_house_d.png | 住宅D（赤） | 同上 |
 
-## まだ無いもの（届いたらここに入れる）
+| town_house_e.png・town_fountain.png・tex_grass/stone/dirt.png・props_trees/flowers/street/misc.png | 住宅E・噴水・地面3・小物4 | 2026-10-22 ZIP「Seimon_Town9_Room14_23Assets_20261022」 |
+| room_shell_*.png（7）・furn_*.png（7） | 部屋の箱・家具 | 同じ ZIP（「Seimon_Room14_ProductionAssets_20261022」と中身は同じ） |
+| decal_grass.png・decal_flowers.png・props_bush_v2.png | 草むら・小花・植え込み | **復元**（下の注意） |
 
-- 街：town_house_e（住宅E）・town_fountain・tex_grass・tex_stone・tex_dirt・props_trees・props_flowers・props_street・props_misc
-- 街の追加部品：decal_grass・decal_flowers・props_bush_v2（草むら・小花・植え込み）
-- 部屋（14枚）：room_shell_player・room_shell_guide・room_shell_house・room_shell_shop・room_shell_lab・room_shell_training・room_shell_arena・
-  furn_player・furn_common・furn_guide・furn_shop・furn_lab・furn_training・furn_arena
+- 確認：いまの設計図（4800）で街・部屋を作り直し、ゲームの絵と比べた。**部屋は1ファイルも変わらず完全に一致**（＝原本）。街は建物・小物・地面・噴水が一致
+- **草むら・小花・植え込みの3枚は原本が見つからなかったため、いまの街の絵から切り出して作った**（2026-10-22）。
+  同じ乱数で「3つだけ抜いた街」を作って差を取り、草むら11・小花8・植え込み4を切り抜いて並べ直したもの。原本より少し淡く、ふちが少しやわらかい。
+  原本が見つかったら、同じ名前で置き換える
+
+## 使わないもの
+
+- 2026-10-22 にチャットで届いた「斜め見下ろし（アイソメ）」の住宅E・噴水・地面の模様・部屋の箱・家具の絵（2枚の一覧画像）は、いまの街の画風・向き（正面）と違うので使っていない
