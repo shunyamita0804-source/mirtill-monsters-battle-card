@@ -4,11 +4,14 @@ import { Router } from '../core/router.ts';
 import { GameStore } from './gameStore.ts';
 import { SCREENS } from './screens/registry.ts';
 import type { ScreenContext, ScreenInstance } from './screens/types.ts';
+import { sound } from './sound.ts';
 import { mountStage } from './stage.ts';
 
 /** アプリ全体の組み立て：ステージを用意し、ルーターの変化に合わせて画面を差し替える */
 export function startApp(root: HTMLElement, store: GameStore = GameStore.fromBrowser()): void {
   const stage = mountStage(root);
+  // iPhone は最初のタップまで音を鳴らせないので、タップで効果音を使えるようにする
+  sound.installUnlock();
   const router = new Router<ScreenId>(INITIAL_SCREEN);
   let current: ScreenInstance | null = null;
 

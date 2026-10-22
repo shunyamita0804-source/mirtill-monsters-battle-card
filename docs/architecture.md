@@ -33,7 +33,15 @@ UI はセーブを直接書き換えず、`GameStore.update(純粋関数)` で�
 画面を追加するとき：`src/config/screens.ts` に ID → `src/ui/screens/` に `ScreenDefinition` → `registry.ts` に登録（登録漏れは型チェックでエラー）。
 バトルは `GameStore.pendingBattle` に依頼（相手・タイトル・終了時の処理）を入れて `battle` へ移動する。
 
-## カードバトル（`src/game/battle/`）
+## カードバトル画面（`src/ui/screens/battleScreen.ts`）
+
+- 流れ：先攻・後攻を決める（伏せたカード2枚から1枚を選ぶ）→ 手札を1枚ずつ高速で配る（効果音つき）→ 対戦 → 結果
+- 縦持ちの配置：上＝手番と先攻/後攻／中＝相手・自分の情報箱（マナ・山札・手札）とモンスター3体（下にライフの数字）／
+  中段＝左に説明文、右に選んだ技カードの拡大／下＝手札と「使う」「捨ててマナ+1」「ターン終了」
+- ターン開始時の補充・ドローで新しく来たカードも、同じ演出と効果音で配る
+- 効果音は `src/ui/sound.ts`（`SE_REGISTRY` を書き換えれば差し替え可能。出どころは `docs/audio-credits.md`）
+
+## カードバトルのルール（`src/game/battle/`）
 
 - `engine.ts`：状態（双方のモンスター3体・ライフ・山札・手札・捨て札・マナ・手番・防御待ち・勝敗・記録）と `applyAction()`
   - 行動：`useCard`（技を使う：使うモンスター・対象を指定）／`defend`（防御カード or しない）／`discardForMana`／`endTurn`

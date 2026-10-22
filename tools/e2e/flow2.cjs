@@ -54,6 +54,8 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
     await waitScreen(page, 'tournament');
     await page.click('[data-id="tournament-e"] >> text=参加する'); await page.click('.modal >> text=参加する');
     await page.click('text=を戦う'); await waitScreen(page, 'battle');
+    await page.click('.battle-order__card[data-index="0"]');
+    await page.waitForSelector('.battle__hand', { timeout: 5000 });
     let manualActions = 0, sawPreview = false, sawTarget = false, sawDefense = false, sawUnusable = false;
     const deadline = Date.now() + 300000;
     while (Date.now() < deadline) {
@@ -69,15 +71,15 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
         if (usable) await usable.click(); else await page.click('.battle__defense >> text=防御しない');
         manualActions++; continue;
       }
-      if (st.acting !== 'player') continue;
+      if (st.acting !== 'player' || st.phase !== 'main') continue;
       // 使えるカードを選ぶ → 拡大表示 → 使う → 対象選択
       const unusable = await page.$('.battle__hand-card.is-unusable');
-      if (unusable && !sawUnusable) { sawUnusable = true; await unusable.click(); await page.screenshot({ path: `${OUT}/manual-unusable.png` }); log('unusable reason:', await page.textContent('.battle__preview-ng')); await page.click('.battle__preview >> text=閉じる'); }
+      if (unusable && !sawUnusable) { sawUnusable = true; await unusable.click(); await page.screenshot({ path: `${OUT}/manual-unusable.png` }); log('unusable reason:', await page.textContent('.battle-text__ng')); }
       const card = await page.$('.battle__hand-card.is-usable');
-      if (!card) { await page.click('text=ターン終了'); manualActions++; continue; }
+      if (!card) { await page.click('.battle__footer >> text=ターン終了'); manualActions++; continue; }
       await card.click(); sawPreview = true;
       if (manualActions < 2) await page.screenshot({ path: `${OUT}/manual-preview-${manualActions}.png` });
-      await page.click('.battle__preview >> text=使う'); manualActions++;
+      await page.click('.battle__footer >> text=使う'); manualActions++;
       await page.waitForTimeout(100);
       const target = await page.$('.battle__monster.is-target');
       if (target) { sawTarget = true; if (manualActions < 4) await page.screenshot({ path: `${OUT}/manual-target.png` }); await target.click({ force: true }); }
@@ -90,7 +92,7 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
     await page.click('text=つづける'); await waitScreen(page, 'tournament');
     for (let i = 0; i < 3; i++) {
       const fight = await page.$('text=を戦う'); if (!fight) break;
-      await fight.click(); await waitScreen(page, 'battle'); await page.click('text=QA:即勝利'); await page.click('text=つづける'); await waitScreen(page, 'tournament');
+      await fight.click(); await waitScreen(page, 'battle'); await page.click('.battle-order__card[data-index="0"]'); await page.waitForSelector('.battle__qa'); await page.click('text=QA:即勝利'); await page.click('text=つづける'); await waitScreen(page, 'tournament');
     }
     await page.screenshot({ path: `${OUT}/t-won.png` });
     log('result:', await page.textContent('.tournament__result-title'));
@@ -174,7 +176,8 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
       if (screen === 'tournament') {
         await page.click('[data-id="tournament-e"] >> text=参加する'); await page.click('.modal >> text=参加する');
         await page.click('text=を戦う'); await waitScreen(page, 'battle');
-        await page.waitForTimeout(400);
+        await page.click('.battle-order__card[data-index="0"]');
+        await page.waitForTimeout(1200);
         results.push(['battle', await overflow(page)]);
         await page.screenshot({ path: `${OUT}/vp${vp.width}-battle.png` });
       }
