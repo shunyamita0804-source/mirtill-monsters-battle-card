@@ -1,5 +1,5 @@
 import { getMonster, getSkill } from '../../data/cards.ts';
-import { BATTLE_RULES, PROVISIONAL_RULE_NOTES } from '../../data/rules.ts';
+import { PROVISIONAL_RULE_NOTES } from '../../data/rules.ts';
 import { chooseAction } from '../../game/battle/ai.ts';
 import {
   actingSide,
@@ -319,12 +319,23 @@ export const battleScreen: ScreenDefinition = {
           h('p', { class: 'battle-text__desc', text: describeSkill(skill) }),
           convertible
             ? h('p', { class: 'battle-text__ok', text: 'マナにできます' })
-            : usability.usable
+            : s.phase === 'mana' && s.active === 'player' && s.manaConvertLimit === 0
+              ? h('p', { class: 'battle-text__ng', text: 'このターンはもうマナにできません' })
+              : usability.usable
               ? h('p', { class: 'battle-text__ok', text: '使えます' })
               : h('p', { class: 'battle-text__ng', text: usability.reason ?? '使えません' }),
         ];
       } else if (s.phase === 'mana' && s.active === 'player') {
-        body = [h('p', { class: 'battle-text__prompt', text: 'マナ化：手札をタップして「マナにする」。何枚でもOK（1枚＝1マナ）。終わったら「ターン終了」' })];
+        const limit = s.manaConvertLimit;
+        body = [
+          h('p', {
+            class: 'battle-text__prompt',
+            text:
+              limit === null
+                ? 'マナ化：手札をタップして「マナにする」。何枚でもOK（1枚＝1マナ）。終わったら「ターン終了」'
+                : `最初のターンはマナ化だけ。あと${limit}枚までマナにできます。終わったら「ターン終了」`,
+          }),
+        ];
       } else {
         body = [h('p', { class: 'battle-text__hint', text: '手札のカードをタップすると、ここに説明と拡大したカードが出ます。' })];
       }
@@ -428,7 +439,7 @@ export const battleScreen: ScreenDefinition = {
       if (s.phase !== 'ended') return null;
       const w = s.winner;
       const title = w === 'player' ? '勝利！' : w === 'opponent' ? '敗北…' : '引き分け';
-      const reason = s.endReason === 'turnLimit' ? `手番の上限（${BATTLE_RULES.turnLimit}）で残りライフ判定` : '';
+      const reason = s.endReason === 'deckOut' ? `${w === 'player' ? '相手' : 'あなた'}の山札切れ` : '';
       const go = button('つづける', () => {
         go.disabled = true;
         finish(s.winner);

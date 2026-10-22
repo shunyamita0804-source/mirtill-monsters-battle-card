@@ -69,7 +69,10 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
   }
 
   // 3. マナ・ドロー
-  const support = options.find((o) => o.skill.effect.type === 'mana' || o.skill.effect.type === 'draw');
+  // 山札が足りないと負けになるので、山札を動かす効果は山札に余裕があるときだけ
+  const support = options.find(
+    (o) => (o.skill.effect.type === 'mana' || o.skill.effect.type === 'draw') && mine.deck.length > o.skill.stat.value + 5,
+  );
   if (support) return { type: 'useCard', side, cardUid: support.card.uid };
 
   // 4. 使えるカードがなければ攻撃を終えてマナ化へ

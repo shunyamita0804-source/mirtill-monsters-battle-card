@@ -77,7 +77,10 @@ export interface BattleState {
   readonly pending: PendingAttack | null;
   readonly sides: Readonly<Record<Side, BattleSide>>;
   readonly winner: BattleWinner | null;
-  readonly endReason: 'knockout' | 'turnLimit' | null;
+  /** knockout＝3体KO、deckOut＝引くべきカードを引けなかった（山札切れ） */
+  readonly endReason: 'knockout' | 'deckOut' | null;
+  /** このターンにあと何枚マナにできるか（null＝制限なし。先攻1ターン目だけ制限あり） */
+  readonly manaConvertLimit: number | null;
   readonly log: readonly LogEntry[];
   readonly nextUid: number;
 }
@@ -154,18 +157,22 @@ export function createBattle(
   const o = drawCards(base(opponent, 'o', oShuffle.items), BATTLE_RULES.initialHand, uid);
   uid = o.nextUid;
   const sides: Record<Side, BattleSide> = { player: p.side, opponent: o.side };
-  // 先攻・後攻ともマナ0から（先攻初手の特例は PS版の確認待ちのため入れていない）
+  // 先攻1ターン目（PS版）：ドローも攻撃もなく、すぐマナ化。マナにできるのは決まった枚数まで
   return {
     seed: s,
     turn: 1,
     active: firstSide,
     first: firstSide,
-    phase: 'main',
+    phase: 'mana',
     pending: null,
     sides,
     winner: null,
     endReason: null,
-    log: [{ turn: 1, text: `${SIDE_LABEL[firstSide]}の先攻で始まった。` }],
+    manaConvertLimit: BATTLE_RULES.firstTurnManaLimit,
+    log: [
+      { turn: 1, text: `${SIDE_LABEL[firstSide]}の先攻で始まった。` },
+      { turn: 1, text: `最初のターンはマナ化だけ（${BATTLE_RULES.firstTurnManaLimit}枚まで）。` },
+    ],
     nextUid: uid,
   };
 }
@@ -240,7 +247,12 @@ export function targetsFor(state: BattleState, side: Side, skill: SkillCard): Ba
 
 /** 手札をマナにできるか（攻撃のあとのマナ化の間だけ。枚数の制限なし） */
 export function canConvertToMana(state: BattleState, side: Side): boolean {
-  return state.phase === 'mana' && state.active === side && state.sides[side].hand.length > 0;
+  return (
+    state.phase === 'mana' &&
+    state.active === side &&
+    state.sides[side].hand.length > 0 &&
+    (state.manaConvertLimit === null || state.manaConvertLimit > 0)
+  );
 }
 
 /* ---------- 進行 ---------- */
@@ -286,9 +298,17 @@ function checkKnockout(state: BattleState): BattleState {
   const pAlive = aliveMonsters(state.sides.player).length;
   const oAlive = aliveMonsters(state.sides.opponent).length;
   if (pAlive > 0 && oAlive > 0) return state;
-  const winner: BattleWinner = pAlive === 0 && oAlive === 0 ? 'draw' : pAlive === 0 ? 'opponent' : 'player';
+  // 双方が同時に全滅したら攻撃側（いまの手番の側）の勝ち。引き分けにはならない
+  const winner: Side = pAlive === 0 && oAlive === 0 ? state.active : pAlive === 0 ? 'opponent' : 'player';
   const ended: BattleState = { ...state, phase: 'ended', pending: null, winner, endReason: 'knockout' };
-  return addLog(ended, winner === 'draw' ? '相打ちで引き分け。' : `${SIDE_LABEL[winner]}の勝ち！`);
+  return addLog(ended, `${SIDE_LABEL[winner]}の勝ち！`);
+}
+
+/** 引くべきカードを引けなかった側の負け */
+function loseByDeckOut(state: BattleState, loser: Side): BattleState {
+  const winner = otherSide(loser);
+  const ended: BattleState = { ...state, phase: 'ended', pending: null, winner, endReason: 'deckOut' };
+  return addLog(ended, `${SIDE_LABEL[loser]}は山札が足りない！ ${SIDE_LABEL[winner]}の勝ち！`);
 }
 
 function applyDamage(state: BattleState, targetUid: string, damage: number): BattleState {
@@ -308,23 +328,26 @@ function resolvePending(state: BattleState, reduction: number): BattleState {
   return applyDamage(next, pending.targetUid, damage);
 }
 
+/**
+ * ターン開始とドローステップ。
+ * 手札が5枚より少なければ5枚まで引く。5枚あれば山札の一番上を1枚そのままマナにする。
+ * どちらも山札が足りなければ、その時点で負け。
+ */
 function startTurn(state: BattleState, side: Side): BattleState {
   const s = state.sides[side];
   const monsters = s.monsters.map((m) => ({ ...m, acted: false }));
-  const need = Math.max(0, BATTLE_RULES.refillHandTo - s.hand.length);
-  const drawn = drawCards({ ...s, monsters }, need, state.nextUid);
-  let next: BattleState = { ...state, active: side, phase: 'main', nextUid: drawn.nextUid };
-  next = updateSide(next, side, drawn.side);
-  return addLog(next, `${SIDE_LABEL[side]}のターン。`);
-}
-
-function judgeByLife(state: BattleState): BattleState {
-  const total = (side: Side): number => state.sides[side].monsters.reduce((sum, m) => sum + m.life, 0);
-  const p = total('player');
-  const o = total('opponent');
-  const winner: BattleWinner = p === o ? 'draw' : p > o ? 'player' : 'opponent';
-  const ended: BattleState = { ...state, phase: 'ended', winner, endReason: 'turnLimit' };
-  return addLog(ended, `手番の上限に達した。残りライフ ${p} 対 ${o} で${winner === 'draw' ? '引き分け' : `${SIDE_LABEL[winner]}の勝ち`}。`);
+  let next: BattleState = { ...state, active: side, phase: 'main', manaConvertLimit: null };
+  next = addLog(updateSide(next, side, { monsters }), `${SIDE_LABEL[side]}のターン。`);
+  const need = BATTLE_RULES.refillHandTo - s.hand.length;
+  if (need > 0) {
+    if (s.deck.length < need) return loseByDeckOut(next, side);
+    const drawn = drawCards(next.sides[side], need, next.nextUid);
+    return updateSide({ ...next, nextUid: drawn.nextUid }, side, drawn.side);
+  }
+  const top = s.deck[0];
+  if (top === undefined) return loseByDeckOut(next, side);
+  next = updateSide(next, side, { deck: s.deck.slice(1), manaPile: [...s.manaPile, top] });
+  return addLog(next, `手札が${BATTLE_RULES.refillHandTo}枚あるので、山札の一番上をマナにした。`);
 }
 
 /**
@@ -347,7 +370,8 @@ export function applyAction(state: BattleState, action: BattleAction): BattleSta
       const s = state.sides[action.side];
       const card = s.hand.find((c) => c.uid === action.cardUid);
       if (!card) return state;
-      const next = updateSide(state, action.side, {
+      const limit = state.manaConvertLimit;
+      const next = updateSide({ ...state, manaConvertLimit: limit === null ? null : limit - 1 }, action.side, {
         hand: s.hand.filter((c) => c.uid !== action.cardUid),
         manaPile: [...s.manaPile, card.cardId],
       });
@@ -355,9 +379,7 @@ export function applyAction(state: BattleState, action: BattleAction): BattleSta
     }
     case 'endTurn': {
       if (state.phase !== 'mana' || state.active !== action.side) return state;
-      const turn = state.turn + 1;
-      if (turn > BATTLE_RULES.turnLimit) return judgeByLife({ ...state, turn });
-      return startTurn({ ...state, turn }, otherSide(action.side));
+      return startTurn({ ...state, turn: state.turn + 1 }, otherSide(action.side));
     }
   }
 }
@@ -415,12 +437,16 @@ function useCard(
     }
     case 'mana': {
       // 仮カードの効果：山札の上から数枚をそのままマナにする（マナは必ずカード1枚＝1マナ）
+      // 決められた枚数を山札から動かせなければ負け（山札切れ）
       const s = next.sides[side];
+      if (s.deck.length < skill.stat.value) return loseByDeckOut(next, side);
       const moved = s.deck.slice(0, skill.stat.value);
       next = updateSide(next, side, { deck: s.deck.slice(moved.length), manaPile: [...s.manaPile, ...moved] });
       return addLog(next, `山札の上から${moved.length}枚をマナにした。`);
     }
     case 'draw': {
+      // 効果のドローも、指示された枚数を引けなければ負け
+      if (next.sides[side].deck.length < skill.stat.value) return loseByDeckOut(next, side);
       const drawn = drawCards(next.sides[side], skill.stat.value, next.nextUid);
       next = updateSide({ ...next, nextUid: drawn.nextUid }, side, drawn.side);
       return addLog(next, `カードを${drawn.drawn}枚引いた。`);
