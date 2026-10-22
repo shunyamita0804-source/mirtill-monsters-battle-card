@@ -2,6 +2,10 @@ import cardDrawOgg from '@assets/audio/se/card_draw.ogg';
 import cardDrawM4a from '@assets/audio/se/card_draw.m4a';
 import turnOrderOgg from '@assets/audio/se/turn_order_select.ogg';
 import turnOrderM4a from '@assets/audio/se/turn_order_select.m4a';
+import manaGainOgg from '@assets/audio/se/mana_gain.ogg';
+import manaGainM4a from '@assets/audio/se/mana_gain.m4a';
+import damageHitOgg from '@assets/audio/se/damage_hit.ogg';
+import damageHitM4a from '@assets/audio/se/damage_hit.m4a';
 
 /**
  * 効果音（SE）。
@@ -12,7 +16,7 @@ import turnOrderM4a from '@assets/audio/se/turn_order_select.m4a';
  * - 同じ音を短い間隔で何度でも重ねて鳴らせる（カードを1枚ずつ配る音）
  * - 音が鳴らせない環境では何もしない（ゲームは止めない）
  */
-export type SoundId = 'cardDraw' | 'turnOrderSelect';
+export type SoundId = 'cardDraw' | 'turnOrderSelect' | 'manaGain' | 'damageHit';
 
 interface SoundEntry {
   /** OGG（Chrome・Firefox など）と M4A（iPhone Safari など）。再生できる方を使う */
@@ -27,6 +31,10 @@ export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   cardDraw: { ogg: cardDrawOgg, m4a: cardDrawM4a, gain: 2.0 },
   // 先攻・後攻のカードを選んだ瞬間：ミスティックモンスターズ正式素材「分かれ道の選択」（15_branch_select）
   turnOrderSelect: { ogg: turnOrderOgg, m4a: turnOrderM4a, gain: 1.0 },
+  // カードをマナにした・山札からマナが増えた：ミスティックモンスターズの GOLD_GET と同じ音（Mix of SFX by Ivokard「bell」・CC0）
+  manaGain: { ogg: manaGainOgg, m4a: manaGainM4a, gain: 1.8 },
+  // モンスターがダメージを受けた：ミスティックモンスターズの BATTLE_HIT と同じ音（Mix of SFX by Ivokard「hit_1」・CC0）
+  damageHit: { ogg: damageHitOgg, m4a: damageHitM4a, gain: 1.2 },
 };
 
 type AudioContextCtor = typeof AudioContext;

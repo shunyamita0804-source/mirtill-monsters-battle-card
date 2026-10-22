@@ -10,6 +10,8 @@
 | 場面（SE_REGISTRY） | ファイル | 元の素材（ミスティックモンスターズ） | 作者・ライセンス | 加工 |
 | --- | --- | --- | --- | --- |
 | `cardDraw`：カードを引く・手札に配る（1枚ごと） | `card_draw.ogg` / `card_draw.m4a` | `assets/audio/se/interface_sfx_pack_1/cursor_style_2.ogg`（本編の UI_SELECT） | Interface SFX Pack 1 / ObsydianX（CC0・クレジット不要） | 末尾の無音を切り落とし、iPhone 用に M4A（AAC）も作成。音色は変えていない |
+| `manaGain`：カードをマナにした・山札からマナが増えた | `mana_gain.ogg` / `mana_gain.m4a` | `assets/audio/se/ivokard/bell.ogg`（本編の GOLD_GET） | Mix of SFX by Ivokard（CC0・クレジット不要） | 先頭1.0秒に切り、最後0.3秒をフェードアウト。M4A も作成 |
+| `damageHit`：モンスターがダメージを受けた | `damage_hit.ogg` / `damage_hit.m4a` | `assets/audio/se/ivokard/hit_1.ogg`（本編の BATTLE_HIT） | Mix of SFX by Ivokard（CC0・クレジット不要） | 先頭0.9秒に切り、最後0.2秒をフェードアウト。M4A も作成 |
 | `turnOrderSelect`：先攻・後攻のカードを選んだ瞬間 | `turn_order_select.ogg` / `turn_order_select.m4a` | `assets/audio/se/mystic_monsters_official/15_branch_select.ogg`（本編の BRANCH_SELECT） | ミスティックモンスターズ正式素材（ユーザー提供・ゲーム所有） | 同上 |
 
 - 再生は Web Audio。OGG を再生できるブラウザは OGG、できないブラウザ（iPhone Safari の一部など）は M4A を使う

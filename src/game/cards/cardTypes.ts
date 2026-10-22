@@ -4,13 +4,15 @@
  * 技カードの表示は「技カード UI テンプレート V4」（マナ＝青、ちから＝赤、かしこさ＝緑、数字1〜10）に合わせる。
  * 数値・効果の具体的な値は正式仕様が未確定のため、src/data/ の仮データで与える。
  */
-export type CardKind = 'monster' | 'skill';
+/** カードの種類は3つ：モンスター／技／サポート（原作の全体カード・ブリーダーカードはサポートにまとめる） */
+export type CardKind = 'monster' | 'skill' | 'support';
 export type StatType = 'force' | 'wisdom';
 export type Rarity = 'C' | 'U' | 'R';
 
 export const CARD_KIND_LABEL: Readonly<Record<CardKind, string>> = {
   monster: 'モンスター',
   skill: '技',
+  support: 'サポート',
 };
 
 export const STAT_LABEL: Readonly<Record<StatType, string>> = {
@@ -97,7 +99,36 @@ export interface SkillCard extends CardBase {
   readonly effect: SkillEffect;
 }
 
-export type CardDefinition = MonsterCard | SkillCard;
+/**
+ * サポートの効果（仮カード用。正式カードが決まったら足す）。
+ * field は「場に残る」効果：その能力の攻撃のダメージを双方とも modifier だけ増減する（stat 'all' は全攻撃）。
+ */
+export type SupportEffect =
+  | { readonly type: 'heal'; readonly value: number }
+  | { readonly type: 'draw'; readonly value: number }
+  | { readonly type: 'mana'; readonly value: number }
+  | { readonly type: 'field'; readonly stat: StatType | 'all'; readonly modifier: number };
+
+export interface SupportCard extends CardBase {
+  readonly kind: 'support';
+  /** 使用に必要なマナ */
+  readonly cost: number;
+  /**
+   * 効果の区分（内部属性。表示上はどれも「サポート」）
+   * - instant：使ったらすぐ効果が出て捨て札へ（旧ブリーダーカード）
+   * - field：場に1枚だけ残り、双方に効果が続く（旧全体カード）。新しく出たら古い方は持ち主の捨て札へ
+   */
+  readonly duration: 'instant' | 'field';
+  /** 回数制限のまとまり。同じまとまりは1ターンに limitPerTurn 回まで（旧ブリーダーは 'breeder' で1回） */
+  readonly limitGroup?: string;
+  readonly limitPerTurn?: number;
+  readonly effect: SupportEffect;
+}
+
+/** バトルで手札・山札に入るカード（技とサポート） */
+export type PlayCard = SkillCard | SupportCard;
+
+export type CardDefinition = MonsterCard | SkillCard | SupportCard;
 
 export function isMonster(card: CardDefinition): card is MonsterCard {
   return card.kind === 'monster';
@@ -105,6 +136,50 @@ export function isMonster(card: CardDefinition): card is MonsterCard {
 
 export function isSkill(card: CardDefinition): card is SkillCard {
   return card.kind === 'skill';
+}
+
+export function isSupport(card: CardDefinition): card is SupportCard {
+  return card.kind === 'support';
+}
+
+const statOrAll = (stat: StatType | 'all'): string => (stat === 'all' ? 'すべての' : `${STAT_LABEL[stat]}`);
+
+/** サポートカードの効果説明 */
+export function describeSupport(card: SupportCard): string {
+  const e = card.effect;
+  const limit = card.limitPerTurn ? `（このようなサポートは、あわせて1ターンに${card.limitPerTurn}回まで）` : '';
+  switch (e.type) {
+    case 'heal':
+      return `味方モンスター1体のライフを${e.value}回復する。${limit}`;
+    case 'draw':
+      return `山札からカードを${e.value}枚引く。${limit}`;
+    case 'mana':
+      return `山札の上から${e.value}枚をマナにする。${limit}`;
+    case 'field': {
+      const sign = e.modifier > 0 ? `+${e.modifier}` : String(e.modifier);
+      return `場に残る。${statOrAll(e.stat)}攻撃のダメージを${sign}する（双方）。場のカードは1枚だけで、新しく出すと入れ替わる。`;
+    }
+  }
+}
+
+/** サポートカードの短い説明（カード面・場の表示） */
+export function supportShortText(card: SupportCard): string {
+  const e = card.effect;
+  switch (e.type) {
+    case 'heal':
+      return `味方1体のライフ+${e.value}`;
+    case 'draw':
+      return `カードを${e.value}枚引く`;
+    case 'mana':
+      return `山札${e.value}枚をマナに`;
+    case 'field':
+      return `場：${statOrAll(e.stat)}攻撃${e.modifier > 0 ? '+' : ''}${e.modifier}`;
+  }
+}
+
+/** 技・サポートどちらでも説明文 */
+export function describePlayCard(card: PlayCard): string {
+  return card.kind === 'skill' ? describeSkill(card) : describeSupport(card);
 }
 
 /** 技カードの効果説明（ゲーム側で表示する文字） */

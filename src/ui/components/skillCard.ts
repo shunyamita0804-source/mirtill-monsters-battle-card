@@ -1,5 +1,5 @@
 import { getMonster } from '../../data/cards.ts';
-import type { SkillCard } from '../../game/cards/cardTypes.ts';
+import { supportShortText, type PlayCard, type SkillCard, type SupportCard } from '../../game/cards/cardTypes.ts';
 import { resolveCardArt } from '../cardArtSources.ts';
 import { h } from '../dom.ts';
 import masterUrl from '@assets/images/ui/skillcard/skillcard_master_v4.png';
@@ -103,6 +103,54 @@ export function createSkillCard(skill: SkillCard, options: SkillCardOptions): HT
   card.style.width = `${options.width}px`;
   card.style.height = `${(options.width * H) / W}px`;
   return card;
+}
+
+/** サポートカードの外枠の色（モンスターに属さないので共通の色） */
+const SUPPORT_TINT = '#b08a3e';
+
+/**
+ * サポートカード。技カードと同じテンプレートで、外枠は共通色、右下は能力の代わりに区分（サポート／全体）を出す。
+ */
+export function createSupportCard(card: SupportCard, options: SkillCardOptions): HTMLElement {
+  const artUrl = resolveCardArt(card.art);
+  const showText = options.showText ?? options.width >= 120;
+  const art = place(
+    artUrl
+      ? h('img', { class: 'skill-card__art', attrs: { src: artUrl, alt: '', draggable: 'false' } })
+      : h(
+          'div',
+          { class: 'skill-card__art skill-card__art--placeholder skill-card__art--support' },
+          h('span', { class: 'skill-card__art-mark', text: card.duration === 'field' ? '場' : '援' }),
+          h('span', { class: 'skill-card__art-note', text: '仮' }),
+        ),
+    LAYOUT.art,
+  );
+  const tint = h('div', { class: 'skill-card__tint' });
+  tint.style.backgroundColor = SUPPORT_TINT;
+  tint.style.setProperty('-webkit-mask-image', `url("${maskUrl}")`);
+  tint.style.maskImage = `url("${maskUrl}")`;
+  const manaNumber = numberUrl('mana', card.cost);
+  const kindLabel = card.duration === 'field' ? '全体' : 'サポート';
+  const el = h(
+    'div',
+    { class: 'skill-card skill-card--support', attrs: { role: 'img', 'aria-label': `サポートカード ${card.name} マナ${card.cost}` } },
+    art,
+    tint,
+    h('img', { class: 'skill-card__master', attrs: { src: masterUrl, alt: '', draggable: 'false' } }),
+    place(h('img', { class: 'skill-card__bar', attrs: { src: barManaUrl, alt: '', draggable: 'false' } }), LAYOUT.mana),
+    manaNumber ? place(h('img', { class: 'skill-card__number', attrs: { src: manaNumber, alt: '', draggable: 'false' } }), LAYOUT.manaNumber) : null,
+    place(h('div', { class: 'skill-card__kind', text: kindLabel }), LAYOUT.stat),
+    showText ? place(h('div', { class: 'skill-card__title', text: card.name }), LAYOUT.title) : null,
+    showText ? place(h('div', { class: 'skill-card__desc', text: supportShortText(card) }), LAYOUT.description) : null,
+  );
+  el.style.width = `${options.width}px`;
+  el.style.height = `${(options.width * H) / W}px`;
+  return el;
+}
+
+/** 技・サポートどちらでも描く */
+export function createPlayCard(card: PlayCard, options: SkillCardOptions): HTMLElement {
+  return card.kind === 'skill' ? createSkillCard(card, options) : createSupportCard(card, options);
 }
 
 /** カード面に書く短い説明 */

@@ -3,6 +3,7 @@ import { PACKS } from '../../data/economy.ts';
 import {
   CARD_KIND_LABEL,
   describeSkill,
+  describeSupport,
   EFFECT_LABEL,
   RARITY_LABEL,
   STAT_LABEL,
@@ -27,6 +28,9 @@ export function openCardDetail(parent: HTMLElement, card: CardDefinition, option
     rows.push(['種類', EFFECT_LABEL[card.effect.type]]);
     rows.push(['マナ', String(card.cost)]);
     rows.push([STAT_LABEL[card.stat.type], String(card.stat.value)]);
+  } else if (card.kind === 'support') {
+    rows.push(['区分', card.duration === 'field' ? '全体（場に残る）' : 'すぐ効果（1ターンに1回まで）']);
+    rows.push(['マナ', String(card.cost)]);
   } else {
     rows.push(['ライフ', String(card.life)]);
   }
@@ -35,7 +39,7 @@ export function openCardDetail(parent: HTMLElement, card: CardDefinition, option
   rows.push(['入手', card.kind === 'monster' && card.hidden ? 'ショップの特別復元（欠片10個）' : packs.join('、') || '—']);
   if (options.owned !== undefined) rows.push(['所持枚数', `${options.owned}枚`]);
 
-  const description = card.kind === 'skill' ? describeSkill(card) : card.description;
+  const description = card.kind === 'skill' ? describeSkill(card) : card.kind === 'support' ? describeSupport(card) : card.description;
 
   const handle = openModal(parent, {
     className: 'card-detail',

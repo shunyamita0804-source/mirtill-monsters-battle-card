@@ -1,6 +1,6 @@
-import { cardCatalog, getMonster, getSkill } from '../../data/cards.ts';
+import { cardCatalog, getMonster, getPlayCard, getSkill, getSupport } from '../../data/cards.ts';
 import { BATTLE_RULES } from '../../data/rules.ts';
-import { STAT_LABEL, type SkillCard, type StatType } from '../cards/cardTypes.ts';
+import { STAT_LABEL, type PlayCard, type SkillCard, type StatType, type SupportCard } from '../cards/cardTypes.ts';
 import type { Deck } from '../deck/deck.ts';
 import { nextRandom, shuffle } from '../rng.ts';
 
@@ -41,6 +41,14 @@ export interface BattleSide {
   readonly discard: readonly string[];
   /** マナにしたカード（積んだ順。先頭が一番古い）。マナの量＝枚数 */
   readonly manaPile: readonly string[];
+  /** このターンに使ったサポートの回数（回数制限のまとまりごと）。ターン開始で空に戻す */
+  readonly turnUsage: Readonly<Record<string, number>>;
+}
+
+/** 場に出ている全体カード（場に1枚だけ） */
+export interface FieldCard {
+  readonly cardId: string;
+  readonly owner: Side;
 }
 
 /** いまのマナの量 */
@@ -55,6 +63,7 @@ export interface PendingAttack {
   readonly targetUid: string;
   readonly cardId: string;
   readonly stat: StatType;
+  /** 攻撃の威力（場の全体カードの増減を反映した値） */
   readonly power: number;
   /** 守備側がこの攻撃に使ったカード（使った順）。守備がすべて終わってからまとめてダメージを計算する */
   readonly responses: readonly string[];
@@ -78,6 +87,8 @@ export interface BattleState {
   readonly phase: BattlePhase;
   readonly pending: PendingAttack | null;
   readonly sides: Readonly<Record<Side, BattleSide>>;
+  /** 場の全体カード（なければ null） */
+  readonly field: FieldCard | null;
   readonly winner: BattleWinner | null;
   /** knockout＝3体KO、deckOut＝引くべきカードを引けなかった（山札切れ） */
   readonly endReason: 'knockout' | 'deckOut' | null;
@@ -92,7 +103,7 @@ export type BattleAction =
       readonly type: 'useCard';
       readonly side: Side;
       readonly cardUid: string;
-      /** 技を使うモンスター（省略時は使えるモンスターを自動で選ぶ） */
+      /** 技を使うモンスター（省略時は使えるモンスターを自動で選ぶ。サポートには不要） */
       readonly userUid?: string;
       /** 対象（攻撃：相手モンスター、回復：味方モンスター） */
       readonly targetUid?: string;
@@ -152,14 +163,14 @@ export function createBattle(
     hand: [],
     discard: [],
     manaPile: [],
+    turnUsage: {},
   });
-  let uid = 1;
-  const p = drawCards(base(player, 'p', pShuffle.items), BATTLE_RULES.initialHand, uid);
-  uid = p.nextUid;
-  const o = drawCards(base(opponent, 'o', oShuffle.items), BATTLE_RULES.initialHand, uid);
-  uid = o.nextUid;
-  const sides: Record<Side, BattleSide> = { player: p.side, opponent: o.side };
-  // 先攻1ターン目（PS版）：ドローも攻撃もなく、すぐマナ化。マナにできるのは決まった枚数まで
+  const sides: Record<Side, BattleSide> = { player: base(player, 'p', pShuffle.items), opponent: base(opponent, 'o', oShuffle.items) };
+  // PS版：最初に手札を引くのは先攻だけ。後攻は自分の最初のドローで5枚引く
+  const dealt = drawCards(sides[firstSide], BATTLE_RULES.initialHand, 1);
+  sides[firstSide] = dealt.side;
+  const uid = dealt.nextUid;
+  // 先攻1ターン目（PS版）：攻撃はなく、すぐマナ化。マナにできるのは決まった枚数まで
   return {
     seed: s,
     turn: 1,
@@ -168,6 +179,7 @@ export function createBattle(
     phase: 'mana',
     pending: null,
     sides,
+    field: null,
     winner: null,
     endReason: null,
     manaConvertLimit: BATTLE_RULES.firstTurnManaLimit,
@@ -210,12 +222,31 @@ export interface Usability {
 const NO: (reason: string) => Usability = (reason) => ({ usable: false, reason });
 const YES: Usability = { usable: true, reason: null };
 
+/** サポートの残り使用回数（制限なしなら null） */
+export function supportUsesLeft(state: BattleState, side: Side, card: SupportCard): number | null {
+  if (!card.limitGroup || card.limitPerTurn === undefined) return null;
+  return card.limitPerTurn - (state.sides[side].turnUsage[card.limitGroup] ?? 0);
+}
+
+function supportUsability(state: BattleState, side: Side, card: SupportCard): Usability {
+  if (state.phase === 'defense') return NO('いまは防御・回避カードしか使えません');
+  if (state.active !== side) return NO('相手のターンです');
+  if (state.phase === 'mana') return NO('マナ化の間はカードを使えません');
+  if (manaOf(state.sides[side]) < card.cost) return NO('マナが足りません');
+  const left = supportUsesLeft(state, side, card);
+  if (left !== null && left <= 0) return NO('このターンはもう使えません（1ターンに1回）');
+  if (card.effect.type === 'heal' && aliveMonsters(state.sides[side]).length === 0) return NO('回復できる味方がいません');
+  return YES;
+}
+
 /** 手札のカードを今使えるか（使用不可状態の表示に使う） */
 export function cardUsability(state: BattleState, side: Side, cardUid: string): Usability {
   if (state.phase === 'ended') return NO('対戦は終了しました');
   const hand = findHandCard(state, side, cardUid);
   if (!hand) return NO('手札にありません');
-  const skill = getSkill(hand.cardId);
+  const card = getPlayCard(hand.cardId);
+  if (card.kind === 'support') return supportUsability(state, side, card);
+  const skill = card;
   const owner = state.sides[side].monsters.filter((m) => m.cardId === skill.monsterId);
   if (owner.length === 0) return NO('このカードを使えるモンスターがいません');
   if (owner.every((m) => m.life <= 0)) return NO('使えるモンスターが倒れています');
@@ -237,7 +268,7 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
   }
 
   if (state.active !== side) return NO('相手のターンです');
-  if (state.phase === 'mana') return NO('マナ化の間は技を使えません');
+  if (state.phase === 'mana') return NO('マナ化の間はカードを使えません');
   if (skill.effect.type === 'defense' || skill.effect.type === 'evade') return NO('防御・回避カードは相手の攻撃を受けたときに使います');
   if (manaOf(state.sides[side]) < skill.cost) return NO('マナが足りません');
   if (availableUsers(state, side, skill).length === 0) return NO('使えるモンスターは行動済みです');
@@ -247,11 +278,24 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
   return YES;
 }
 
-/** 対象を選ぶ必要がある技なら、選べる対象を返す */
-export function targetsFor(state: BattleState, side: Side, skill: SkillCard): BattleMonster[] {
-  if (skill.effect.type === 'attack') return aliveMonsters(state.sides[otherSide(side)]);
-  if (skill.effect.type === 'heal') return aliveMonsters(state.sides[side]);
+/** 対象を選ぶ必要があるカードなら、選べる対象を返す */
+export function targetsFor(state: BattleState, side: Side, card: PlayCard): BattleMonster[] {
+  if (card.effect.type === 'attack') return aliveMonsters(state.sides[otherSide(side)]);
+  if (card.effect.type === 'heal') return aliveMonsters(state.sides[side]);
   return [];
+}
+
+/** 場の全体カードによる、その能力の攻撃のダメージの増減 */
+export function fieldModifier(state: BattleState, stat: StatType): number {
+  if (!state.field) return 0;
+  const e = getSupport(state.field.cardId).effect;
+  if (e.type !== 'field') return 0;
+  return e.stat === 'all' || e.stat === stat ? e.modifier : 0;
+}
+
+/** 攻撃の威力（場の増減を反映。0未満にはならない） */
+export function attackPower(state: BattleState, skill: SkillCard): number {
+  return Math.max(0, skill.stat.value + fieldModifier(state, skill.stat.type));
 }
 
 /** 手札をマナにできるか（攻撃のあとのマナ化の間だけ。枚数の制限なし） */
@@ -360,7 +404,7 @@ function startTurn(state: BattleState, side: Side): BattleState {
   const s = state.sides[side];
   const monsters = s.monsters.map((m) => ({ ...m, acted: false }));
   let next: BattleState = { ...state, active: side, phase: 'main', manaConvertLimit: null };
-  next = addLog(updateSide(next, side, { monsters }), `${SIDE_LABEL[side]}のターン。`);
+  next = addLog(updateSide(next, side, { monsters, turnUsage: {} }), `${SIDE_LABEL[side]}のターン。`);
   const need = BATTLE_RULES.refillHandTo - s.hand.length;
   if (need > 0) {
     if (s.deck.length < need) return loseByDeckOut(next, side);
@@ -418,7 +462,9 @@ function useCard(
   if (!cardUsability(state, side, cardUid).usable) return state;
   const hand = findHandCard(state, side, cardUid);
   if (!hand) return state;
-  const skill = getSkill(hand.cardId);
+  const card = getPlayCard(hand.cardId);
+  if (card.kind === 'support') return useSupport(state, side, cardUid, card, targetUid);
+  const skill = card;
   const users = availableUsers(state, side, skill);
   const user = userUid ? users.find((m) => m.uid === userUid) : users[0];
   if (!user) return state;
@@ -438,8 +484,9 @@ function useCard(
   switch (skill.effect.type) {
     case 'attack': {
       if (!target) return state;
+      const power = attackPower(state, skill);
       // 防御も回避もできない攻撃は、守備を待たずにダメージ
-      if (skill.effect.unblockable && skill.effect.undodgeable) return applyDamage(next, target.uid, skill.stat.value);
+      if (skill.effect.unblockable && skill.effect.undodgeable) return applyDamage(next, target.uid, power);
       return {
         ...next,
         phase: 'defense',
@@ -449,36 +496,87 @@ function useCard(
           targetUid: target.uid,
           cardId: skill.id,
           stat: skill.stat.type,
-          power: skill.stat.value,
+          power,
           responses: [],
         },
       };
     }
-    case 'heal': {
-      if (!target) return state;
-      const healed = Math.min(target.maxLife, target.life + skill.stat.value);
-      next = updateMonster(next, target.uid, { life: healed });
-      return addLog(next, `${nameOf(target.cardId)}のライフが${healed - target.life}回復。`);
-    }
-    case 'mana': {
-      // 仮カードの効果：山札の上から数枚をそのままマナにする（マナは必ずカード1枚＝1マナ）
-      // 決められた枚数を山札から動かせなければ負け（山札切れ）
-      const s = next.sides[side];
-      if (s.deck.length < skill.stat.value) return loseByDeckOut(next, side);
-      const moved = s.deck.slice(0, skill.stat.value);
-      next = updateSide(next, side, { deck: s.deck.slice(moved.length), manaPile: [...s.manaPile, ...moved] });
-      return addLog(next, `山札の上から${moved.length}枚をマナにした。`);
-    }
-    case 'draw': {
-      // 効果のドローも、指示された枚数を引けなければ負け
-      if (next.sides[side].deck.length < skill.stat.value) return loseByDeckOut(next, side);
-      const drawn = drawCards(next.sides[side], skill.stat.value, next.nextUid);
-      next = updateSide({ ...next, nextUid: drawn.nextUid }, side, drawn.side);
-      return addLog(next, `カードを${drawn.drawn}枚引いた。`);
-    }
+    case 'heal':
+      return target ? healMonster(next, target, skill.stat.value) : state;
+    case 'mana':
+      return deckToMana(next, side, skill.stat.value);
+    case 'draw':
+      return drawByEffect(next, side, skill.stat.value);
     case 'defense':
     case 'evade':
       return state;
+  }
+}
+
+function healMonster(state: BattleState, target: BattleMonster, value: number): BattleState {
+  const healed = Math.min(target.maxLife, target.life + value);
+  const next = updateMonster(state, target.uid, { life: healed });
+  return addLog(next, `${nameOf(target.cardId)}のライフが${healed - target.life}回復。`);
+}
+
+/** 山札の上から数枚をそのままマナにする（マナは必ずカード1枚＝1マナ）。決められた枚数を動かせなければ負け */
+function deckToMana(state: BattleState, side: Side, count: number): BattleState {
+  const s = state.sides[side];
+  if (s.deck.length < count) return loseByDeckOut(state, side);
+  const moved = s.deck.slice(0, count);
+  const next = updateSide(state, side, { deck: s.deck.slice(moved.length), manaPile: [...s.manaPile, ...moved] });
+  return addLog(next, `山札の上から${moved.length}枚をマナにした。`);
+}
+
+/** 効果のドロー。指示された枚数を引けなければ負け */
+function drawByEffect(state: BattleState, side: Side, count: number): BattleState {
+  if (state.sides[side].deck.length < count) return loseByDeckOut(state, side);
+  const drawn = drawCards(state.sides[side], count, state.nextUid);
+  const next = updateSide({ ...state, nextUid: drawn.nextUid }, side, drawn.side);
+  return addLog(next, `カードを${drawn.drawn}枚引いた。`);
+}
+
+/**
+ * サポートを使う。モンスターの行動は使わない。回数制限のあるものは使用回数を数える。
+ * 全体カードは場に残り、すでに場にあったカードは持ち主の捨て札へ。
+ */
+function useSupport(state: BattleState, side: Side, cardUid: string, card: SupportCard, targetUid: string | undefined): BattleState {
+  let target: BattleMonster | undefined;
+  if (card.effect.type === 'heal') {
+    target = targetUid ? targetsFor(state, side, card).find((m) => m.uid === targetUid) : undefined;
+    if (!target) return state;
+  }
+  const s = state.sides[side];
+  let next: BattleState;
+  if (card.duration === 'field') {
+    // 場に置く（捨て札には行かない）
+    next = updateSide(state, side, { hand: s.hand.filter((c) => c.uid !== cardUid) });
+  } else {
+    next = removeFromHand(state, side, cardUid);
+  }
+  next = payMana(next, side, card.cost);
+  if (card.limitGroup) {
+    const usage = next.sides[side].turnUsage;
+    next = updateSide(next, side, { turnUsage: { ...usage, [card.limitGroup]: (usage[card.limitGroup] ?? 0) + 1 } });
+  }
+  next = addLog(next, `${SIDE_LABEL[side]}はサポート「${card.name}」を使った！`);
+  const e = card.effect;
+  switch (e.type) {
+    case 'heal':
+      return target ? healMonster(next, target, e.value) : state;
+    case 'draw':
+      return drawByEffect(next, side, e.value);
+    case 'mana':
+      return deckToMana(next, side, e.value);
+    case 'field': {
+      const old = next.field;
+      if (old) {
+        const owner = next.sides[old.owner];
+        next = updateSide(next, old.owner, { discard: [...owner.discard, old.cardId] });
+        next = addLog(next, `場の「${nameOf(old.cardId)}」は捨て札へ。`);
+      }
+      return addLog({ ...next, field: { cardId: card.id, owner: side } }, `「${card.name}」が場に出た。`);
+    }
   }
 }
 

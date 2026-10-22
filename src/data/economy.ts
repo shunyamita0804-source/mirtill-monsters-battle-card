@@ -1,4 +1,4 @@
-import { HIDDEN_MONSTER_ID, monsterId, skillId } from './cards.ts';
+import { HIDDEN_MONSTER_ID, monsterId, skillId, supportId } from './cards.ts';
 
 /**
  * 【仮データ】通貨・パック・提供割合。
@@ -44,24 +44,24 @@ export const PACKS: readonly PackDefinition[] = [
   {
     id: 'pack-01',
     name: '第1弾パック（仮）',
-    description: '仮モンスターA〜Dとその技を収録。',
+    description: '仮モンスターA〜Dとその技、仮サポートを収録。',
     price: 100,
     cardsPerPack: 5,
     unlockHint: '最初から購入できます',
     unlockedFromStart: true,
-    cardIds: [...['a', 'b', 'c', 'd'].map(monsterId), ...skillsFor(['a', 'b', 'c', 'd'])],
+    cardIds: [...['a', 'b', 'c', 'd'].map(monsterId), ...skillsFor(['a', 'b', 'c', 'd']), ...[1, 2, 4, 5].map(supportId)],
     rarityRates: RATES,
     isPlaceholder: true,
   },
   {
     id: 'pack-02',
     name: '第2弾パック（仮）',
-    description: '仮モンスターE〜Gとその技を収録。',
+    description: '仮モンスターE〜Gとその技、仮サポートを収録。',
     price: 120,
     cardsPerPack: 5,
     unlockHint: 'Eランク大会で初優勝すると解放',
     unlockedFromStart: false,
-    cardIds: [...['e', 'f', 'g'].map(monsterId), ...skillsFor(['e', 'f', 'g'])],
+    cardIds: [...['e', 'f', 'g'].map(monsterId), ...skillsFor(['e', 'f', 'g']), ...[3, 6].map(supportId)],
     rarityRates: RATES,
     isPlaceholder: true,
   },

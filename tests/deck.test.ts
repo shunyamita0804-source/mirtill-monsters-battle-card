@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { monsterId, skillId } from '../src/data/cards.ts';
+import { cardCatalog, monsterId, skillId, supportId } from '../src/data/cards.ts';
 import { DECK_RULES } from '../src/data/rules.ts';
 import {
   buildAutoDeck,
@@ -41,10 +41,27 @@ describe('デッキ構成チェック（仮ルール）', () => {
     expect(validateDeck(createStarterDeck(), collection).map((i) => i.code)).toContain('notOwned');
   });
 
-  it('NPC 用の自動デッキは正しい構成になる', () => {
+  it('NPC 用の自動デッキは正しい構成になる（仮サポートも入る）', () => {
     const deck = buildAutoDeck(['e', 'f', 'g'].map(monsterId));
     expect(validateDeck(deck)).toEqual([]);
     expect(Math.max(...Object.values(countCards(deck.skills)))).toBeLessThanOrEqual(DECK_RULES.maxCopies);
+    expect(deck.skills.some((id) => cardCatalog.get(id)?.kind === 'support')).toBe(true);
+  });
+
+  it('サポートはどのモンスターのデッキにも入れられる。モンスターカードは山札に入れられない', () => {
+    const deck = createStarterDeck();
+    const skills = [...deck.skills];
+    skills[0] = supportId(1);
+    expect(validateDeck({ ...deck, skills })).toEqual([]);
+    skills[1] = monsterId('a');
+    expect(validateDeck({ ...deck, skills }).map((i) => i.code)).toContain('notSkill');
+  });
+
+  it('おまかせ構築は、適合技が足りなければ持っているサポートで埋める', () => {
+    const collection = { ...createStarterCollection(), [supportId(1)]: 4, [supportId(2)]: 4 };
+    const monsters = [monsterId('a'), monsterId('b'), monsterId('d')]; // d の技は持っていない
+    const deck = buildDeckFromCollection(monsters, collection);
+    expect(deck.skills.filter((id) => id.startsWith('sup-'))).toHaveLength(8);
   });
 
   it('所持カードからのおまかせ構築', () => {

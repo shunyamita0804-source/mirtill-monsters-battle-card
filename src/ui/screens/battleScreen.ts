@@ -1,4 +1,4 @@
-import { getMonster, getSkill } from '../../data/cards.ts';
+import { getMonster, getPlayCard, getSkill, getSupport } from '../../data/cards.ts';
 import { PROVISIONAL_RULE_NOTES } from '../../data/rules.ts';
 import { chooseAction } from '../../game/battle/ai.ts';
 import {
@@ -10,19 +10,20 @@ import {
   manaOf,
   pendingDamage,
   SIDE_LABEL,
+  supportUsesLeft,
   targetsFor,
   type BattleAction,
   type BattleMonster,
   type BattleState,
   type Side,
 } from '../../game/battle/engine.ts';
-import { describeSkill, STAT_LABEL } from '../../game/cards/cardTypes.ts';
+import { describePlayCard, STAT_LABEL, supportShortText } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
 import { openCardDetail } from '../components/cardDetail.ts';
 import { confirmModal, openModal } from '../components/modal.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
-import { createSkillCard } from '../components/skillCard.ts';
+import { createPlayCard, createSkillCard } from '../components/skillCard.ts';
 import { button, h } from '../dom.ts';
 import { once, type BattleRequest } from '../gameStore.ts';
 import { sound } from '../sound.ts';
@@ -34,6 +35,10 @@ const AI_STEP_MS = 650;
 const DEAL_MS = 110;
 /** 先攻・後攻のカードをめくってからバトルを始めるまで（ミリ秒） */
 const ORDER_REVEAL_MS = 1300;
+/** マナにするカードが情報箱へ飛んでいく時間（ミリ秒） */
+const MANA_FLY_MS = 380;
+/** 場面の表示（あなたのターン・マナ化など）が出ている時間（ミリ秒） */
+const BANNER_MS = 1100;
 
 interface Targeting {
   readonly cardUid: string;
@@ -79,6 +84,12 @@ export const battleScreen: ScreenDefinition = {
     let busyUntil = 0;
     /** 前回描画時のライフ（ダメージ・回復の演出に使う） */
     const prevLife = new Map<string, number>();
+    /** 前回描画時のマナ（マナが増えた演出に使う） */
+    const prevMana = new Map<Side, number>();
+    /** マナ化で選んだ手札（まとめてマナにする） */
+    const manaPicks = new Set<string>();
+    /** 最後に出した場面の表示（同じ表示を繰り返さない） */
+    let bannerKey = '';
     let targeting: Targeting | null = null;
     let auto = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -95,6 +106,59 @@ export const battleScreen: ScreenDefinition = {
       targeting = null;
       if (selectedUid && !state.sides.player.hand.some((c) => c.uid === selectedUid)) selectedUid = null;
       render();
+    };
+
+    /** いまの画面の拡大率（ステージは拡大縮小されているので、位置の計算に使う） */
+    const stageScale = (): number => {
+      const w = element.offsetWidth;
+      return w > 0 ? element.getBoundingClientRect().width / w : 1;
+    };
+
+    /** 選んだ手札をまとめてマナにする：カードが情報箱へ飛んでいき、着いたらマナが増える */
+    const convertPicked = (): void => {
+      if (!state || dealing() || manaPicks.size === 0) return;
+      const picks = state.sides.player.hand.filter((c) => manaPicks.has(c.uid)).map((c) => c.uid);
+      const goal = element.querySelector('.battle-info--player .battle-info__mana');
+      const root = element.getBoundingClientRect();
+      const scale = stageScale();
+      if (goal) {
+        const g = goal.getBoundingClientRect();
+        for (const uid of picks) {
+          const from = element.querySelector(`.battle__hand-card[data-uid="${uid}"] .skill-card`);
+          if (!from) continue;
+          const r = from.getBoundingClientRect();
+          const fly = from.cloneNode(true) as HTMLElement;
+          fly.classList.add('battle__mana-fly');
+          fly.style.left = `${(r.left - root.left) / scale}px`;
+          fly.style.top = `${(r.top - root.top) / scale}px`;
+          fly.style.setProperty('--dx', `${(g.left + g.width / 2 - (r.left + r.width / 2)) / scale}px`);
+          fly.style.setProperty('--dy', `${(g.top + g.height / 2 - (r.top + r.height / 2)) / scale}px`);
+          element.append(fly);
+          setTimeout(() => fly.remove(), MANA_FLY_MS + 50);
+          element.querySelector(`.battle__hand-card[data-uid="${uid}"]`)?.classList.add('is-leaving');
+        }
+      }
+      busyUntil = Math.max(busyUntil, Date.now() + MANA_FLY_MS);
+      setTimeout(() => {
+        if (destroyed || !state) return;
+        let next = state;
+        for (const uid of picks) next = applyAction(next, { type: 'convertToMana', side: 'player', cardUid: uid });
+        manaPicks.clear();
+        selectedUid = null;
+        state = next;
+        render();
+      }, MANA_FLY_MS);
+    };
+
+    /** マナ化で手札をタップ：マナにする候補に入れる／外す（最初のターンは決まった枚数まで） */
+    const toggleManaPick = (uid: string): void => {
+      if (!state) return;
+      if (manaPicks.has(uid)) manaPicks.delete(uid);
+      else {
+        const limit = state.manaConvertLimit;
+        if (limit !== null && manaPicks.size >= limit) return;
+        manaPicks.add(uid);
+      }
     };
 
     /** 守備に使えるカードが1枚もないときは、守備の選択を出さずに自動で進める */
@@ -185,9 +249,9 @@ export const battleScreen: ScreenDefinition = {
       if (!state || dealing()) return;
       const hand = state.sides.player.hand.find((c) => c.uid === cardUid);
       if (!hand || !cardUsability(state, 'player', cardUid).usable) return;
-      const skill = getSkill(hand.cardId);
-      const targets = targetsFor(state, 'player', skill);
-      if (skill.effect.type === 'attack' || skill.effect.type === 'heal') {
+      const card = getPlayCard(hand.cardId);
+      const targets = targetsFor(state, 'player', card);
+      if (card.effect.type === 'attack' || card.effect.type === 'heal') {
         if (targets.length === 1 && targets[0]) {
           dispatch({ type: 'useCard', side: 'player', cardUid, targetUid: targets[0].uid });
           return;
@@ -195,7 +259,7 @@ export const battleScreen: ScreenDefinition = {
         targeting = {
           cardUid,
           targets: targets.map((t) => t.uid),
-          prompt: skill.effect.type === 'attack' ? '攻撃する相手モンスターをタップしてください' : '回復する味方モンスターをタップしてください',
+          prompt: card.effect.type === 'attack' ? '攻撃する相手モンスターをタップしてください' : '回復する味方モンスターをタップしてください',
         };
         render();
         return;
@@ -269,6 +333,8 @@ export const battleScreen: ScreenDefinition = {
             const before = prevLife.get(m.uid) ?? m.life;
             const diff = m.life - before;
             const isPendingTarget = s.pending?.targetUid === m.uid;
+            // 守備待ちの攻撃の対象には、いまのダメージ予定を出す（PS版の対象表示）
+            const incoming = isPendingTarget && s.phase === 'defense' && s.pending ? pendingDamage(s.pending) : null;
             return h(
               'button',
               {
@@ -280,6 +346,8 @@ export const battleScreen: ScreenDefinition = {
               createMonsterCard(getMonster(m.cardId), { width: 74, life: { current: m.life, max: m.maxLife }, showName: false }),
               h('span', { class: 'battle__monster-life', text: String(m.life) }),
               m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: '行動済' }) : null,
+              incoming !== null ? h('span', { class: 'battle__incoming', text: String(incoming) }) : null,
+              diff < 0 ? h('span', { class: 'battle__burst', attrs: { 'aria-hidden': 'true' } }) : null,
               diff !== 0 ? h('span', { class: `battle__float ${diff < 0 ? 'is-damage' : 'is-heal'}`, text: diff < 0 ? String(diff) : `+${diff}` }) : null,
             );
           }),
@@ -289,7 +357,7 @@ export const battleScreen: ScreenDefinition = {
     /** 中段：左に説明文、右に選んだ技カードの拡大 */
     const detailPanel = (s: BattleState): HTMLElement => {
       const hand = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
-      const skill = hand ? getSkill(hand.cardId) : undefined;
+      const card = hand ? getPlayCard(hand.cardId) : undefined;
       const logs = s.log.slice(-2).map((l) => h('p', { class: 'battle-text__log', text: l.text }));
       let body: (HTMLElement | null)[];
       if (targeting) {
@@ -311,31 +379,37 @@ export const battleScreen: ScreenDefinition = {
                 : `「${getSkill(p.cardId).name}」で攻撃中… 相手の守備を待っています（いまのダメージ ${pendingDamage(p)}）`,
           }),
         ];
-      } else if (skill && hand) {
-        const usability = cardUsability(s, 'player', hand.uid);
-        const convertible = canConvertToMana(s, 'player');
-        body = [
-          h('p', { class: 'battle-text__name', text: skill.name }),
-          h('p', { class: 'battle-text__owner', text: `適合：${getMonster(skill.monsterId).name}` }),
-          h('p', { class: 'battle-text__desc', text: describeSkill(skill) }),
-          convertible
-            ? h('p', { class: 'battle-text__ok', text: 'マナにできます' })
-            : s.phase === 'mana' && s.active === 'player' && s.manaConvertLimit === 0
-              ? h('p', { class: 'battle-text__ng', text: 'このターンはもうマナにできません' })
-              : usability.usable
-              ? h('p', { class: 'battle-text__ok', text: '使えます' })
-              : h('p', { class: 'battle-text__ng', text: usability.reason ?? '使えません' }),
-        ];
       } else if (s.phase === 'mana' && s.active === 'player') {
+        // マナ化：手札をタップして候補を選び、「マナにする」でまとめてマナに
         const limit = s.manaConvertLimit;
         body = [
           h('p', {
             class: 'battle-text__prompt',
             text:
               limit === null
-                ? 'マナ化：手札をタップして「マナにする」。何枚でもOK（1枚＝1マナ）。終わったら「ターン終了」'
-                : `最初のターンはマナ化だけ。あと${limit}枚までマナにできます。終わったら「ターン終了」`,
+                ? 'マナ化：マナにするカードをタップして選び（何枚でも・1枚＝1マナ）、「マナにする」。終わったら「ターン終了」'
+                : limit > 0
+                  ? `最初のターンはマナ化だけ。あと${limit}枚まで選んで「マナにする」。終わったら「ターン終了」`
+                  : '最初のターンにマナにできる枚数に達しました。「ターン終了」を押してください',
           }),
+          h('p', { class: 'battle-text__ok', text: `選んだカード ${manaPicks.size}枚` }),
+          card ? h('p', { class: 'battle-text__desc', text: `${card.name}：${describePlayCard(card)}` }) : null,
+        ];
+      } else if (card && hand) {
+        const usability = cardUsability(s, 'player', hand.uid);
+        const owner =
+          card.kind === 'skill'
+            ? `適合：${getMonster(card.monsterId).name}`
+            : card.duration === 'field'
+              ? 'サポート（全体・場に残る）'
+              : `サポート（このターンあと${supportUsesLeft(s, 'player', card) ?? '-'}回）`;
+        body = [
+          h('p', { class: 'battle-text__name', text: card.name }),
+          h('p', { class: 'battle-text__owner', text: owner }),
+          h('p', { class: 'battle-text__desc', text: describePlayCard(card) }),
+          usability.usable
+            ? h('p', { class: 'battle-text__ok', text: '使えます' })
+            : h('p', { class: 'battle-text__ng', text: usability.reason ?? '使えません' }),
         ];
       } else {
         body = [h('p', { class: 'battle-text__hint', text: '手札のカードをタップすると、ここに説明と拡大したカードが出ます。' })];
@@ -347,37 +421,45 @@ export const battleScreen: ScreenDefinition = {
         h(
           'div',
           { class: 'battle-detail__card' },
-          skill ? createSkillCard(skill, { width: 136, showText: true }) : h('div', { class: 'battle-detail__empty', text: 'カード' }),
+          card ? createPlayCard(card, { width: 136, showText: true }) : h('div', { class: 'battle-detail__empty', text: 'カード' }),
         ),
       );
     };
 
     const handRow = (s: BattleState): HTMLElement => {
       const myTurnMain = s.phase === 'main' && s.active === 'player';
+      const myMana = s.phase === 'mana' && s.active === 'player' && !auto;
       let newIndex = 0;
       const row = h(
         'div',
         { class: 'battle__hand', attrs: { 'aria-label': '手札' } },
         ...s.sides.player.hand.map((c) => {
-          const skill = getSkill(c.cardId);
+          const card = getPlayCard(c.cardId);
           const usable = cardUsability(s, 'player', c.uid).usable;
           const isNew = !shownHand.has(c.uid);
+          const picked = myMana && manaPicks.has(c.uid);
           const el = h(
             'button',
             {
-              class: `battle__hand-card${usable ? ' is-usable' : ''}${!usable && myTurnMain ? ' is-unusable' : ''}${selectedUid === c.uid ? ' is-selected' : ''}${isNew ? ' is-dealt' : ''}`,
-              attrs: { type: 'button', 'aria-label': `${skill.name}${usable ? '' : '（使えない）'}` },
+              class: `battle__hand-card${usable ? ' is-usable' : ''}${!usable && myTurnMain ? ' is-unusable' : ''}${selectedUid === c.uid ? ' is-selected' : ''}${picked ? ' is-picked' : ''}${isNew ? ' is-dealt' : ''}`,
+              attrs: {
+                type: 'button',
+                'aria-label': `${card.name}${picked ? '（マナにする）' : usable ? '' : '（使えない）'}`,
+                ...(myMana ? { 'aria-pressed': String(picked) } : {}),
+              },
               dataset: { uid: c.uid },
               on: {
                 click: () => {
                   selectedUid = c.uid;
                   targeting = null;
+                  if (myMana && !dealing()) toggleManaPick(c.uid);
                   render();
                 },
               },
             },
-            createSkillCard(skill, { width: 62, showText: false }),
-            h('span', { class: 'battle__hand-name', text: skill.name }),
+            createPlayCard(card, { width: 62, showText: false }),
+            h('span', { class: 'battle__hand-name', text: card.name }),
+            picked ? h('span', { class: 'battle__hand-mana', text: 'マナ' }) : null,
           );
           if (isNew) {
             // 1枚ずつ高速で配る：見た目の遅れと効果音を同じ間隔でずらす
@@ -400,8 +482,8 @@ export const battleScreen: ScreenDefinition = {
       const target = s.sides.player.monsters.find((m) => m.uid === pending.targetUid);
       // 守備に使えるのは狙われたモンスターのカードだけなので、そのカードだけ並べる
       const options = s.sides.player.hand.filter((c) => {
-        const skill = getSkill(c.cardId);
-        return ['defense', 'evade'].includes(skill.effect.type) && skill.monsterId === target?.cardId;
+        const card = getPlayCard(c.cardId);
+        return card.kind === 'skill' && ['defense', 'evade'].includes(card.effect.type) && card.monsterId === target?.cardId;
       });
       const used = pending.responses.map((id) => getSkill(id).name).join('・');
       return h(
@@ -502,6 +584,58 @@ export const battleScreen: ScreenDefinition = {
           )
         : null;
 
+    /** 場面の表示（あなたのターン・マナ化など）。場面が変わったときだけ短く出す */
+    const phaseBanner = (s: BattleState): HTMLElement | null => {
+      if (s.phase === 'ended' || s.phase === 'defense') return null;
+      const key = `${s.turn}-${s.active}-${s.phase}`;
+      if (key === bannerKey) return null;
+      bannerKey = key;
+      const who = s.active === 'player' ? 'あなた' : '相手';
+      const sub =
+        s.manaConvertLimit !== null ? `先攻1ターン目：マナ化だけ（${s.manaConvertLimit}枚まで）` : s.phase === 'mana' ? 'マナ化' : 'ドロー → 攻撃';
+      const el = h(
+        'div',
+        { class: `battle__banner battle__banner--${s.active}`, attrs: { 'aria-hidden': 'true' } },
+        h('span', { class: 'battle__banner-main', text: s.phase === 'mana' && s.manaConvertLimit === null ? `${who}のマナ化` : `${who}のターン` }),
+        h('span', { class: 'battle__banner-sub', text: sub }),
+      );
+      setTimeout(() => el.remove(), BANNER_MS);
+      return el;
+    };
+
+    /** 場の全体カード（上の帯の右に出す。タップで詳しく） */
+    const fieldChip = (s: BattleState): HTMLElement => {
+      if (!s.field) return h('span', { class: 'battle-turn__first', text: s.first === 'player' ? 'あなたが先攻' : 'あなたが後攻' });
+      const card = getSupport(s.field.cardId);
+      return h(
+        'button',
+        {
+          class: `battle-turn__field battle-turn__field--${s.field.owner}`,
+          attrs: { type: 'button', 'aria-label': `場のカード ${card.name}` },
+          on: { click: () => openCardDetail(element, card, { extra: [`${SIDE_LABEL[s.field?.owner ?? 'player']}が出した場のカード`] }) },
+        },
+        h('span', { class: 'battle-turn__field-label', text: '場' }),
+        h('span', { class: 'battle-turn__field-text', text: supportShortText(card).replace(/^場：/, '') }),
+      );
+    };
+
+    /** マナが増えた・ダメージを受けたときの演出と効果音（前回の描画との差で判断する） */
+    const playEffects = (s: BattleState): void => {
+      for (const side of ['player', 'opponent'] as const) {
+        const now = manaOf(s.sides[side]);
+        const before = prevMana.get(side);
+        prevMana.set(side, now);
+        if (before === undefined || now <= before) continue;
+        const box = element.querySelector(`.battle-info--${side} .battle-info__mana`);
+        if (box) {
+          box.classList.add('is-mana-up');
+          box.append(h('span', { class: 'battle__mana-float', text: `+${now - before}` }), h('span', { class: 'battle__mana-spark', attrs: { 'aria-hidden': 'true' } }));
+        }
+        sound.play('manaGain');
+      }
+      if (element.querySelector('.battle__monster.is-hit')) sound.play('damageHit');
+    };
+
     const render = (): void => {
       element.dataset.stage = state ? 'play' : 'order';
       if (!state) {
@@ -509,25 +643,32 @@ export const battleScreen: ScreenDefinition = {
         return;
       }
       const s = state;
+      // 手札から無くなったカード・マナ化以外の場面では、マナにする候補を消す
+      if (s.phase !== 'mana' || s.active !== 'player') manaPicks.clear();
+      for (const uid of [...manaPicks]) if (!s.sides.player.hand.some((c) => c.uid === uid)) manaPicks.delete(uid);
       const handScroll = element.querySelector('.battle__hand')?.scrollLeft ?? 0;
       const hand = handRow(s);
       const blocked = dealing();
       const myTurn = s.phase === 'main' && s.active === 'player' && !auto && !blocked;
-      const selected = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
-      const useBtn = button('使う', () => selected && useCard(selected.uid), 'btn btn--primary');
-      useBtn.disabled = !myTurn || !selected || !cardUsability(s, 'player', selected.uid).usable || targeting !== null;
       const myMana = s.phase === 'mana' && s.active === 'player' && !auto && !blocked;
-      const manaBtn = button('マナにする', () => {
-        if (selected) dispatch({ type: 'convertToMana', side: 'player', cardUid: selected.uid });
-      }, 'btn');
-      manaBtn.disabled = !myMana || !selected || !canConvertToMana(s, 'player');
-      // 攻撃中は「攻撃終了」でマナ化へ、マナ化中は「ターン終了」
-      const endBtn = myMana
-        ? button('ターン終了', () => dispatch({ type: 'endTurn', side: 'player' }), 'btn')
-        : button('攻撃終了', () => dispatch({ type: 'endAttack', side: 'player' }), 'btn');
-      endBtn.disabled = !myTurn && !myMana;
+      const selected = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
 
-      const phaseText = s.phase === 'mana' ? '・マナ化' : s.phase === 'ended' ? '' : '・攻撃';
+      // 操作ボタンは場面ごとに2つだけ（スマホで押しやすく）：攻撃中＝使う／攻撃終了、マナ化中＝マナにする／ターン終了
+      let primary: HTMLButtonElement;
+      let secondary: HTMLButtonElement;
+      if (s.phase === 'mana' && s.active === 'player') {
+        primary = button(manaPicks.size > 0 ? `マナにする（${manaPicks.size}枚）` : 'マナにする', convertPicked, 'btn btn--primary');
+        primary.disabled = !myMana || manaPicks.size === 0 || !canConvertToMana(s, 'player');
+        secondary = button('ターン終了', () => dispatch({ type: 'endTurn', side: 'player' }), 'btn');
+        secondary.disabled = !myMana;
+      } else {
+        primary = button('使う', () => selected && useCard(selected.uid), 'btn btn--primary');
+        primary.disabled = !myTurn || !selected || !cardUsability(s, 'player', selected.uid).usable || targeting !== null;
+        secondary = button('攻撃終了', () => dispatch({ type: 'endAttack', side: 'player' }), 'btn');
+        secondary.disabled = !myTurn;
+      }
+
+      const phaseText = s.phase === 'mana' ? '・マナ化' : s.phase === 'ended' ? '' : s.phase === 'defense' ? '・守備' : '・攻撃';
       const turnText =
         s.phase === 'ended' ? '対戦終了' : `${s.turn}手番・${s.active === 'player' ? 'あなたの番' : '相手の番'}${phaseText}`;
       element.replaceChildren(
@@ -537,18 +678,19 @@ export const battleScreen: ScreenDefinition = {
           'div',
           { class: `battle-turn battle-turn--${s.phase === 'ended' ? 'ended' : s.active}` },
           h('span', { class: 'battle-turn__text', text: turnText }),
-          h('span', { class: 'battle-turn__first', text: s.first === 'player' ? 'あなたが先攻' : 'あなたが後攻' }),
+          fieldChip(s),
         ),
         monsterRow(s, 'opponent'),
         monsterRow(s, 'player'),
         detailPanel(s),
         hand,
-        h('footer', { class: 'battle__footer' }, useBtn, manaBtn, endBtn),
+        h('footer', { class: 'battle__footer' }, primary, secondary),
       );
-      const overlays = [defenseOverlay(s), resultOverlay(s)].filter((o): o is HTMLElement => o !== null);
+      const overlays = [defenseOverlay(s), resultOverlay(s), phaseBanner(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);
       const handEl = element.querySelector('.battle__hand');
       if (handEl) handEl.scrollLeft = handScroll;
+      playEffects(s);
       for (const side of ['player', 'opponent'] as const) {
         for (const m of s.sides[side].monsters) prevLife.set(m.uid, m.life);
       }

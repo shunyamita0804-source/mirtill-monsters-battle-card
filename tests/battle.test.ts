@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getSkill, monsterId, skillId, SKILLS } from '../src/data/cards.ts';
+import { getSkill, monsterId, skillId, SKILLS, supportId } from '../src/data/cards.ts';
 import { BATTLE_RULES } from '../src/data/rules.ts';
 import { chooseAction } from '../src/game/battle/ai.ts';
 import {
@@ -58,14 +58,16 @@ function playOut(state: BattleState, maxSteps = 5000): { state: BattleState; ste
 }
 
 describe('バトル開始', () => {
-  it('双方モンスター3体、手札5枚、山札55枚。マナは双方0から', () => {
+  it('双方モンスター3体・マナ0。最初に手札を引くのは先攻だけ（後攻は自分の最初のドローで5枚）', () => {
     const s = battle();
     for (const side of ['player', 'opponent'] as const) {
       expect(s.sides[side].monsters).toHaveLength(3);
-      expect(s.sides[side].hand).toHaveLength(BATTLE_RULES.initialHand);
-      expect(s.sides[side].deck).toHaveLength(60 - BATTLE_RULES.initialHand);
       expect(manaOf(s.sides[side])).toBe(0);
     }
+    expect(s.sides.player.hand).toHaveLength(BATTLE_RULES.initialHand);
+    expect(s.sides.player.deck).toHaveLength(60 - BATTLE_RULES.initialHand);
+    expect(s.sides.opponent.hand).toHaveLength(0);
+    expect(s.sides.opponent.deck).toHaveLength(60);
   });
 
   it('先攻の1ターン目はドロー・攻撃なしで、すぐマナ化。マナにできるのは2枚まで', () => {
@@ -178,7 +180,8 @@ describe('使用不可状態', () => {
     let s = withHand(battle(), 'player', [skillId('a', 3), skillId('a', 1), skillId('a', 1), skillId('a', 4)], 2);
     expect(cardUsability(s, 'player', 't0')).toMatchObject({ usable: false, reason: 'マナが足りません' });
     expect(cardUsability(s, 'player', 't3').usable).toBe(false); // 防御カード
-    expect(cardUsability(s, 'opponent', s.sides.opponent.hand[0]?.uid ?? '').reason).toBe('相手のターンです');
+    s = withHand(s, 'opponent', [skillId('d', 1)], 0);
+    expect(cardUsability(s, 'opponent', 't0').reason).toBe('相手のターンです');
     const target = s.sides.opponent.monsters[0]?.uid ?? '';
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't1', targetUid: target });
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
@@ -200,17 +203,25 @@ describe('使用不可状態', () => {
 });
 
 describe('ターン進行とドロー', () => {
-  it('後攻の最初のドロー：手札が5枚あるので、山札の一番上を1枚マナにする', () => {
+  it('後攻の最初のドロー：手札0枚から5枚引く（マナは増えない）', () => {
     let s = battle();
-    const top = s.sides.opponent.deck[0];
-    const deck = s.sides.opponent.deck.length;
     s = applyAction(s, { type: 'endTurn', side: 'player' });
     expect(s.active).toBe('opponent');
     expect(s.phase).toBe('main');
     expect(s.turn).toBe(2);
     expect(s.sides.opponent.hand).toHaveLength(5);
-    expect(s.sides.opponent.manaPile).toEqual([top]);
-    expect(s.sides.opponent.deck).toHaveLength(deck - 1);
+    expect(s.sides.opponent.manaPile).toEqual([]);
+    expect(s.sides.opponent.deck).toHaveLength(55);
+  });
+
+  it('ドローで手札が5枚のままなら、山札の一番上を1枚マナにする', () => {
+    let s = battle();
+    s = applyAction(s, { type: 'endTurn', side: 'player' });
+    s = applyAction(s, { type: 'endAttack', side: 'opponent' });
+    const top = s.sides.player.deck[0];
+    s = applyAction(s, { type: 'endTurn', side: 'opponent' });
+    expect(s.sides.player.hand).toHaveLength(5);
+    expect(s.sides.player.manaPile).toEqual([top]);
   });
 
   it('攻撃中はターン終了できない。攻撃終了でマナ化 → ターン終了。手札が減っていれば5枚まで引く', () => {
@@ -222,7 +233,7 @@ describe('ターン進行とドロー', () => {
     // 2ターン目以降はマナ化の枚数に制限なし
     for (const c of s.sides.opponent.hand) s = applyAction(s, { type: 'convertToMana', side: 'opponent', cardUid: c.uid });
     expect(s.sides.opponent.hand).toHaveLength(0);
-    expect(manaOf(s.sides.opponent)).toBe(6);
+    expect(manaOf(s.sides.opponent)).toBe(5);
     s = applyAction(s, { type: 'endTurn', side: 'opponent' });
     // 先攻は手札5枚のまま → 山札の一番上をマナに
     expect(s.active).toBe('player');
@@ -231,13 +242,13 @@ describe('ターン進行とドロー', () => {
     s = applyAction(s, { type: 'endTurn', side: 'player' });
     // 後攻は手札0枚 → 5枚引く。マナは自動では増えない
     expect(s.sides.opponent.hand).toHaveLength(5);
-    expect(manaOf(s.sides.opponent)).toBe(6);
+    expect(manaOf(s.sides.opponent)).toBe(5);
   });
 
   it('マナ化の間は技を使えない。マナにしたカードは捨て札ではなくマナの山へ', () => {
     let s = battle();
     const first = s.sides.player.hand[0]?.uid ?? '';
-    expect(cardUsability(s, 'player', first)).toMatchObject({ usable: false, reason: 'マナ化の間は技を使えません' });
+    expect(cardUsability(s, 'player', first)).toMatchObject({ usable: false, reason: 'マナ化の間はカードを使えません' });
     s = applyAction(s, { type: 'convertToMana', side: 'player', cardUid: first });
     expect(s.sides.player.discard).toHaveLength(0);
     expect(s.sides.player.manaPile).toHaveLength(1);
@@ -330,6 +341,58 @@ describe('山札切れ', () => {
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0' });
     expect(s.winner).toBe('opponent');
     expect(s.endReason).toBe('deckOut');
+  });
+});
+
+describe('サポートカード', () => {
+  it('旧ブリーダーにあたるサポートは、モンスターの行動を使わず、まとめて1ターンに1回まで', () => {
+    let s = withHand(battle(), 'player', [supportId(2), supportId(3)], 5); // 仮サポート2：2枚引く、3：山札2枚をマナに
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0' });
+    expect(s.sides.player.hand).toHaveLength(1 + 2);
+    expect(s.sides.player.monsters.every((m) => !m.acted)).toBe(true);
+    expect(cardUsability(s, 'player', 't1')).toMatchObject({ usable: false, reason: 'このターンはもう使えません（1ターンに1回）' });
+    // 次の自分のターンにはまた使える
+    s = applyAction(s, { type: 'endAttack', side: 'player' });
+    s = applyAction(s, { type: 'endTurn', side: 'player' });
+    s = applyAction(s, { type: 'endAttack', side: 'opponent' });
+    s = applyAction(s, { type: 'endTurn', side: 'opponent' });
+    expect(cardUsability(s, 'player', 't1').usable).toBe(true);
+  });
+
+  it('回復のサポートは味方を選んでライフを戻す（上限は最初のライフ）', () => {
+    let s = withHand(battle(), 'player', [supportId(1)], 5);
+    const m = s.sides.player.monsters[0];
+    if (!m) throw new Error('monster');
+    s = { ...s, sides: { ...s.sides, player: { ...s.sides.player, monsters: s.sides.player.monsters.map((x, i) => (i === 0 ? { ...x, life: x.maxLife - 1 } : x)) } } };
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: m.uid });
+    expect(s.sides.player.monsters[0]?.life).toBe(m.maxLife);
+  });
+
+  it('全体カードは場に1枚だけ残り、双方の攻撃のダメージを変える。新しく出すと古い方は持ち主の捨て札へ', () => {
+    let s = withHand(battle(), 'player', [supportId(4), skillId('a', 2)], 10); // 仮全体1：ちから攻撃-1
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0' });
+    expect(s.field).toEqual({ cardId: supportId(4), owner: 'player' });
+    expect(s.sides.player.discard).not.toContain(supportId(4));
+    // ちから5の攻撃が4になる
+    const target = enemyUid(s, 'e');
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't1', targetUid: target });
+    expect(s.pending?.power).toBe(getSkill(skillId('a', 2)).stat.value - 1);
+    s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
+    // 相手が別の全体カードを出すと入れ替わる
+    s = applyAction(s, { type: 'endAttack', side: 'player' });
+    s = applyAction(s, { type: 'endTurn', side: 'player' });
+    s = withHand(s, 'opponent', [supportId(6)], 3);
+    s = { ...s, active: 'opponent' };
+    s = applyAction(s, { type: 'useCard', side: 'opponent', cardUid: 't0' });
+    expect(s.field).toEqual({ cardId: supportId(6), owner: 'opponent' });
+    expect(s.sides.player.discard).toContain(supportId(4));
+  });
+
+  it('サポートは守備には使えない', () => {
+    let s = withHand(battle(), 'player', [skillId('a', 2)], 5);
+    s = withHand(s, 'opponent', [supportId(2)], 5);
+    s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: enemyUid(s, 'e') });
+    expect(cardUsability(s, 'opponent', 't0').usable).toBe(false);
   });
 });
 

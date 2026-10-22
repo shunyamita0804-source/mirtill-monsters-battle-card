@@ -1,4 +1,4 @@
-import { HIDDEN_MONSTER_ID, MONSTERS, SKILLS } from '../../data/cards.ts';
+import { HIDDEN_MONSTER_ID, MONSTERS, SKILLS, SUPPORTS } from '../../data/cards.ts';
 import { PACKS } from '../../data/economy.ts';
 import { cardCatalog } from '../../data/cards.ts';
 import type { CardDefinition } from '../../game/cards/cardTypes.ts';
@@ -14,7 +14,7 @@ export const collectionScreen: ScreenDefinition = {
   create(ctx) {
     const save = ctx.store.save;
     const element = h('main', { class: 'screen collection' });
-    const cards: CardDefinition[] = [...MONSTERS.filter((m) => m.id !== HIDDEN_MONSTER_ID || save.hiddenRestored), ...SKILLS];
+    const cards: CardDefinition[] = [...MONSTERS.filter((m) => m.id !== HIDDEN_MONSTER_ID || save.hiddenRestored), ...SKILLS, ...SUPPORTS];
     const ownedKinds = cards.filter((c) => (save.collection[c.id] ?? 0) > 0).length;
     element.append(
       createScreenHeader({ title: '図鑑', back: { label: '戻る', onTap: () => ctx.back('world') } }),

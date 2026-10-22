@@ -1,5 +1,5 @@
 import { createCardCatalog } from '../game/cards/cardCatalog.ts';
-import type { MonsterCard, Rarity, SkillCard, SkillEffect, StatType } from '../game/cards/cardTypes.ts';
+import type { MonsterCard, PlayCard, Rarity, SkillCard, SkillEffect, StatType, SupportCard } from '../game/cards/cardTypes.ts';
 
 /**
  * 【仮データ】カード一覧。
@@ -121,7 +121,26 @@ export const SKILLS: readonly SkillCard[] = [
   ...HIDDEN_SKILLS,
 ];
 
-export const cardCatalog = createCardCatalog([...MONSTERS, ...SKILLS]);
+/**
+ * 仮のサポートカード（ユーザー承認 2026-10-22：仮サポートの追加）。
+ * - 仮サポート1〜3：旧ブリーダーカードにあたる。すぐ効果が出て、まとめて1ターンに1回まで
+ * - 仮全体1〜3：旧全体カードにあたる。場に1枚だけ残り、双方に効果が続く
+ * 効果・数値はすべて仮（原作のカードの写しではない）。
+ */
+export const supportId = (no: number): string => `sup-${no}`;
+
+const BREEDER = { duration: 'instant', limitGroup: 'breeder', limitPerTurn: 1 } as const;
+
+export const SUPPORTS: readonly SupportCard[] = [
+  { no: 1, name: '仮サポート1', cost: 2, rarity: 'U', ...BREEDER, effect: { type: 'heal', value: 3 } },
+  { no: 2, name: '仮サポート2', cost: 1, rarity: 'U', ...BREEDER, effect: { type: 'draw', value: 2 } },
+  { no: 3, name: '仮サポート3', cost: 1, rarity: 'U', ...BREEDER, effect: { type: 'mana', value: 2 } },
+  { no: 4, name: '仮全体1', cost: 2, rarity: 'U', duration: 'field', effect: { type: 'field', stat: 'force', modifier: -1 } },
+  { no: 5, name: '仮全体2', cost: 2, rarity: 'U', duration: 'field', effect: { type: 'field', stat: 'wisdom', modifier: -1 } },
+  { no: 6, name: '仮全体3', cost: 3, rarity: 'R', duration: 'field', effect: { type: 'field', stat: 'all', modifier: 1 } },
+].map(({ no, ...rest }) => ({ ...rest, kind: 'support', id: supportId(no), isPlaceholder: true }) as SupportCard);
+
+export const cardCatalog = createCardCatalog([...MONSTERS, ...SKILLS, ...SUPPORTS]);
 
 export function getMonster(id: string): MonsterCard {
   const card = cardCatalog.get(id);
@@ -132,6 +151,19 @@ export function getMonster(id: string): MonsterCard {
 export function getSkill(id: string): SkillCard {
   const card = cardCatalog.get(id);
   if (!card || card.kind !== 'skill') throw new Error(`技カードが見つかりません: ${id}`);
+  return card;
+}
+
+export function getSupport(id: string): SupportCard {
+  const card = cardCatalog.get(id);
+  if (!card || card.kind !== 'support') throw new Error(`サポートカードが見つかりません: ${id}`);
+  return card;
+}
+
+/** 手札・山札のカード（技かサポート） */
+export function getPlayCard(id: string): PlayCard {
+  const card = cardCatalog.get(id);
+  if (!card || card.kind === 'monster') throw new Error(`技・サポートカードが見つかりません: ${id}`);
   return card;
 }
 

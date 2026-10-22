@@ -1,4 +1,4 @@
-import { cardCatalog, monsterId, skillId, skillsOf } from '../../data/cards.ts';
+import { cardCatalog, monsterId, skillId, skillsOf, supportId, SUPPORTS } from '../../data/cards.ts';
 import { DECK_RULES } from '../../data/rules.ts';
 
 export interface Deck {
@@ -57,7 +57,7 @@ export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
   if (deck.skills.length !== DECK_RULES.skillCount) {
     issues.push({
       code: 'skillCount',
-      message: `技カードは${DECK_RULES.skillCount}枚必要です（現在${deck.skills.length}枚）`,
+      message: `山札（技カード＋サポート）は${DECK_RULES.skillCount}枚必要です（現在${deck.skills.length}枚）`,
     });
   }
   const skillCounts = countCards(deck.skills);
@@ -67,8 +67,8 @@ export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
       issues.push({ code: 'unknownCard', message: `存在しないカードです: ${id}` });
       continue;
     }
-    if (card.kind !== 'skill') {
-      issues.push({ code: 'notSkill', message: `${card.name} は技カードではありません` });
+    if (card.kind === 'monster') {
+      issues.push({ code: 'notSkill', message: `${card.name} は山札に入れられません（技カード・サポートのみ）` });
       continue;
     }
     if (count > DECK_RULES.maxCopies) {
@@ -77,7 +77,8 @@ export function validateDeck(deck: Deck, collection?: CardCounts): DeckIssue[] {
         message: `${card.name} は${DECK_RULES.maxCopies}枚までです（現在${count}枚）`,
       });
     }
-    if (!deck.monsters.includes(card.monsterId)) {
+    // サポートはどのモンスターのデッキにも入れられる。技はデッキのモンスターの適合技だけ
+    if (card.kind === 'skill' && !deck.monsters.includes(card.monsterId)) {
       issues.push({ code: 'notCompatible', message: `${card.name} はデッキのモンスターの技ではありません` });
     }
   }
@@ -118,13 +119,17 @@ export function createStarterCollection(): Record<string, number> {
   return countCards([...deck.monsters, ...deck.skills]);
 }
 
+/** NPC のデッキに入れる仮サポート（各2枚） */
+const NPC_SUPPORTS = [1, 2, 4, 5].map(supportId);
+const NPC_SUPPORT_COPIES = 2;
+
 /**
- * NPC（ダンジョンの敵・大会の相手）用のデッキを、モンスターの適合技から自動で組む。
- * 技を順番に入れて上限枚数を超えないように60枚にする。
+ * NPC（ダンジョンの敵・大会の相手）用のデッキを自動で組む。
+ * 仮サポートを少し入れ、残りはモンスターの適合技を順番に、上限枚数を超えないように入れて60枚にする。
  */
 export function buildAutoDeck(monsters: readonly string[]): Deck {
   const pool = monsters.flatMap((m) => skillsOf(m).map((s) => s.id));
-  const skills: string[] = [];
+  const skills: string[] = pool.length === 0 ? [] : NPC_SUPPORTS.flatMap((id) => Array<string>(NPC_SUPPORT_COPIES).fill(id));
   if (pool.length === 0) return { monsters, skills };
   const counts: Record<string, number> = {};
   let i = 0;
@@ -141,25 +146,28 @@ export function buildAutoDeck(monsters: readonly string[]): Deck {
 
 /**
  * 所持カードから、指定モンスター3体で組める一番近いデッキを自動で作る（デッキ編集の「おまかせ」）。
- * 技カードが足りなければ60枚に満たないデッキを返す（画面側で不足を表示）。
+ * 適合技を先に入れ、足りない分を持っているサポートで埋める。それでも足りなければ60枚に満たないデッキを返す（画面側で不足を表示）。
  */
 export function buildDeckFromCollection(monsters: readonly string[], collection: CardCounts): Deck {
   const skills: string[] = [];
-  const candidates = monsters.flatMap((m) => skillsOf(m));
-  // 安い技・攻撃を優先しすぎないよう、技番号順に1枚ずつ巡回して入れる
-  let added = true;
   const used: Record<string, number> = {};
-  while (skills.length < DECK_RULES.skillCount && added) {
-    added = false;
-    for (const s of candidates) {
-      if (skills.length >= DECK_RULES.skillCount) break;
-      const n = used[s.id] ?? 0;
-      if (n < DECK_RULES.maxCopies && n < (collection[s.id] ?? 0)) {
-        used[s.id] = n + 1;
-        skills.push(s.id);
-        added = true;
+  // 安い技・攻撃を優先しすぎないよう、番号順に1枚ずつ巡回して入れる（適合技 → サポートの順）
+  const fill = (candidates: readonly { readonly id: string }[]): void => {
+    let added = true;
+    while (skills.length < DECK_RULES.skillCount && added) {
+      added = false;
+      for (const s of candidates) {
+        if (skills.length >= DECK_RULES.skillCount) break;
+        const n = used[s.id] ?? 0;
+        if (n < DECK_RULES.maxCopies && n < (collection[s.id] ?? 0)) {
+          used[s.id] = n + 1;
+          skills.push(s.id);
+          added = true;
+        }
       }
     }
-  }
+  };
+  fill(monsters.flatMap((m) => skillsOf(m)));
+  fill(SUPPORTS);
   return { monsters, skills };
 }
