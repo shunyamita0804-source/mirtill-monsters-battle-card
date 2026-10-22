@@ -1,4 +1,4 @@
-# 引き継ぎメモ（2026-10-22 時点・次便のあと）
+# 引き継ぎメモ（2026-10-22 時点・次便の公開とユーザー確認のあと）
 
 新しいセッションで読むのは `CLAUDE.md` とこのファイルだけ。他の資料は必要になったときに1つずつ読む。
 
@@ -7,7 +7,7 @@
 | 項目 | 状態 |
 | --- | --- |
 | 正式名称 | セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card・短縮「セイクリッドBC」）。旧称ミルティル・ミストリア |
-| 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `7f72020` を公開。2026-10-22）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
+| 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `7f72020` を公開。2026-10-22。**ユーザーが iPhone で開いて「すべてOK」と確認済み**）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
 | リポジトリ | https://github.com/shunyamita0804-source/sacred-monsters-battle-card （Public。2026-10-22 ユーザーが改名。旧名 mirtill-monsters-battle-card） |
 | 最新版 | `main` の `7f72020`（次便：改名・正式アイコン・日英・バックアップ・設定・データ点検。テスト 224件） |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
@@ -77,7 +77,10 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
   - URL に `?qa=1` で QA 用ボタン（バトルのオート・即勝利、所持金追加など）
 - 本編の素材を見るとき：`GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/shunyamita0804-source/mystic-monsters /home/user/shunyamita0804-source/mystic-monsters`（読み取りのみ）
 - PS版の参考サイト：note は読める。tapatalk・gamefaqs・legendcup は相手サイトの制限で読めない（必要ならユーザーに文章を貼ってもらう）
-- 公開URL（github.io）にはこの作業環境から接続できない。公開後の見た目はユーザーの iPhone で確認してもらう
+- 公開URL（github.io）には、2026-10-22 の次便の公開後はこの作業環境から接続できた（curl・Playwright）。それでも最終の見た目はユーザーの iPhone で確認してもらう
+- GitHub への push は新しい名前のリポジトリで行う（`origin` = https://github.com/shunyamita0804-source/sacred-monsters-battle-card）。
+  権限エラー（「authorized repository set にない」）が出たら、セッションに `sacred-monsters-battle-card` を追加してから push する
+- `main` への push は、作業環境の安全確認で止められることがある。そのときはユーザーに「main に入れてよいか」を確認してから行う
 
 ## 5. 公開（デプロイ）の手順
 
@@ -91,20 +94,19 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 
 ## 6. 未完了・気になっている点
 
-- iPhone 実機での確認はユーザー頼み：効果音（カードを引く・先攻後攻・マナ・ダメージ）が鳴るか・音量、中央の帯のコマンドと右上の「攻撃終了」の押しやすさ、
-  マナが飛ぶ演出、旧セーブのデッキが自動で直っているか
-- 新URLの表示・JS/CSS/画像/効果音の取得は Chromium で確認済み。iPhone Safari の実機は未確認。旧URLは 404（転送なし）
-- iPhone のホーム画面版（PWA）は、URL が変わるとセーブが見えない可能性あり → 設定の「セーブをバックアップ」で引き継ぐ（実機未確認）
-- 正式アイコンの角の外側は白（原本のまま）。iPhone のホーム画面で白い角が見えるかは未確認（透過加工は承認なしではしない）
-- 英語はすべて仮訳（カード・パック・大会・マップ・能力名 POW/INT）。正式な英語名は未決
+- 新URLは 2026-10-22 にユーザーが iPhone で開いて「すべてOK」。旧URLは 404（転送なし）
+- iPhone のホーム画面版（PWA）は、URL が変わるとセーブが見えない可能性あり → 設定の「セーブをバックアップ」で引き継ぐ（書き出し・復元の iPhone での操作は個別には未確認）
+- 正式アイコンの角の外側は白（原本のまま。透過加工は承認なしではしない）
+- 英語はすべて仮訳（カード・パック・大会・マップ・能力名 POW/INT）。正式な英語名は未決。小さいモンスターカードでは英語名が「Temp Mo…」と省略される
+- 次便の指示書で「次次便に保留」とされた事項・デザイン担当向けの街・主人公制作は、まだ受け取っていない（ユーザーから届いたら対応）
+- 商標の確認は未実施（名称変更＝商標の安全の保証ではない）
 - 演出の簡略化（動きを減らす設定）は未実装（必要なら項目を追加する）
 - PS版で未確認の裁定（ユーザーが実機で確認する約束）：`docs/battle-rules-audit.md` の5章、`docs/battle-rules.md` の「まだ確かめられていないこと」
 - 正式カード待ちで未実装：防御の「0にする・はね返す・効果だけ消す・肩代わり」、全体カードを打ち消すカード、コンボ、派生モンスター（MAIN/SUB）の技、モンスターの特徴（地上・空中）
 - 新ルールでは1戦が長め（自動対戦で1〜2分）。テンポ調整はユーザーの判断待ち
 - 正式素材が無いもの：背景、モンスター・技カードの絵、NPC・敵・宝箱、BGM。正式仕様が無いもの：カードデータ、価格・提供割合、大会、敵編成、隠しモンスター
-- リポジトリ名の変更（mirtill → mistria）は未実施（`docs/rename-migration.md`）
 - ダンジョンから帰ると家に戻る（街の入口の前には戻らない）。対戦の途中でアプリを閉じると、その対戦は最初からやり直し
-- 不要になった作業ブランチ（`fix/town-dungeon-gate`・`feature/battle-layout-deal`・`claude/cool-gauss-emyae1`）は main に取り込み済み。消すかどうかはユーザーに確認してから
+- 不要になった作業ブランチ（`fix/town-dungeon-gate`・`feature/battle-layout-deal`・`claude/cool-gauss-emyae1`・`feature/sacred-rename-i18n`）は main に取り込み済み。消すかどうかはユーザーに確認してから
 
 ## 7. 主なファイル
 
@@ -125,4 +127,5 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 | 公開の手順 | `docs/github-pages.md` |
 | 日英の辞書・英訳表 | `src/i18n/`（`docs/i18n.md`） |
 | 設定画面・バックアップ | `src/ui/screens/optionsScreen.ts`・`src/game/save/backup.ts`・`src/game/settings/settings.ts` |
-| 名称変更の計画 | `docs/rename-migration.md` |
+| 名称変更の記録 | `docs/rename-migration.md` |
+| カードデータ・ID の決まり・点検 | `docs/card-data-policy.md`・`src/game/cards/dataChecks.ts` |
