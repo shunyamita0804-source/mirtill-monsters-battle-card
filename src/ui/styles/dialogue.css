@@ -147,10 +147,10 @@
 /* ===== 目的地 ===== */
 .world__goal {
   position: absolute;
-  top: 58px;
+  top: 66px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3;
+  z-index: 21;
   padding: 6px 14px;
   border-radius: 16px;
   background: rgb(20 40 80 / 0.85);

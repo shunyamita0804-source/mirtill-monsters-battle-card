@@ -177,23 +177,58 @@ def load_props(parts: str) -> dict[str, Image.Image]:
     return out
 
 
+def noise_field(W: int, cells: int, seed: int) -> np.ndarray:
+    """なめらかなむら（-1〜1）。小さな乱数を拡大してぼかす"""
+    rng = np.random.default_rng(seed)
+    small = Image.fromarray(((rng.random((cells, cells)) * 255)).astype(np.uint8))
+    big = np.array(small.resize((W, W), Image.BICUBIC).filter(ImageFilter.GaussianBlur(W / cells / 3))).astype(np.float32)
+    return (big - big.mean()) / (big.std() + 1e-6) / 2.2
+
+
+def vary_grass(img: Image.Image) -> Image.Image:
+    """草地の色にむらを付ける（同じ模様のくり返しを目立たなくする。絵の部品は変えない）"""
+    W = img.width
+    a = np.array(img.convert('RGB')).astype(np.float32)
+    big = np.clip(noise_field(W, 14, 7), -1, 1)
+    mid = np.clip(noise_field(W, 46, 11), -1, 1)
+    light = 1 + 0.10 * big + 0.05 * mid
+    a *= light[..., None]
+    # 明るい所は少し黄みに、暗い所は少し青みに
+    warm = np.clip(big, 0, 1)[..., None] * np.array([10, 6, -6], np.float32)
+    cool = np.clip(-big, 0, 1)[..., None] * np.array([-6, 0, 4], np.float32)
+    a += warm + cool
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert('RGBA')
+
+
 def build_town(parts: str, check_dir: str | None):
     W = MAP
     walk = town_walk_mask()
     walk_np = np.array(walk) > 0
 
-    # 地面：草地 → 歩ける所は石畳 → 草原への出口は土の道
-    base = tile_texture(Image.open(f'{parts}/tex_grass.png'), W, 0.75).convert('RGBA')
-    stone = tile_texture(Image.open(f'{parts}/tex_stone.png'), W, 0.5).convert('RGBA')
+    # 地面：草地（色のむら付き）→ 歩ける所は石畳（ふちに縁石と陰）→ 草原への出口は土の道
+    base = vary_grass(tile_texture(Image.open(f'{parts}/tex_grass.png'), W, 0.75))
+    stone = tile_texture(Image.open(f'{parts}/tex_stone.png'), W, 0.38).convert('RGBA')
     dirt = tile_texture(Image.open(f'{parts}/tex_dirt.png'), W, 0.75).convert('RGBA')
     ex = pack.TOWN['exit']['rect']
     dirt_mask = Image.new('L', (W, W), 0)
     ImageDraw.Draw(dirt_mask).rectangle([ex[0], ex[1], ex[2] - 1, ex[3] - 1], fill=255)
-    stone_mask = Image.fromarray(np.where(walk_np & ~(np.array(dirt_mask) > 0), 255, 0).astype(np.uint8))
-    # 石畳のふち：少し濃い縁取りと、草とのなじみ
-    edge = stone_mask.filter(ImageFilter.MaxFilter(9))
-    base.paste(Image.new('RGBA', (W, W), (120, 112, 92, 255)), (0, 0), edge.filter(ImageFilter.GaussianBlur(3)))
-    base.paste(stone, (0, 0), stone_mask.filter(ImageFilter.GaussianBlur(1.5)))
+    stone_np = walk_np & ~(np.array(dirt_mask) > 0)
+    stone_mask = Image.fromarray(np.where(stone_np, 255, 0).astype(np.uint8))
+    # 石畳のまわりの草に落ちる陰（ふちから外へうすく）
+    outer = stone_mask.filter(ImageFilter.MaxFilter(41)).filter(ImageFilter.GaussianBlur(14))
+    base.paste(Image.new('RGBA', (W, W), (24, 40, 18, 255)), (0, 0), outer.point(lambda v: int(v * 0.28)))
+    # 縁石：石畳のふちに一回り大きい、濃い石の帯
+    curb = stone_mask.filter(ImageFilter.MaxFilter(15))
+    curb_col = np.array(tile_texture(Image.open(f'{parts}/tex_stone.png'), W, 0.25).convert('RGB')).astype(np.float32) * np.array([0.62, 0.58, 0.52])
+    base.paste(Image.fromarray(curb_col.astype(np.uint8)).convert('RGBA'), (0, 0), curb.filter(ImageFilter.GaussianBlur(1.2)))
+    # 石畳：ふちに近いほど少し暗く（へこみの陰）、中ほどは少し明るく
+    small = stone_mask.resize((W // 4, W // 4), Image.BILINEAR)
+    dist = ndimage.distance_transform_edt(np.array(small) > 127) * 4
+    dist = np.array(Image.fromarray(dist.astype(np.float32)).resize((W, W), Image.BILINEAR))
+    shade = 1 - 0.22 * np.exp(-dist / 26) + 0.04 * np.clip((dist - 60) / 200, 0, 1)
+    st = np.array(stone.convert('RGB')).astype(np.float32) * shade[..., None]
+    stone = Image.fromarray(np.clip(st, 0, 255).astype(np.uint8)).convert('RGBA')
+    base.paste(stone, (0, 0), stone_mask.filter(ImageFilter.GaussianBlur(1.0)))
     # 土の道は上（石畳との境）をぼかしてつなぐ
     dm = np.array(dirt_mask).astype(np.float32)
     ramp = np.clip((np.arange(W) - ex[1]) / 120.0, 0, 1)[:, None]
@@ -226,6 +261,24 @@ def build_town(parts: str, check_dir: str | None):
         mx1, my1, mx2, my2 = next(z['rect'] for z in pack.TOWN['green'] if z['id'] == g)
         for x in range(mx1 + 120, mx2 - 60, 330):
             prop_list.append((rng.choice(['tree_round', 'tree_small', 'bush']), x + rng.randint(-60, 60), my1 + 160 + rng.randint(-40, 120)))
+
+    # 空いている草地を自然に埋める：道から遠い所は木、近い所は植え込み・花・岩（乱数は固定で毎回同じ並び）
+    far = ndimage.distance_transform_edt(~ndimage.zoom(walk_np, 0.125, order=0)) * 8
+    for gy in range(140, W, 190):
+        for gx in range(80, W, 190):
+            x = gx + rng.randint(-70, 70) + (95 if (gy // 190) % 2 else 0)
+            y = gy + rng.randint(-60, 60)
+            if not (0 < x < W and 0 < y < W) or rng.random() < 0.18:
+                continue
+            d = far[min(y // 8, far.shape[0] - 1), min(x // 8, far.shape[1] - 1)]
+            if d > 420:
+                name = rng.choices(['tree_round', 'tree_conifer', 'tree_small'], [5, 3, 3])[0]
+            elif d > 220:
+                name = rng.choices(['tree_small', 'tree_round', 'bush', 'flowerbed_long'], [5, 2, 1, 1])[0]
+            else:
+                # 道のそば：植木鉢・花壇（植え込み・岩の部品は平たく見えるので控えめに）
+                name = rng.choices(['flower_pot', 'planter_round', 'bush', 'rock'], [3, 3, 1, 0.3])[0]
+            prop_list.append((name, x, y))
 
     # 建物の枠（小物を重ねない）
     bld_rects = [b['rect'] for b in pack.TOWN['buildings']]

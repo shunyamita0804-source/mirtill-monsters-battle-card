@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeStageLayout } from '../src/core/stageLayout.ts';
+import { computeStageLayout, MAX_STAGE_WIDTH } from '../src/core/stageLayout.ts';
 
 describe('computeStageLayout', () => {
   it('基準解像度ちょうどなら等倍', () => {
@@ -24,11 +24,21 @@ describe('computeStageLayout', () => {
     expect(layout.height * layout.scale).toBeLessThanOrEqual(900);
   });
 
-  it('横長の画面では高さに合わせ、左右中央に寄せる', () => {
+  it('少し横長（iPhone のセーフエリア内 393×759）では高さに合わせ、論理幅を伸ばして左右に余白を作らない', () => {
+    const layout = computeStageLayout(393, 759);
+    expect(layout.scale).toBeCloseTo(759 / 844);
+    expect(layout.height).toBe(844);
+    expect(layout.width).toBeGreaterThan(390);
+    expect(layout.width * layout.scale).toBeGreaterThan(392);
+    expect(layout.offsetX).toBeLessThan(1);
+  });
+
+  it('とても横長の画面では高さに合わせ、幅は上限までにして左右中央に寄せる', () => {
     const layout = computeStageLayout(1280, 720);
     expect(layout.scale).toBeCloseTo(720 / 844);
     expect(layout.height).toBe(844);
-    expect(layout.offsetX).toBeCloseTo((1280 - 390 * layout.scale) / 2);
+    expect(layout.width).toBe(MAX_STAGE_WIDTH);
+    expect(layout.offsetX).toBeCloseTo((1280 - MAX_STAGE_WIDTH * layout.scale) / 2);
     expect(layout.offsetY).toBeCloseTo(0);
   });
 
