@@ -10,6 +10,7 @@ export const ASSET_CATEGORIES = {
   ui: 'images/ui',
   icons: 'images/icons',
   townMaps: 'images/maps/town',
+  roomMaps: 'images/maps/rooms',
   dungeonMaps: 'images/maps/dungeon',
   effects: 'images/effects',
   bgm: 'audio/bgm',

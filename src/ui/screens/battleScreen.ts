@@ -12,6 +12,7 @@ import {
   supportUsesLeft,
   targetsFor,
   type BattleAction,
+  type BattleFxKind,
   type BattleMonster,
   type BattleState,
   type Side,
@@ -30,8 +31,16 @@ import { createMonsterCard } from '../components/monsterCard.ts';
 import { createPlayCard, createSkillCard } from '../components/skillCard.ts';
 import { button, h } from '../dom.ts';
 import { once, type BattleRequest } from '../gameStore.ts';
-import { sound } from '../sound.ts';
+import { sound, type SoundId } from '../sound.ts';
 import type { ScreenDefinition } from './types.ts';
+
+/** ルール上のきっかけ → 効果音 */
+const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
+  manaSpend: 'manaSpend',
+  evade: 'evade',
+  hitNormal: 'hitNormal',
+  hitStrong: 'hitStrong',
+};
 
 /** 相手の1手ごとの間（ミリ秒） */
 const AI_STEP_MS = 650;
@@ -40,7 +49,9 @@ const DEAL_MS = 110;
 /** 先攻・後攻のカードをめくってからバトルを始めるまで（ミリ秒） */
 const ORDER_REVEAL_MS = 1300;
 /** マナにするカードが情報箱へ飛んでいく時間（ミリ秒） */
-const MANA_FLY_MS = 380;
+const MANA_FLY_MS = 620;
+/** 何枚かまとめてマナにするとき、1枚ずつ少しずらして飛ばす（ミリ秒） */
+const MANA_FLY_STAGGER_MS = 70;
 /** 場面の表示（あなたのターン・マナ化など）が出ている時間（ミリ秒） */
 const BANNER_MS = 1100;
 
@@ -99,6 +110,8 @@ export const battleScreen: ScreenDefinition = {
     const prevLife = new Map<string, number>();
     /** 前回描画時のマナ（マナが増えた演出に使う） */
     const prevMana = new Map<Side, number>();
+    /** 鳴らし終えた効果音のきっかけ（engine の fx の seq） */
+    let lastFxSeq = 0;
     /** マナ化で選んだ手札（まとめてマナにする） */
     const manaPicks = new Set<string>();
     /** 最後に出した場面の表示（同じ表示を繰り返さない） */
@@ -141,7 +154,7 @@ export const battleScreen: ScreenDefinition = {
       const scale = stageScale();
       if (goal) {
         const g = goal.getBoundingClientRect();
-        for (const uid of picks) {
+        for (const [i, uid] of picks.entries()) {
           const from = element.querySelector(`.battle__hand-card[data-uid="${uid}"] .skill-card`);
           if (!from) continue;
           const r = from.getBoundingClientRect();
@@ -151,12 +164,14 @@ export const battleScreen: ScreenDefinition = {
           fly.style.top = `${(r.top - root.top) / scale}px`;
           fly.style.setProperty('--dx', `${(g.left + g.width / 2 - (r.left + r.width / 2)) / scale}px`);
           fly.style.setProperty('--dy', `${(g.top + g.height / 2 - (r.top + r.height / 2)) / scale}px`);
+          fly.style.setProperty('--delay', `${i * MANA_FLY_STAGGER_MS}ms`);
           element.append(fly);
-          setTimeout(() => fly.remove(), MANA_FLY_MS + 50);
+          setTimeout(() => fly.remove(), MANA_FLY_MS + i * MANA_FLY_STAGGER_MS + 50);
           element.querySelector(`.battle__hand-card[data-uid="${uid}"]`)?.classList.add('is-leaving');
         }
       }
-      busyUntil = Math.max(busyUntil, Date.now() + MANA_FLY_MS);
+      const total = MANA_FLY_MS + (picks.length - 1) * MANA_FLY_STAGGER_MS;
+      busyUntil = Math.max(busyUntil, Date.now() + total);
       setTimeout(() => {
         if (destroyed || !state) return;
         let next = state;
@@ -165,7 +180,7 @@ export const battleScreen: ScreenDefinition = {
         selectedUid = null;
         state = next;
         render();
-      }, MANA_FLY_MS);
+      }, total);
     };
 
     /** マナ化で手札をタップ：マナにする候補に入れる／外す（最初のターンは決まった枚数まで） */
@@ -697,7 +712,13 @@ export const battleScreen: ScreenDefinition = {
         }
         sound.play('manaGain');
       }
-      if (element.querySelector('.battle__monster.is-hit')) sound.play('damageHit');
+      // 回避成功・命中・マナ消費：ルールで結果が確定した分だけ、1件につき1回（描き直しでは鳴らさない）
+      if (s.fxSeq < lastFxSeq) lastFxSeq = 0;
+      for (const fx of s.fx) {
+        if (fx.seq <= lastFxSeq) continue;
+        sound.play(FX_SOUND[fx.kind]);
+      }
+      lastFxSeq = s.fxSeq;
     };
 
     /** 攻撃終了。まだ使えるカードがあるときは確かめる（押しまちがい防止） */

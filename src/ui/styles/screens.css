@@ -88,11 +88,11 @@
 }
 
 .new-game__sprite {
-  width: 96px;
-  height: 108px;
-  background-size: 384px 432px;
-  background-position: 0 0;
-  image-rendering: auto;
+  /* 正式な主人公の待機の絵（216×288）を縦横比のまま */
+  width: 90px;
+  height: 120px;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
 .new-game__label {

@@ -8,8 +8,8 @@ import { addCards, hasProcessed, markProcessed, type SaveData } from '../save/sa
  * - 10個集めるとショップの「特別復元」で隠しモンスターカード1枚だけを受け取れる（技カードは付与しない）
  * - 本編・大会の進行には必須ではない
  */
-export function fragmentAt(mapId: string, x: number, y: number): (typeof FRAGMENTS)[number] | undefined {
-  return FRAGMENTS.find((f) => f.mapId === mapId && f.x === x && f.y === y);
+export function fragmentAt(mapId: string, x: number, y: number, range = 0): (typeof FRAGMENTS)[number] | undefined {
+  return FRAGMENTS.find((f) => f.mapId === mapId && Math.abs(f.x - x) <= range && Math.abs(f.y - y) <= range);
 }
 
 export function collectFragment(save: SaveData, fragmentId: string): { save: SaveData; collected: boolean } {

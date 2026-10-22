@@ -11,10 +11,11 @@ export interface FragmentDefinition {
 }
 
 export const FRAGMENTS: readonly FragmentDefinition[] = [
-  { id: 'fragment-01', mapId: 'town', x: 1, y: 1 },
-  { id: 'fragment-02', mapId: 'town', x: 16, y: 7 },
-  { id: 'fragment-03', mapId: 'town', x: 2, y: 19 },
-  { id: 'fragment-04', mapId: 'town', x: 17, y: 17 },
+  // 街（正式な絵の街。マスは 32px）：道の行き止まり4か所
+  { id: 'fragment-01', mapId: 'town', x: 11, y: 75 },
+  { id: 'fragment-02', mapId: 'town', x: 139, y: 37 },
+  { id: 'fragment-03', mapId: 'town', x: 19, y: 130 },
+  { id: 'fragment-04', mapId: 'town', x: 138, y: 75 },
   { id: 'fragment-05', mapId: 'dungeon-01-b1', x: 9, y: 1 },
   { id: 'fragment-06', mapId: 'dungeon-01-b1', x: 3, y: 14 },
   { id: 'fragment-07', mapId: 'dungeon-01-b2', x: 5, y: 11 },

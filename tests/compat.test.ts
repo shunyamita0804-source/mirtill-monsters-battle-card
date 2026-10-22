@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { APP_INFO } from '../src/config/app.ts';
 import { createBackup, parseBackup, serializeBackup } from '../src/game/save/backup.ts';
 import { createStarterDeck } from '../src/game/deck/deck.ts';
+import { DEFAULT_LOCATION } from '../src/game/save/saveData.ts';
 import { MemoryStorage, SAVE_KEY } from '../src/game/save/saveRepository.ts';
 import { DEFAULT_SETTINGS, effectiveSeVolume, normalizeSettings, SETTINGS_KEY } from '../src/game/settings/settings.ts';
 import { getLanguage, setLanguage } from '../src/i18n/i18n.ts';
@@ -59,7 +60,8 @@ describe('改名前のセーブを新しい名前のアプリで読む', () => {
     expect(s.deck).toEqual(OLD_SAVE.deck);
     expect(s.tournaments).toEqual(OLD_SAVE.tournaments);
     expect(s.fragments).toEqual(OLD_SAVE.fragments);
-    expect(s.location).toEqual(OLD_SAVE.location);
+    // 街を正式な絵に作り直した（version 4）ので、街にいたセーブは主人公の家の前に移る
+    expect(s.location).toEqual(DEFAULT_LOCATION);
     expect(s.dungeons).toEqual(OLD_SAVE.dungeons);
     expect(s.rank).toBe('D');
   });

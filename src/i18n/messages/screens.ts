@@ -26,10 +26,6 @@ export const SCREENS = {
   'newGame.female': { ja: '女の子', en: 'Girl' },
   'newGame.maleNote': { ja: '黒髪・青い帽子と服', en: 'Black hair, blue cap and clothes' },
   'newGame.femaleNote': { ja: '赤い帽子と服', en: 'Red cap and clothes' },
-  'newGame.qaNote': {
-    ja: '歩行グラフィックは確認用の試作品（QA）です。正式素材ではありません。',
-    en: 'The walking sprites are QA prototypes, not official artwork.',
-  },
   'newGame.back': { ja: 'タイトルへ戻る', en: 'Back to Title' },
   'newGame.welcome': {
     ja: 'ようこそ！\n家の机でデッキ、壁の地図でダンジョン、本棚で図鑑、ベッドで設定を確認できます。\nショップでカードパック、大会会場で大会に参加できます。',
@@ -160,12 +156,17 @@ export const SCREENS = {
   'options.error.read': { ja: 'ファイルを読めませんでした。', en: 'Could not read the file.' },
   'options.help': { ja: '遊び方', en: 'How to Play' },
   'options.helpSteps': {
-    ja: '1. 街を歩く（画面の下の十字キー）\n2. 家の机でデッキを確認\n3. ショップでカードパックを買う\n4. 街の南のダンジョンで腕だめし\n5. 大会会場で大会に出る',
-    en: '1. Walk around town (D-pad at the bottom)\n2. Check your deck at the desk at home\n3. Buy card packs at the shop\n4. Test your skills in the dungeon south of town\n5. Enter a cup at the tournament hall',
+    ja: '1. 街を歩く（画面をなぞる・行きたい所をタップ）\n2. 家の机でデッキを確認\n3. ショップでカードパックを買う\n4. 街の南のダンジョンで腕だめし\n5. 大会会場で大会に出る',
+    en: '1. Walk around town (slide on the screen, or tap where to go)\n2. Check your deck at the desk at home\n3. Buy card packs at the shop\n4. Test your skills in the dungeon south of town\n5. Enter a cup at the tournament hall',
   },
   'options.helpNote': {
     ja: '対戦のルールはバトル中の「ルール」で確認できます（ルールは仮です）。',
     en: 'You can check the battle rules with “Rules” during a battle (the rules are temporary).',
+  },
+  'options.credits': { ja: '素材のクレジット', en: 'Credits' },
+  'options.creditsText': {
+    ja: '効果音：OtoLogic（https://otologic.jp/）・効果音ラボ（https://soundeffect-lab.info/）',
+    en: 'Sound effects: OtoLogic (https://otologic.jp/), Sound Effect Lab (https://soundeffect-lab.info/)',
   },
   'options.battleLocked': { ja: '対戦中は言語を変えられません。', en: 'You cannot change the language during a battle.' },
 

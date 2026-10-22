@@ -30,3 +30,4 @@ assets/**/*.psd
 assets/**/*.clip
 assets/**/*.kra
 assets/**/*.aseprite
+__pycache__/

@@ -11,10 +11,11 @@ export const WORLD = {
   'world.building.shop': { ja: 'カードショップ', en: 'Card Shop' },
   'world.building.practice': { ja: 'カード練習場', en: 'Practice Hall' },
   'world.building.neighbor': { ja: 'となりの家', en: 'Neighbor\'s House' },
+  'world.building.lab': { ja: 'カード研究所', en: 'Card Lab' },
 
   // 上の帯・操作
   'world.placeDungeon': { ja: '{dungeon} {floor}', en: '{dungeon} {floor}' },
-  'world.placeNote': { ja: '仮マップ・歩行素材QA試作', en: 'Temp map · walk sprite QA build' },
+  'world.placeNote': { ja: '仮マップ', en: 'Temp map' },
   'world.escape': { ja: '脱出', en: 'Escape' },
   'world.menu': { ja: 'メニュー', en: 'Menu' },
   'world.player': { ja: 'プレイヤー', en: 'Player' },

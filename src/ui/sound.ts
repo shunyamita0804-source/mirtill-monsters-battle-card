@@ -4,8 +4,10 @@ import turnOrderOgg from '@assets/audio/se/turn_order_select.ogg';
 import turnOrderM4a from '@assets/audio/se/turn_order_select.m4a';
 import manaGainOgg from '@assets/audio/se/mana_gain.ogg';
 import manaGainM4a from '@assets/audio/se/mana_gain.m4a';
-import damageHitOgg from '@assets/audio/se/damage_hit.ogg';
-import damageHitM4a from '@assets/audio/se/damage_hit.m4a';
+import evadeMp3 from '@assets/audio/se/evade_success.mp3';
+import hitNormalMp3 from '@assets/audio/se/hit_normal.mp3';
+import hitStrongMp3 from '@assets/audio/se/hit_strong.mp3';
+import manaSpendMp3 from '@assets/audio/se/mana_spend.mp3';
 
 /**
  * 効果音（SE）。
@@ -17,15 +19,20 @@ import damageHitM4a from '@assets/audio/se/damage_hit.m4a';
  * - 音が鳴らせない環境では何もしない（ゲームは止めない）
  * - 設定の効果音の音量（0〜1）を SE_REGISTRY の gain に掛ける。0（ミュート含む）なら鳴らさない
  */
-export type SoundId = 'cardDraw' | 'turnOrderSelect' | 'manaGain' | 'damageHit';
+export type SoundId = 'cardDraw' | 'turnOrderSelect' | 'manaGain' | 'evade' | 'hitNormal' | 'hitStrong' | 'manaSpend';
 
-interface SoundEntry {
-  /** OGG（Chrome・Firefox など）と M4A（iPhone Safari など）。再生できる方を使う */
-  readonly ogg: string;
-  readonly m4a: string;
+type SoundEntry = (
+  | {
+      /** OGG（Chrome・Firefox など）と M4A（iPhone Safari など）。再生できる方を使う */
+      readonly ogg: string;
+      readonly m4a: string;
+    }
+  /** MP3（どのブラウザでも鳴る。ユーザーが試聴して承認した音をそのまま使う） */
+  | { readonly mp3: string }
+) & {
   /** 音量（1 = 元のまま） */
   readonly gain: number;
-}
+};
 
 export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   // カードを引く・配る：ミスティックモンスターズの UI_SELECT と同じ音（Interface SFX Pack 1 / ObsydianX・CC0）
@@ -34,8 +41,15 @@ export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   turnOrderSelect: { ogg: turnOrderOgg, m4a: turnOrderM4a, gain: 1.0 },
   // カードをマナにした・山札からマナが増えた：ミスティックモンスターズの GOLD_GET と同じ音（Mix of SFX by Ivokard「bell」・CC0）
   manaGain: { ogg: manaGainOgg, m4a: manaGainM4a, gain: 1.8 },
-  // モンスターがダメージを受けた：ミスティックモンスターズの BATTLE_HIT と同じ音（Mix of SFX by Ivokard「hit_1」・CC0）
-  damageHit: { ogg: damageHitOgg, m4a: damageHitM4a, gain: 1.2 },
+  // ここから正式採用の4音（ユーザー承認 2026-10-22。docs/audio-credits.md）。受け取った MP3 をそのまま使う
+  // 回避が成功してダメージ0が確定した：効果音ラボ「高速移動」
+  evade: { mp3: evadeMp3, gain: 1.0 },
+  // 攻撃が命中した（通常）：OtoLogic「Hit-Punch02-1(Dry)」
+  hitNormal: { mp3: hitNormalMp3, gain: 1.0 },
+  // 攻撃が命中した（強攻撃。仮に必要マナ3以上の技）：効果音ラボ「大パンチ」
+  hitStrong: { mp3: hitStrongMp3, gain: 1.0 },
+  // マナを支払った（技・サポート・守備のカードを使った）：効果音ラボ「ワープ」。マナ化（増える）では鳴らさない
+  manaSpend: { mp3: manaSpendMp3, gain: 1.0 },
 };
 
 type AudioContextCtor = typeof AudioContext;
@@ -85,6 +99,7 @@ class SoundPlayer {
   }
 
   #source(entry: SoundEntry): string {
+    if ('mp3' in entry) return entry.mp3;
     const probe = typeof document !== 'undefined' ? document.createElement('audio') : null;
     const ogg = probe?.canPlayType('audio/ogg; codecs="vorbis"') ?? '';
     return ogg !== '' ? entry.ogg : entry.m4a;
