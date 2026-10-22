@@ -1,6 +1,7 @@
 import { getDungeon, ENCOUNTERS } from '../../data/dungeons.ts';
 import { FRAGMENT_TOTAL } from '../../data/fragments.ts';
-import { getMap, type ChestObject, type EnemyObject, type MapDefinition, type MapObject } from '../../data/maps.ts';
+import { getMap, type ChestObject, type EnemyObject, type MapDefinition, type MapObject, type NpcObject } from '../../data/maps.ts';
+import type { SceneId } from '../../data/storyScenes.ts';
 import { getMonster } from '../../data/cards.ts';
 import { isDeckValid } from '../../game/deck/deck.ts';
 import {
@@ -23,6 +24,17 @@ import {
   objectsAt,
   type Point,
 } from '../../game/world/world.ts';
+import {
+  applySceneEffects,
+  isNpcPresent,
+  sceneAfterPractice,
+  sceneOnEnter,
+  sceneOnTable,
+  sceneOnTalk,
+  showsPracticeGoal,
+  startPractice,
+} from '../../game/story/intro.ts';
+import { playScene } from '../components/dialogue.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
 import { button, h } from '../dom.ts';
 import maleSheet from '@assets/images/characters/player_male_walk_qa.png';
@@ -43,12 +55,18 @@ const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, 
 
 const TILE_CLASS: Readonly<Record<string, string>> = {
   '#': 'wall', '.': 'floor', ',': 'grass', '=': 'road', T: 'tree', '~': 'water', H: 'bld-hall', A: 'bld-home',
-  B: 'bld-shop', D: 'door', d: 'exit', G: 'dungeon-gate', F: 'fountain', S: 'stairs-down', U: 'stairs-up', b: 'bed', M: 'wallmap',
+  B: 'bld-shop', P: 'bld-practice', N: 'bld-neighbor', D: 'door', d: 'exit', G: 'dungeon-gate', F: 'fountain', S: 'stairs-down', U: 'stairs-up', b: 'bed', M: 'wallmap',
   h: 'bookshelf', k: 'desk', s: 'shelf', c: 'counter', n: 'npc', g: 'gacha', x: 'table', r: 'rug',
 };
 
 /** 建物（同じ記号のかたまり）の名前ラベル */
-const BUILDING_LABEL: Readonly<Record<string, MessageKey>> = { H: 'world.building.hall', A: 'world.building.home', B: 'world.building.shop' };
+const BUILDING_LABEL: Readonly<Record<string, MessageKey>> = {
+  H: 'world.building.hall',
+  A: 'world.building.home',
+  B: 'world.building.shop',
+  P: 'world.building.practice',
+  N: 'world.building.neighbor',
+};
 
 const coins = (n: number): string => t('common.coins', { n } satisfies Params);
 
@@ -129,15 +147,33 @@ class WorldView {
     this.#last = performance.now();
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
     const flash = this.#store.flashMessage;
+    const scene = this.#sceneOnLoad();
     if (flash) {
       this.#store.flashMessage = null;
-      this.#message(flash);
+      this.#message(flash, scene ? () => this.#playScene(scene) : undefined);
+    } else if (scene) {
+      this.#playScene(scene);
     }
+  }
+
+  /** このマップに来たときに始まる会話（練習試合のあと・最初に街へ出たとき・練習場に着いたとき） */
+  #sceneOnLoad(): SceneId | null {
+    const store = this.#store;
+    const result = store.practiceResult;
+    if (result) {
+      store.practiceResult = null;
+      return sceneAfterPractice(store.save, result);
+    }
+    return sceneOnEnter(store.save, this.#map.id);
   }
 
   /* ---------- 表示の組み立て ---------- */
 
-  #isVisible = (obj: MapObject): boolean => (obj.type === 'enemy' ? isEnemyActive(this.#store.save, obj.id) : true);
+  #isVisible = (obj: MapObject): boolean => {
+    if (obj.type === 'enemy') return isEnemyActive(this.#store.save, obj.id);
+    if (obj.type === 'npc') return isNpcPresent(this.#store.save, obj);
+    return true;
+  };
 
   #blocked = (x: number, y: number): boolean => isBlocked(this.#map, x, y, this.#isVisible);
 
@@ -209,8 +245,10 @@ class WorldView {
       button(t('world.examine'), () => this.#examine(), 'world__action'),
     );
 
-    this.#root.replaceChildren(hud, this.#viewport, controls);
+    const goal = showsPracticeGoal(save, map.id) ? h('div', { class: 'world__goal', text: t('story.goal.practice') }) : null;
+    this.#root.replaceChildren(hud, this.#viewport, controls, goal ?? '');
     this.#root.dataset.map = map.id;
+    this.#root.dataset.intro = save.story.intro;
     this.#render();
   }
 
@@ -223,7 +261,8 @@ class WorldView {
         minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
       }));
       if (maxX < 0) continue;
-      const el = h('div', { class: 'world__label world__label--building', text: t(label) });
+      const goal = ch === 'P' && showsPracticeGoal(this.#store.save, map.id);
+      const el = h('div', { class: `world__label world__label--building${goal ? ' is-goal' : ''}`, text: t(label) });
       Object.assign(el.style, { left: `${minX * TILE}px`, top: `${minY * TILE}px`, width: `${(maxX - minX + 1) * TILE}px`, height: `${(maxY - minY + 1) * TILE}px` });
       this.#mapLayer.append(el);
     }
@@ -249,6 +288,21 @@ class WorldView {
         attrs: { 'aria-label': enc ? opponentName(enc) : t('world.enemy') },
       });
       return place(el, obj.x, obj.y);
+    }
+    if (obj.type === 'npc') {
+      if (!this.#isVisible(obj)) return null;
+      // 会話の絵・歩行の絵が届くまでの仮の印（人物の絵は作らない）
+      const name = t('story.speaker.neighborGuide');
+      return place(
+        h(
+          'div',
+          { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': name } },
+          h('span', { class: 'world__npc-dot', text: t('story.ui.portraitTemp') }),
+          h('span', { class: 'world__npc-name', text: name }),
+        ),
+        obj.x,
+        obj.y,
+      );
     }
     if (obj.type === 'chest') {
       const save = this.#store.save;
@@ -444,12 +498,65 @@ class WorldView {
         this.#openChest(obj);
         return true;
       }
+      if (obj.type === 'npc') {
+        this.#talk(obj);
+        return true;
+      }
       if (obj.type === 'interact') {
         this.#action(obj.action, objectMessage(obj));
         return true;
       }
     }
     return false;
+  }
+
+  /* ---------- 会話・練習試合（序盤イベント。進み具合は src/game/story/intro.ts） ---------- */
+
+  #talk(npc: NpcObject): void {
+    if (npc.npcId === 'neighbor_guide') this.#playScene(sceneOnTalk(this.#store.save));
+  }
+
+  #playScene(id: SceneId): void {
+    this.#busy = true;
+    this.#held = null;
+    this.#path = [];
+    this.#afterPath = null;
+    const store = this.#store;
+    playScene(this.#root, id, {
+      onEffects: (effects) => store.update((s) => applySceneEffects(s, effects)),
+      onClose: (practice) => {
+        if (this.#destroyed) return;
+        // 案内役の場所・目的地の表示が変わることがあるので描き直す
+        this.#build();
+        this.#busy = false;
+        if (practice) this.#startPractice(practice.tutorial);
+      },
+    });
+  }
+
+  /** 練習試合（報酬・戦績なし。勝ち負けで進行は止まらない） */
+  #startPractice(tutorial: boolean): void {
+    const store = this.#store;
+    const opponent = ENCOUNTERS['enc-practice'];
+    if (!opponent) return;
+    if (!isDeckValid(store.save.deck, store.save.collection)) {
+      this.#message(t('world.deckInvalidBattle'));
+      return;
+    }
+    this.#busy = true;
+    const ctx = this.#ctx;
+    store.update((s) => startPractice(s, tutorial));
+    store.pendingBattle = {
+      title: t('story.practice.title'),
+      opponent,
+      allowSurrender: true,
+      tutorial: tutorial && store.save.story.intro !== 'completed',
+      onFinish: (winner) => {
+        store.practiceResult = { winner, tutorial };
+        ctx.reset('world');
+      },
+    };
+    ctx.navigate('battle');
   }
 
   #action(action: string, message?: string): void {
@@ -462,6 +569,7 @@ class WorldView {
       case 'shopClerk': return nav('shopMenu');
       case 'gacha': return nav('gacha');
       case 'tournamentDesk': return nav('tournament');
+      case 'practiceTable': return this.#playScene(sceneOnTable(this.#store.save));
       default: this.#message(message ?? '');
     }
   }

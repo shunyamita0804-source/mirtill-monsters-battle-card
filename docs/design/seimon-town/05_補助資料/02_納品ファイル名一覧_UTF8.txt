@@ -1,0 +1,61 @@
+納品ファイル名一覧（全33枚＋画風見本）
+
+・名前は小文字の英字・数字・アンダーバーだけ。拡張子は .png
+・背景：透明＝透明（できなければマゼンタ一色 #FF00FF）／なし＝画像全体が絵
+・置き場所：Claude がゲームで使う位置（設計図の ID）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1回目
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+style_master.png　　　　画風見本（ユーザーが選んだ全体ラフ）　1024×1024　背景なし
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2回目・街（19枚）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+番号　保存名　　　　　　　　　中身　　　　　　　　　　　大きさ　　　背景　置き場所
+B01　town_arena.png　　　　　カードバトル大会会場　　　1536×1024　透明　ARENA
+B02　town_training.png　　　 カード練習場　　　　　　　1536×1024　透明　TRAINING
+B03　town_house_a.png　　　　住宅A　　　　　　　　　　1024×1024　透明　HOUSE_A
+B04　town_house_b.png　　　　住宅B　　　　　　　　　　1024×1024　透明　HOUSE_B
+B05　town_house_c.png　　　　住宅C　　　　　　　　　　1024×1024　透明　HOUSE_C
+B06　town_house_d.png　　　　住宅D　　　　　　　　　　1024×1024　透明　HOUSE_D
+B07　town_house_e.png　　　　住宅E　　　　　　　　　　1024×1024　透明　HOUSE_E
+B08　town_shop.png　　　　　 カードショップ　　　　　　1536×1024　透明　SHOP
+B09　town_lab.png　　　　　　カード研究所　　　　　　　1024×1024　透明　LAB
+B10　town_player_home.png　　主人公の家　　　　　　　　1024×1024　透明　PLAYER_HOME
+B11　town_guide_home.png　　 案内役の家　　　　　　　　1024×1024　透明　GUIDE_HOME
+B12　town_fountain.png　　　 噴水　　　　　　　　　　　1024×1024　透明　FOUNTAIN
+B13　tex_grass.png　　　　　 地面：草地　　　　　　　　1024×1024　なし　街の地面全体
+B14　tex_stone.png　　　　　 地面：石畳　　　　　　　　1024×1024　なし　歩ける所
+B15　tex_dirt.png　　　　　　地面：土の道　　　　　　　1024×1024　なし　草原への出口
+B16　props_trees.png　　　　 木・植え込み（4つ）　　　 1024×1024　透明　緑地・街のまわり
+B17　props_flowers.png　　　 花壇・植木鉢（4つ）　　　 1024×1024　透明　緑地・玄関わき
+B18　props_street.png　　　　街灯・ベンチ・旗・標柱　　1024×1024　透明　道ぞい・広場・出口
+B19　props_misc.png　　　　　樽・木箱・柵・岩（4つ）　 1024×1024　透明　緑地・ショップのわき
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2回目・部屋（14枚）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+番号　保存名　　　　　　　　　中身　　　　　　　　　　　大きさ　　　背景　使う部屋
+C01　room_shell_player.png　 主人公の家の部屋の箱　　　1024×1024　なし　ROOM_PLAYER
+C02　room_shell_guide.png　　案内役の家の部屋の箱　　　1024×1024　なし　ROOM_GUIDE
+C03　room_shell_house.png　　民家の部屋の箱　　　　　　1024×1024　なし　ROOM_HOUSE（住宅A〜E）
+C04　room_shell_shop.png　　 ショップの店内の箱　　　　1024×1024　なし　ROOM_SHOP
+C05　room_shell_lab.png　　　研究所の中の箱　　　　　　1024×1024　なし　ROOM_LAB
+C06　room_shell_training.png 練習場の中の箱　　　　　　1024×1024　なし　ROOM_TRAINING
+C07　room_shell_arena.png　　大会会場の中の箱　　　　　1024×1024　なし　ROOM_ARENA
+C08　furn_player.png　　　　 ベッド・机と椅子・本棚・壁の地図　　1024×1024　透明　主人公の家（本棚は案内役の家でも使う）
+C09　furn_common.png　　　　 じゅうたん・植木鉢・テーブルと椅子・棚　1024×1024　透明　主人公の家・民家
+C10　furn_guide.png　　　　　暖炉・台所の棚・丸テーブルと椅子・花台　1024×1024　透明　案内役の家
+C11　furn_shop.png　　　　　 商品棚・パック販売機・カウンター・ショーケース　1024×1024　透明　ショップ
+C12　furn_lab.png　　　　　　本棚・水晶の台・標本ケース・研究机・資料棚・閲覧テーブル　1536×1024　透明　研究所
+C13　furn_training.png　　　 黒板・練習テーブル・ベンチ・教材の棚　1024×1024　透明　練習場
+C14　furn_arena.png　　　　　旗・対戦ステージ・観客席・受付カウンター　1024×1024　透明　大会会場
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+納品のしかた
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・2回目の途中：街の19枚がそろったら1つの ZIP（例：seimon_parts_town_v1.zip）、部屋の14枚で1つの ZIP（seimon_parts_room_v1.zip）
+・3回目：直した部品だけを ZIP にする（seimon_parts_fix_v1.zip）。名前は元と同じ
+・4回目：全33枚＋style_master.png を1つの ZIP（seimon_parts_final.zip）
+・ZIP の中にフォルダは作らなくてよい（全部同じ場所に）

@@ -1,6 +1,7 @@
 import type { OpponentDefinition } from '../data/tournaments.ts';
 import type { BattleWinner } from '../game/battle/engine.ts';
 import { sanitizeLocation } from '../game/progress/dungeon.ts';
+import type { PracticeResult } from '../game/story/intro.ts';
 import { createNewSave, type SaveData } from '../game/save/saveData.ts';
 import { MemoryStorage, SaveRepository, type KeyValueStorage, type LoadResult } from '../game/save/saveRepository.ts';
 import { SettingsStore } from './settingsStore.ts';
@@ -11,6 +12,8 @@ export interface BattleRequest {
   readonly opponent: OpponentDefinition;
   /** 降参ボタンを出すか */
   readonly allowSurrender: boolean;
+  /** 最初の練習試合：場面に合わせてヒントを出す（バトルのルールは変えない） */
+  readonly tutorial?: boolean;
   /** 対戦後に1回だけ呼ばれる */
   readonly onFinish: (winner: BattleWinner) => void;
 }
@@ -27,6 +30,8 @@ export class GameStore {
   pendingBattle: BattleRequest | null = null;
   /** 歩行画面に戻ったときに出すお知らせ */
   flashMessage: string | null = null;
+  /** 練習試合の結果（歩行画面に戻ったとき、対戦後の会話に使う） */
+  practiceResult: PracticeResult | null = null;
   /** QA用の機能を出すか（URL に ?qa=1） */
   readonly qa: boolean;
   /** 最後に保存できたか */
@@ -93,6 +98,7 @@ export class GameStore {
     this.#save = next;
     this.pendingBattle = null;
     this.flashMessage = null;
+    this.practiceResult = null;
     this.lastSaveOk = true;
     return true;
   }

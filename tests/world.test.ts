@@ -6,11 +6,11 @@ const blockedIn = (map: typeof HOME) => (x: number, y: number) => isBlocked(map,
 
 describe('歩行マップの経路探索', () => {
   it('床のマスへは最短経路で行ける（噴水は迂回する）', () => {
-    const straight = findPath(TOWN, TOWN.spawn, { x: 7, y: 18 }, blockedIn(TOWN));
-    expect(straight).toHaveLength(21 - 18);
-    const around = findPath(TOWN, TOWN.spawn, { x: 7, y: 14 }, blockedIn(TOWN));
-    expect(around?.at(-1)).toEqual({ x: 7, y: 14 });
-    expect(around?.some((p) => p.x === 7 && (p.y === 15 || p.y === 16))).toBe(false);
+    const straight = findPath(TOWN, TOWN.spawn, { x: 10, y: 15 }, blockedIn(TOWN));
+    expect(straight).toHaveLength(18 - 15);
+    const around = findPath(TOWN, TOWN.spawn, { x: 10, y: 7 }, blockedIn(TOWN));
+    expect(around?.at(-1)).toEqual({ x: 10, y: 7 });
+    expect(around?.some((p) => p.x === 10 && (p.y === 8 || p.y === 9))).toBe(false);
   });
 
   it('壁で囲まれたマスへは行けない', () => {
@@ -43,10 +43,11 @@ describe('街のダンジョン入口', () => {
   });
 
   it('出現位置・各建物の前から、道を歩いて入口まで行ける（途中で塞がれていない）', () => {
-    for (const from of [TOWN.spawn, { x: 3, y: 12 }, { x: 13, y: 12 }, { x: 7, y: 6 }]) {
-      const path = findPath(TOWN, from, { x: 7, y: 25 }, blockedIn(TOWN));
+    // 出現位置・家・ショップ・大会会場・練習場の前
+    for (const from of [TOWN.spawn, { x: 14, y: 15 }, { x: 4, y: 15 }, { x: 10, y: 5 }, { x: 4, y: 5 }]) {
+      const path = findPath(TOWN, from, { x: 10, y: 20 }, blockedIn(TOWN));
       expect(path, `${from.x},${from.y}`).not.toBeNull();
-      expect(path?.at(-1)).toEqual({ x: 7, y: 25 });
+      expect(path?.at(-1)).toEqual({ x: 10, y: 20 });
       // 途中で他の施設の入口を踏まない（誤った施設へ移動しない）
       const others = path?.slice(0, -1).filter((p) => objectsAt(TOWN, p.x, p.y).some((o) => o.type === 'warp' && o.id !== 'door-dungeon'));
       expect(others).toEqual([]);
@@ -54,7 +55,7 @@ describe('街のダンジョン入口', () => {
   });
 
   it('入口の手前（戻ってくる位置）は歩けるマス', () => {
-    expect(isBlocked(TOWN, 7, 24, () => true)).toBe(false);
-    expect(isBlocked(TOWN, 8, 24, () => true)).toBe(false);
+    expect(isBlocked(TOWN, 10, 19, () => true)).toBe(false);
+    expect(isBlocked(TOWN, 11, 19, () => true)).toBe(false);
   });
 });
