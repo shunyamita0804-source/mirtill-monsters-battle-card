@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cardCatalog, monsterId, skillId, supportId } from '../src/data/cards.ts';
+import { ENCOUNTERS } from '../src/data/dungeons.ts';
+import { TOURNAMENTS } from '../src/data/tournaments.ts';
 import { DECK_RULES } from '../src/data/rules.ts';
 import {
   buildAutoDeck,
@@ -11,11 +13,19 @@ import {
 } from '../src/game/deck/deck.ts';
 
 describe('デッキ構成チェック（仮ルール）', () => {
-  it('スターターデッキはモンスター3体・技60枚で、所持カードで組める', () => {
+  it('スターターデッキはモンスター3体・山札60枚（同じカードは3枚まで）で、所持カードで組める', () => {
     const deck = createStarterDeck();
     expect(deck.monsters).toHaveLength(3);
     expect(deck.skills).toHaveLength(60);
+    expect(DECK_RULES.maxCopies).toBe(3);
+    expect(Math.max(...Object.values(countCards(deck.skills)))).toBeLessThanOrEqual(3);
     expect(validateDeck(deck, createStarterCollection())).toEqual([]);
+  });
+
+  it('ダンジョン・大会のすべての相手のデッキが正しい構成になる', () => {
+    const teams = [...Object.values(ENCOUNTERS).map((e) => e.monsters), ...TOURNAMENTS.flatMap((t) => t.rounds.map((o) => o.monsters))];
+    expect(teams.length).toBeGreaterThan(0);
+    for (const monsters of teams) expect(validateDeck(buildAutoDeck(monsters))).toEqual([]);
   });
 
   it('枚数不足・モンスター数・重複モンスターを検出する', () => {
@@ -37,7 +47,7 @@ describe('デッキ構成チェック（仮ルール）', () => {
   });
 
   it('所持枚数を超えるデッキを検出する', () => {
-    const collection = { ...createStarterCollection(), [skillId('a', 1)]: 3 };
+    const collection = { ...createStarterCollection(), [skillId('a', 1)]: 2 };
     expect(validateDeck(createStarterDeck(), collection).map((i) => i.code)).toContain('notOwned');
   });
 

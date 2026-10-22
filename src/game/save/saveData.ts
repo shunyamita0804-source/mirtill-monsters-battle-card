@@ -1,6 +1,13 @@
 import { cardCatalog } from '../../data/cards.ts';
 import { CURRENCY, PACKS, RANK_ORDER, type RankId } from '../../data/economy.ts';
-import { createStarterCollection, createStarterDeck, type Deck } from '../deck/deck.ts';
+import {
+  buildDeckFromCollection,
+  countCards,
+  createStarterCollection,
+  createStarterDeck,
+  isDeckValid,
+  type Deck,
+} from '../deck/deck.ts';
 
 /**
  * セーブデータ（カード所持・通貨・パック解放・欠片・大会実績・ダンジョン進捗・デッキを一元管理）。
@@ -9,7 +16,7 @@ import { createStarterCollection, createStarterDeck, type Deck } from '../deck/d
  * - 読み込み時は normalizeSave() で型・範囲を確認し、壊れた値は既定値に戻す
  * - 変更はすべて「古いセーブを受け取り新しいセーブを返す」純粋関数で行う
  */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export type Gender = 'male' | 'female';
 export type Direction = 'down' | 'up' | 'left' | 'right';
@@ -116,8 +123,32 @@ export function createNewSave(now: Date = new Date()): SaveData {
 
 type RawObject = Record<string, unknown>;
 
+/**
+ * version 1 → 2（2026-10-22）：同じカードの上限が4枚→3枚になり、スターターデッキも変わった。
+ * 4枚入りのデッキのままだと大会・ダンジョンに出られなくなるので、1回だけ次のことをする（version で1回だけ）。
+ * - 新しいスターターデッキのカードで足りない分を所持カードに足す（上限変更の補填）
+ * - デッキが新しいルールで使えなければ、同じモンスター3体で所持カードから組み直す。それでも無理ならスターターデッキにする
+ */
+function migrateDeckRulesV2(raw: RawObject): RawObject {
+  const collection: Record<string, number> = isObject(raw.collection) ? { ...(raw.collection as Record<string, number>) } : {};
+  for (const [id, count] of Object.entries(countCards(createStarterDeck().skills))) {
+    const owned = typeof collection[id] === 'number' ? collection[id] : 0;
+    collection[id] = Math.max(owned, count);
+  }
+  const old = isObject(raw.deck) ? raw.deck : {};
+  const deck: Deck = { monsters: asStringArray(old.monsters), skills: asStringArray(old.skills) };
+  let next: Deck = deck;
+  if (!isDeckValid(deck, collection)) {
+    const rebuilt = buildDeckFromCollection(deck.monsters, collection);
+    next = isDeckValid(rebuilt, collection) ? rebuilt : createStarterDeck();
+  }
+  return { ...raw, collection, deck: next };
+}
+
 /** version n → n+1 の変換。形式を変えるときはここに足し、SAVE_VERSION を上げる */
-const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {};
+const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
+  1: migrateDeckRulesV2,
+};
 
 export function migrate(raw: RawObject): RawObject | null {
   let current = raw;

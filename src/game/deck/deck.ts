@@ -99,9 +99,14 @@ export function isDeckValid(deck: Deck, collection?: CardCounts): boolean {
   return validateDeck(deck, collection).length === 0;
 }
 
-/** 新しく始めたときのデッキ（仮）：仮モンスターA〜C と、それぞれの技1〜4・6 を4枚ずつ */
+/**
+ * 新しく始めたときのデッキ（仮）：仮モンスターA〜C と、それぞれの技1〜6 を3枚ずつ（54枚）＋仮サポート6枚＝60枚。
+ * 同じカードは3枚までなので、技だけでは60枚に届かない分をサポートで埋める。
+ */
 export const STARTER_MONSTER_KEYS = ['a', 'b', 'c'] as const;
-const STARTER_SKILL_NUMBERS = [1, 2, 3, 4, 6] as const;
+const STARTER_SKILL_NUMBERS = [1, 2, 3, 4, 5, 6] as const;
+const STARTER_SUPPORTS = [1, 2, 4] as const;
+const STARTER_SUPPORT_COPIES = 2;
 
 export function createStarterDeck(): Deck {
   const skills: string[] = [];
@@ -109,6 +114,9 @@ export function createStarterDeck(): Deck {
     for (const no of STARTER_SKILL_NUMBERS) {
       for (let i = 0; i < DECK_RULES.maxCopies; i++) skills.push(skillId(key, no));
     }
+  }
+  for (const no of STARTER_SUPPORTS) {
+    for (let i = 0; i < STARTER_SUPPORT_COPIES; i++) skills.push(supportId(no));
   }
   return { monsters: STARTER_MONSTER_KEYS.map(monsterId), skills };
 }
@@ -130,8 +138,8 @@ const NPC_SUPPORT_COPIES = 2;
 export function buildAutoDeck(monsters: readonly string[]): Deck {
   const pool = monsters.flatMap((m) => skillsOf(m).map((s) => s.id));
   const skills: string[] = pool.length === 0 ? [] : NPC_SUPPORTS.flatMap((id) => Array<string>(NPC_SUPPORT_COPIES).fill(id));
+  const counts: Record<string, number> = countCards(skills);
   if (pool.length === 0) return { monsters, skills };
-  const counts: Record<string, number> = {};
   let i = 0;
   while (skills.length < DECK_RULES.skillCount && i < pool.length * DECK_RULES.maxCopies) {
     const id = pool[i % pool.length] as string;
@@ -140,6 +148,13 @@ export function buildAutoDeck(monsters: readonly string[]): Deck {
       skills.push(id);
     }
     i++;
+  }
+  // 適合技だけで60枚に届かないとき（技の少ないモンスターなど）は、サポートを上限まで足して埋める
+  for (const card of SUPPORTS) {
+    while (skills.length < DECK_RULES.skillCount && (counts[card.id] ?? 0) < DECK_RULES.maxCopies) {
+      counts[card.id] = (counts[card.id] ?? 0) + 1;
+      skills.push(card.id);
+    }
   }
   return { monsters, skills };
 }
