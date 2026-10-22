@@ -49,6 +49,8 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 | `audio/se/mana_convert.ogg`・`mana_convert.m4a`（原本 `mana_convert_original_44100.wav`） | マナ化の効果音（09）。ChatGPT 作の独自の電子音（2026-10-22 ユーザー送付・指示） | 受け取ったまま（`docs/audio-credits.md`）。原本 WAV はビルドに含めない |
 | `audio/se/evade_success.mp3`・`hit_normal.mp3`・`hit_strong.mp3`・`mana_spend.mp3` | 正式採用の効果音（回避成功・通常命中・強攻撃命中・マナ消費） | ユーザー承認の MP3 をそのまま（`docs/audio-credits.md`） |
 
+街・部屋の部品の原本（絵を作り直すときの材料。ゲームには直接入らない）は `design-parts/seimon-world/`（2026-10-22〜。何がそろっているかは中の README）。
+
 アプリアイコンは `public/icons/`。2026-10-22 にユーザー承認の正式アイコンへ差し替え：
 原本 `images/icons/sacred-monsters-bc-official-icon.png`（1254×1254 RGBA。受け取ったファイル「セイクリッドモンスターズBC_正式アイコン.png」をそのまま保管・改変なし）から、
 高品質縮小（Lanczos）だけで 512・192・180（apple-touch-icon）・48・32・16 を作成。透過加工・切り抜き・加筆はしていない（原本の角の外側は白）。
