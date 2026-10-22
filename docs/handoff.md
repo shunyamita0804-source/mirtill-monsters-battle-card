@@ -1,4 +1,4 @@
-# 引き継ぎメモ（2026-10-22 時点・セッション引き継ぎ用）
+# 引き継ぎメモ（2026-10-22 夜 時点・セッション引き継ぎ用）
 
 新しいセッションで読むのは `CLAUDE.md` とこのファイルだけ。他の資料は必要になったときに1つずつ読む。
 
@@ -9,7 +9,7 @@
 | 正式名称 | セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card・短縮「セイクリッドBC」）。旧称ミルティル・ミストリア |
 | 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `d4ac1a2` を公開。2026-10-22 夜・ユーザーの「仕上がったら公開まで OK」による。BGM・街の新しい絵・宝箱などのファイルが公開版で 200 になることを確認）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
 | リポジトリ | https://github.com/shunyamita0804-source/sacred-monsters-battle-card （Public。2026-10-22 ユーザーが改名。旧名 mirtill-monsters-battle-card） |
-| 最新版 | `main`（`5ccf667` の内容＋引き継ぎメモ）。テスト 281件。正式な街・部屋・人物・効果音の統合＋試遊を受けた品質改善まで |
+| 最新版 | `main`（公開した `d4ac1a2` ＋引き継ぎメモ）。テスト 284件。手札をなぞる操作・マナ化の音・男性／女性・ミスモン素材（BGM など）・詰めた街まで、すべて公開済み |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
 | バトルのルール | **PS版『モンスターファーム バトルカード』準拠。変えるのは3点だけ**：山札60枚・ガッツを「マナ」と表記・全体カードとブリーダー（プレイヤー）カードを「サポート」に集約（ユーザー決定。`docs/battle-rules.md`） |
@@ -17,9 +17,9 @@
 | 登場人物の年齢 | **主人公（男性・女性）と案内役は20代前半、ほかの人は20代〜50代**（子ども・お年寄りは出さない。2026-10-22 ユーザー決定）。主人公の選択は「男性／女性」。描き直しの依頼一式は `docs/design/characters-adult-20261022/`（AIには設定画・正面の立ち姿・歩き3枚〔1枚に3ポーズ〕だけ頼み、右向きの反転・切り抜き・コマ並べは Claude） |
 | 主人公の歩行の絵 | 2026-10-22 に22歳版が届いたが使っていない（保留）：歩く絵の頭身・横向きの足がいまの絵とほぼ同じで、大人に見えないため（全身の立ち絵だけは大人の絵）。ゲームはいまの絵のまま |
 | 序盤イベント | 公開済み。案内役（となりの家の女性）の会話の絵6表情・歩行の絵は正式。名前は仮の「隣家の女性」のまま |
-| 直近の公開 | `deed858`：手札を指でなぞる・上へはじく操作と、マナ化専用の音（09 `manaConvert`。1枚着くたびに1回。山札からのマナは従来のベル `manaGain`）。ユーザーが確認して OK |
+| 直近の公開 | `d4ac1a2`（2026-10-22 夜。ユーザーは寝る前に「仕上がったら公開まで OK」）：詰めた街＋ミスモン素材。**ユーザーの iPhone 確認はまだ**（BGM が最初のタップで鳴るか・曲の継ぎ目・街の歩きやすさ）。その前の `deed858`（手札をなぞる・マナ化の音）と `eef8e26`（男性／女性）はユーザー確認 OK |
 | ミスモン素材 | 2026-10-22（公開済み）：BGM 7曲（`src/ui/bgm.ts`。タイトル・街・大会の受付・大会の対戦・ダンジョン・対戦・ボス）、ダンジョンの対戦の背景（階ごと）と宝箱の絵・開く動き、大会の景品のアイコン、金貨、ボタン（青＝行う・赤＝やめる）。モンスター・技・NPC・闘技場の背景などは**使わない**（ユーザー指示）。調査の一覧は `docs/mismon-reuse-candidates.md` |
-| 次の作業 | **デザイン納品待ち**（届いたら8章の手順で組み込む）。①いまのデザイン担当＝NPC（店員・研究員・受付・先生・住人5人）の歩く姿と会話の絵（`docs/design/quality-pass-20261022/` の 01・02）。②生成AI担当＝主人公の横向き・背中の歩きの描き直し、案内役の会話の絵（髪を収める）、岩・広場の輪・飾り石・縁石・植え込みの描き直し、縦長の部屋7、UI、ダンジョン、斜め歩き（`docs/design/genai-request-20261022/`） |
+| 次の作業 | ①**人物の描き直しの納品待ち**：ユーザーが生成AI（上限あり）で `docs/design/characters-adult-20261022/` の手順どおりに作る。まず主人公（男性）だけ届く予定 → 8章「大人の人物の組み込み」の手順で入れて、動く様子を返す。②公開した版へのユーザーの感想しだいで調整（BGM の音量・歩く速さ・街）。③それ以外の依頼（縦長の部屋・UI・ダンジョンの絵・斜め歩き：`docs/design/genai-request-20261022/`）は届いたら8章 |
 
 ## 2. これまでの作業（時系列・要点だけ）
 
@@ -71,7 +71,21 @@
    歩き4コマ＋立ち止まりを1枚にまとめたシート `player_{male,female}_sheet.png`（`tools/art/walk_passing.py` が作る）にし、画像は替えず位置だけ動かす。
    横向きの足が動かない → 届いた4コマ（全部足を開いた形）から、2・4コマ目を「足がそろう形」に作り替えた（足だけ真ん中へ寄せる。描き直しが届くまでの応急処置）
 16. デザイン納品・優先A 環境8点（2026-10-22・公開済み）：草むら・小花・植え込みだけ使用（街に散らす・植え込みを入れ替え）。岩・広場の輪・会場前の飾り石・縁石は
-   画風が合わないので不使用（理由と描き直しの一文は `docs/design/quality-pass-20261022/10_…`）。部品の原本はリポジトリに入れていない
+   画風が合わないので不使用（理由と描き直しの一文は `docs/design/quality-pass-20261022/10_…`）
+17. 手札を指でなぞる操作（2026-10-22・公開済み）：7章の最後のとおり（`battleScreen.ts` の「手札を指でなぞる」の部分）
+18. マナ化専用の音（2026-10-22・公開済み）：ユーザーの ZIP「Seimon_ManaConvert_SE_EmergencyFix」。`engine.ts` の `fx` に `manaConvert`（手札→マナ・1枚1件）と
+   `manaGain`（山札→マナ）を足し、音はマナの数の差ではなくこのきっかけで鳴らす。まとめてマナにするときは1枚ずつ着くたびにルールに渡す（音・絵・数がそろう）。
+   飛んでいくカードは描き直しで消えないよう `fxLayer`（描き直しても外さない層）に置く
+19. 人物の年齢（2026-10-22）：主人公・案内役は20代前半、ほかは20代〜50代。主人公の選択を「男性／女性」に（公開済み）。22歳版の歩く絵は大人に見えないので保留。
+   描き直しの依頼一式（プロンプト日英・人物一覧12人・位置の目安の枠 T1/T2）を `docs/design/characters-adult-20261022/` に作り、ZIP でユーザーに渡した
+20. ミスモン素材（2026-10-22・公開済み）：調査（`docs/mismon-reuse-candidates.md`）→ ユーザーが選んだものだけ使用：BGM 7曲（`src/ui/bgm.ts`・
+   `tools/audio/make_bgm_loops.py`）、ダンジョンの対戦の背景（B1F 草原・B2F 海岸・B3F 火山）と宝箱（木・鉄・金、開く4コマ）、大会の景品のアイコン（金貨・勲章・小袋）、
+   金貨（所持金の表示）、ボタン（`.btn--primary`＝青の金枠・`.btn--danger`＝赤の金枠。`border-image` で両端の飾りをのばさない）。設定の BGM 音量・ミュートが効く
+21. 部品の原本の保管（2026-10-22）：ユーザーが部品を消してしまったため、チャットの建物10枚と ZIP「Seimon_Town9_Room14_23Assets」で `design-parts/seimon-world/` に全部そろえた。
+   いまの設計図で作り直して比べ、部屋は1ファイルも変わらない＝原本と確認。草むら・小花・植え込みの3枚だけ原本が無く、いまの街の絵から復元（同じ乱数で「3つだけ抜いた街」を作って差を取り、切り抜いた）
+22. 街を詰めた（2026-10-22・公開済み）：ユーザー「街が広すぎ・移動が面倒」→ 設計図 4800→4032（`seimon_town_pack.py` の TOWN。住宅Dを東の通りの北の段へ、北東の小道をなくした）。
+   建物の大きさは扉の高さ＝主人公の背たけで決めているので変えない（詰めても歩く時間は約2割しか減らない）→ 歩く速さも 1.25 倍（ユーザー選択）。家→大会会場 約11秒→約7秒。
+   街灯は家と道の間に入らないので道の南側の芝生へ。欠片4つを新しい道の行き止まりへ。セーブ version 5（街にいたら家の前へ）
 
 
 ## 3. 大事な約束（詳しくは CLAUDE.md）
@@ -87,7 +101,7 @@
 ## 4. 作業環境の手順
 
 クラウドセッションでは開始時に Node 24 と依存関係が自動で入る（`.claude/hooks/session-start.sh`）はずだが、
-**2026-10-22 は2つのセッションとも動かなかった**（Node 22 のまま・`node_modules` なし。原因は未調査）。`node -v` が 24 でなければ：
+**2026-10-22 は3つのセッションとも動かなかった**（Node 22 のまま・`node_modules` なし。原因は未調査）。`node -v` が 24 でなければ：
 
 ```bash
 # 作業用フォルダ（スクラッチパッド）に Node 24 を直接入れて使う
@@ -97,15 +111,23 @@ export PATH=$PWD/node-$V-linux-x64/bin:$PATH && npm install --no-audit --no-fund
 ```
 
 ```bash
-npm run check            # 型チェック＋テスト（280件）＋ビルド
+npm run check            # 型チェック＋テスト（284件）＋ビルド
 npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後。バックグラウンドで動かす）
 # 公開と同じ base で確かめるとき：npm run build:pages → npx vite preview --mode pages … → http://127.0.0.1:4173/sacred-monsters-battle-card/
 ```
 
-- 街・部屋の絵を作り直すとき（8章）：Python の `scipy` が要る（`pip install scipy`）。1回 約3〜4分。`python3 tools/design/seimon_world_build.py 部品のフォルダ 確認画像の出力先`
+- 街・部屋の絵を作り直すとき（8章）：Python の `scipy` が要る（`pip install scipy`）。1回 約3分。`python3 tools/design/seimon_world_build.py design-parts/seimon-world 確認画像の出力先`
+  （部品は全部リポジトリにある。部屋は同じ部品から同じ絵になる＝変化なし）。設計図だけ試すときは `seimon_town_pack.py` の `town_mask()`・`town_checks()` を Python から呼ぶと、
+  部品なしで「全部の玄関・出口へ歩けるか」を確かめられる
+- 古い版と見比べたいとき：`git worktree add 作業用フォルダ main` で別の場所に取り出して作り直すと、作業中のブランチを汚さない（終わったら `git worktree remove --force`）
+- BGM のファイルを作り直すとき：本編を読み取りでクローンして `python3 -I tools/audio/make_bgm_loops.py 本編/assets/audio/bgm assets/audio/bgm`（ffmpeg が要る。入っている）
 - 主人公のシート（`player_{male,female}_sheet.png`）を作り直すとき：`python3 tools/art/walk_passing.py 歩行シート 待機の絵の接頭辞 出力`
 - GitHub の MCP（公開のワークフロー実行に使う）は、セッションの途中でつながらなくなることがある。`ToolSearch` で `mcp__github__actions_run_trigger` を読み込み直すと使える
-- ブラウザ確認：Playwright（`/opt/node-tools/node_modules/playwright`、Chromium は `/opt/pw-browsers`）
+- ブラウザ確認：Playwright（`/opt/node-tools/node_modules/playwright`、Chromium は `/opt/pw-browsers`。`chromium.launch()` だけで動く）
+  - 2026-10-22 夜のやり方：タイトル →「はじめから」→ 主人公を選ぶ（セーブができる）→ localStorage のセーブを読み、`location`・`story: {intro: 'skipped'}`・
+    `activeDungeon` を書き換えて `addInitScript` で入れ直し → 再読み込み →「つづきから」。大会の受付は `{mapId:'hall', x:20, y:28, dir:'up'}` で「しらべる」、
+    ダンジョンの敵は `{mapId:'dungeon-01-b2', x:7, y:5, dir:'up'}` で「しらべる」→「OK」→ 伏せカードを1枚。指の操作は CDP の `Input.dispatchTouchEvent`（`hasTouch: true`）
+  - 音の確認：`HTMLMediaElement.prototype.play`（BGM）や `AudioBufferSourceNode.prototype.start`（効果音）を `addInitScript` で包んで、鳴らした順を記録する
   - `tools/e2e/flow.cjs`・`intro.cjs`・`flow2.cjs` は古い仮の街（1マス40px）向けで、**いまは動かない**。画面確認は短い Playwright のスクリプトを都度書く
     （iPhone のセーフエリア内と同じ 393×759・deviceScaleFactor 3 で撮ると、ユーザーの見え方に近い。セーブは localStorage の `mistria-battle-card/save` を
     `addInitScript` で入れると好きな場所から始められる）
@@ -144,7 +166,12 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 - 統合便で仮・未完了のもの：強攻撃の基準（必要マナ3以上）は仮。効果音は受け取った MP3 をそのまま使い、素材サイトの原本とは未照合。
   民家A〜Eは無人（住人の絵が無い）。ショップの店員・研究所の研究員・大会の受付・練習場の先生の絵は無い（カウンターなどを調べると従来どおり画面が開く）。
   案内役は家の中には出さない（いまは街か練習場にいる。同じ人が2か所に出ないように）。ダンジョンは仮マップのまま（人物は小さめに表示）
-- 歩く速さ（約185 論理px/秒）・コマ送り（7コマ/秒）・スティックの反応・街の表示の大きさは、ユーザーの iPhone 確認しだいで調整
+- 歩く速さ（231 論理px/秒。2026-10-22 に 185 から 1.25 倍）・コマ送り（7コマ/秒）・スティックの反応・街の表示の大きさは、ユーザーの iPhone 確認しだいで調整
+- BGM：MP3 なので、曲が一周して頭に戻るときにごく短く途切れることがある（気になれば形式か鳴らし方を変える）。最初のタップまでは鳴らない（ブラウザの決まり）。
+  BGM の音量は曲ごとの gain（本編と同じ値）のまま。iPhone で効果音との大きさのつり合いは未確認
+- 草むら・小花・植え込みの3枚は復元したもの（原本より少し淡い）。原本が見つかったら `design-parts/seimon-world/` の同じ名前で置き換えて街を作り直す
+- ダンジョンの対戦の背景は野外の絵（草原・海岸・火山）で、地下のダンジョンという設定とは合っていない（仮の割り当て。ユーザーはこの素材を選んだ）
+- NPC の依頼文（`docs/design/quality-pass-20261022/01・02`）は年齢が古い（頭に追記済み）。歩く絵は `characters-adult-20261022` に置き換え。NPC の会話の絵は設定画が決まってから別に頼む
 - 商標の確認は未実施（名称変更＝商標の安全の保証ではない）
 - 演出の簡略化（動きを減らす設定）は未実装（必要なら項目を追加する）
 - PS版で未確認の裁定（ユーザーが実機で確認する約束）：`docs/battle-rules-audit.md` の5章、`docs/battle-rules.md` の「まだ確かめられていないこと」
@@ -153,10 +180,11 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 - 序盤イベントで仮のもの：となりの家の女性の正式な名前（「隣家の女性」）、正式な台詞（台本 V1 は仮）、練習相手のデッキ（スターターと同じ3体）
 - 応急処置（描き直しが届いたら外す）：主人公の横向き2・4コマ目は足を寄せて作ったコマ（`tools/art/walk_passing.py`）、男の子の背中の帽子の飾りを消した、
   会話の絵の左右の端をぼかしている（`dialogue.css` の `mask-image`）
-- 正式素材が無いもの：モンスター・技カードの絵、NPC（作成中）・ダンジョン・敵・宝箱（依頼済み）、BGM、戦闘の背景。正式仕様が無いもの：カードデータ、価格・提供割合、大会、敵編成、隠しモンスター
+- 正式素材が無いもの：モンスター・技カードの絵、NPC（描き直しの依頼一式あり）・ダンジョンの床や壁・敵、大会の戦闘の背景（ミスモンの闘技場はユーザーが不使用と決定）。正式仕様が無いもの：カードデータ、価格・提供割合、大会、敵編成、隠しモンスター
 - ダンジョンから帰ると家に戻る（街の入口の前には戻らない）。対戦の途中でアプリを閉じると、その対戦は最初からやり直し
 - 不要になった作業ブランチ（main に取り込み済み）：`fix/town-dungeon-gate`・`feature/battle-layout-deal`・`claude/cool-gauss-emyae1`・`feature/sacred-rename-i18n`・
-  `feature/official-town-integration`・`feature/quality-pass`・`fix/walk-portrait`・`fix/walk-flicker`・`feature/env-assets-a`。消すかどうかはユーザーに確認してから
+  `feature/official-town-integration`・`feature/quality-pass`・`fix/walk-portrait`・`fix/walk-flicker`・`feature/env-assets-a`・
+  `feature/hand-swipe`・`fix/mana-convert-se`・`fix/adult-labels`・`assets/town-parts`・`feature/mismon-assets`・`feature/compact-town`。消すかどうかはユーザーに確認してから
   （`nightbatch/2026-10-22`・`claude/sacred-monsters-battle-card-btgeie` は中身未確認）
 
 ## 7. 主なファイル
@@ -171,9 +199,13 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 | カード（仮モンスター・仮技・仮サポート） | `src/data/cards.ts`・`src/game/cards/cardTypes.ts` |
 | バトルのルール本体・相手の思考 | `src/game/battle/engine.ts`・`src/game/battle/ai.ts` |
 | デッキの決まり・スターター・自動構築 | `src/game/deck/deck.ts` |
-| セーブ（形式 version 4・変換） | `src/game/save/saveData.ts` |
+| セーブ（形式 version 5・変換） | `src/game/save/saveData.ts` |
 | バトル画面・コマンドボタン | `src/ui/screens/battleScreen.ts`・`src/ui/components/commandButton.ts`・`src/ui/styles/battle.css` |
 | 効果音の割り当て・出どころ | `src/ui/sound.ts`（`SE_REGISTRY`）・`docs/audio-credits.md` |
+| BGM（場面ごとの曲・音量・切り替え） | `src/ui/bgm.ts`（`BGM_REGISTRY`。曲を決めるのは各画面の `bgm.play()`：タイトル・歩行画面〔街／ダンジョン〕・大会・対戦〔`BattleRequest.bgm`〕） |
+| ミスモン素材の調査・使うもの | `docs/mismon-reuse-candidates.md`（使ったものの出どころは `docs/audio-credits.md`） |
+| 街・部屋の部品の原本 | `design-parts/seimon-world/`（README に受け取り・復元の記録） |
+| 人物の描き直しの依頼一式（大人の年齢） | `docs/design/characters-adult-20261022/`（枠は `tools/design/char_templates.py`） |
 | 素材の置き場と記録 | `assets/README.md` |
 | 公開の手順 | `docs/github-pages.md` |
 | 日英の辞書・英訳表 | `src/i18n/`（`docs/i18n.md`） |
@@ -191,7 +223,7 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 
 - 受け取ったら、まず街や画面に実際に置いて、いまの絵と見比べてから使うか決める（2026-10-22 の環境8点は、平たい図形のような絵が多く半分不採用だった）。
   見比べの画像をユーザーに送り、使わないものは理由を `docs/design/…/10_受け取り結果` のように記録する
-- **部品の原本**：街の作り直し（`seimon_world_build.py`）には部品が全部そろったフォルダが要る。`design-parts/seimon-world/` に保管中（足りない分は README。届いたらそこへ入れる）。
+- **部品の原本**：`design-parts/seimon-world/` に全部ある（2026-10-22）。部品を直したら同じ名前で置き換えて `seimon_world_build.py design-parts/seimon-world …` で作り直す。
   ファイル名は `docs/design/seimon-town/05_補助資料/02_納品ファイル名一覧` のとおり（建物10棟はチャットの画像で届いたので、名前を付け直す：
   紫＝town_guide_home、オレンジのしましま屋根＝town_shop、郵便受けの赤茶屋根＝town_player_home、緑＝town_house_c、赤い横長＝town_training、
   茶＝town_house_a、青緑＝town_lab、青いドーム＝town_arena、赤＝town_house_d、青＝town_house_b）。草むら・小花・植え込みは decal_grass・decal_flowers・props_bush_v2
@@ -202,4 +234,8 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 - 案内役の会話の絵の描き直し：`assets/images/characters/neighbor_guide_talk_*.webp` を作り直し（半分に縮小して WebP）、`dialogue.css` の端をぼかす `mask-image` を外す
 - 縦長の部屋：`seimon_world_build.py` の `SHELL`（床の範囲・出入口）を測り直し、`ROOM_FILL`・`ROOM_ZOOM_MAX`（`worldScreen.ts`）を見直す
 - 岩・広場の輪・飾り石・縁石：`seimon_world_build.py` の `USE_PLAZA_DECOR` などで、見比べてから入れる
+- **大人の人物（`characters-adult-20261022`）の組み込み**（まだ道具は作っていない）：届くのは1人につき「正面の立ち姿（1024×1024）」と「歩き3枚（正面・背中・左向き。1536×1024 に3ポーズ）」。
+  3つの枠（512 幅ずつ）から1人ずつ切り抜き → 背景を透明に → 足元（枠の y=940）と背の高さ（約 860）をそろえて 216×288 のコマ（足元 270・人物の高さ 約250）に縮める →
+  歩きの4コマ＝「立つ・右足を前・立つ・左足を前」、右向き＝左向きの左右反転 → いまの歩行シートと同じ並び（4行×4列。行は正面・背中・左・右）の
+  `player_{male,female}_walk.png` を作り、`walk_passing.py` でゲーム用のシートにする（「足を寄せたコマ」の応急処置は外す）。ゲームに入れたら動く様子をユーザーに返す
 
