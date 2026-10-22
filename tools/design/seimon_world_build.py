@@ -128,6 +128,61 @@ def shadow(base: Image.Image, part: Image.Image, xy: tuple[int, int], dx=18, dy=
     base.paste(Image.new('RGBA', part.size, (40, 50, 30, 255)), (xy[0] + dx, xy[1] + dy), sh)
 
 
+# 噴水広場の輪・会場前の飾り石を使うか（納品された絵が平たい図形で、街の画風に合わないため、いまは使わない）
+USE_PLAZA_DECOR = os.environ.get('SEIMON_PLAZA_DECOR') == '1'
+
+
+def scatter_decals(parts: str, base: Image.Image, paved: np.ndarray) -> None:
+    """草地に草むら・小花を散らす（地面の飾り。人より必ず奥なので、どこに置いても前後はおかしくならない）"""
+    W = base.width
+    grass = split_sheet(parts, 'decal_grass', 3)
+    flowers = split_sheet(parts, 'decal_flowers', 3) if os.path.exists(f'{parts}/decal_flowers.png') else []
+    # 石畳・土の道・建物の枠には置かない（ふちから少し離す）
+    block = ndimage.binary_dilation(paved[::4, ::4], iterations=6)
+    for b in pack.TOWN['buildings']:
+        x1, y1, x2, y2 = (v // 4 for v in b['rect'])
+        block[y1:y2, x1:x2] = True
+    rng = random.Random(1022)
+    for gy in range(40, W, 120):
+        for gx in range(40, W, 120):
+            x = gx + rng.randint(-50, 50)
+            y = gy + rng.randint(-50, 50)
+            if not (0 <= x < W and 0 <= y < W) or block[y // 4, x // 4] or rng.random() < 0.35:
+                continue
+            src = rng.choice(flowers) if flowers and rng.random() < 0.3 else rng.choice(grass)
+            s = rng.uniform(0.7, 1.0)
+            im = src.resize((max(1, round(src.width * s)), max(1, round(src.height * s))), Image.LANCZOS)
+            if rng.random() < 0.5:
+                im = im.transpose(Image.FLIP_LEFT_RIGHT)
+            px, py = x - im.width // 2, y - im.height
+            # はみ出し・石畳への重なりは置かない
+            if px < 0 or py < 0 or px + im.width > W or py + im.height > W:
+                continue
+            if block[py // 4:(py + im.height) // 4 + 1, px // 4:(px + im.width) // 4 + 1].any():
+                continue
+            base.alpha_composite(im, (px, py))
+
+
+def place_plaza_decor(parts: str, base: Image.Image) -> None:
+    """噴水広場の石の輪と、大会会場の前の飾り石の帯（地面に敷く）"""
+    ring = Image.open(f'{parts}/plaza_ring.png').convert('RGBA')
+    ring = ring.crop(ring.getbbox())
+    size = 1000
+    ring = ring.resize((size, size), Image.LANCZOS)
+    cx, cy = pack.TOWN['fountain']['center']
+    base.alpha_composite(ring, (cx - size // 2, cy - size // 2))
+    carpet = Image.open(f'{parts}/plaza_carpet.png').convert('RGBA')
+    carpet = carpet.crop(carpet.getbbox())
+    w = 220
+    carpet = carpet.resize((w, round(carpet.height * w / carpet.width)), Image.LANCZOS)
+    top, bottom = 1262, 1800
+    y = top
+    while y < bottom:
+        piece = carpet.crop((0, 0, w, min(carpet.height, bottom - y)))
+        base.alpha_composite(piece, (cx - w // 2, y))
+        y += piece.height
+
+
 # 小物（部品の何番目か → 名前と、街での大きさの倍率）
 PROPS = {
     'props_trees': [('tree_round', 0.80), ('tree_conifer', 0.80), ('tree_small', 0.80), ('bush', 0.62)],
@@ -169,11 +224,18 @@ PROP_SPOTS = [
 
 def load_props(parts: str) -> dict[str, Image.Image]:
     out = {}
+    # 植え込み（描き直し・2026-10-22 納品）があれば、前の平たい植え込みの代わりに使う
+    if os.path.exists(f'{parts}/props_bush_v2.png'):
+        pieces = split_sheet(parts, 'props_bush_v2', 3)
+        for i, piece in enumerate(pieces[:4]):
+            out[f'bush2_{i}'] = piece.resize((round(piece.width * 0.42), round(piece.height * 0.42)), Image.LANCZOS)
     for sheet, items in PROPS.items():
         pieces = split_sheet(parts, sheet, 3)
         assert len(pieces) == len(items), (sheet, len(pieces))
         for piece, (name, scale) in zip(pieces, items):
             out[name] = piece.resize((round(piece.width * scale), round(piece.height * scale)), Image.LANCZOS)
+    if 'bush2_0' in out:
+        out['bush'] = out['bush2_0']
     return out
 
 
@@ -235,6 +297,12 @@ def build_town(parts: str, check_dir: str | None):
     dm = (dm * ramp).astype(np.uint8)
     base.paste(dirt, (0, 0), Image.fromarray(dm).filter(ImageFilter.GaussianBlur(6)))
 
+    # 品質改善の追加部品（2026-10-22 納品。あるときだけ使う）：草むら・小花の飾り、噴水広場の輪、会場前の飾り石
+    if os.path.exists(f'{parts}/decal_grass.png'):
+        scatter_decals(parts, base, stone_np | (np.array(dirt_mask) > 0))
+    if USE_PLAZA_DECOR and os.path.exists(f'{parts}/plaza_ring.png'):
+        place_plaza_decor(parts, base)
+
     # 噴水（形は絵のとおり。絵の部分は歩けない）
     fountain, fxy = place_fountain(parts)
     shadow(base, fountain, fxy, 10, 8, 8, 70)
@@ -278,6 +346,8 @@ def build_town(parts: str, check_dir: str | None):
             else:
                 # 道のそば：植木鉢・花壇（植え込み・岩の部品は平たく見えるので控えめに）
                 name = rng.choices(['flower_pot', 'planter_round', 'bush', 'rock'], [3, 3, 1, 0.3])[0]
+            if name == 'bush' and 'bush2_3' in props:
+                name = rng.choice(['bush2_0', 'bush2_1', 'bush2_2', 'bush2_3'])
             prop_list.append((name, x, y))
 
     # 建物の枠（小物を重ねない）
