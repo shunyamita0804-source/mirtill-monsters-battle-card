@@ -231,6 +231,9 @@ class WorldView {
   /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
   #walkDist = 0;
   #lastMoving = 0;
+  /** 1論理px あたりの画面の画素（地図の位置をそろえる単位）と、それを測ったときの画面の大きさ */
+  #snap = 1;
+  #snapKey = '';
   #playerLook = '';
   #destroyed = false;
   #mapLayer!: HTMLElement;
@@ -623,21 +626,32 @@ class WorldView {
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
   }
 
+  /**
+   * dt 秒ぶん進める。マスに着いて歩き続けるときは、あまった時間でそのまま次のマスへ進む
+   * （2026-10-23。それまではマスごとに1コマ止まり、カクカクして見えた）
+   */
   #step(dt: number): void {
-    if (this.#move) {
-      const speed = WALK_PX / this.#cell;
-      this.#move.t += (dt * speed) / this.#move.len;
-      if (this.#move.t >= 1) {
-        this.#tile = this.#move.to;
-        this.#pos = { ...this.#tile };
-        this.#move = null;
-        this.#arrive();
-        return;
-      }
-      const { from, to, t } = this.#move;
-      this.#pos = { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
+    if (!this.#move) {
+      this.#startNext();
+      if (!this.#move) return;
+    }
+    const speed = WALK_PX / this.#cell;
+    this.#move.t += (dt * speed) / this.#move.len;
+    if (this.#move.t >= 1) {
+      const rest = ((this.#move.t - 1) * this.#move.len) / speed;
+      this.#tile = this.#move.to;
+      this.#pos = { ...this.#tile };
+      this.#move = null;
+      this.#arrive();
+      if (rest > 0 && !this.#busy) this.#step(rest);
       return;
     }
+    const { from, to, t } = this.#move;
+    this.#pos = { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
+  }
+
+  /** 止まっているとき：道順・調べる予約・押している向きから、次の1歩を始める */
+  #startNext(): void {
     const next = this.#path.shift();
     if (next) {
       const dx = next.x - this.#tile.x;
@@ -737,7 +751,9 @@ class WorldView {
     const fy = f.y - this.#figureH / 2;
     const cx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(f.x - vw / 2, 0), mw - vw);
     const cy = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fy - vh / 2, 0), mh - vh);
-    this.#mapLayer.style.transform = `translate(${Math.round(cx)}px, ${Math.round(cy)}px)`;
+    // 画面の実際の点（デバイスの画素）にそろえる。論理px で丸めると、人物が地図に対して半px ずつ揺れて見える
+    const snap = this.#pixelSnap();
+    this.#mapLayer.style.transform = `translate(${Math.round(cx * snap) / snap}px, ${Math.round(cy * snap) / snap}px)`;
     // 施設の看板が上の帯に隠れるときは、建物の上を少し下へずらす（玄関の上までは下げない）
     for (const sign of this.#signs) {
       const shift = Math.max(0, Math.min(SIGN_MIN_BOTTOM - (sign.top + cy), sign.maxShift));
@@ -818,6 +834,19 @@ class WorldView {
   #stageScale(): number {
     const w = this.#root.offsetWidth;
     return w > 0 ? this.#root.getBoundingClientRect().width / w : 1;
+  }
+
+  /** 1論理px が画面の何画素か。画面の大きさが変わったときだけ測り直す（毎コマ測ると重い） */
+  #pixelSnap(): number {
+    const key = `${window.innerWidth}x${window.innerHeight}@${window.devicePixelRatio}`;
+    if (key !== this.#snapKey) {
+      const snap = this.#stageScale() * (window.devicePixelRatio || 1);
+      if (snap > 0) {
+        this.#snapKey = key;
+        this.#snap = snap;
+      }
+    }
+    return this.#snap;
   }
 
   #key(e: KeyboardEvent, down: boolean): void {
