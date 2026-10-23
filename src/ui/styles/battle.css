@@ -1739,3 +1739,15 @@
 .battle-info--player .battle-info__name {
   display: none;
 }
+
+/* 相手の手札（裏向き）：小さすぎたので大きく（2026-10-23 ユーザー指示） */
+.battle-opp__hand {
+  padding-left: 14px;
+}
+
+.battle-opp__back {
+  width: 40px;
+  height: 57px;
+  margin-left: -14px;
+  border-radius: 4px;
+}
