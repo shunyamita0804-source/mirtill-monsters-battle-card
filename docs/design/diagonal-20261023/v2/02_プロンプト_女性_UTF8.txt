@@ -1,0 +1,191 @@
+【プロンプト】主人公（女性）の斜め向きの歩きの絵　1枚に1ポーズ　正方形 1024×1024（作り直し版・2026-10-23）
+使い方：
+・ChatGPT などの画像を作るAIに、▼〜▲ の間をそのまま貼り付ける。日本語でうまくいかないときは English version
+・向きごと（斜め前・斜め後ろ）に新しい会話で始め、その中で手順1→2→3 と続ける
+・手順1の絵が参考シートの人物と同じに見えるまで、手順1をやり直す（下の「うまくいかないとき」の一言を使う）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 斜め前（画面の左下へ歩いてくる）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ 手順1　斜め前の立ち姿 → 保存名 player_female_downleft_stand.png
+添付：参考シート_女性_正面・左向き・背中.png、T5_1ポーズの枠_1024x1024.png、style_master.png
+▼ここからコピー
+スマホ向け2Dカードゲームの、街を歩く小さなキャラクターの絵を1枚描いてください。
+添付の参考シートの人物（正面・左向き・背中の3つは同じ1人）を、別の向きから見た絵です。新しい人物を作るのではなく、参考シートの人物をそのまま回転させて描いてください。
+
+【向き】参考シートの「正面」と「左向き」のちょうど中間の向き（45度）。画面の左下へ歩いてくる。顔と体の前が見え、体の左側も少し見える
+【ポーズ】まっすぐ立つ。足は肩幅くらいでそろえる。腕は体の横に自然に下ろす
+【人物】参考シートとまったく同じ。顔・髪型・帽子・服の模様・ベルト・かばん・飾り・ブーツ・色を変えない。体の幅・頭身・大きさも参考シートと同じ（細くしない）
+・22歳の女性。3.5頭身のミニキャラだが大人の顔（小さめの顔・すっきりしたあご・落ち着いた目）
+・髪：明るい茶色の長い髪、ゆるいウェーブで胸より下まで。目は茶色
+・帽子：赤い帽子。ふちに白いフリルと金の線。本人の右側（正面の絵では画面の左側）に赤いリボンの結び目
+・ブラウス：白いブラウス、ふくらんだ短い袖、袖口にフリル
+・ベスト：赤いベスト。金の縁取り、胸の前は金のひもの編み上げ、金の花の飾りボタン
+・腰：茶色の革ベルト2本、金のバックル。両方の腰に茶色の小さな革のかばん
+・スカート：赤いスカート。金の縁取りと金の刺しゅう模様、すそは左右で長さが違う重ね。下から白いフリルが見える
+・タイツ：茶色
+・ブーツ：茶色のロングブーツ。金色のひもの編み上げ、折り返し
+・手袋：指なしの茶色の革手袋、手首にベルト
+【画風】添付の参考シートと同じ。なめらかな筆の手描きの質感、濃い茶色の輪郭線。ざらざらした模様・ベクター風・フラット・3DCG風にしない
+【形式】正方形 1024×1024。人物は1人だけ。添付の枠（T5）の「頭の上」と「足元」の線に頭のてっぺんと足の裏をそろえ、体の中心を点線に。枠の線と文字は描かない
+【禁止】文字・数字・ロゴ・サイン。地面・影・背景・ほかの人物
+【背景】透明（できなければマゼンタ一色 #FF00FF）
+▲ここまで
+
+◆ 手順2　斜め前・右足を前 → 保存名 player_female_downleft_rightfoot.png（手順1と同じ会話で続ける）
+添付：手順1でできた立ち姿、T5_1ポーズの枠_1024x1024.png（参考シートもあれば）
+▼ここからコピー
+添付の立ち姿の絵（手順1の絵）の人物が、同じ向きのまま歩いている絵を1枚描いてください。
+・右足を大きく前に出し、左足は後ろ。前の足と後ろの足がはっきり見分けられるように
+・左腕を少し前、右腕を少し後ろに軽く振る
+・変えるのは足と腕の位置だけ。顔・髪・帽子・服・ベルト・かばん・飾り・ブーツ・色・大きさ・向きは添付の立ち姿とまったく同じ
+・頭のてっぺんと足元（地面についている足）を枠の線にそろえる。体の中心は点線
+・1024×1024、人物は1人。背景は透明（できなければマゼンタ一色 #FF00FF）。枠の線と文字は描かない
+▲ここまで
+
+◆ 手順3　斜め前・左足を前 → 保存名 player_female_downleft_leftfoot.png（同じ会話で続ける）
+添付：手順1でできた立ち姿、T5_1ポーズの枠_1024x1024.png
+▼ここからコピー
+もう1枚、同じように描いてください。今度は左足を大きく前に出し、右足は後ろ。右腕を少し前、左腕を少し後ろ。
+変えるのは足と腕の位置だけ。ほかは添付の立ち姿とまったく同じ。1024×1024、人物は1人、背景は透明、枠の線と文字は描かない。
+▲ここまで
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 斜め後ろ（画面の左上へ歩いていく）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ 手順1　斜め後ろの立ち姿 → 保存名 player_female_upleft_stand.png
+添付：参考シート_女性_正面・左向き・背中.png、T5_1ポーズの枠_1024x1024.png、style_master.png
+▼ここからコピー
+スマホ向け2Dカードゲームの、街を歩く小さなキャラクターの絵を1枚描いてください。
+添付の参考シートの人物（正面・左向き・背中の3つは同じ1人）を、別の向きから見た絵です。新しい人物を作るのではなく、参考シートの人物をそのまま回転させて描いてください。
+
+【向き】参考シートの「背中」と「左向き」のちょうど中間の向き（45度）。画面の左上へ歩いていく。背中と体の左側が見え、顔はほぼ見えない（ほおの線が少し見える程度）
+【ポーズ】まっすぐ立つ。足は肩幅くらいでそろえる。腕は体の横に自然に下ろす
+【人物】参考シートとまったく同じ。顔・髪型・帽子・服の模様・ベルト・かばん・飾り・ブーツ・色を変えない。体の幅・頭身・大きさも参考シートと同じ（細くしない）
+・22歳の女性。3.5頭身のミニキャラだが大人の顔（小さめの顔・すっきりしたあご・落ち着いた目）
+・髪：明るい茶色の長い髪、ゆるいウェーブで胸より下まで。目は茶色
+・帽子：赤い帽子。ふちに白いフリルと金の線。本人の右側（正面の絵では画面の左側）に赤いリボンの結び目
+・ブラウス：白いブラウス、ふくらんだ短い袖、袖口にフリル
+・ベスト：赤いベスト。金の縁取り、胸の前は金のひもの編み上げ、金の花の飾りボタン
+・腰：茶色の革ベルト2本、金のバックル。両方の腰に茶色の小さな革のかばん
+・スカート：赤いスカート。金の縁取りと金の刺しゅう模様、すそは左右で長さが違う重ね。下から白いフリルが見える
+・タイツ：茶色
+・ブーツ：茶色のロングブーツ。金色のひもの編み上げ、折り返し
+・手袋：指なしの茶色の革手袋、手首にベルト
+【画風】添付の参考シートと同じ。なめらかな筆の手描きの質感、濃い茶色の輪郭線。ざらざらした模様・ベクター風・フラット・3DCG風にしない
+【形式】正方形 1024×1024。人物は1人だけ。添付の枠（T5）の「頭の上」と「足元」の線に頭のてっぺんと足の裏をそろえ、体の中心を点線に。枠の線と文字は描かない
+【禁止】文字・数字・ロゴ・サイン。地面・影・背景・ほかの人物
+【背景】透明（できなければマゼンタ一色 #FF00FF）
+▲ここまで
+
+◆ 手順2　斜め後ろ・右足を前 → 保存名 player_female_upleft_rightfoot.png（手順1と同じ会話で続ける）
+添付：手順1でできた立ち姿、T5_1ポーズの枠_1024x1024.png（参考シートもあれば）
+▼ここからコピー
+添付の立ち姿の絵（手順1の絵）の人物が、同じ向きのまま歩いている絵を1枚描いてください。
+・右足を大きく前に出し、左足は後ろ。前の足と後ろの足がはっきり見分けられるように
+・左腕を少し前、右腕を少し後ろに軽く振る
+・変えるのは足と腕の位置だけ。顔・髪・帽子・服・ベルト・かばん・飾り・ブーツ・色・大きさ・向きは添付の立ち姿とまったく同じ
+・頭のてっぺんと足元（地面についている足）を枠の線にそろえる。体の中心は点線
+・1024×1024、人物は1人。背景は透明（できなければマゼンタ一色 #FF00FF）。枠の線と文字は描かない
+▲ここまで
+
+◆ 手順3　斜め後ろ・左足を前 → 保存名 player_female_upleft_leftfoot.png（同じ会話で続ける）
+添付：手順1でできた立ち姿、T5_1ポーズの枠_1024x1024.png
+▼ここからコピー
+もう1枚、同じように描いてください。今度は左足を大きく前に出し、右足は後ろ。右腕を少し前、左腕を少し後ろ。
+変えるのは足と腕の位置だけ。ほかは添付の立ち姿とまったく同じ。1024×1024、人物は1人、背景は透明、枠の線と文字は描かない。
+▲ここまで
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ English version（日本語でうまくいかないとき）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Step 1 — 斜め前 standing (player_female_downleft_stand.png)
+▼
+Draw ONE small character sprite for a smartphone 2D card game's town map.
+It is the person in the attached reference sheet (the front, left and back views are the same person), seen from a different angle. Do not invent a new character: rotate the reference character exactly as is.
+
+[Direction] Exactly halfway (45 degrees) between the "front" and "left" views of the reference sheet: a three-quarter front view, walking toward the viewer and to the LEFT of the screen. The face and the front of the body are visible, plus a little of the left side.
+[Pose] Standing straight, feet about shoulder-width apart, arms relaxed at the sides.
+[Character] Exactly the same as the reference sheet. Do NOT change the face, hair, cap, clothing patterns, straps, bags, ornaments, boots or colors. Same body width, proportions and size as the reference sheet (do not make it slimmer).
+- A 22-year-old woman. A 3.5-head chibi, but with an adult face (small face, clean jawline, calm eyes).
+- Hair: long, softly wavy light brown hair reaching below the chest. Brown eyes.
+- Cap: red cap with white frills and a gold line on the brim, and a red ribbon bow on her right side (left side of the picture in the front view).
+- Blouse: white, short puffed sleeves with frilled cuffs.
+- Vest: red vest with gold trim, gold lacing on the chest, gold flower-shaped buttons.
+- Waist: two brown leather belts with gold buckles. Small brown leather pouches on both hips.
+- Skirt: red skirt with gold trim and gold embroidery, asymmetric layered hem, white frills showing underneath.
+- Tights: brown.
+- Boots: tall brown boots laced with gold laces, with folded cuffs.
+- Gloves: fingerless brown leather gloves with a wrist strap.
+[Style] Same as the attached reference sheet: smooth hand-painted brush texture, dark-brown outlines. NO rough/noisy texture, NO flat vector art, NO 3D render look.
+[Format] Square 1024x1024, ONE figure only. Top of the head and soles of the feet on the "top" and "feet" lines of the attached guide frame (T5); body centered on the dotted line. Do NOT draw the guide lines or text.
+[Forbidden] Any text, numbers, logos, signatures. Ground, shadows, background, other people.
+[Background] Transparent (if impossible, solid magenta #FF00FF).
+▲
+
+◆ Step 2 — 斜め前, right foot forward (player_female_downleft_rightfoot.png)
+▼
+Draw the person in the attached standing image (from step 1) walking, facing the same direction.
+- Right foot clearly forward, left foot behind. Left arm slightly forward, right arm slightly back.
+- Change ONLY the legs and arms. Face, hair, cap, clothes, straps, bags, ornaments, boots, colors, size and direction exactly the same as the attached standing image.
+- Top of the head and the planted foot on the guide lines; body centered on the dotted line.
+- 1024x1024, one figure, transparent background (or solid magenta #FF00FF). No guide lines or text.
+▲
+
+◆ Step 3 — 斜め前, left foot forward (player_female_downleft_leftfoot.png)
+▼
+One more, the same way: this time the LEFT foot clearly forward and the right foot behind; right arm slightly forward, left arm slightly back. Change only the legs and arms. 1024x1024, one figure, transparent background, no guide lines or text.
+▲
+
+◆ Step 1 — 斜め後ろ standing (player_female_upleft_stand.png)
+▼
+Draw ONE small character sprite for a smartphone 2D card game's town map.
+It is the person in the attached reference sheet (the front, left and back views are the same person), seen from a different angle. Do not invent a new character: rotate the reference character exactly as is.
+
+[Direction] Exactly halfway (45 degrees) between the "back" and "left" views of the reference sheet: a three-quarter back view, walking away and to the LEFT of the screen. The back and the left side of the body are visible; the face is almost hidden (only the line of the cheek).
+[Pose] Standing straight, feet about shoulder-width apart, arms relaxed at the sides.
+[Character] Exactly the same as the reference sheet. Do NOT change the face, hair, cap, clothing patterns, straps, bags, ornaments, boots or colors. Same body width, proportions and size as the reference sheet (do not make it slimmer).
+- A 22-year-old woman. A 3.5-head chibi, but with an adult face (small face, clean jawline, calm eyes).
+- Hair: long, softly wavy light brown hair reaching below the chest. Brown eyes.
+- Cap: red cap with white frills and a gold line on the brim, and a red ribbon bow on her right side (left side of the picture in the front view).
+- Blouse: white, short puffed sleeves with frilled cuffs.
+- Vest: red vest with gold trim, gold lacing on the chest, gold flower-shaped buttons.
+- Waist: two brown leather belts with gold buckles. Small brown leather pouches on both hips.
+- Skirt: red skirt with gold trim and gold embroidery, asymmetric layered hem, white frills showing underneath.
+- Tights: brown.
+- Boots: tall brown boots laced with gold laces, with folded cuffs.
+- Gloves: fingerless brown leather gloves with a wrist strap.
+[Style] Same as the attached reference sheet: smooth hand-painted brush texture, dark-brown outlines. NO rough/noisy texture, NO flat vector art, NO 3D render look.
+[Format] Square 1024x1024, ONE figure only. Top of the head and soles of the feet on the "top" and "feet" lines of the attached guide frame (T5); body centered on the dotted line. Do NOT draw the guide lines or text.
+[Forbidden] Any text, numbers, logos, signatures. Ground, shadows, background, other people.
+[Background] Transparent (if impossible, solid magenta #FF00FF).
+▲
+
+◆ Step 2 — 斜め後ろ, right foot forward (player_female_upleft_rightfoot.png)
+▼
+Draw the person in the attached standing image (from step 1) walking, facing the same direction.
+- Right foot clearly forward, left foot behind. Left arm slightly forward, right arm slightly back.
+- Change ONLY the legs and arms. Face, hair, cap, clothes, straps, bags, ornaments, boots, colors, size and direction exactly the same as the attached standing image.
+- Top of the head and the planted foot on the guide lines; body centered on the dotted line.
+- 1024x1024, one figure, transparent background (or solid magenta #FF00FF). No guide lines or text.
+▲
+
+◆ Step 3 — 斜め後ろ, left foot forward (player_female_upleft_leftfoot.png)
+▼
+One more, the same way: this time the LEFT foot clearly forward and the right foot behind; right arm slightly forward, left arm slightly back. Change only the legs and arms. 1024x1024, one figure, transparent background, no guide lines or text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ うまくいかないとき（同じ会話で続けて送る一言）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・服や顔が参考シートと違う →「参考シートの人物とまったく同じに。新しいデザインにしないで、参考シートの服・ベルト・飾り・ブーツをそのまま写して」
+・真正面・真横・真後ろになった →「参考シートの正面（または背中）と左向きのちょうど中間、45度の斜めに」
+・右向きになった →「画面の左のほうへ向かうように。体の左側が見える向きに」
+・細くなった →「体の幅を参考シートと同じに。細くしない」
+・塗りがざらざら →「参考シートと同じなめらかな塗りに。ざらざらした模様をつけない」
+・手順2・3で人物が変わった →「添付の立ち姿とまったく同じ人物に。足と腕の位置だけ変えて」
+・右足と左足が同じ →「前に出す足をはっきり。右足（または左足）を大きく前、反対の足は後ろに」
+・背景や枠の線がついた →「人物だけに。背景は透明、枠の線と文字は消して」

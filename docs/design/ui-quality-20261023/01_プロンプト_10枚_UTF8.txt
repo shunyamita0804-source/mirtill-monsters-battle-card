@@ -1,0 +1,207 @@
+【プロンプト】画面の見た目を上げるデザイン10枚（2026-10-23）
+
+使い方：
+・画像を作るAIに、▼〜▲ の間をそのまま貼り付ける。1枚ごとに新しい会話で
+・最初に「共通ルール」を貼り、続けてその番号の文を貼る（1回で送ってよい）
+・日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（毎回、最初に付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の画面の絵を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本と同じ、筆で塗り重ねた手描きの質感。ファンタジーの石と木の街の世界。ベクター風・フラット・3DCG風にしない
+【雰囲気】大人向けの落ち着いた雰囲気。色は濃い灰色・こげ茶・くすんだ金を中心に。紫・明るい黄色・ピンクは使わない
+【禁止】文字・数字・ロゴ・透かし・サイン（日本語・英語とも）。実在の作品に似せること
+▲ここまで
+▼English
+Draw an image for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Hand-painted with layered brush strokes, like the attached style sample. A fantasy world of stone and wooden towns. NO flat vector art, NO 3D render look.
+[Mood] Calm, for adults. Mainly dark charcoal grey, dark brown and muted gold. No purple, no bright yellow, no pink.
+[Forbidden] Any text, numbers, logos, watermarks or signatures (Japanese or English). Resemblance to existing IP.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　タイトル画面の背景（キービジュアル）→ title_bg.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、今の画面_タイトル.png
+▼ここからコピー
+タイトル画面の背景を1枚描いてください。縦長 1024×1536。
+・夕暮れの石と木の街を、少し高い所から見下ろした景色。奥に大きな大会会場（円形の石の建物、旗）。空は深い藍色から金色の夕焼けへ
+・画面の手前（下のほう）に、光る金の粒をまとったカードが数枚、ゆっくり舞っている。カードは裏向きで、表の絵は見せない
+・画面の上から 1/3 は空を広く空けて、暗めに（ゲームがロゴを重ねる）。下から 1/3 も落ち着いた暗さに（ボタンを重ねる）
+・人物・モンスターは描かない。文字は描かない
+・上下を少し切っても成り立つように、大事な物は真ん中に
+▲ここまで
+▼English
+Title screen background, portrait 1024x1536.
+- A stone-and-wood fantasy town at dusk, seen from a slightly high viewpoint. A large circular stone tournament arena with banners in the distance. Sky from deep indigo to golden sunset.
+- In the foreground (lower area), a few cards float slowly, wrapped in glowing gold particles. Show only their backs, no card faces.
+- Keep the top third mostly open, darker sky (the game puts the logo there). Keep the bottom third calm and dark (buttons go there).
+- No people, no monsters, no text. Keep important things in the middle so the top and bottom can be cropped a little.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　大会の対戦の背景 → battle_bg_arena.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、今の画面_バトル.png
+▼ここからコピー
+カードバトルの画面の背景を1枚描いてください。縦長 1024×1536。
+・大会会場の中。石の床の真ん中に、上から見下ろした大きな対戦用のテーブル（濃い木に金の飾り、紺の布）。テーブルは画面のほぼ全体に広がる
+・テーブルの上半分が相手の場、下半分が自分の場。真ん中に細い金のラインで区切り
+・テーブルのまわりの床は暗く、奥（画面のいちばん上）にだけ観客席の灯りがぼんやり見える
+・この上にカードと文字がたくさん重なるので、全体を暗めに、模様は控えめに。明るい所・細かい模様をテーブルの真ん中に置かない
+・人物・モンスター・カード・文字は描かない
+▲ここまで
+▼English
+Card battle screen background, portrait 1024x1536.
+- Inside the tournament arena. A large card-battle table seen from above (dark wood with gold ornaments and a navy cloth), filling almost the whole picture.
+- Upper half of the table is the opponent's side, lower half is the player's side, divided by a thin gold line in the middle.
+- The floor around the table is dark; only at the very top, the lights of the audience seats glow softly.
+- Cards and text will be placed on top, so keep everything dark and the patterns subtle. No bright spots or busy patterns in the middle of the table.
+- No people, no monsters, no cards, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3　カードの裏面 → card_back.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、今の画面_先攻後攻.png
+▼ここからコピー
+トレーディングカードの裏面の絵を1枚描いてください。縦長 1024×1536 の中に、カード1枚（縦:横＝3:2）を真っすぐ正面から、ほぼいっぱいに。
+・紺色の地に、くすんだ金の枠と、四隅の飾り。真ん中に大きな紋章（カードと星と翼を組み合わせた形。文字なし）
+・左右対称、上下対称に近く。小さく表示しても紋章の形が分かる
+・カードの角は少し丸い。カードの外は透明（できなければマゼンタ一色 #FF00FF）。影なし、斜めにしない
+▲ここまで
+▼English
+The back side of a trading card, one card (3:2 tall) seen straight from the front, almost filling a portrait 1024x1536 canvas.
+- Navy base, muted gold border and corner ornaments, a large emblem in the center combining a card, a star and wings (no text).
+- Nearly symmetrical left-right and top-bottom. The emblem must read at small sizes.
+- Slightly rounded corners. Outside the card is transparent (if impossible, solid magenta #FF00FF). No shadow, no tilt.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 4　メニュー画面の共通の背景（つなげて敷ける）→ ui_bg_pattern.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、今の画面_デッキ編集.png、今の画面_ショップ.png
+▼ここからコピー
+デッキ編集・ショップ・大会受付・設定などの画面に敷く、背景の模様を1枚描いてください。正方形 1024×1024。
+・濃い灰色からこげ茶の、使い込んだ革か厚い布のような質感。ごく薄い金の唐草模様がうっすら見える程度
+・上下左右につなげて敷いたとき、つなぎ目が見えないように（シームレス）
+・明暗の差は小さく。この上に文字と一覧が乗るので、目立たないこと
+・物・人物・文字は描かない
+▲ここまで
+▼English
+A background pattern for menu screens (deck editing, shop, tournament desk, settings), square 1024x1024.
+- Dark charcoal to dark brown, like well-used leather or heavy cloth, with a very faint muted-gold arabesque pattern.
+- Seamless: it must tile left-right and top-bottom without visible seams.
+- Low contrast; text and lists go on top, so it must stay quiet. No objects, no people, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 5　窓の枠（メニュー・確認の窓）→ ui_window_frame.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、今の画面_メニュー.png、今の画面_確認の窓.png
+▼ここからコピー
+メニューや「はい／いいえ」の確認で出す窓の、無地の枠を1枚描いてください。正方形 1024×1024 の中央に、窓1つ（正方形に近い横長）。
+・中は濃い灰色の無地（少し透ける黒っぽい石板のような質感でもよい）。ふちに細いくすんだ金の線、四隅だけに小さな金の飾り
+・辺の真ん中には飾りを置かない（ゲームで枠を縦横に伸ばして使うため。四隅と辺を分けて使う）
+・窓の外は透明（できなければマゼンタ一色 #FF00FF）。中に文字・ボタンは描かない
+▲ここまで
+▼English
+A blank window frame for menus and yes/no dialogs, one window (nearly square) centered on 1024x1024.
+- Plain dark charcoal inside (a slightly translucent dark slate look is fine). A thin muted-gold line along the edge and small gold ornaments only at the four corners.
+- No ornaments in the middle of the sides (the game stretches the frame by slicing corners and sides).
+- Outside the window is transparent (or solid magenta #FF00FF). No text or buttons inside.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 6　画面上の見出しの帯 → ui_header_bar.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、今の画面_デッキ編集.png（上の「‹戻る　デッキ編集」の帯の所）
+▼ここからコピー
+画面のいちばん上に置く、見出しの帯の無地の絵を1枚描いてください。横長 1536×1024 の真ん中に、横いっぱいの細長い帯（横:縦＝8:1くらい）を1本。
+・濃い灰色の地に、下のふちだけ細いくすんだ金の線。帯の真ん中の下に小さな金の飾り
+・左右の端は飾りなしで、横に伸ばしてもおかしくないように
+・帯の外は透明（できなければマゼンタ一色 #FF00FF）。文字は描かない
+▲ここまで
+▼English
+A blank header bar for the very top of the screen: one long thin bar (about 8:1) across the full width, centered on a 1536x1024 canvas.
+- Dark charcoal base, a thin muted-gold line only along the bottom edge, a small gold ornament at the bottom center.
+- No ornaments at the left and right ends so it can be stretched horizontally.
+- Outside the bar is transparent (or solid magenta #FF00FF). No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 7　一覧のパネルの枠 → ui_list_panel.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、今の画面_大会受付.png、今の画面_デッキ編集.png
+▼ここからコピー
+大会の一覧やカードの一覧の1行に敷く、無地のパネルの絵を1枚描いてください。横長 1536×1024 の真ん中に、横長のパネル（横:縦＝3:1くらい）を1つ。
+・地は濃い灰色で、ほんの少し明るい。ふちに細いくすんだ金の線。左上と右下の角だけに小さな飾り
+・辺の真ん中には飾りを置かない（ゲームで縦横に伸ばして使う）
+・パネルの外は透明（できなければマゼンタ一色 #FF00FF）。文字・アイコンは描かない
+▲ここまで
+▼English
+A blank panel for one row of a list (tournament list, card list): one horizontal panel (about 3:1) centered on 1536x1024.
+- Dark charcoal base, very slightly lighter than the background. A thin muted-gold line along the edge, small ornaments only at the top-left and bottom-right corners.
+- No ornaments in the middle of the sides (the game stretches it).
+- Outside the panel is transparent (or solid magenta #FF00FF). No text, no icons.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 8・9　顔の絵（店員・受付）→ face_clerk.png ／ face_receptionist.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+会話でもバトルでも共通で使う「顔の絵」の最初の見本。2枚とも同じ形にそろえる（同じ会話で続けて頼むとそろいやすい）。
+添付：style_master.png、neighbor_guide_talk_normal.png（顔の描き方の見本）、その人の設定画（npc_clerk_design.png または npc_receptionist_design.png）、今の画面_ショップ.png（左上の仮の丸の所に入る）
+▼ここからコピー（8 店員）
+添付の設定画の人物の「顔の絵」を1枚描いてください。正方形 1024×1024。
+・胸から上。顔は少し右を向き（体は斜め右向き）、目はこちら。やさしい笑顔
+・頭のてっぺんから胸までが正方形にちょうど収まる大きさ。顔が正方形の真ん中より少し上
+・顔の描き方・塗り・線は、添付の会話の絵（金髪の女性）と同じ画風。大人の顔（20代後半）
+・服・髪型・色は設定画とまったく同じ（白いブラウスにオレンジのエプロン、短めの茶色の髪、胸にカード形の小さなバッジ・文字なし）
+・背景は透明（できなければマゼンタ一色 #FF00FF）。枠・文字は描かない
+▲ここまで
+▼ここからコピー（9 受付。8 と同じ会話で続ける）
+同じ形・同じ大きさ・同じ向きで、もう1人。添付の設定画の大会会場の受付の女性（20代、紺と金の制服、星とカードの紋章の帽子・文字なし）。きちんとした笑顔。
+胸から上、顔は少し右向きで目はこちら。背景は透明。枠・文字は描かない。
+▲ここまで
+▼English (8 clerk)
+A "face portrait" of the character in the attached design sheet, square 1024x1024.
+- From the chest up. Face turned slightly to the right (body three-quarter right), eyes looking at the viewer, a kind smile.
+- Head top to chest fits the square exactly; the face sits slightly above the center.
+- Same face style, painting and lines as the attached conversation portrait (the blonde woman). An adult face (late 20s).
+- Clothes, hair and colors exactly as the design sheet (white blouse, orange apron, short brown hair, small card-shaped badge, no text).
+- Transparent background (or solid magenta #FF00FF). No frame, no text.
+▲
+▼English (9 receptionist, same chat)
+One more in exactly the same format, size and angle: the tournament receptionist in the attached design sheet (a woman in her 20s, navy-and-gold uniform, a cap with a star-and-card emblem, no text). A neat, polite smile. Chest up, face slightly right, eyes at the viewer, transparent background, no frame, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 10　カードパックの絵（3種を1枚に）→ card_packs.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、card_back.png（3 ができていれば）
+▼ここからコピー
+カードショップで売るカードのパック（袋）を3種類、横に並べて1枚に描いてください。横長 1536×1024。
+・縦長の銀紙の袋（上下がギザギザに閉じてある）を、真正面から3つ。大きさ・形・向きは3つとも同じ
+・左＝紺と金、真ん中＝深い緑と金、右＝深い赤と金。どれも真ん中にカードの紋章（カードと星と翼。文字なし）と、うっすら光る模様
+・袋のツヤと、少しのしわ。モンスターや人物は描かない
+・3つは重ならず、間をあける。袋の外は透明（できなければマゼンタ一色 #FF00FF）。文字は描かない（パックの名前はゲームが重ねる）
+▲ここまで
+▼English
+Three trading-card booster packs side by side, landscape 1536x1024.
+- Tall foil packs with crimped top and bottom edges, seen straight from the front; all three the same size, shape and angle.
+- Left: navy and gold. Middle: deep green and gold. Right: deep red and gold. Each has a card emblem in the center (a card, a star and wings; no text) and a faint glowing pattern.
+- Foil sheen and a few wrinkles. No monsters, no people.
+- The packs must not overlap; leave space between them. Transparent background (or solid magenta #FF00FF). No text (the game adds pack names).
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ うまくいかないとき（同じ会話で続けて送る一言）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・文字や数字が描かれた →「文字・数字・ロゴを全部消して」
+・派手すぎる／明るすぎる →「全体をもっと暗く、落ち着いた色に。くすんだ金と濃い灰色を中心に」
+・紫や明るい黄色が入った →「紫と明るい黄色をやめて、くすんだ金と紺に」
+・枠の辺の真ん中に飾りが入った（5・6・7）→「辺の真ん中は飾りなしのまっすぐな線に。飾りは角だけ」
+・背景の模様がつながらない（4）→「上下左右につなげてもつなぎ目が見えないように」
+・顔の絵が子どもっぽい（8・9）→「大人の顔に。顔を小さめ、目を小さく落ち着いた形に」

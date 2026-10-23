@@ -1,0 +1,26 @@
+Attach all 4 images in the "attach" folder, then paste the text between the markers.
+
+▼ COPY FROM HERE
+Draw ONE game sprite: the young woman (22 years old) in image 02, walking toward the viewer and to the LEFT of the screen (3/4 front-left view, same angle as image 02), with her LEFT foot forward.
+
+LEG POSITION — the most important part. Look at image 01:
+- C is her approved "RIGHT foot forward" image (same as image 03). In C, the boot on the LEFT side of the picture is in front.
+- D is a different person (a man) with the correct "LEFT foot forward" legs. Copy ONLY his leg positions, NOT his face, clothes or body.
+So in the new image:
+- The boot on the RIGHT side of the picture (her left foot) is IN FRONT: lower in the picture, planted on the ground, toe pointing down-left.
+- The boot on the LEFT side of the picture (her right foot) is BEHIND: higher in the picture, heel lifted, toe also pointing down-left.
+- This is the opposite of image 03. If the left-side boot is in front, the image is wrong.
+- Hips, knees and both toes all point down-left. No twisted legs. Same stride as image 03.
+- Arms close to the body, swinging lightly: her right arm slightly forward, left arm slightly back (the opposite of image 03). Do not hold the belt.
+- Skirt: calm, swinging only a little behind her. Not flaring out.
+
+CHARACTER: exactly the same as image 02 — face, long wavy light-brown hair, red cap with white frills, gold line and red ribbon bow, white blouse with puffed short sleeves, red vest with gold trim, gold lacing and gold flower buttons, two brown belts with gold buckles and small pouches, red skirt with gold trim and gold embroidery over white frills, brown tights, tall brown boots with gold laces, fingerless brown gloves. Same colors, same smooth hand-painted style, same size. Nothing from the man in D.
+
+FORMAT: square 1024x1024, ONE figure only. Top of the head on the "top of head" line and the planted foot on the "feet" line of image 04; body centered on the dotted line. Transparent background (if impossible, solid magenta #FF00FF). Do NOT draw guide lines, labels or reference figures. No text, no ground, no shadow.
+▲ COPY TO HERE
+
+If it goes wrong, send one of these:
+- Same foot forward again: "Wrong foot. The boot on the RIGHT side of the picture must be in front and lower; the boot on the LEFT side must be behind and higher with the heel lifted. Copy the legs of D."
+- Man's clothes appear: "Use the man in D only for the leg positions. Her face, clothes and skirt must be exactly as in image 02."
+- Legs twisted: "Hips, knees and both toes all point down-left."
+- Skirt flares: "Make the skirt calmer, like image 02. Only a small swing behind her."
