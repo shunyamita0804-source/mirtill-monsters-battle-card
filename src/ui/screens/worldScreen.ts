@@ -151,11 +151,17 @@ const FRAME_H = 288;
 const FOOT_X = 108;
 const FOOT_Y = 270;
 const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, right: 3 };
+/** 主人公の斜め向き（絵の向きだけ。セーブや「しらべる」の向きは上下左右の Direction のまま） */
+type Diagonal = 'downleft' | 'downright' | 'upleft' | 'upright';
+/** 主人公のシートの斜め向きの行（上下左右の4行の下に足した4行） */
+const DIAG_ROW: Readonly<Record<Diagonal, number>> = { downleft: 4, downright: 5, upleft: 6, upright: 7 };
+/** 主人公のシートの行の数 */
+const PLAYER_SHEET_ROWS = 8;
 /** 待機の絵が歩行シートの何列目と同じか（歩き4コマは「右足を前・立つ・左足を前・立つ」なので2列目） */
 const NPC_IDLE_COL = 1;
 
 /**
- * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×4行）。
+ * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×8行。行は 正面・背中・左・右・左下・右下・左上・右上）。
  * 歩く・止まるで別の画像に切り替えると、iPhone で読み込み直しの間だけ人物が消えるので、1枚の中で位置だけ動かす。
  * 2026-10-23 の大人の絵（男性・女性。tools/art/adult_walk_build.py が作る。右足を前・立つ・左足を前・立つ・立ち止まり）
  */
@@ -201,7 +207,7 @@ const TILE_CLASS: Readonly<Record<string, string>> = {
 const coins = (n: number): string => t('common.coins', { n } satisfies Params);
 
 /**
- * 1歩の向き → 人物の向き（斜めの絵は無い）。
+ * 1歩の向き → 人物の向き（上下左右。主人公の斜めの絵は別に #diag で選ぶ）。
  * いまの向きの成分がある斜め（例：右を向いて右下へ）は向きを変えない。斜め45度あたりで正面と横の絵が細かく入れ替わらないように。
  * それ以外の斜めは左右の絵
  */
@@ -211,6 +217,10 @@ const facing = (dx: number, dy: number, prev: Direction): Direction => {
   if ((p.x !== 0 && p.x === dx) || (p.y !== 0 && p.y === dy)) return prev;
   return dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
 };
+
+/** 1歩の向き → 斜めの絵の向き（斜めでなければ null） */
+const diagonalOf = (dx: number, dy: number): Diagonal | null =>
+  dx !== 0 && dy !== 0 ? `${dy > 0 ? 'down' : 'up'}${dx > 0 ? 'right' : 'left'}` : null;
 
 /** 2つの角度の差（-π〜π） */
 const angleDiff = (a: number, b: number): number => Math.atan2(Math.sin(a - b), Math.cos(a - b));
@@ -241,6 +251,8 @@ class WorldView {
   #pos: Point = { x: 0, y: 0 };
   #tile: Point = { x: 0, y: 0 };
   #dir: Direction = 'down';
+  /** 斜めに1歩進んだときの絵の向き（上下左右へ進む・向きを変えると null） */
+  #diag: Diagonal | null = null;
   #move: Move | null = null;
   #path: Point[] = [];
   /** 経路の最後に話しかける・調べる物 */
@@ -364,6 +376,7 @@ class WorldView {
     this.#tile = { x: loc.x, y: loc.y };
     this.#pos = { ...this.#tile };
     this.#dir = loc.dir;
+    this.#diag = null;
     this.#move = null;
     this.#path = [];
     this.#afterPath = null;
@@ -506,7 +519,7 @@ class WorldView {
     this.#sizeFigure(this.#player);
     // 絵は最初に1回だけ設定する（あとは位置だけ動かす）
     this.#player.style.backgroundImage = `url("${PLAYER_SHEET[save.player.gender === 'female' ? 'female' : 'male']}")`;
-    this.#player.style.backgroundSize = `${parseFloat(this.#player.style.width) * PLAYER_SHEET_COLS}px ${parseFloat(this.#player.style.height) * 4}px`;
+    this.#player.style.backgroundSize = `${parseFloat(this.#player.style.width) * PLAYER_SHEET_COLS}px ${parseFloat(this.#player.style.height) * PLAYER_SHEET_ROWS}px`;
     this.#addShadow(this.#player);
     this.#playerLook = '';
     this.#mapLayer.append(this.#player);
@@ -711,6 +724,7 @@ class WorldView {
       this.#afterPath = null;
       if (cell) {
         this.#dir = this.#dirTo(cell);
+        this.#diag = null;
         this.#interactAt(cell.x, cell.y);
       }
       return;
@@ -728,12 +742,14 @@ class WorldView {
   /** (dx, dy) へ1歩。斜めで進めないときは、進める方の縦か横へすべる（スティック操作のとき）。進めたら true */
   #tryStep(dx: number, dy: number, slide: boolean): boolean {
     this.#dir = facing(dx, dy, this.#dir);
+    this.#diag = diagonalOf(dx, dy);
     const from = this.#tile;
     const tries: [number, number][] = [[dx, dy]];
     if (slide && dx !== 0 && dy !== 0) tries.push([dx, 0], [0, dy]);
     for (const [sx, sy] of tries) {
       if (canStep(from, sx, sy, this.#blocked)) {
         this.#dir = facing(sx, sy, this.#dir);
+        this.#diag = diagonalOf(sx, sy);
         this.#move = { from, to: { x: from.x + sx, y: from.y + sy }, len: sx !== 0 && sy !== 0 ? Math.SQRT2 : 1, t: 0 };
         return true;
       }
@@ -782,9 +798,10 @@ class WorldView {
     const stride = this.#figureH * (this.#running ? RUN_STEP_PER_HEIGHT : STEP_PER_HEIGHT);
     const step = Math.floor(this.#walkDist / (stride / 2)) % 4;
     const col = walking ? step : IDLE_COL;
-    const look = `${this.#dir}:${col}`;
+    const row = this.#diag ? DIAG_ROW[this.#diag] : DIR_ROW[this.#dir];
+    const look = `${row}:${col}`;
     if (look !== this.#playerLook) {
-      this.#player.style.backgroundPosition = `${-col * w}px ${-DIR_ROW[this.#dir] * hgt}px`;
+      this.#player.style.backgroundPosition = `${-col * w}px ${-row * hgt}px`;
       this.#playerLook = look;
     }
     this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0);
@@ -961,6 +978,7 @@ class WorldView {
       const here = adjacentCellOf(target, from);
       if (here && !this.#move) {
         this.#dir = this.#dirTo(here);
+        this.#diag = null;
         this.#interactAt(here.x, here.y);
         return;
       }
@@ -1005,6 +1023,7 @@ class WorldView {
     const near = this.#nearTarget();
     if (near) {
       this.#dir = this.#dirTo(near);
+      this.#diag = null;
       if (this.#interactAt(near.x, near.y)) return;
     }
     // 欠片：正式な絵の街ではマスが細かいので、まわり2マスまで
