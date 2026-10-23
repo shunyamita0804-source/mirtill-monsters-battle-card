@@ -1,4 +1,5 @@
-import type { MonsterCard, SkillCard, SkillCategory, SkillEffect } from '../game/cards/cardTypes.ts';
+import type { MonsterCard, SkillCard, SkillEffect } from '../game/cards/cardTypes.ts';
+import { officialSkill, twoDigits, type OfficialSkill } from './officialSkills.ts';
 import officialSkills from './official/soramo_cards_OFFICIAL.json';
 import themeColors from './official/monster_theme_colors.json';
 
@@ -20,19 +21,8 @@ import themeColors from './official/monster_theme_colors.json';
  * - 効果の細かい裁定（下の SPECIAL_EFFECTS のコメント・docs/battle-rules.md「要仕様確定」）
  */
 
-interface OfficialSkill {
-  readonly design_id: string;
-  readonly number: number;
-  readonly name_ja: string;
-  readonly mana: number;
-  readonly damage: number | null;
-  readonly category: string;
-  readonly effect_text_ja: string | null;
-  readonly availability: string;
-}
-
 export const SORAMO_MONSTER_ID = 'mon-soramo';
-export const soramoSkillId = (no: number): string => `skl-soramo-${String(no).padStart(2, '0')}`;
+export const soramoSkillId = (no: number): string => `skl-soramo-${twoDigits(no)}`;
 
 /** ソラモのモンスターランク（カードのレアリティとは別物） */
 export const SORAMO_RANK = officialSkills.monster_rank;
@@ -75,41 +65,21 @@ const SPECIAL_EFFECTS: Readonly<Record<string, SkillEffect>> = {
   'SOR-SK-16': { type: 'evade', against: 'all' },
 };
 
-const CATEGORIES: readonly SkillCategory[] = ['force', 'wisdom', 'special', 'defense', 'evade'];
-
-function toSkill(o: OfficialSkill): SkillCard {
-  const category = CATEGORIES.find((c) => c === o.category);
-  if (!category) throw new Error(`ソラモの技の種別が不明です: ${o.design_id} ${o.category}`);
-  const attack = category === 'force' || category === 'wisdom';
-  if (attack !== (o.damage !== null)) throw new Error(`ソラモの技のダメージと種別が合いません: ${o.design_id}`);
-  const effect = SPECIAL_EFFECTS[o.design_id] ?? (attack ? { type: 'attack' } : undefined);
-  if (!effect) throw new Error(`ソラモの技の動きが未定義です: ${o.design_id}`);
-  return {
-    kind: 'skill',
-    id: soramoSkillId(o.number),
-    designId: o.design_id,
-    name: o.name_ja,
-    monsterId: SORAMO_MONSTER_ID,
-    rarity: null,
-    cost: o.mana,
-    stat: attack && o.damage !== null ? { type: category as 'force' | 'wisdom', value: o.damage } : null,
-    category,
-    effectTextJa: o.effect_text_ja,
-    availability: o.availability === 'initial' ? 'initial' : 'collect',
-    effect,
-    isPlaceholder: false,
-    art: { category: 'skillCards', file: `sor_sk_${String(o.number).padStart(2, '0')}.webp`, layout: 'frame' },
-    pendingSpec: ['rarity'],
-  };
-}
-
 /**
  * 【テスト用】相手（大会・ダンジョン・練習試合）のモンスター：ソラモ3体（2026-10-23 ユーザー指示「技の発動を見るため、仮のカードはすべてソラモに」）。
  * それまでの仮モンスターの組み合わせは git の履歴にある。正式な相手の編成は未定
  */
 export const SORAMO_TEAM: readonly string[] = [SORAMO_MONSTER_ID, SORAMO_MONSTER_ID, SORAMO_MONSTER_ID];
 
-export const SORAMO_SKILLS: readonly SkillCard[] = (officialSkills.skill_cards as readonly OfficialSkill[]).map(toSkill);
+export const SORAMO_SKILLS: readonly SkillCard[] = (officialSkills.skill_cards as readonly OfficialSkill[]).map((o) =>
+  officialSkill(o, {
+    label: 'ソラモ',
+    monsterId: SORAMO_MONSTER_ID,
+    skillId: soramoSkillId,
+    artFile: (no) => `sor_sk_${twoDigits(no)}.webp`,
+    specialEffects: SPECIAL_EFFECTS,
+  }),
+);
 
 /** 正式データのまだ決まっていない裁定（JSON の rules_not_finalized をそのまま） */
 export const SORAMO_RULES_NOT_FINALIZED: readonly string[] = officialSkills.rules_not_finalized;

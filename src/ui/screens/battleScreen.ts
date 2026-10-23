@@ -60,6 +60,7 @@ function showcaseSound(card: PlayCard): SoundId {
     case 'evade':
       return 'cardEvade';
     case 'weaken':
+    case 'taunt':
       return 'cardSpecial';
     case 'seal':
       return 'cardSeal';
@@ -707,15 +708,8 @@ export const battleScreen: ScreenDefinition = {
               createMonsterCard(getMonster(m.cardId), { width: MONSTER_CARD_W, life: { current: m.life, max: m.maxLife }, showName: false }),
               h('span', { class: 'battle__monster-life', text: String(m.life) }),
               m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: t('battle.monster.acted') }) : null,
-              // 吠える（次の技のダメージ−）・すなかけ（次の手番は攻撃できない）がかかっている印
-              m.life > 0 && (m.weaken || (m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn))
-                ? h(
-                    'span',
-                    { class: 'battle__status' },
-                    m.weaken ? h('span', { text: t('battle.status.weaken', { stat: statLabel(m.weaken.stat), n: m.weaken.amount }) }) : null,
-                    m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn ? h('span', { text: t('battle.status.sealed') }) : null,
-                  )
-                : null,
+              // 吠える・ダストキック（技のダメージ−）・すなかけ（次の手番は攻撃できない）・ちょうはつ（ラズックだけ）がかかっている印
+              m.life > 0 ? statusBadges(s, m) : null,
               incoming !== null ? h('span', { class: 'battle__incoming', text: String(incoming) }) : null,
               diff < 0 ? h('span', { class: 'battle__burst', attrs: { 'aria-hidden': 'true' } }) : null,
               diff !== 0 ? battleDigits(diff, 'battle__float') : null,
@@ -723,6 +717,18 @@ export const battleScreen: ScreenDefinition = {
           }),
         ),
       );
+
+    /** モンスターにかかっている特殊の効果の印（無ければ null） */
+    const statusBadges = (s: BattleState, m: BattleMonster): HTMLElement | null => {
+      const items: string[] = [];
+      if (m.weaken) items.push(t('battle.status.weaken', { stat: statLabel(m.weaken.stat), n: m.weaken.amount }));
+      // ダストキック：かけた手番（相手の番）と、効く手番（次の手番）の間だけ出す
+      if (m.weakenTurn && m.weakenTurn.turn >= s.turn) items.push(t('battle.status.weaken', { stat: statLabel(m.weakenTurn.stat), n: m.weakenTurn.amount }));
+      if (m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn) items.push(t('battle.status.sealed'));
+      if (m.taunt && m.taunt.turn >= s.turn) items.push(t('battle.status.taunted', { only: cardName(m.taunt.monsterId) }));
+      if (items.length === 0) return null;
+      return h('span', { class: 'battle__status' }, ...items.map((text) => h('span', { text })));
+    };
 
     /** 中段：左に説明文、右に選んだ技カードの拡大 */
     const detailPanel = (s: BattleState): HTMLElement => {

@@ -1,0 +1,318 @@
+{
+  "document_title": "ラズック16技・実装用確定データ",
+  "created_on": "2026-10-23",
+  "source": "ユーザーと本チャットで個別承認された16技。画像は Seimon_Razukku_ALL16_FINAL_20261023.zip",
+  "monster_name_ja": "ラズック",
+  "monster_rank": "C",
+  "rank_visibility": "内部設定のみ・UI非表示",
+  "monster_game_id": "mon-lazuck",
+  "monster_life": 6,
+  "monster_art_existing": [
+    "lazuck_official.webp",
+    "lazuck_battle.webp"
+  ],
+  "rarity": null,
+  "skill_cards": [
+    {
+      "design_id": "LAZ-SK-01",
+      "number": 1,
+      "name_ja": "ひっかき",
+      "mana": 0,
+      "damage": 1,
+      "category": "force",
+      "effect_text_ja": null,
+      "availability": "initial",
+      "illustration_png": "01_ひっかき.png",
+      "game_asset_webp": "laz_sk_01.webp",
+      "game_id": "skl-lazuck-01",
+      "effect_logic_spec": {
+        "type": "attack"
+      },
+      "art_direction_summary": "低姿勢から片前足の爪を素早く振り抜く。鋭い単発斬撃、草原・土ぼこり"
+    },
+    {
+      "design_id": "LAZ-SK-02",
+      "number": 2,
+      "name_ja": "かみつき",
+      "mana": 1,
+      "damage": 1,
+      "category": "force",
+      "effect_text_ja": null,
+      "availability": "initial",
+      "illustration_png": "02_かみつき.png",
+      "game_asset_webp": "laz_sk_02.webp",
+      "game_id": "skl-lazuck-02",
+      "effect_logic_spec": {
+        "type": "attack"
+      },
+      "art_direction_summary": "大きく口を開け牙を見せて噛みつく。飛び込み姿勢、草原"
+    },
+    {
+      "design_id": "LAZ-SK-03",
+      "number": 3,
+      "name_ja": "とびかかり",
+      "mana": 2,
+      "damage": 3,
+      "category": "force",
+      "effect_text_ja": null,
+      "availability": "initial",
+      "illustration_png": "03_とびかかり.png",
+      "game_asset_webp": "laz_sk_03.webp",
+      "game_id": "skl-lazuck-03",
+      "effect_logic_spec": {
+        "type": "attack"
+      },
+      "art_direction_summary": "後ろ足で地面を蹴り、空中へ跳躍して両前足を突き出す"
+    },
+    {
+      "design_id": "LAZ-SK-04",
+      "number": 4,
+      "name_ja": "みだれづめ",
+      "mana": 3,
+      "damage": 2,
+      "category": "force",
+      "effect_text_ja": "回避されない",
+      "availability": "initial",
+      "illustration_png": "04_みだれづめ.png",
+      "game_asset_webp": "laz_sk_04.webp",
+      "game_id": "skl-lazuck-04",
+      "effect_logic_spec": {
+        "type": "attack",
+        "undodgeable": true
+      },
+      "art_direction_summary": "前足の爪を高速で連続して振り抜く。複数の斬撃と残像"
+    },
+    {
+      "design_id": "LAZ-SK-05",
+      "number": 5,
+      "name_ja": "しっぽアタック",
+      "mana": 1,
+      "damage": 2,
+      "category": "force",
+      "effect_text_ja": null,
+      "availability": "initial",
+      "illustration_png": "05_しっぽアタック.png",
+      "game_asset_webp": "laz_sk_05.webp",
+      "game_id": "skl-lazuck-05",
+      "effect_logic_spec": {
+        "type": "attack"
+      },
+      "art_direction_summary": "長いしっぽを大きくしならせて振り抜く。地面に足をつけた回転攻撃"
+    },
+    {
+      "design_id": "LAZ-SK-06",
+      "number": 6,
+      "name_ja": "しっぷうタックル",
+      "mana": 4,
+      "damage": 4,
+      "category": "force",
+      "effect_text_ja": null,
+      "availability": "initial",
+      "illustration_png": "06_しっぷうタックル.png",
+      "game_asset_webp": "laz_sk_06.webp",
+      "game_id": "skl-lazuck-06",
+      "effect_logic_spec": {
+        "type": "attack"
+      },
+      "art_direction_summary": "四足で低く構え地面すれすれを高速突進。風圧・土ぼこり・残像"
+    },
+    {
+      "design_id": "LAZ-SK-07",
+      "number": 7,
+      "name_ja": "ちょうはつ",
+      "mana": 2,
+      "damage": null,
+      "category": "special",
+      "effect_text_ja": "指定した相手モンスターは次のターン、ラズックにしか攻撃できない",
+      "availability": "initial",
+      "illustration_png": "07_ちょうはつ.png",
+      "game_asset_webp": "laz_sk_07.webp",
+      "game_id": "skl-lazuck-07",
+      "effect_logic_spec": {
+        "type": "taunt",
+        "target": "enemyMonster",
+        "restrictTargetMonsterId": "mon-lazuck",
+        "duration": "nextTargetOwnerTurn"
+      },
+      "art_direction_summary": "自信満々の笑顔で片前足を上げて挑発、長いしっぽを持ち上げる"
+    },
+    {
+      "design_id": "LAZ-SK-08",
+      "number": 8,
+      "name_ja": "ダストキック",
+      "mana": 0,
+      "damage": null,
+      "category": "special",
+      "effect_text_ja": "指定した相手の次のターンのちから技ダメージ−1",
+      "availability": "initial",
+      "illustration_png": "08_ダストキック.png",
+      "game_asset_webp": "laz_sk_08.webp",
+      "game_id": "skl-lazuck-08",
+      "effect_logic_spec": {
+        "type": "weaken",
+        "stat": "force",
+        "amount": 1,
+        "duration": "nextTargetOwnerTurn"
+      },
+      "art_direction_summary": "後ろ足で地面を蹴り上げ砂煙を前方に飛ばす。いたずらっぽい表情"
+    },
+    {
+      "design_id": "LAZ-SK-09",
+      "number": 9,
+      "name_ja": "トリックショット",
+      "mana": 2,
+      "damage": 3,
+      "category": "wisdom",
+      "effect_text_ja": null,
+      "availability": "collect",
+      "illustration_png": "09_トリックショット.png",
+      "game_asset_webp": "laz_sk_09.webp",
+      "game_id": "skl-lazuck-09",
+      "effect_logic_spec": {
+        "type": "attack"
+      },
+      "art_direction_summary": "片前足から青紫色の曲がるエネルギー弾を放つ。夕暮れの岩場"
+    },
+    {
+      "design_id": "LAZ-SK-10",
+      "number": 10,
+      "name_ja": "シャドウバースト",
+      "mana": 4,
+      "damage": 5,
+      "category": "wisdom",
+      "effect_text_ja": null,
+      "availability": "collect",
+      "illustration_png": "10_シャドウバースト.png",
+      "game_asset_webp": "laz_sk_10.webp",
+      "game_id": "skl-lazuck-10",
+      "effect_logic_spec": {
+        "type": "attack"
+      },
+      "art_direction_summary": "両前足から強い黒紫色のエネルギー衝撃波を前方へ放つ。夜の岩場"
+    },
+    {
+      "design_id": "LAZ-SK-11",
+      "number": 11,
+      "name_ja": "しっぽいなし",
+      "mana": 1,
+      "damage": null,
+      "category": "defense",
+      "effect_text_ja": "受けるちから技のダメージを3軽減する",
+      "availability": "initial",
+      "illustration_png": "11_しっぽいなし.png",
+      "game_asset_webp": "laz_sk_11.webp",
+      "game_id": "skl-lazuck-11",
+      "effect_logic_spec": {
+        "type": "defense",
+        "reduce": 3,
+        "against": "force"
+      },
+      "art_direction_summary": "しっぽを使いちからの衝撃を横へそらす。防御姿勢"
+    },
+    {
+      "design_id": "LAZ-SK-12",
+      "number": 12,
+      "name_ja": "シャドウガード",
+      "mana": 2,
+      "damage": null,
+      "category": "defense",
+      "effect_text_ja": "受けるかしこさ技のダメージを4軽減する",
+      "availability": "collect",
+      "illustration_png": "12_シャドウガード.png",
+      "game_asset_webp": "laz_sk_12.webp",
+      "game_id": "skl-lazuck-12",
+      "effect_logic_spec": {
+        "type": "defense",
+        "reduce": 4,
+        "against": "wisdom"
+      },
+      "art_direction_summary": "両前足から半透明の紫の防御障壁を展開。魔法ダメージ軽減"
+    },
+    {
+      "design_id": "LAZ-SK-13",
+      "number": 13,
+      "name_ja": "クロスガード",
+      "mana": 1,
+      "damage": null,
+      "category": "defense",
+      "effect_text_ja": "受けるちから技・かしこさ技のダメージを2軽減する",
+      "availability": "collect",
+      "illustration_png": "13_クロスガード.png",
+      "game_asset_webp": "laz_sk_13.webp",
+      "game_id": "skl-lazuck-13",
+      "effect_logic_spec": {
+        "type": "defense",
+        "reduce": 2,
+        "against": "all"
+      },
+      "art_direction_summary": "両前足をX字に交差して正面から攻撃を受け止める"
+    },
+    {
+      "design_id": "LAZ-SK-14",
+      "number": 14,
+      "name_ja": "フェイントステップ",
+      "mana": 1,
+      "damage": null,
+      "category": "evade",
+      "effect_text_ja": "ちから技を回避する",
+      "availability": "initial",
+      "illustration_png": "14_フェイントステップ.png",
+      "game_asset_webp": "laz_sk_14.webp",
+      "game_id": "skl-lazuck-14",
+      "effect_logic_spec": {
+        "type": "evade",
+        "against": "force"
+      },
+      "art_direction_summary": "地面を蹴って横に回避。元の場所に淡い残像を残す"
+    },
+    {
+      "design_id": "LAZ-SK-15",
+      "number": 15,
+      "name_ja": "シャドウスリップ",
+      "mana": 1,
+      "damage": null,
+      "category": "evade",
+      "effect_text_ja": "かしこさ技を回避する",
+      "availability": "collect",
+      "illustration_png": "15_シャドウスリップ.png",
+      "game_asset_webp": "laz_sk_15.webp",
+      "game_id": "skl-lazuck-15",
+      "effect_logic_spec": {
+        "type": "evade",
+        "against": "wisdom"
+      },
+      "art_direction_summary": "暗紫色の影に滑り込み攻撃をかわす。夜の岩場"
+    },
+    {
+      "design_id": "LAZ-SK-16",
+      "number": 16,
+      "name_ja": "ミラージュダッシュ",
+      "mana": 2,
+      "damage": null,
+      "category": "evade",
+      "effect_text_ja": "ちから技とかしこさ技を回避する",
+      "availability": "collect",
+      "illustration_png": "16_ミラージュダッシュ.png",
+      "game_asset_webp": "laz_sk_16.webp",
+      "game_id": "skl-lazuck-16",
+      "effect_logic_spec": {
+        "type": "evade",
+        "against": "all"
+      },
+      "art_direction_summary": "超高速でジグザグ移動、複数の半透明の残像で幻惑する"
+    }
+  ],
+  "availability_conflict": {
+    "global_rule": "初期8技・収集8技",
+    "specific_approvals": "初期10技・収集6技",
+    "action": "個別指定を無断改変しない。配布、パック投入、初期デッキ構築は別途確認されるまで変更しない。カード定義と技のテストは進める。"
+  },
+  "not_finalized": [
+    "レアリティ",
+    "正式英語訳",
+    "スターター配布枚数",
+    "パック提供割合・価格・景品・敵デッキ",
+    "ちょうはつ対象ラズック不在時の裁定・複数ラズックの場合の扱い",
+    "技07/08の重ねがけ・解除タイミングの細則"
+  ]
+}

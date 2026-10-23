@@ -51,10 +51,18 @@
 | --- | --- | --- |
 | （モンスター） | `mon-soramo` | ソラモ（ライフ7・正式カードの絵の値） |
 | SOR-SK-01〜16 | `skl-soramo-01`〜`skl-soramo-16`（番号は同じ） | ひっかき〜星影ステップ |
+| （モンスター） | `mon-lazuck` | ラズック（ライフ6。2026-10-23 に技が届き、登録のみから正式へ） |
+| LAZ-SK-01〜16 | `skl-lazuck-01`〜`skl-lazuck-16`（番号は同じ） | ひっかき〜ミラージュダッシュ |
+
+ラズックの正本は `src/data/official/lazuck_cards_OFFICIAL.json`（無改変）、読み込みは `src/data/lazuck.ts`（ソラモと同じ作り方 `src/data/officialSkills.ts`）。
+絵は `laz_sk_NN.webp`。**初期・収集の配分が食い違っている**（全体方針は初期8・収集8、1枚ずつの指定を足すと初期10〔01〜08・11・14〕・収集6）。データは1枚ずつの指定のまま持ち、配布・スターター・パックには使っていない（ユーザー確認待ち）
 
 - 絵：技 `assets/images/cards/skills/sor_sk_NN.webp`（827×937 のまま WebP）、モンスター `soramo_official.webp`（ショップ・図鑑など）・`soramo_battle.webp`（バトル）
 - レアリティは未定（`rarity: null`。モンスターのランク C とは別物）。パックには入れていない
 - 英語は仮訳（`src/i18n/contentEnOfficialDraft.ts` に分けて管理）
-- 登録だけ（ゲームで未使用）：ガウル・ラズックのモンスターカード（`src/data/registeredMonsters.ts`）
+- 登録だけ（ゲームで未使用）：ガウルのモンスターカード（`src/data/registeredMonsters.ts`）
 - 【テスト用】ユーザー指示「技の発動を見るため、仮のカードはすべてソラモに」：スターター・相手の編成をソラモ3体に（`createSoramoTestDeck`・`SORAMO_TEAM`）。
   旧セーブは version 6 で1回だけソラモのカードを受け取り、デッキがソラモに替わる（仮カードは消さない）。同じモンスターの重複を「可」に（`DECK_RULES`）
+- 【テスト用】2026-10-23 ユーザー指示「仮置きで、ソラモしかいない所にラズックも出して」：スターター＝ソラモ・ラズック・ソラモ（`createMixedTestDeck`）、
+  大会・ダンジョンの相手＝その編成とラズック・ソラモ・ラズックを交互に（`src/data/testTeams.ts`）。旧セーブは version 7 で1回だけラズックのカードを受け取り、
+  デッキが version 6 で配ったソラモのデッキのままならソラモとラズックのデッキに替わる（自分で組み直したデッキはそのまま）

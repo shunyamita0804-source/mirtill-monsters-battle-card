@@ -91,10 +91,15 @@ export type SkillEffect =
   | { readonly type: 'defense'; readonly reduce?: number; readonly against?: StatType | 'all' }
   /** 回避：ダメージを0に。正式カードは against（'all'＝攻撃すべて）。仮カードは stat の種類 */
   | { readonly type: 'evade'; readonly against?: StatType | 'all' }
-  /** 特殊（正式：吠える）：選んだ相手モンスターの、次に使う stat の技のダメージを amount 減らす */
-  | { readonly type: 'weaken'; readonly stat: StatType; readonly amount: number }
+  /**
+   * 特殊：選んだ相手モンスターの stat の技のダメージを amount 減らす。
+   * duration なし（正式：ソラモの吠える）＝次にその種類の技を使うまで。'nextTurn'（正式：ラズックのダストキック）＝相手の次の手番の間だけ
+   */
+  | { readonly type: 'weaken'; readonly stat: StatType; readonly amount: number; readonly duration?: 'nextTurn' }
   /** 特殊（正式：すなかけ）：選んだ相手モンスターは次回攻撃できない */
   | { readonly type: 'seal' }
+  /** 特殊（正式：ラズックのちょうはつ）：選んだ相手モンスターは次の手番、使ったモンスターと同じ種類（ラズック）にしか攻撃できない */
+  | { readonly type: 'taunt' }
   | { readonly type: 'heal' }
   | { readonly type: 'mana' }
   | { readonly type: 'draw' };
@@ -148,7 +153,7 @@ export function guardAgainst(skill: SkillCard): StatType | 'all' {
 /** 相手モンスター1体を選んで使う技か（攻撃・特殊） */
 export function targetsEnemy(skill: SkillCard): boolean {
   const type = skill.effect.type;
-  return type === 'attack' || type === 'weaken' || type === 'seal';
+  return type === 'attack' || type === 'weaken' || type === 'seal' || type === 'taunt';
 }
 
 /**
@@ -249,7 +254,7 @@ export function describeSkill(card: SkillCard): string {
     return official ? `${base}${getLanguage() === 'en' ? ' ' : ''}${official}`.trim() : base;
   }
   if (official) return official;
-  if (card.effect.type === 'weaken' || card.effect.type === 'seal') return '';
+  if (card.effect.type === 'weaken' || card.effect.type === 'seal' || card.effect.type === 'taunt') return '';
   return t(`card.skill.${card.effect.type}`, { stat, v });
 }
 
@@ -260,7 +265,7 @@ export function skillShortText(skill: SkillCard): string {
   const v = skillValue(skill);
   const e = skill.effect;
   if (e.type === 'attack') return t(e.unblockable && e.undodgeable ? 'card.short.attackSure' : 'card.short.attack', { v });
-  if (e.type === 'weaken' || e.type === 'seal') return '';
+  if (e.type === 'weaken' || e.type === 'seal' || e.type === 'taunt') return '';
   return t(`card.short.${e.type}`, { v });
 }
 

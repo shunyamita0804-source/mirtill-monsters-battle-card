@@ -31,6 +31,7 @@ export const CARDS = {
   'card.effect.draw': { ja: 'ドロー', en: 'Draw' },
   'card.effect.weaken': { ja: '特殊', en: 'Special' },
   'card.effect.seal': { ja: '特殊', en: 'Special' },
+  'card.effect.taunt': { ja: '特殊', en: 'Special' },
   'card.supportKind.field': { ja: '全体', en: 'Field' },
 
   // 技の効果説明（ゲーム側で描く文字）

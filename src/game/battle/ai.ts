@@ -11,6 +11,7 @@ import {
   pendingDamage,
   targetsFor,
   type BattleAction,
+  type BattleMonster,
   type BattleState,
   type HandCard,
   type Side,
@@ -91,17 +92,19 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
   if (attacks.length > 0 && enemies.length > 0) {
     const power = (o: SkillOption): number => attackPower(state, o.def, availableUsers(state, side, o.def)[0]);
     const byPower = [...attacks].sort((a, b) => power(b) - power(a));
+    // 攻撃できる相手（ちょうはつで限られていればそれだけ）
+    const reachable = (o: SkillOption): BattleMonster[] => targetsFor(state, side, o.def);
     for (const option of byPower) {
-      const kill = enemies.filter((e) => e.life <= power(option)).sort((a, b) => b.life - a.life)[0];
+      const kill = reachable(option).filter((e) => e.life <= power(option)).sort((a, b) => b.life - a.life)[0];
       if (kill) return attackAction(state, side, option, kill.uid);
     }
-    const weakest = [...enemies].sort((a, b) => a.life - b.life)[0];
     const strongest = byPower[0];
+    const weakest = strongest ? [...reachable(strongest)].sort((a, b) => a.life - b.life)[0] : undefined;
     if (weakest && strongest) return attackAction(state, side, strongest, weakest.uid);
   }
 
-  // 4. 特殊（吠える・すなかけ）：一番ライフの多い相手に使う（仮の思考）
-  const special = options.filter(isSkillOption).find((o) => o.def.effect.type === 'weaken' || o.def.effect.type === 'seal');
+  // 4. 特殊（吠える・すなかけ・ダストキック・ちょうはつ）：一番ライフの多い相手に使う（仮の思考）
+  const special = options.filter(isSkillOption).find((o) => ['weaken', 'seal', 'taunt'].includes(o.def.effect.type));
   const strongestEnemy = [...enemies].sort((a, b) => b.life - a.life)[0];
   if (special && strongestEnemy) return attackAction(state, side, special, strongestEnemy.uid);
 
@@ -173,7 +176,9 @@ function chooseDefense(state: BattleState, side: Side): BattleAction | null {
 function attackAction(state: BattleState, side: Side, option: SkillOption, targetUid: string): BattleAction {
   const targets = targetsFor(state, side, option.def);
   const target = targets.find((t) => t.uid === targetUid) ?? targets[0];
-  const user = availableUsers(state, side, option.def)[0];
+  // その相手に攻撃できるモンスター（ちょうはつで限られていないもの）を使う
+  const users = availableUsers(state, side, option.def);
+  const user = (target ? users.find((u) => targetsFor(state, side, option.def, u).some((m) => m.uid === target.uid)) : undefined) ?? users[0];
   return {
     type: 'useCard',
     side,

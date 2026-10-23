@@ -48,6 +48,11 @@ export const BATTLE = {
     en: "{name}'s next {stat} skill deals {n} less damage.",
   },
   'battle.log.seal': { ja: '{name}は次のターン攻撃できない。', en: "{name} can't attack next turn." },
+  'battle.log.weakenTurn': {
+    ja: '{name}は次のターン、{stat}の技のダメージ−{n}。',
+    en: "{name}'s {stat} skills deal {n} less damage next turn.",
+  },
+  'battle.log.taunt': { ja: '{name}は次のターン、{only}にしか攻撃できない。', en: '{name} can only attack {only} next turn.' },
 
   // 使えない理由（engine.ts の cardUsability）
   'battle.ng.defenseOnly': { ja: 'いまは防御・回避カードしか使えません', en: 'Only Guard/Dodge cards now' },
@@ -74,6 +79,7 @@ export const BATTLE = {
   'battle.showcase': { ja: '{side}の「{card}」！', en: '{side}: {card}!' },
   'battle.status.weaken': { ja: '{stat}−{n}', en: '{stat} -{n}' },
   'battle.status.sealed': { ja: '攻撃不可', en: 'No attack' },
+  'battle.status.taunted': { ja: '{only}だけ', en: '{only} only' },
   'battle.ng.sealed': { ja: 'このターンは攻撃できません（すなかけ）', en: "Can't attack this turn (Sand Throw)" },
   'battle.ng.noAttackTarget': { ja: '攻撃できる相手がいません', en: 'No enemy to attack' },
 
