@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it } from 'vitest';
 import { APP_INFO } from '../src/config/app.ts';
 import { createBackup, parseBackup, serializeBackup } from '../src/game/save/backup.ts';
-import { createStarterDeck } from '../src/game/deck/deck.ts';
+import { createPlaceholderStarterDeck, createSoramoTestDeck } from '../src/game/deck/deck.ts';
 import { DEFAULT_LOCATION, migrate } from '../src/game/save/saveData.ts';
 import { MemoryStorage, SAVE_KEY } from '../src/game/save/saveRepository.ts';
 import { DEFAULT_SETTINGS, effectiveBgmVolume, effectiveSeVolume, normalizeSettings, SETTINGS_KEY } from '../src/game/settings/settings.ts';
@@ -32,7 +32,7 @@ const OLD_SAVE = {
     'sup-1': 3,
     'sup-2': 3,
   },
-  deck: createStarterDeck(),
+  deck: createPlaceholderStarterDeck(),
   rank: 'D',
   unlockedPacks: ['pack-01', 'pack-02'],
   tournaments: { 'tournament-e': { entries: 1, wins: 1, firstWinClaimed: true } },
@@ -56,8 +56,10 @@ describe('改名前のセーブを新しい名前のアプリで読む', () => {
     expect(store.loadResult.status).toBe('loaded');
     const s = store.save;
     expect(s.coins).toBe(777);
-    expect(s.collection).toEqual(OLD_SAVE.collection);
-    expect(s.deck).toEqual(OLD_SAVE.deck);
+    // 持っていたカードはそのまま。2026-10-23（version 6）にテスト用のソラモのデッキのカードを受け取り、デッキはそれに替わる
+    expect(s.collection).toMatchObject(OLD_SAVE.collection);
+    expect(s.collection['skl-soramo-01']).toBe(3);
+    expect(s.deck).toEqual(createSoramoTestDeck());
     expect(s.tournaments).toEqual(OLD_SAVE.tournaments);
     expect(s.fragments).toEqual(OLD_SAVE.fragments);
     // 街を正式な絵に作り直した（version 4）ので、街にいたセーブは主人公の家の前に移る

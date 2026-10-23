@@ -1,4 +1,5 @@
 import { cardCatalog, monsterId, skillId, skillsOf, supportId, SUPPORTS } from '../../data/cards.ts';
+import { SORAMO_SKILLS, SORAMO_TEAM } from '../../data/soramo.ts';
 import { DECK_RULES } from '../../data/rules.ts';
 import { cardName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
@@ -110,7 +111,7 @@ const STARTER_SKILL_NUMBERS = [1, 2, 3, 4, 5, 6] as const;
 const STARTER_SUPPORTS = [1, 2, 4] as const;
 const STARTER_SUPPORT_COPIES = 2;
 
-export function createStarterDeck(): Deck {
+export function createPlaceholderStarterDeck(): Deck {
   const skills: string[] = [];
   for (const key of STARTER_MONSTER_KEYS) {
     for (const no of STARTER_SKILL_NUMBERS) {
@@ -121,6 +122,34 @@ export function createStarterDeck(): Deck {
     for (let i = 0; i < STARTER_SUPPORT_COPIES; i++) skills.push(supportId(no));
   }
   return { monsters: STARTER_MONSTER_KEYS.map(monsterId), skills };
+}
+
+/**
+ * 【テスト用】ソラモのデッキ（2026-10-23 ユーザー指示「技の発動を見るため、仮のカードはすべてソラモに」）。
+ * ソラモ3体＋ソラモの技16種を3枚ずつ（48枚）＋仮サポート1〜6を2枚ずつ（12枚）＝60枚。
+ * 正式なスターターデッキの内訳は未承認（これは技を試すための仮の組み合わせ）
+ */
+const TEST_SORAMO_SUPPORT_COPIES = 2;
+export function createSoramoTestDeck(): Deck {
+  const skills: string[] = [];
+  for (const skill of SORAMO_SKILLS) {
+    for (let i = 0; i < DECK_RULES.maxCopies; i++) skills.push(skill.id);
+  }
+  for (const card of SUPPORTS) {
+    for (let i = 0; i < TEST_SORAMO_SUPPORT_COPIES && skills.length < DECK_RULES.skillCount; i++) skills.push(card.id);
+  }
+  return { monsters: [...SORAMO_TEAM], skills };
+}
+
+/** 新しく始めたときのデッキ。いまはテスト用のソラモのデッキ（仮モンスターA〜C の旧スターターは createPlaceholderStarterDeck） */
+export function createStarterDeck(): Deck {
+  return createSoramoTestDeck();
+}
+
+/** 旧スターター（仮モンスターA〜C）と同じ内容の所持カード（テスト用） */
+export function createPlaceholderStarterCollection(): Record<string, number> {
+  const deck = createPlaceholderStarterDeck();
+  return countCards([...deck.monsters, ...deck.skills]);
 }
 
 /** 新しく始めたときの所持カード（スターターデッキと同じ内容） */

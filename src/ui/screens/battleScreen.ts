@@ -17,7 +17,7 @@ import {
   type BattleState,
   type Side,
 } from '../../game/battle/engine.ts';
-import { describePlayCard, effectLabel, statLabel, supportShortText } from '../../game/cards/cardTypes.ts';
+import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { nextBattleHint, type BattleHintId } from '../../game/story/battleTutorial.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
@@ -341,7 +341,8 @@ export const battleScreen: ScreenDefinition = {
       if (!hand || !cardUsability(state, 'player', cardUid).usable) return;
       const card = getPlayCard(hand.cardId);
       const targets = targetsFor(state, 'player', card);
-      if (card.effect.type === 'attack' || card.effect.type === 'heal') {
+      const enemyTarget = card.kind === 'skill' && targetsEnemy(card);
+      if (enemyTarget || card.effect.type === 'heal') {
         if (targets.length === 1 && targets[0]) {
           dispatch({ type: 'useCard', side: 'player', cardUid, targetUid: targets[0].uid });
           return;
@@ -349,7 +350,7 @@ export const battleScreen: ScreenDefinition = {
         targeting = {
           cardUid,
           targets: targets.map((t) => t.uid),
-          prompt: t(card.effect.type === 'attack' ? 'battle.prompt.attackTarget' : 'battle.prompt.healTarget'),
+          prompt: t(card.effect.type === 'attack' ? 'battle.prompt.attackTarget' : enemyTarget ? 'battle.prompt.specialTarget' : 'battle.prompt.healTarget'),
         };
         render();
         return;
@@ -621,6 +622,15 @@ export const battleScreen: ScreenDefinition = {
               createMonsterCard(getMonster(m.cardId), { width: 74, life: { current: m.life, max: m.maxLife }, showName: false }),
               h('span', { class: 'battle__monster-life', text: String(m.life) }),
               m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: t('battle.monster.acted') }) : null,
+              // 吠える（次の技のダメージ−）・すなかけ（次の手番は攻撃できない）がかかっている印
+              m.life > 0 && (m.weaken || (m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn))
+                ? h(
+                    'span',
+                    { class: 'battle__status' },
+                    m.weaken ? h('span', { text: t('battle.status.weaken', { stat: statLabel(m.weaken.stat), n: m.weaken.amount }) }) : null,
+                    m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn ? h('span', { text: t('battle.status.sealed') }) : null,
+                  )
+                : null,
               incoming !== null ? h('span', { class: 'battle__incoming', text: String(incoming) }) : null,
               diff < 0 ? h('span', { class: 'battle__burst', attrs: { 'aria-hidden': 'true' } }) : null,
               diff !== 0 ? h('span', { class: `battle__float ${diff < 0 ? 'is-damage' : 'is-heal'}`, text: diff < 0 ? String(diff) : `+${diff}` }) : null,
@@ -807,7 +817,7 @@ export const battleScreen: ScreenDefinition = {
             ...options.map((c) => {
               const usable = cardUsability(s, 'player', c.uid);
               const skill = getSkill(c.cardId);
-              const label = skill.effect.type === 'evade' ? effectLabel('evade') : `-${skill.stat.value}`;
+              const label = skill.effect.type === 'evade' ? effectLabel('evade') : `-${guardReduction(skill)}`;
               const b = h(
                 'button',
                 {

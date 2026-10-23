@@ -20,8 +20,9 @@ describe('カードデータの点検（正式データを入れる前の土台�
     expect(checkCardData(cardCatalog.all(), options)).toEqual([]);
   });
 
-  it('いまのカードはすべて仮（正式データはまだない）', () => {
-    expect([...MONSTERS, ...SKILLS, ...SUPPORTS].every((c) => c.isPlaceholder)).toBe(true);
+  it('正式カードはソラモ（モンスターと技16種）だけで、ほかはすべて仮', () => {
+    const official = [...MONSTERS, ...SKILLS, ...SUPPORTS].filter((c) => !c.isPlaceholder).map((c) => c.id);
+    expect(official).toEqual(['mon-soramo', ...Array.from({ length: 16 }, (_, i) => `skl-soramo-${String(i + 1).padStart(2, '0')}`)]);
   });
 
   it('問題のあるデータを見つけられる', () => {
@@ -48,8 +49,9 @@ describe('カードデータの点検（正式データを入れる前の土台�
     ]);
   });
 
-  it('仮カードは画像がなくても問題にしない（仮の絵で表示する）', () => {
-    expect(cardCatalog.all().filter((c) => c.art)).toEqual([]);
+  it('仮カードは画像がなくても問題にしない（仮の絵で表示する）。画像があるのは正式カード（ソラモ）だけ', () => {
+    expect(cardCatalog.all().filter((c) => c.art && c.isPlaceholder)).toEqual([]);
+    expect(cardCatalog.all().filter((c) => c.art).map((c) => c.id)).toEqual(['mon-soramo', ...SKILLS.filter((s) => !s.isPlaceholder).map((s) => s.id)]);
     expect(checkCardData(cardCatalog.all(), options).filter((i) => i.code === 'officialWithoutArt')).toEqual([]);
   });
 });

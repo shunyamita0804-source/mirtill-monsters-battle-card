@@ -52,8 +52,10 @@ describe('セーブデータ', () => {
     expect(migrated?.version).toBe(SAVE_VERSION);
     const save = normalizeSave(raw);
     if (!save) throw new Error('save');
-    expect(save.deck.monsters).toEqual(['mon-a', 'mon-b', 'mon-c']);
+    // version 2 で仮モンスターのデッキに直り、version 6（2026-10-23）でテスト用のソラモのデッキに替わる
+    expect(save.deck.monsters).toEqual(['mon-soramo', 'mon-soramo', 'mon-soramo']);
     expect(validateDeck(save.deck, save.collection)).toEqual([]);
+    expect(save.collection['mon-a']).toBe(1);
     // 持っていた枚数は減らさない
     expect(save.collection['skl-a-1']).toBe(4);
     expect(save.collection['skl-a-5']).toBeGreaterThan(0);

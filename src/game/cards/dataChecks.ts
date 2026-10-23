@@ -6,7 +6,7 @@ import type { CardDefinition } from './cardTypes.ts';
  *
  * 仮カードと正式カードで基準を分ける：
  * - 仮カード（isPlaceholder: true）：名前は「仮」で始まる（隠し・未確定は「？？？」「隠し技（未確定）」も可）。画像はなくてよい（仮の絵で表示）
- * - 正式カード（isPlaceholder: false）：名前に「仮」を付けない。画像（art）が必須で、ファイルが実在すること。英語名が必要
+ * - 正式カード（isPlaceholder: false）：名前に「仮」を付けない。画像（art）が必須で、ファイルが実在すること（絵が未定と記したもの〔pendingSpec に 'art'〕は除く）。英語名が必要
  * どちらも：ID の重複なし・技の適合モンスターが実在する・画像を指定したならファイルが実在する・ファイル名が命名規則どおり
  */
 export interface CardDataIssue {
@@ -46,7 +46,8 @@ export function checkCardData(cards: readonly CardDefinition[], options: CardDat
       if (!PLACEHOLDER_NAME.test(card.name)) add('placeholderName');
     } else {
       if (card.name.startsWith('仮')) add('officialNamedAsPlaceholder');
-      if (!card.art) add('officialWithoutArt');
+      // 絵がまだ決まっていない正式カード（pendingSpec に 'art'）は、絵なしでよい（仮の絵で表示）
+      if (!card.art && !card.pendingSpec?.includes('art')) add('officialWithoutArt');
       if (!options.hasEnglishName(card.id)) add('missingEnglishName');
     }
     if (card.art) {

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "notice": "HEX values are initial candidate colors for the approved named palettes. The artist/user may adjust HEX without modifying artwork.",
+  "monsters": {
+    "soramo": {
+      "display_name": "ソラモ",
+      "theme_name": "クリーム",
+      "hex": "#E4D2AC",
+      "palette_approval": "テーマ名確定・HEXは調整可能"
+    },
+    "gauul": {
+      "display_name": "ガウル",
+      "theme_name": "オレンジ",
+      "hex": "#E68A46",
+      "palette_approval": "テーマ名確定・HEXは調整可能"
+    },
+    "lazuck": {
+      "display_name": "ラズック",
+      "theme_name": "青紫",
+      "hex": "#7775B8",
+      "palette_approval": "テーマ名確定・HEXは調整可能"
+    }
+  }
+}

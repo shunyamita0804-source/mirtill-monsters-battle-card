@@ -15,6 +15,16 @@ import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import { newId } from '../gameStore.ts';
 import type { ScreenDefinition } from './types.ts';
+import faceClerk from '@assets/images/characters/face_clerk.webp';
+import pack01Art from '@assets/images/ui/packs/pack_01.webp';
+import pack02Art from '@assets/images/ui/packs/pack_02.webp';
+import pack03Art from '@assets/images/ui/packs/pack_03.webp';
+
+/**
+ * パックの絵（2026-10-23 納品「UI画像10種」のカードパック3種：紺・緑・赤）。
+ * パックの中身・価格・提供割合は仮のまま。絵の割り当て（第1弾＝紺・第2弾＝緑・第3弾＝赤）も仮
+ */
+const PACK_ART: Readonly<Record<string, string>> = { 'pack-01': pack01Art, 'pack-02': pack02Art, 'pack-03': pack03Art };
 
 /** ショップの店員メニュー：カードを見る／売る（価格未確定のため無効）／ガチャ／特別復元（欠片を持っているときだけ） */
 export const shopMenuScreen: ScreenDefinition = {
@@ -33,7 +43,7 @@ export const shopMenuScreen: ScreenDefinition = {
         h(
           'div',
           { class: 'shop-menu__clerk' },
-          h('div', { class: 'shop-menu__clerk-figure', text: t('shop.clerk'), attrs: { 'aria-hidden': 'true' } }),
+          h('img', { class: 'shop-menu__clerk-figure shop-menu__face', attrs: { src: faceClerk, alt: t('shop.clerk'), draggable: 'false' } }),
           h('p', { class: 'shop-menu__bubble', text: t('shop.greeting') }),
         ),
         h('p', { class: 'shop-menu__coins' }, coinIcon(), t('shop.coins', { n: save.coins })),
@@ -177,7 +187,8 @@ export const gachaScreen: ScreenDefinition = {
           isNew ? h('span', { class: 'pack-open__new', text: t('gacha.new') }) : null,
         );
       });
-      const packEl = h('div', { class: 'pack-open__pack', text: packName(pack) });
+      const packEl = h('div', { class: `pack-open__pack${PACK_ART[pack.id] ? ' has-art' : ''}`, text: packName(pack) });
+      if (PACK_ART[pack.id]) packEl.style.setProperty('--pack-art', `url("${PACK_ART[pack.id]}")`);
       const cardsEl = h('div', { class: 'pack-open__cards' }, ...slots);
       const done = button(t('common.close'), () => overlay.remove(), 'btn btn--primary');
       done.disabled = true;
@@ -202,7 +213,9 @@ export const gachaScreen: ScreenDefinition = {
         return h(
           'div',
           { class: `gacha__pack${unlocked ? '' : ' is-locked'}`, dataset: { id: pack.id } },
-          h('div', { class: 'gacha__pack-art', text: unlocked ? packName(pack).replace(/（仮）| \(Temp\)/, '') : '？' }),
+          unlocked && PACK_ART[pack.id]
+            ? h('div', { class: 'gacha__pack-art has-art' }, h('img', { attrs: { src: PACK_ART[pack.id] ?? '', alt: packName(pack), draggable: 'false' } }))
+            : h('div', { class: 'gacha__pack-art', text: unlocked ? packName(pack).replace(/（仮）| \(Temp\)/, '') : '？' }),
           h(
             'div',
             { class: 'gacha__pack-info' },
@@ -219,7 +232,15 @@ export const gachaScreen: ScreenDefinition = {
           'div',
           { class: 'gacha__machine', attrs: { 'aria-hidden': 'true' } },
           h('div', { class: 'gacha__machine-top', text: t('gacha.machine') }),
-          h('div', { class: 'gacha__machine-slot' }, h('div', { class: 'gacha__machine-pack' })),
+          h(
+            'div',
+            { class: 'gacha__machine-slot' },
+            (() => {
+              const el = h('div', { class: 'gacha__machine-pack has-art' });
+              el.style.setProperty('--pack-art', `url("${pack01Art}")`);
+              return el;
+            })(),
+          ),
           h('p', { class: 'gacha__machine-note', text: t('gacha.machineNote') }),
         ),
         h('p', { class: 'gacha__coins' }, coinIcon(), t('shop.coins', { n: save.coins })),

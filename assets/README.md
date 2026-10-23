@@ -74,3 +74,15 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 - 権利が確認できていない素材は置かないでください。
 - `.psd` `.clip` などの作業用ファイルは `.gitignore` で除外しています。
 - ビルドを通さずにURLで直接参照したいファイル（`robots.txt` 等）は `public/` に置きます。
+
+## 配置した素材（2026-10-23）
+
+| パス | 内容 | 状態 |
+| --- | --- | --- |
+| `images/cards/skills/sor_sk_01〜16.webp` | ソラモの技カードの絵16枚（ZIP「Seimon_Soramo_Claude_FirstImplementation_20261023」の 05_SKILL_ART_16） | ユーザー承認の正式画像。827×937 のまま WebP（品質88）に。02・03 は差し替え済みの新しい絵 |
+| `images/ui/skillcard/bar_defense.png`・`bar_evade.png`・`bar_special.png` | 防御（盾）・回避（翼）・特殊（渦）のバー（同 ZIP の 03_UI_ADDON） | 正式。そのまま（390×118） |
+| `images/ui/skillcard/badge_*_blank.png` | 空の数値枠（マナ0 など文字で数字を書くとき） | 正式。128→64px に縮小 |
+| `images/cards/monsters/{soramo,gauul,lazuck}_{official,battle}.webp` | モンスターカード（正式カード＝名前・LIFE 入り／バトル用＝文字なし）（ZIP「Mismon_MonsterCards_Official_and_Battle_20261023」） | ユーザー提供。WebP（品質90）。ガウル・ラズックは登録のみ（ゲームで未使用） |
+| `images/backgrounds/title_bg.webp`・`battle_arena.webp` | タイトルの背景・大会の対戦の背景（ZIP「UI画像10種」） | ユーザー提供（画像生成）。WebP |
+| `images/ui/frame/*.webp`・`images/ui/card_back.webp`・`images/ui/packs/pack_0N.webp` | 共通背景・見出しの帯・窓の枠・一覧のパネル・カードの裏面・パック3種（同） | 切り抜きと 1/2 縮小（枠・帯・パネル）、背景は 512px、裏面は幅400、パックは幅240。描き換えなし |
+| `images/characters/face_{clerk,receptionist}.webp` | 店員・受付の顔（ショップ・大会受付の画面） | 384px に縮小 |

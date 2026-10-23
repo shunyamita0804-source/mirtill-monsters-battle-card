@@ -9,10 +9,11 @@ import { validatePack } from '../src/game/economy/gacha.ts';
 import { isBlocked, isSolidTile, objectsAt, reachable, tileAt } from '../src/game/world/world.ts';
 
 describe('カードデータ（仮）', () => {
-  it('技カードの数値は V4 テンプレートの数字 1〜10 の範囲', () => {
+  it('技カードの数値は V4 テンプレートの数字の範囲（マナ0〜10・数値1〜10。マナ0 は正式カードで使う）', () => {
     for (const s of SKILLS) {
-      expect(s.cost).toBeGreaterThanOrEqual(1);
+      expect(s.cost).toBeGreaterThanOrEqual(s.isPlaceholder ? 1 : 0);
       expect(s.cost).toBeLessThanOrEqual(10);
+      if (s.stat === null) continue;
       expect(s.stat.value).toBeGreaterThanOrEqual(1);
       expect(s.stat.value).toBeLessThanOrEqual(10);
     }
@@ -22,8 +23,11 @@ describe('カードデータ（仮）', () => {
     for (const s of SKILLS) expect(cardCatalog.get(s.monsterId)?.kind).toBe('monster');
   });
 
-  it('仮データであることが明示されている', () => {
-    for (const c of [...MONSTERS, ...SKILLS, ...SUPPORTS]) expect(c.isPlaceholder).toBe(true);
+  it('仮データであることが明示されている（正式カードはソラモだけ）', () => {
+    for (const c of [...MONSTERS, ...SKILLS, ...SUPPORTS]) {
+      const official = c.id === 'mon-soramo' || c.id.startsWith('skl-soramo-');
+      expect(c.isPlaceholder).toBe(!official);
+    }
   });
 
   it('サポートカードは名前が「仮」で始まり、パックで手に入る', () => {
@@ -39,11 +43,11 @@ describe('カードデータ（仮）', () => {
   });
 
   it('各モンスターに守備（ちから・かしこさの防御か回避）を含む適合技がある', () => {
-    for (const m of MONSTERS.filter((x) => !x.hidden)) {
+    for (const m of MONSTERS.filter((x) => !x.hidden && x.isPlaceholder)) {
       const skills = skillsOf(m.id);
       expect(skills.length).toBe(6);
       const guards = skills.filter((s) => s.effect.type === 'defense' || s.effect.type === 'evade');
-      expect(new Set(guards.map((s) => s.stat.type))).toEqual(new Set(['force', 'wisdom']));
+      expect(new Set(guards.map((s) => s.stat?.type))).toEqual(new Set(['force', 'wisdom']));
       expect(guards.some((s) => s.effect.type === 'evade')).toBe(true);
     }
   });

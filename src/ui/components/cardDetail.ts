@@ -1,8 +1,8 @@
 import { getMonster } from '../../data/cards.ts';
 import { PACKS } from '../../data/economy.ts';
-import { describeSkill, describeSupport, effectLabel, kindLabel, rarityLabel, statLabel, type CardDefinition } from '../../game/cards/cardTypes.ts';
+import { categoryLabel, describeSkill, describeSupport, effectLabel, kindLabel, rarityLabel, skillCategory, type CardDefinition } from '../../game/cards/cardTypes.ts';
 import { cardDescription, cardName, packName } from '../../i18n/content.ts';
-import { t } from '../../i18n/i18n.ts';
+import { t, tKey } from '../../i18n/i18n.ts';
 import { h } from '../dom.ts';
 import { createCardView } from './cardView.ts';
 import { openModal, type ModalHandle } from './modal.ts';
@@ -19,15 +19,18 @@ export function openCardDetail(parent: HTMLElement, card: CardDefinition, option
   const rows: [string, string][] = [[t('card.detail.kind'), t('card.kindCard', { kind: kindLabel(card.kind) })]];
   if (card.kind === 'skill') {
     rows.push([t('card.detail.monster'), cardName(getMonster(card.monsterId))]);
-    rows.push([t('card.detail.effect'), effectLabel(card.effect.type)]);
+    if (card.category) rows.push([t('card.detail.category'), categoryLabel(card.category)]);
+    else rows.push([t('card.detail.effect'), effectLabel(card.effect.type)]);
     rows.push([t('card.detail.mana'), String(card.cost)]);
-    rows.push([statLabel(card.stat.type), String(card.stat.value)]);
+    if (card.stat) rows.push([card.category ? t('card.detail.damage') : categoryLabel(skillCategory(card)), String(card.stat.value)]);
+    if (card.availability) rows.push([t('card.detail.availability'), t(`card.availability.${card.availability}`)]);
   } else if (card.kind === 'support') {
     rows.push([t('card.detail.supportKind'), t(card.duration === 'field' ? 'card.detail.supportField' : 'card.detail.supportInstant')]);
     rows.push([t('card.detail.mana'), String(card.cost)]);
   } else {
-    rows.push([t('card.detail.life'), String(card.life)]);
+    rows.push([t('card.detail.life'), card.pendingSpec?.includes('life') ? t('card.provisionalValue', { n: card.life }) : String(card.life)]);
   }
+  if (card.designId) rows.push([t('card.detail.designId'), card.designId]);
   rows.push([t('card.detail.rarity'), rarityLabel(card.rarity)]);
   const packs = PACKS.filter((p) => p.cardIds.includes(card.id)).map(packName);
   rows.push([
@@ -51,6 +54,12 @@ export function openCardDetail(parent: HTMLElement, card: CardDefinition, option
         ...rows.flatMap(([k, v]) => [h('dt', { text: k }), h('dd', { text: v })]),
       ),
       card.isPlaceholder ? h('p', { class: 'card-detail__note', text: t('card.detail.placeholderNote') }) : null,
+      !card.isPlaceholder && card.pendingSpec && card.pendingSpec.length > 0
+        ? h('p', {
+            class: 'card-detail__note',
+            text: t('card.detail.pendingNote', { items: card.pendingSpec.map((k) => tKey(`card.pending.${k}`, undefined, k)).join(t('common.listSeparator')) }),
+          })
+        : null,
     ],
     actions: [{ label: t('common.close'), primary: true, onTap: () => handle.close() }],
   });

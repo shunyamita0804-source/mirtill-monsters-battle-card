@@ -78,12 +78,49 @@
   align-items: center;
   justify-content: center;
   padding: 0 4cqw;
+  overflow-wrap: anywhere;
   color: #3b2410;
   font-size: 6cqw;
   font-weight: 700;
   line-height: 1.3;
   text-align: center;
   overflow: hidden;
+}
+
+/* バーの真ん中の文字（マナ・ちから・防御など。ゲーム側で書く） */
+.skill-card__bar-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-shadow: 0 0.3cqw 0.6cqw rgb(0 0 0 / 0.7);
+}
+
+/* 空の数値枠＋文字の数字（マナ0 など） */
+.skill-card__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skill-card__badge > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.skill-card__badge > span {
+  position: relative;
+  color: #fff;
+  font-size: 8cqw;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0.3cqw 0.8cqw rgb(0 0 0 / 0.75);
 }
 
 /* ===== モンスターカード（仮デザイン） ===== */
@@ -186,6 +223,36 @@
 .monster-card__life-text--base {
   font-size: max(8px, 9cqw);
   text-align: center;
+}
+
+/* 正式の絵のモンスター：絵に枠が描かれているので、ゲーム側の枠・余白は付けない */
+.monster-card--art {
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+}
+
+.monster-card--art .monster-card__art {
+  border-radius: 6px;
+}
+
+.monster-card--art .monster-card__img {
+  object-fit: fill;
+}
+
+/* バトル：ライフのバーは絵の下のほうに重ねる */
+.monster-card__life--overlay {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 5%;
+  margin: 0;
+}
+
+.monster-card__life--overlay .monster-card__life-bar {
+  height: 6px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5);
 }
 
 .monster-card.is-down .monster-card__art {

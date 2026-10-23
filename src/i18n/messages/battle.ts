@@ -42,6 +42,12 @@ export const BATTLE = {
   'battle.log.defenseDone': { ja: '{side}は守備を終えた。', en: '{side} finished defending.' },
   'battle.log.evade': { ja: '{side}は「{skill}」で回避！', en: '{side} dodged with {skill}!' },
   'battle.log.guard': { ja: '{side}は「{skill}」で防御（ダメージ-{v}）！', en: '{side} guarded with {skill} (dmg -{v})!' },
+  'battle.log.recoil': { ja: '反動で{name}のライフが{n}減った。', en: '{name} took {n} recoil damage.' },
+  'battle.log.weaken': {
+    ja: '{name}の次の{stat}技のダメージが{n}下がった。',
+    en: "{name}'s next {stat} skill deals {n} less damage.",
+  },
+  'battle.log.seal': { ja: '{name}は次のターン攻撃できない。', en: "{name} can't attack next turn." },
 
   // 使えない理由（engine.ts の cardUsability）
   'battle.ng.defenseOnly': { ja: 'いまは防御・回避カードしか使えません', en: 'Only Guard/Dodge cards now' },
@@ -64,6 +70,9 @@ export const BATTLE = {
     en: 'Guard/Dodge cards are used when you are attacked',
   },
   'battle.ng.acted': { ja: '使えるモンスターは行動済みです', en: 'The monster has already acted' },
+  'battle.status.weaken': { ja: '{stat}−{n}', en: '{stat} -{n}' },
+  'battle.status.sealed': { ja: '攻撃不可', en: 'No attack' },
+  'battle.ng.sealed': { ja: 'このターンは攻撃できません（すなかけ）', en: "Can't attack this turn (Sand Throw)" },
   'battle.ng.noAttackTarget': { ja: '攻撃できる相手がいません', en: 'No enemy to attack' },
 
   // 先攻・後攻を決める
@@ -106,6 +115,7 @@ export const BATTLE = {
   // 説明欄
   'battle.prompt.attackTarget': { ja: '攻撃する相手モンスターをタップしてください', en: 'Tap an enemy monster to attack' },
   'battle.prompt.healTarget': { ja: '回復する味方モンスターをタップしてください', en: 'Tap an ally monster to heal' },
+  'battle.prompt.specialTarget': { ja: '効果を与える相手モンスターをタップしてください', en: 'Tap an enemy monster to target' },
   'battle.prompt.incoming': { ja: '相手の「{skill}」！ {stat}{power}の攻撃', en: "Opponent's {skill}! {stat} {power} attack" },
   'battle.prompt.incomingNoDefense': {
     ja: '相手の「{skill}」！ {stat}{power}の攻撃（守備できるカードなし）',

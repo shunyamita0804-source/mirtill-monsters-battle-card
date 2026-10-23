@@ -170,8 +170,8 @@ export const SCREENS = {
   // 図鑑・カード一覧
   'collection.title': { ja: '図鑑', en: 'Card Album' },
   'collection.count': {
-    ja: '登録 {owned}/{total} 種類（カードはすべて仮データ）',
-    en: 'Registered {owned}/{total} (all cards are temporary data)',
+    ja: '登録 {owned}/{total} 種類（正式カードはソラモのみ。ほかは仮データ）',
+    en: 'Registered {owned}/{total} (only Soramo cards are official; others are temporary)',
   },
   'cardList.title': { ja: 'カード一覧', en: 'Card List' },
   'cardList.heading': { ja: 'カードを見る', en: 'View Cards' },
@@ -203,6 +203,7 @@ export const SCREENS = {
   'deck.statusOk': { ja: '✓ 使用可能', en: '✓ Ready' },
   'deck.statusNg': { ja: '✕ 問題{n}件', en: '✕ {n} {n|problem|problems}' },
   'deck.metaSkill': { ja: '{effect}・マナ{cost}・{stat}{v}', en: '{effect} · Mana {cost} · {stat} {v}' },
+  'deck.metaSkillNoValue': { ja: '{category}・マナ{cost}', en: '{category} · Mana {cost}' },
   'deck.metaSupport': { ja: '{kind}・マナ{cost}', en: '{kind} · Mana {cost}' },
   'deck.owned': { ja: '所持{n}', en: 'Own {n}' },
   'deck.detail': { ja: '{name}の詳細', en: 'Details of {name}' },
