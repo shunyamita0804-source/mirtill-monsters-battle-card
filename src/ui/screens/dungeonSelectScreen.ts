@@ -36,7 +36,8 @@ export const dungeonSelectScreen: ScreenDefinition = {
       info.replaceChildren(h('div', { class: 'dungeon-select__item' }, ...body));
     };
 
-    const pinAt = (spot: WorldMapSpot, label: string, kind: 'here' | 'dungeon', onTap: (pin: HTMLElement) => void): HTMLElement => {
+    /** 印の絵（2026-10-23 デザイン第7弾）：here＝街（現在地の金の輪つき）、dungeon＝洞窟、cleared＝クリアしたダンジョン（星つき） */
+    const pinAt = (spot: WorldMapSpot, label: string, kind: 'here' | 'dungeon' | 'cleared', onTap: (pin: HTMLElement) => void): HTMLElement => {
       const pin = h(
         'button',
         { class: `world-map__pin world-map__pin--${kind}`, attrs: { type: 'button', 'aria-label': label } },
@@ -108,7 +109,8 @@ export const dungeonSelectScreen: ScreenDefinition = {
     for (const d of DUNGEONS) {
       const spot = DUNGEON_SPOTS[d.id];
       if (!spot) continue;
-      const pin = pinAt(spot, dungeonName(d), 'dungeon', (p) => showDungeon(p, d, spot));
+      const kind = dungeonRecord(store.save, d.id).clears > 0 ? 'cleared' : 'dungeon';
+      const pin = pinAt(spot, dungeonName(d), kind, (p) => showDungeon(p, d, spot));
       map.append(pin);
       first ??= () => showDungeon(pin, d, spot);
     }

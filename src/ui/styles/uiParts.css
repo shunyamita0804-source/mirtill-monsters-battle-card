@@ -1,0 +1,471 @@
+/*
+ * デザイン第6弾・第7弾の部品（2026-10-23 納品）。それまでプログラムで描いていた部品を絵にする。
+ * 切り出しは tools/design/ui67_build.py。記録は docs/design/ui-quality7-20261023/10_受け取り結果_UTF8.txt
+ *
+ * ボタン・タブ・説明の台は border-image で「両端の飾りはそのまま、真ん中だけ伸ばす」。
+ * slice の数字は切り出した絵（高さ 96〜120px）の上での端の幅、/ のあとが画面での幅
+ */
+
+/* ===== 第7弾 1〜3：ボタン（金＝大事・暗い＝ふつう・赤＝危ない） ===== */
+.btn {
+  padding: 0 4px;
+  border-style: solid;
+  border-width: 7px 26px;
+  border-color: transparent;
+  border-radius: 0;
+  border-image: url('@assets/images/ui/button/btn_secondary.webp') 14 56 14 56 fill / 7px 26px / 0 stretch;
+  background: none;
+  color: #f1e8d2;
+}
+
+.btn:not(:disabled):active {
+  border-image-source: url('@assets/images/ui/button/btn_secondary_pressed.webp');
+}
+
+.btn:disabled {
+  opacity: 0.8;
+  border-image-source: url('@assets/images/ui/button/btn_secondary_disabled.webp');
+  color: rgb(241 232 210 / 0.55);
+}
+
+.btn--primary {
+  border-width: 7px 32px;
+  border-image: url('@assets/images/ui/button/btn_primary.webp') 16 72 16 72 fill / 7px 32px / 0 stretch;
+  color: #241806;
+  text-shadow: 0 1px 0 rgb(255 240 200 / 0.45);
+}
+
+.btn--primary:not(:disabled):active {
+  border-image-source: url('@assets/images/ui/button/btn_primary_pressed.webp');
+}
+
+.btn--primary:disabled {
+  border-image-source: url('@assets/images/ui/button/btn_primary_disabled.webp');
+  color: rgb(36 24 6 / 0.6);
+}
+
+.btn--danger {
+  border-image: url('@assets/images/ui/button/btn_danger.webp') 18 70 18 70 fill / 7px 26px / 0 stretch;
+  color: #ffe6e0;
+}
+
+.btn--danger:not(:disabled):active {
+  border-image-source: url('@assets/images/ui/button/btn_danger_pressed.webp');
+}
+
+/* 小さいボタン：両端の飾りを少し細く（文字の場所を広く） */
+.btn--small {
+  border-width: 6px 20px;
+  border-image-width: 6px 20px;
+}
+
+.btn--primary.btn--small {
+  border-width: 6px 24px;
+  border-image-width: 6px 24px;
+}
+
+/* キーボードなどで選んでいるボタンの印：白い太枠ではなく、細い金の線 */
+.btn:focus-visible {
+  outline: 2px solid rgb(243 213 138 / 0.75);
+  outline-offset: 1px;
+}
+
+/* 文字だけのボタン・街の上のボタン（第2弾の絵）は今までどおり */
+.btn--ghost,
+.btn--ghost:not(:disabled):active,
+.btn--ghost:disabled,
+.world__hud .btn--small,
+.world__hud .btn--small:active {
+  border-width: 0;
+  border-image: none;
+}
+
+.btn--ghost {
+  padding: 0 12px;
+  color: var(--color-sub);
+}
+
+/* ===== 第7弾 4：切り替えのタブ（図鑑・デッキの絞り込み、言語） ===== */
+.card-grid__tab,
+.deck__tab,
+.btn.options__choice {
+  border-style: solid;
+  border-width: 5px 15px;
+  border-color: transparent;
+  border-radius: 0;
+  border-image: url('@assets/images/ui/button/tab_off.webp') 10 36 10 36 fill / 5px 15px / 0 stretch;
+  background: none;
+  color: #e9dfc6;
+}
+
+.card-grid__tab.is-active,
+.deck__tab.is-active,
+.btn.options__choice.is-active {
+  border-image: url('@assets/images/ui/button/tab_on.webp') 12 36 20 36 fill / 5px 15px 8px / 0 stretch;
+  background: none;
+  box-shadow: none;
+  color: #241806;
+  font-weight: 700;
+}
+
+.card-grid__tab,
+.deck__tab {
+  padding: 0 6px;
+}
+
+/* ===== 第7弾 5：戻るボタン（画面の左上） ===== */
+.screen-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 6px 0 2px;
+  border: 0;
+  background: none;
+  color: var(--color-sub);
+  font-family: var(--font-display);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.screen-header__back-icon,
+.battle__top-icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  background: url('@assets/images/ui/button/nav_back.webp') center / contain no-repeat;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+
+.screen-header__back:active .screen-header__back-icon,
+.battle__top-btn:active .battle__top-icon {
+  transform: scale(0.92);
+  filter: brightness(1.2) drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+
+/* ===== 第7弾 10：対戦の上の小さなボタン（降参・ルール） ===== */
+.battle__top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 40px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--color-sub);
+  font-family: var(--font-display);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.battle__top-btn--rules {
+  justify-self: end;
+}
+
+.battle__top-btn--surrender .battle__top-icon {
+  background-image: url('@assets/images/ui/battle/icon_surrender.webp');
+}
+
+.battle__top-btn--rules .battle__top-icon {
+  background-image: url('@assets/images/ui/battle/icon_rules.webp');
+}
+
+/* ===== 第7弾 6：枚数の増減（デッキ編集） ===== */
+.deck__step {
+  border: 0;
+  border-radius: 0;
+  background: url('@assets/images/ui/button/step_plus.webp') center / contain no-repeat;
+  color: transparent;
+  font-size: 0;
+}
+
+.deck__step--minus {
+  background-image: url('@assets/images/ui/button/step_minus.webp');
+}
+
+.deck__step:disabled {
+  opacity: 1;
+  background-image: url('@assets/images/ui/button/step_plus_off.webp');
+}
+
+.deck__step--minus:disabled {
+  background-image: url('@assets/images/ui/button/step_minus_off.webp');
+}
+
+.deck__step:not(:disabled):active {
+  transform: scale(0.92);
+  filter: brightness(1.2);
+}
+
+.deck__row-count {
+  min-width: 34px;
+  padding: 2px 0;
+  border-style: solid;
+  border-width: 5px 8px;
+  border-color: transparent;
+  border-image: url('@assets/images/ui/button/step_window.webp') 20 30 20 30 fill / 5px 8px / 0 stretch;
+  color: #f1e8d2;
+  line-height: 1.2;
+}
+
+/* ===== 第7弾 7：音量のつまみと溝（設定） ===== */
+.options__range-wrap {
+  position: relative;
+  height: 40px;
+}
+
+.options__range-wrap::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  height: 28px;
+  border-style: solid;
+  border-width: 7px 21px;
+  border-color: transparent;
+  border-image: url('@assets/images/ui/button/slider_track.webp') 12 36 12 36 fill / 7px 21px / 0 stretch;
+  box-sizing: border-box;
+}
+
+/* 金色の棒：溝の内側（左右 19px・上下 8px）に、音量の割合の長さで */
+.options__range-gold {
+  position: absolute;
+  left: 19px;
+  top: 14px;
+  height: 12px;
+  width: calc((100% - 38px) * var(--fill, 0) / 100);
+  border-style: solid;
+  border-width: 0 5px;
+  border-color: transparent;
+  border-image: url('@assets/images/ui/button/slider_gold.webp') 0 10 0 10 fill / 0 5px / 0 stretch;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.options__range {
+  position: relative;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.options__range::-webkit-slider-runnable-track {
+  height: 40px;
+  background: transparent;
+}
+
+.options__range::-moz-range-track {
+  height: 40px;
+  background: transparent;
+}
+
+.options__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 31px;
+  margin-top: 4px;
+  border: 0;
+  background: url('@assets/images/ui/button/slider_knob.webp') center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.6));
+}
+
+.options__range::-moz-range-thumb {
+  width: 30px;
+  height: 31px;
+  border: 0;
+  background: url('@assets/images/ui/button/slider_knob.webp') center / contain no-repeat;
+}
+
+/* ===== 第7弾 8：説明の文を置く台 ===== */
+.notice {
+  border-style: solid;
+  border-width: 5px 7px 5px 19px;
+  border-color: transparent;
+  border-radius: 0;
+  border-image: url('@assets/images/ui/button/notice_panel.webp') 14 18 14 56 fill / 5px 7px 5px 19px / 0 stretch;
+  background: none;
+  padding: 6px 8px 6px 4px;
+  color: #d9cfb6;
+}
+
+/* ===== 第7弾 9：世界地図の印と地名の札 ===== */
+.world-map__dot {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 0;
+  background: url('@assets/images/ui/worldmap/pin_dungeon.webp') center / contain no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.7));
+}
+
+.world-map__pin--dungeon .world-map__dot {
+  background: url('@assets/images/ui/worldmap/pin_dungeon.webp') center / contain no-repeat;
+}
+
+.world-map__pin--cleared .world-map__dot {
+  background-image: url('@assets/images/ui/worldmap/pin_cleared.webp');
+}
+
+.world-map__pin--here .world-map__dot {
+  background-image: url('@assets/images/ui/worldmap/pin_town.webp');
+}
+
+/* 現在地：街の印に金の輪を重ねる */
+.world-map__pin--here .world-map__dot::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  background: url('@assets/images/ui/worldmap/pin_here_ring.webp') center / contain no-repeat;
+}
+
+.world-map__pin.is-selected .world-map__dot {
+  animation: world-map-pin 1.2s ease-in-out infinite;
+}
+
+@keyframes world-map-pin {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.7)) drop-shadow(0 0 0 rgb(255 220 140 / 0));
+  }
+  50% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.7)) drop-shadow(0 0 6px rgb(255 220 140 / 0.9));
+  }
+}
+
+.world-map__label {
+  top: 30px;
+  padding: 0 2px;
+  border-style: solid;
+  border-width: 3px 9px;
+  border-color: transparent;
+  border-radius: 0;
+  border-image: url('@assets/images/ui/worldmap/map_label.webp') 12 40 12 40 fill / 3px 9px / 0 stretch;
+  background: none;
+  font-family: var(--font-display);
+}
+
+/* ===== 第6弾 1：使ったカードを見せるときの光の帯（今の暗い帯の真ん中に重ねる） ===== */
+.battle__showcase-band {
+  background:
+    url('@assets/images/ui/battle/showcase_band.webp') center / 100% auto no-repeat,
+    linear-gradient(90deg, rgb(6 7 10 / 0) 0%, rgb(6 7 10 / 0.82) 18%, rgb(6 7 10 / 0.86) 50%, rgb(6 7 10 / 0.82) 82%, rgb(6 7 10 / 0) 100%);
+}
+
+.battle__showcase--opponent .battle__showcase-band {
+  background:
+    url('@assets/images/ui/battle/showcase_band.webp') center / 100% auto no-repeat,
+    linear-gradient(90deg, rgb(30 6 10 / 0) 0%, rgb(30 8 12 / 0.84) 18%, rgb(36 8 14 / 0.88) 50%, rgb(30 8 12 / 0.84) 82%, rgb(30 6 10 / 0) 100%);
+}
+
+/* ===== 第6弾 2：ターンの切り替わりの帯（自分＝紺・相手＝えんじ） ===== */
+.battle__banner {
+  left: 8px;
+  right: 8px;
+  height: 54px;
+  padding: 0 40px;
+  justify-content: center;
+  gap: 0;
+  background: url('@assets/images/ui/battle/phase_player.webp') center / 100% 100% no-repeat;
+  filter: drop-shadow(0 4px 10px rgb(0 0 0 / 0.6));
+}
+
+.battle__banner--opponent {
+  background-image: url('@assets/images/ui/battle/phase_opponent.webp');
+}
+
+.battle__banner-main {
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.9);
+}
+
+.battle__banner--player .battle__banner-main,
+.battle__banner--opponent .battle__banner-main {
+  color: #f6ecd2;
+}
+
+.battle__banner-sub {
+  font-size: 11px;
+  color: #d8ccae;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.9);
+}
+
+/* ===== 第6弾 3：ダメージ・回復の数字 ===== */
+.battle-digits {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.7));
+}
+
+.battle-digits__glyph {
+  display: block;
+  height: 34px;
+  width: auto;
+  margin: 0 -1px;
+}
+
+/* ===== 第6弾 4・5：話しかけられる人の印・調べられる物のきらめき ===== */
+.world__marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 100000;
+  display: none;
+  pointer-events: none;
+}
+
+.world__marker.is-talk,
+.world__marker.is-examine {
+  display: block;
+}
+
+.world__marker::before {
+  content: '';
+  position: absolute;
+  background: center / contain no-repeat;
+}
+
+.world__marker.is-talk::before {
+  left: -20px;
+  top: -27px;
+  width: 40px;
+  height: 26px;
+  background-image: url('@assets/images/ui/hud/talk_marker.webp');
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.6));
+  animation: world-marker-bob 1.1s ease-in-out infinite;
+}
+
+.world__marker.is-examine::before {
+  left: -28px;
+  top: -28px;
+  width: 56px;
+  height: 56px;
+  background-image: url('@assets/images/ui/hud/examine_sparkle.webp');
+  animation: world-marker-twinkle 1.4s ease-in-out infinite;
+}
+
+@keyframes world-marker-bob {
+  0%,
+  100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes world-marker-twinkle {
+  0%,
+  100% { opacity: 0.55; transform: scale(0.75) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.1) rotate(15deg); }
+}
+
+/* 対戦の上の帯：左右のボタンに丸い絵が付いたので、少し広く */
+.battle__header {
+  grid-template-columns: 96px 1fr 96px;
+}

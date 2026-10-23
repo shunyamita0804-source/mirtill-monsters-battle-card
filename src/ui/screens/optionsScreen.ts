@@ -44,15 +44,19 @@ export const optionsScreen: ScreenDefinition = {
         on: {
           input: () => {
             valueEl.textContent = t('options.volume', { n: Number(input.value) });
+            wrap.style.setProperty('--fill', input.value);
           },
           change: () => onChange(Number(input.value)),
         },
       });
+      // 溝の絵の上に、音量に合わせた長さの金色の棒を重ねる（2026-10-23 デザイン第7弾）。つまみは input の見た目
+      const wrap = h('div', { class: 'options__range-wrap' }, h('span', { class: 'options__range-gold', attrs: { 'aria-hidden': 'true' } }), input);
+      wrap.style.setProperty('--fill', String(value));
       return h(
         'div',
         { class: 'options__slider' },
         h('label', { class: 'options__label', text: label, attrs: { for: id } }),
-        input,
+        wrap,
         valueEl,
         note ? h('p', { class: 'options__note', text: note }) : null,
       );

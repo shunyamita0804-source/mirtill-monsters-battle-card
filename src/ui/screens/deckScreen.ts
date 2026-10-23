@@ -176,9 +176,9 @@ export const deckScreen: ScreenDefinition = {
       const skillRows = listed.map((skill) => {
         const owned = coll[skill.id] ?? 0;
         const inDeck = counts[skill.id] ?? 0;
-        const plus = button('＋', () => changeSkill(skill.id, 1), 'deck__step');
+        const plus = button('＋', () => changeSkill(skill.id, 1), 'deck__step deck__step--plus');
         plus.disabled = inDeck >= owned || inDeck >= DECK_RULES.maxCopies || draft.skills.length >= DECK_RULES.skillCount;
-        const minus = button('－', () => changeSkill(skill.id, -1), 'deck__step');
+        const minus = button('－', () => changeSkill(skill.id, -1), 'deck__step deck__step--minus');
         minus.disabled = inDeck === 0;
         return h(
           'div',

@@ -6,6 +6,7 @@ import './ui/styles/world.css';
 import './ui/styles/battle.css';
 import './ui/styles/dialogue.css';
 import './ui/styles/uiFrames.css';
+import './ui/styles/uiParts.css';
 import { startApp } from './ui/app.ts';
 
 const root = document.querySelector<HTMLElement>('#app');
