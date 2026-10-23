@@ -341,3 +341,60 @@
 .collection__desk .shop-menu__bubble {
   font-size: 13px;
 }
+
+/* ===== 字体（2026-10-23）=====
+ * 見出し・ボタン・名前の札・カードの名前などは、ゲームらしい明朝体にそろえる（iPhone に入っているヒラギノ明朝。
+ * 無い端末では游明朝・Noto Serif JP・ふつうの明朝体）。長い文章は読みやすさのため今の字体のまま
+ */
+:root {
+  --font-display: 'Hiragino Mincho ProN', 'Hiragino Mincho Pro', 'Yu Mincho', YuMincho, 'Noto Serif JP', serif;
+}
+
+.screen-header__title,
+.modal__title,
+.btn,
+.command-btn__label,
+.world__place-name,
+.world__hud .btn--small,
+.world__action-label,
+.talk__name,
+.battle-turn__text,
+.battle-info__name,
+.battle-info__tag,
+.battle__defense-title,
+.skill-card__title,
+.skill-card__bar-label,
+.monster-card__name,
+.shop-menu__item,
+.gacha__pack-name,
+.tournament__name,
+.tournament__round-label,
+.dungeon-select__name,
+.card-detail__name,
+.settings__heading,
+.new-game__choice,
+.deck__tab,
+.shop-menu__bubble {
+  font-family: var(--font-display);
+}
+
+.screen-header__title {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* ===== 押したときの手応え（2026-10-23）：ボタンが少し沈んで明るくなる ===== */
+.btn,
+.command-btn,
+.shop-menu__item,
+.world__hud .btn--small {
+  transition: transform 80ms ease-out, filter 80ms ease-out;
+}
+
+.btn:not(:disabled):active,
+.command-btn:not(:disabled):active,
+.shop-menu__item:not(:disabled):active,
+.world__hud .btn--small:active {
+  transform: translateY(1px) scale(0.97);
+  filter: brightness(1.18);
+}

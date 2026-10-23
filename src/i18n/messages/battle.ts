@@ -70,6 +70,8 @@ export const BATTLE = {
     en: 'Guard/Dodge cards are used when you are attacked',
   },
   'battle.ng.acted': { ja: '使えるモンスターは行動済みです', en: 'The monster has already acted' },
+  'battle.detail.recent': { ja: '{side}が使ったカード', en: 'Played by {side}' },
+  'battle.showcase': { ja: '{side}の「{card}」！', en: '{side}: {card}!' },
   'battle.status.weaken': { ja: '{stat}−{n}', en: '{stat} -{n}' },
   'battle.status.sealed': { ja: '攻撃不可', en: 'No attack' },
   'battle.ng.sealed': { ja: 'このターンは攻撃できません（すなかけ）', en: "Can't attack this turn (Sand Throw)" },

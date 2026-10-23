@@ -50,7 +50,13 @@ const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
 };
 
 /** 相手の1手ごとの間（ミリ秒） */
-const AI_STEP_MS = 650;
+const AI_STEP_MS = 1100;
+/** 場のモンスターのカードの幅（2026-10-23 に 74→88。場を大きく見せる） */
+const MONSTER_CARD_W = 88;
+/** 使ったカードを大きく見せる時間（2026-10-23。PS版のように「何を使ったか」を見せる） */
+const SHOWCASE_MS = 1150;
+/** 命中したときの一瞬の間（ヒットストップ）と画面の揺れ */
+const HIT_PAUSE_MS = 320;
 /** カードを1枚配る間隔（ミリ秒） */
 const DEAL_MS = 110;
 /** 先攻・後攻のカードをめくってからバトルを始めるまで（ミリ秒） */
@@ -141,6 +147,8 @@ export const battleScreen: ScreenDefinition = {
 
     let state: BattleState | null = null;
     let selectedUid: string | null = null;
+    /** 最後に使われたカード（何も選んでいないとき、中段の拡大の所に出す） */
+    let lastPlayed: { cardId: string; side: Side } | null = null;
     /** 表示済みの手札（新しく来たカードだけを配る演出にする） */
     const shownHand = new Set<string>();
     /** 配っている間は操作と相手の行動を待たせる */
@@ -182,14 +190,45 @@ export const battleScreen: ScreenDefinition = {
 
     const dealing = (): boolean => Date.now() < busyUntil;
 
+    /** 手札のカードを使う・守備に出す行動なら、そのカードと陣営（大きく見せる演出に使う） */
+    const playedCard = (s: BattleState, action: BattleAction): { cardId: string; side: Side } | null => {
+      const uid = action.type === 'useCard' ? action.cardUid : action.type === 'defend' ? action.cardUid : null;
+      if (!uid) return null;
+      const hand = s.sides[action.side].hand.find((c) => c.uid === uid);
+      return hand ? { cardId: hand.cardId, side: action.side } : null;
+    };
+
     const dispatch = (action: BattleAction): void => {
       if (!state) return;
+      const played = playedCard(state, action);
       const next = applyAction(state, action);
       if (next === state) return;
       state = next;
       targeting = null;
       if (selectedUid && !state.sides.player.hand.some((c) => c.uid === selectedUid)) selectedUid = null;
+      if (played) {
+        lastPlayed = played;
+        busyUntil = Math.max(busyUntil, Date.now() + SHOWCASE_MS - 150);
+      }
       render();
+      if (played) showcase(played.cardId, played.side);
+    };
+
+    /**
+     * 使ったカードを画面の真ん中に大きく見せる（技のアニメーションではなく、カードそのものを見せる）。
+     * 見せている間は操作と相手の行動を待たせる
+     */
+    const showcase = (cardId: string, side: Side): void => {
+      const card = getPlayCard(cardId);
+      const el = h(
+        'div',
+        { class: `battle__showcase battle__showcase--${side}` },
+        h('div', { class: 'battle__showcase-band' }),
+        h('div', { class: 'battle__showcase-card' }, createPlayCard(card, { width: 156, showText: true })),
+        h('p', { class: 'battle__showcase-text', text: t('battle.showcase', { side: t(`battle.side.${side}`), card: cardName(card) }) }),
+      );
+      fxLayer.append(el);
+      setTimeout(() => el.remove(), SHOWCASE_MS);
     };
 
     /** いまの画面の拡大率（ステージは拡大縮小されているので、位置の計算に使う） */
@@ -641,7 +680,7 @@ export const battleScreen: ScreenDefinition = {
                 dataset: { uid: m.uid },
                 on: { click: () => tapMonster(side, m) },
               },
-              createMonsterCard(getMonster(m.cardId), { width: 74, life: { current: m.life, max: m.maxLife }, showName: false }),
+              createMonsterCard(getMonster(m.cardId), { width: MONSTER_CARD_W, life: { current: m.life, max: m.maxLife }, showName: false }),
               h('span', { class: 'battle__monster-life', text: String(m.life) }),
               m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: t('battle.monster.acted') }) : null,
               // 吠える（次の技のダメージ−）・すなかけ（次の手番は攻撃できない）がかかっている印
@@ -665,6 +704,8 @@ export const battleScreen: ScreenDefinition = {
     const detailPanel = (s: BattleState): HTMLElement => {
       const hand = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
       const card = hand ? getPlayCard(hand.cardId) : undefined;
+      // 何も選んでいないときは、直前に使われたカードを出す（空の枠を見せない）
+      const recent = !card && lastPlayed ? getPlayCard(lastPlayed.cardId) : undefined;
       const logs = s.log.slice(-2).map((l) => h('p', { class: 'battle-text__log', text: l.text }));
       let body: (HTMLElement | null)[];
       if (targeting) {
@@ -734,7 +775,16 @@ export const battleScreen: ScreenDefinition = {
         h(
           'div',
           { class: 'battle-detail__card' },
-          card ? createPlayCard(card, { width: 136, showText: true }) : h('div', { class: 'battle-detail__empty', text: t('battle.detail.empty') }),
+          card
+            ? createPlayCard(card, { width: 136, showText: true })
+            : recent && lastPlayed
+              ? h(
+                  'div',
+                  { class: 'battle-detail__recent' },
+                  h('span', { class: 'battle-detail__recent-label', text: t('battle.detail.recent', { side: t(`battle.side.${lastPlayed.side}`) }) }),
+                  createPlayCard(recent, { width: 124, showText: true }),
+                )
+              : h('div', { class: 'battle-detail__empty', text: t('battle.detail.empty') }),
         ),
       );
     };
@@ -1001,6 +1051,15 @@ export const battleScreen: ScreenDefinition = {
       for (const fx of s.fx) {
         if (fx.seq <= lastFxSeq) continue;
         sound.play(FX_SOUND[fx.kind]);
+        // 命中：画面を揺らし、一瞬だけ次の行動を待たせる（ヒットストップ）
+        if (fx.kind === 'hitNormal' || fx.kind === 'hitStrong') {
+          const cls = fx.kind === 'hitStrong' ? 'is-shake-strong' : 'is-shake';
+          element.classList.remove('is-shake', 'is-shake-strong');
+          void element.offsetWidth;
+          element.classList.add(cls);
+          setTimeout(() => element.classList.remove(cls), 420);
+          busyUntil = Math.max(busyUntil, Date.now() + HIT_PAUSE_MS);
+        }
       }
       lastFxSeq = s.fxSeq;
     };

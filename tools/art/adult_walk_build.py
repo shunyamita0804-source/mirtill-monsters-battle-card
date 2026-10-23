@@ -23,6 +23,8 @@
 --diag：斜め向きの4行を足す（主人公だけ。2026-10-23 追加）。行は 正面・背中・左・右・左下・右下・左上・右上 の8行になる。
   届く絵は1枚に1ポーズ：{ID}_{downleft,upleft}_{stand,rightfoot,leftfoot}.png（1024×1024 か 1254×1254）。
   絵ごとに大きさが違うので、1枚ずつ背の高さ（頭のてっぺん〜足元）を FIGURE_H にそろえる。右下・右上は左下・左上の左右反転
+--outline N：人物のまわりに N px の暗い輪郭を付ける（2026-10-23 追加）。背景の描き込みが強い街・部屋で人物が埋もれないように。
+  同じ日に --tone（色を落ち着かせる）はやめた（背景を描き直して色の調整を外したので、人物だけがくすんで見えたため）
 """
 import sys
 
@@ -154,16 +156,32 @@ def tone(im: Image.Image) -> Image.Image:
     return Image.fromarray(np.round(out * 255).astype(np.uint8), 'RGBA')
 
 
+def outline(im: Image.Image, width: int) -> Image.Image:
+    """人物のまわりに暗い輪郭（こげ茶、少し透ける）を付ける。絵そのものは変えず、後ろに輪郭を敷く"""
+    a = np.asarray(im)[..., 3] > 40
+    yy, xx = np.mgrid[-width:width + 1, -width:width + 1]
+    disk = (xx * xx + yy * yy) <= width * width + 0.5
+    grown = ndimage.binary_dilation(a, structure=disk)
+    soft = ndimage.gaussian_filter(grown.astype(np.float64), 0.6)
+    layer = np.zeros((*a.shape, 4), dtype=np.uint8)
+    layer[..., 0], layer[..., 1], layer[..., 2] = 34, 22, 14
+    layer[..., 3] = np.clip(soft * 215, 0, 255).astype(np.uint8)
+    base = Image.fromarray(layer, 'RGBA')
+    base.alpha_composite(im)
+    return base
+
+
 def main() -> None:
     args = sys.argv[1:]
     npc = '--npc' in args
     idle_out = args[args.index('--idle') + 1] if '--idle' in args else None
     scale_arg = args[args.index('--scale') + 1] if '--scale' in args else None
+    outline_arg = args[args.index('--outline') + 1] if '--outline' in args else None
     if scale_arg:
         global FW, FH, FOOT_X, FOOT_Y, FIGURE_H
         sc = float(scale_arg)
         FW, FH, FOOT_X, FOOT_Y, FIGURE_H = (round(v * sc) for v in (FW, FH, FOOT_X, FOOT_Y, FIGURE_H))
-    folder, cid, out_path = [a for a in args if not a.startswith('--') and a not in (idle_out, scale_arg)][:3]
+    folder, cid, out_path = [a for a in args if not a.startswith('--') and a not in (idle_out, scale_arg, outline_arg)][:3]
     rows = []
     k = FIGURE_H / figure_height(Image.open(f'{folder}/{cid}_walk_front.png').convert('RGBA'))
     for d in ('front', 'back', 'left'):
@@ -184,6 +202,8 @@ def main() -> None:
             out.alpha_composite(f, (c * FW, r * FH))
     if '--tone' in args:
         out = tone(out)
+    if outline_arg:
+        out = outline(out, int(outline_arg))
     if out_path.endswith('.webp'):
         out.save(out_path, quality=92, method=6)
     else:

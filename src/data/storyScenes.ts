@@ -40,7 +40,7 @@ export const INTRO_STATES: readonly IntroState[] = [
 export type Expression = 'normal' | 'smile' | 'explain' | 'surprised' | 'troubled' | 'happy';
 
 /** 話している人。system は地の文（名前の札なし）。住人は会話の絵が無いので名前の札だけ */
-export type Speaker = 'neighbor_guide' | ResidentId | 'teacher' | 'system';
+export type Speaker = 'neighbor_guide' | ResidentId | 'teacher' | 'clerk' | 'receptionist' | 'researcher' | 'system';
 
 /** 住人の会話の場面（話しかけるたびに 1・2 を交互に） */
 export type ResidentSceneId = `${ResidentId}_${1 | 2}`;
@@ -63,6 +63,9 @@ export type SceneId =
   | 'afterReplay'
   | 'tableOffer'
   | 'afterTable'
+  | 'greetClerk'
+  | 'greetReceptionist'
+  | 'greetResearcher'
   | ResidentSceneId;
 
 /** 場面の終わり（またはスキップ）にすること */
@@ -196,6 +199,10 @@ export const SCENES: Readonly<Record<SceneId, Scene>> = {
     skipEffects: [],
   },
   afterTable: { id: 'afterTable', steps: [system('story.sys.practiceDone')] },
+  // 【仮】店員・受付・研究員に話しかけたときのひと言（2026-10-23。台詞は仮）。終わったらその画面を開く
+  greetClerk: { id: 'greetClerk', steps: [{ kind: 'line', text: 'story.greet.clerk', speaker: 'clerk' }], skipEffects: [] },
+  greetReceptionist: { id: 'greetReceptionist', steps: [{ kind: 'line', text: 'story.greet.receptionist', speaker: 'receptionist' }], skipEffects: [] },
+  greetResearcher: { id: 'greetResearcher', steps: [{ kind: 'line', text: 'story.greet.researcher', speaker: 'researcher' }], skipEffects: [] },
   ...residentScenes(),
 };
 

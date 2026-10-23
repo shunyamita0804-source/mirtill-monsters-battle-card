@@ -18,6 +18,15 @@ export function startApp(root: HTMLElement, store: GameStore = GameStore.fromBro
   // iPhone は最初のタップまで音を鳴らせないので、タップで効果音・BGM を使えるようにする
   sound.installUnlock();
   bgm.installUnlock();
+  // ボタンを押したときの小さな音（2026-10-23。押せないボタン・カードの手札は除く）
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      const target = e.target instanceof Element ? e.target.closest('button') : null;
+      if (target && !target.disabled && !target.closest('.battle__hand')) sound.tap();
+    },
+    { passive: true },
+  );
   const router = new Router<ScreenId>(INITIAL_SCREEN);
   let current: ScreenInstance | null = null;
 
