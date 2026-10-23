@@ -21,7 +21,7 @@ import iconDeck from '@assets/images/ui/battle/icon_deck.webp';
 import iconHand from '@assets/images/ui/battle/icon_hand.webp';
 import iconMana from '@assets/images/ui/battle/icon_mana.webp';
 import { opponentFace } from '../components/opponentFace.ts';
-import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy } from '../../game/cards/cardTypes.ts';
+import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy, type PlayCard } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { nextBattleHint, type BattleHintId } from '../../game/story/battleTutorial.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
@@ -48,6 +48,22 @@ const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
   hitNormal: 'hitNormal',
   hitStrong: 'hitStrong',
 };
+
+/** 使ったカードを大きく見せるときの音（カードの種類ごと） */
+function showcaseSound(card: PlayCard): SoundId {
+  if (card.kind === 'support') return 'cardSupport';
+  switch (card.effect.type) {
+    case 'defense':
+      return 'cardGuard';
+    case 'evade':
+      return 'cardEvade';
+    case 'weaken':
+    case 'seal':
+      return 'cardSpecial';
+    default:
+      return 'cardAttack';
+  }
+}
 
 /** 相手の1手ごとの間（ミリ秒） */
 const AI_STEP_MS = 1100;
@@ -229,6 +245,7 @@ export const battleScreen: ScreenDefinition = {
       );
       fxLayer.append(el);
       setTimeout(() => el.remove(), SHOWCASE_MS);
+      sound.play(showcaseSound(card));
     };
 
     /** いまの画面の拡大率（ステージは拡大縮小されているので、位置の計算に使う） */
@@ -1185,7 +1202,13 @@ export const battleScreen: ScreenDefinition = {
       syncSwipeGhost();
       playEffects(s);
       for (const side of ['player', 'opponent'] as const) {
-        for (const m of s.sides[side].monsters) prevLife.set(m.uid, m.life);
+        for (const m of s.sides[side].monsters) {
+          // 倒れた・回復した瞬間の音（描き直しでは鳴らさない：前回のライフと比べる）
+          const before = prevLife.get(m.uid);
+          if (before !== undefined && before > 0 && m.life === 0) sound.play('knockout', 260);
+          else if (before !== undefined && m.life > before) sound.play('heal');
+          prevLife.set(m.uid, m.life);
+        }
       }
       element.dataset.phase = s.phase;
       element.dataset.active = s.active;

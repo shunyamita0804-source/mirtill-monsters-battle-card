@@ -10,6 +10,13 @@ import evadeMp3 from '@assets/audio/se/evade_success.mp3';
 import hitNormalMp3 from '@assets/audio/se/hit_normal.mp3';
 import hitStrongMp3 from '@assets/audio/se/hit_strong.mp3';
 import manaSpendMp3 from '@assets/audio/se/mana_spend.mp3';
+import cardAttackMp3 from '@assets/audio/se/card_attack.mp3';
+import cardGuardMp3 from '@assets/audio/se/card_guard.mp3';
+import cardSpecialMp3 from '@assets/audio/se/card_special.mp3';
+import cardSupportMp3 from '@assets/audio/se/card_support.mp3';
+import cardEvadeMp3 from '@assets/audio/se/card_evade.mp3';
+import knockoutMp3 from '@assets/audio/se/knockout.mp3';
+import healMp3 from '@assets/audio/se/heal.mp3';
 
 /**
  * 効果音（SE）。
@@ -21,7 +28,22 @@ import manaSpendMp3 from '@assets/audio/se/mana_spend.mp3';
  * - 音が鳴らせない環境では何もしない（ゲームは止めない）
  * - 設定の効果音の音量（0〜1）を SE_REGISTRY の gain に掛ける。0（ミュート含む）なら鳴らさない
  */
-export type SoundId = 'cardDraw' | 'turnOrderSelect' | 'manaGain' | 'manaConvert' | 'evade' | 'hitNormal' | 'hitStrong' | 'manaSpend';
+export type SoundId =
+  | 'cardDraw'
+  | 'turnOrderSelect'
+  | 'manaGain'
+  | 'manaConvert'
+  | 'evade'
+  | 'hitNormal'
+  | 'hitStrong'
+  | 'manaSpend'
+  | 'cardAttack'
+  | 'cardGuard'
+  | 'cardSpecial'
+  | 'cardSupport'
+  | 'cardEvade'
+  | 'knockout'
+  | 'heal';
 
 type SoundEntry = (
   | {
@@ -55,6 +77,15 @@ export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   hitStrong: { mp3: hitStrongMp3, gain: 1.0 },
   // マナを支払った（技・サポート・守備のカードを使った）：効果音ラボ「ワープ」。マナ化（増える）では鳴らさない
   manaSpend: { mp3: manaSpendMp3, gain: 1.0 },
+  // 2026-10-23 ユーザー提供の効果音（ZIP「Downloads」。ファイル名から効果音ラボの素材とみられる。docs/audio-credits.md）
+  // 使ったカードを大きく見せるとき（種類ごと）・守備・倒れた・回復
+  cardAttack: { mp3: cardAttackMp3, gain: 1.0 },
+  cardGuard: { mp3: cardGuardMp3, gain: 0.7 },
+  cardSpecial: { mp3: cardSpecialMp3, gain: 0.6 },
+  cardSupport: { mp3: cardSupportMp3, gain: 0.6 },
+  cardEvade: { mp3: cardEvadeMp3, gain: 1.2 },
+  knockout: { mp3: knockoutMp3, gain: 0.8 },
+  heal: { mp3: healMp3, gain: 0.6 },
 };
 
 type AudioContextCtor = typeof AudioContext;
