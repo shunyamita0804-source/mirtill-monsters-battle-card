@@ -1,0 +1,98 @@
+【プロンプト】斜め向きの歩きの絵（1枚に3ポーズ）　横長 1536×1024　×2枚（斜め前・斜め後ろ）（2026-10-23）
+
+■ なぜ頼むか
+・街ではスティックで斜めにも歩けるが、斜め向きの絵が無いので、正面・背中・横の絵のまま斜めに進み、体が横にすべって見える（ユーザー「斜め移動がかなりチープ」）
+・斜め向きの絵が届いたら、斜めに歩くときはその絵に切り替える
+・頼むのは左の斜め2つだけ。右の斜めは Claude が左右反転して作る
+　　斜め前（左下へ歩いてくる）→ 反転して右下
+　　斜め後ろ（左上へ歩いていく）→ 反転して右上
+
+■ 頼む順番
+1. まず主人公（男性）の「斜め前」1枚 → Claude がゲームに入れて動画で返す → よければ残り
+2. 主人公（男性）の「斜め後ろ」→ 主人公（女性）の2枚
+・街を歩き回るのは主人公だけなので、ほかの人の分はいらない
+・「半歩」の絵（docs/design/walk-inbetween-20261023）や走る絵（docs/design/run-20261023）を頼むときは、
+　同じ要領で斜め2つもあとで頼める（まずは歩きの3ポーズだけ）
+
+■ 添付するもの（1枚ごと）
+・前に作った正面の歩きの絵（player_male_walk_front.png）と左向きの歩きの絵（player_male_walk_left.png）← いちばん大事
+・斜め後ろを頼むときは、背中の歩きの絵（player_male_walk_back.png）も
+・その人の正面の立ち姿（例：player_male_stand.png）
+・T2_歩きの3ポーズの枠_1536x1024.png（このフォルダに入れてある。前の依頼と同じ枠）
+・画風見本 style_master.png（あれば）
+
+■ 納品のしかた
+・保存名：○○_walk_downleft.png（斜め前）／○○_walk_upleft.png（斜め後ろ）（○○ は player_male・player_female）
+・背景は透明（できなければマゼンタ一色 #FF00FF）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 日本語
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の、街を歩く人物の絵の続きを描いてください。
+添付の「歩きの絵」（正面・左向き・背中）は、すでにゲームで使っている同じ人物の絵です。この人物が斜めの向きに歩く絵を描きます。
+
+【描くもの】横長 1536×1024。添付の枠のとおり、横に3つ並べる。左から「1 立つ」「2 右足を前に出す」「3 左足を前に出す」
+・3つとも同じ斜めの向き（【向き】のとおり）。正面と左向きのちょうど中間（45度）の角度
+・2と3は足の形をはっきり変える（前に出した足と後ろの足が見分けられるように）。腕は足と反対に軽く振る
+・斜め上から少し見下ろす視点（添付の歩きの絵と同じ）
+
+【いちばん大事なこと】
+・添付の歩きの絵と、まったく同じ人物・同じ絵。顔・髪型・帽子・服の模様・飾り・持ち物・色・線の太さ・塗り方を変えない
+・同じ頭身・同じ大きさ。頭の上と足元を枠の線にそろえる。体の中心は点線
+・かばんや飾りの位置は、正面と左向きの絵で見えている位置と矛盾しないように
+
+【画風】添付の絵と同じ。筆で塗り重ねた手描きの質感。輪郭は濃い茶色系の線。ベクター風・フラット・3DCG風は禁止
+【禁止】文字・数字・ロゴ・透かし・サイン。地面・影・背景・枠の線と文字・ほかの人物。3人が重ならない
+【形式】背景は透明（できなければマゼンタ一色 #FF00FF）。PNG
+
+【向き】斜め前（画面の左下へ歩いてくる。顔と体の正面が見え、体の左側も少し見える）
+【人物】22歳の男性。黒い短めの髪（少し無造作）。青い帽子（正面に小さな金の紋章）。青い袖なしの長いベストに金の縁取り、白いシャツは袖をまくる。茶色の革のたすき掛けのベルト、腰に茶色のかばん。濃い灰色のズボン、茶色のロングブーツ、指なしの革手袋
+▲ここまで
+
+【向き】の差し替え（保存名）：
+・斜め前（画面の左下へ歩いてくる。顔と体の正面が見え、体の左側も少し見える）→ ○○_walk_downleft.png
+・斜め後ろ（画面の左上へ歩いていく。背中が見え、顔は横顔が少し見える程度）→ ○○_walk_upleft.png
+
+【人物】の差し替え：
+・主人公（男性）player_male：上の文のまま
+・主人公（女性）player_female：22歳の女性。明るい茶色の長い髪（ゆるいウェーブ）。赤い帽子（リボン付き）。白いブラウス（ふくらんだ短い袖）に、金の刺しゅうの赤いベスト、茶色の革ベルト。白いフリルの上に赤と金のスカート、黒いタイツ、茶色の編み上げのロングブーツ、腰に小さな革のかばん、指なしの革手袋
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ English version
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼
+Continue the walking sprite of a character for the commercial smartphone 2D card game "Sacred Monsters Battle Card".
+The attached walk sheets (front, left, back) show the same character already used in the game. Draw this character walking in a DIAGONAL direction.
+
+[What to draw] Landscape 1536x1024. Three figures side by side, as in the attached guide frame. From left: "1 standing", "2 right foot forward", "3 left foot forward".
+- All three face the same diagonal direction (see [Direction]), exactly halfway (45 degrees) between the front view and the left side view.
+- Poses 2 and 3 must clearly show different leg positions. Arms swing lightly opposite to the legs.
+- Seen slightly from above, the same camera angle as the attached walk sheets.
+
+[Most important]
+- Exactly the same character and the same drawing as the attached walk sheets. Do NOT change the face, hair, cap, clothing patterns, decorations, items, colors, line weight or painting style.
+- Same proportions and size. Top of head and feet on the guide lines; body centered on the dotted line.
+- Keep the satchel and decorations consistent with where they appear in the front and left views.
+
+[Style] Same as the attached images: hand-painted, layered brush strokes, dark-brown outlines. NO flat vector art, NO 3D render look.
+[Forbidden] Any text, numbers, logos, watermarks, signatures. Ground, shadows, background, guide lines or labels, other people. The three figures must not overlap.
+[Format] Transparent background (if impossible, solid magenta #FF00FF). PNG.
+
+[Direction] Three-quarter front view, walking toward the viewer and to the LEFT of the screen (face and front of the body visible, a little of the left side visible)
+[Character] A 22-year-old man. Short, slightly messy black hair. Blue cap with a small gold emblem on the front. Long sleeveless blue vest with gold trim over a white shirt with rolled-up sleeves. Brown leather cross-body straps, brown satchel at the hip. Dark gray trousers, tall brown boots, fingerless leather gloves.
+▲
+[Direction] options:
+ "Three-quarter front view, walking toward the viewer and to the LEFT of the screen (face and front of the body visible, a little of the left side visible)" → ○○_walk_downleft.png
+ "Three-quarter back view, walking away and to the LEFT of the screen (back visible, only a hint of the face in profile)" → ○○_walk_upleft.png
+[Character] female hero: A 22-year-old woman. Long, softly wavy light-brown hair. Red cap with a ribbon. White blouse with short puffed sleeves, red vest with gold embroidery, brown leather belts. Red-and-gold skirt over white frills, black tights, tall brown lace-up boots, small leather pouch at the hip, fingerless leather gloves.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ うまくいかないとき（続けて送る一言）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・真正面や真横になった →「正面と横向きのちょうど中間、45度の斜めに」
+・左右が逆になった →「画面の左へ向かって歩くように。体の左側が見える向きに」
+・人物が変わった（顔・服・色）→「添付の歩きの絵とまったく同じ人物に」
+・2と3の足が同じ →「2は右足を大きく前、3は左足を大きく前に。足の形をはっきり変えて」
+・大きさがばらばら →「3人とも頭の上と足元を枠の線にそろえて、同じ大きさに」
+・背景がついた →「背景を透明に（できなければマゼンタ一色 #FF00FF）」
