@@ -76,10 +76,10 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
         // 画面が描き直されても押せるよう、押す瞬間に探す（マナにするカードは飛んでいく演出のあいだ待つ）
         if (await page.$('.battle__hand-card')) {
           await page.click('.battle__hand-card >> nth=0');
-          await page.click('.battle__command-band >> text=マナにする', { timeout: 2000 }).catch(() => {});
+          await page.click('.battle__commands >> text=マナにする', { timeout: 2000 }).catch(() => {});
           await page.waitForTimeout(500);
         }
-        await page.click('.battle__command-band >> text=ターン終了'); manualActions++; continue;
+        await page.click('.battle__commands >> text=ターン終了'); manualActions++; continue;
       }
       if (st.acting !== 'player' || st.phase !== 'main') continue;
       // 使えるカードを選ぶ → 拡大表示 → 使う → 対象選択
@@ -89,7 +89,7 @@ const waitScreen = (page, id) => page.waitForFunction((id) => document.querySele
       if (!card) { await page.click('.battle-turn__end'); manualActions++; continue; }
       await card.click(); sawPreview = true;
       if (manualActions < 2) await page.screenshot({ path: `${OUT}/manual-preview-${manualActions}.png` });
-      await page.click('.battle__command-band >> text=使う'); manualActions++;
+      await page.click('.battle__commands >> text=使う'); manualActions++;
       await page.waitForTimeout(100);
       const target = await page.$('.battle__monster.is-target');
       if (target) { sawTarget = true; if (manualActions < 4) await page.screenshot({ path: `${OUT}/manual-target.png` }); await target.click({ force: true }); }

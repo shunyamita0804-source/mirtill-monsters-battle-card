@@ -1420,3 +1420,163 @@
 .battle__hand-card {
   width: 60px;
 }
+
+/* ===== 2026-10-23 配置の見直し（2回目・ユーザーの指示図）=====
+ * 上：相手の顔の絵とひと言・手札（裏向き）／相手のモンスターの右に相手の情報／自分のモンスターの左に自分の情報／
+ * 説明の箱の下にいまできるコマンド（中央の帯はやめた）／その他のコマンドは上の帯の「コマンド」で開く一覧
+ */
+.battle-opp {
+  gap: 8px;
+  padding: 4px 10px 0;
+}
+
+.battle-opp__talk {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.battle-opp__talk .opponent-face {
+  box-shadow: 0 0 0 2px rgb(201 162 74 / 0.95), 0 2px 6px rgb(0 0 0 / 0.6);
+}
+
+.battle-opp__noface {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-opponent);
+  color: #2a0a10;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* 吹き出し（左に小さなしっぽ） */
+.battle-opp__line {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding: 5px 10px;
+  border: 1px solid rgb(201 162 74 / 0.8);
+  border-radius: 10px;
+  background: rgb(245 236 214 / 0.95);
+  color: #2a2014;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.battle-opp__line::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-left: 1px solid rgb(201 162 74 / 0.8);
+  border-bottom: 1px solid rgb(201 162 74 / 0.8);
+  background: inherit;
+  transform: rotate(45deg);
+}
+
+.battle-opp__line.is-empty {
+  background: rgb(20 22 28 / 0.75);
+  color: var(--color-sub);
+}
+
+/* 相手の手札：裏向きのカードを少し重ねて */
+.battle-opp__hand {
+  flex: none;
+  justify-content: flex-end;
+  gap: 0;
+  padding-left: 12px;
+}
+
+.battle-opp__back {
+  flex: none;
+  width: 26px;
+  height: 37px;
+  margin-left: -12px;
+  border-radius: 3px;
+  background: url('@assets/images/ui/card_back.webp') center / 100% 100% no-repeat;
+  box-shadow: -1px 1px 3px rgb(0 0 0 / 0.6);
+}
+
+/* 場：モンスターを真ん中に、情報の箱は相手＝右・自分＝左 */
+.battle-side {
+  align-items: center;
+  gap: 10px;
+}
+
+.battle-side .battle-info {
+  width: 92px;
+  align-self: center;
+}
+
+.battle-side__monsters {
+  gap: 8px;
+}
+
+/* 説明の箱の下のコマンド（小さく横に並べる） */
+.battle__commands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding: 4px 0 2px;
+}
+
+.battle__commands .command-btn {
+  width: 104px;
+  height: 36px;
+}
+
+.battle__commands .command-btn__label {
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+.battle__commands.is-enter {
+  animation: cmd-pop 180ms ease-out both;
+}
+
+@keyframes cmd-pop {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* コマンドの一覧（上の帯の「コマンド」で開く） */
+.battle__cmd-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  background: rgb(6 7 9 / 0.35);
+}
+
+.battle__cmd-list {
+  position: absolute;
+  right: 10px;
+  top: 82px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 12px solid transparent;
+  border-image: url('@assets/images/ui/frame/window_frame.webp') 50 fill / 12px / 0 stretch;
+  animation: cmd-pop 160ms ease-out both;
+}
+
+.battle__cmd-list .command-btn {
+  width: 140px;
+  height: 46px;
+}
+
+.battle-turn__cmd.is-open {
+  filter: brightness(1.25);
+}
