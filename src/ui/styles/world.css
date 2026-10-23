@@ -115,11 +115,8 @@
   -webkit-user-drag: none;
 }
 
-/* 2026-10-23：大人向けに、人物などの絵の色を少し落ち着かせる（彩度を下げ、わずかに暗く）。
-   街・部屋・家具は大人向けに描き直した絵（2026-10-23 納品）が落ち着いた色なので、色の調整はしない。
-   人物の描き直しが届いたら、人物の値も見直す */
-.world__map--art .world__player,
-.world__map--art .world__npc,
+/* 2026-10-23：大人向けに、宝箱の絵の色を少し落ち着かせる（彩度を下げ、わずかに暗く）。
+   人物は同じ色の調整を絵に焼き込んだ（tools/art/adult_walk_build.py --tone）。filter のままだと歩くたびに描き直しが重く、iPhone でコマが飛んだ */
 .world__map--art .world__chest {
   filter: saturate(0.72) brightness(0.94) contrast(1.06);
 }
@@ -328,6 +325,12 @@
   left: 0;
   background-repeat: no-repeat;
   pointer-events: none;
+}
+
+/* 主人公と足元の影は毎コマ動くので、地図とは別の層にして、動かすだけで描き直さないように */
+.world__player,
+.world__shadow--player {
+  will-change: transform;
 }
 
 /* 移動のスティック：指を置いた所に、触っている間だけ半透明で出る */

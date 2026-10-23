@@ -15,8 +15,11 @@
 使い方:
   python3 tools/art/adult_walk_build.py 届いた絵のフォルダ ID 出力.png [--npc] [--idle 立ち絵の出力.png] [--scale 倍率]
 
---scale：コマの大きさの倍率（2026-10-23 追加）。1.5 なら 1コマ 324×432・足元 (162, 405)。並び・位置の割合は同じなので、
-  ゲームはそのまま読める。人物を大きく表示してもぼやけないように、ゲームのシートは 1.5 で作る（出力は .webp）
+--scale：コマの大きさの倍率（2026-10-23 追加）。1.25 なら 1コマ 270×360・足元 (135, 338)。並び・位置の割合は同じなので、
+  ゲームはそのまま読める。人物を大きく表示してもぼやけないように、ゲームのシートは 1.25 で作る（出力は .webp）。
+  1.5 も試したが、iPhone で絵が大きすぎて歩くときにコマが飛んだ（2026-10-23）
+--tone：大人向けの色の落ち着かせ（彩度 0.72・明るさ 0.94・コントラスト 1.06）を絵に焼き込む（2026-10-23 追加）。
+  それまでは CSS の filter で毎回計算していて、歩くたびに描き直しが重くなっていた
 """
 import sys
 
@@ -108,6 +111,23 @@ def figure_height(sheet: Image.Image) -> int:
     return int(ys[-1] - ys[0])
 
 
+def tone(im: Image.Image) -> Image.Image:
+    """CSS の filter: saturate(0.72) brightness(0.94) contrast(1.06) と同じ計算（sRGB のまま）"""
+    a = np.asarray(im).astype(np.float64) / 255
+    rgb, al = a[..., :3], a[..., 3:]
+    s = 0.72
+    m = np.array([
+        [0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s],
+        [0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s],
+        [0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s],
+    ])
+    rgb = np.clip(rgb @ m.T, 0, 1)
+    rgb = np.clip(rgb * 0.94, 0, 1)
+    rgb = np.clip((rgb - 0.5) * 1.06 + 0.5, 0, 1)
+    out = np.concatenate([rgb, al], axis=-1)
+    return Image.fromarray(np.round(out * 255).astype(np.uint8), 'RGBA')
+
+
 def main() -> None:
     args = sys.argv[1:]
     npc = '--npc' in args
@@ -130,6 +150,8 @@ def main() -> None:
     for r, frames in enumerate(rows):
         for c, f in enumerate(frames):
             out.alpha_composite(f, (c * FW, r * FH))
+    if '--tone' in args:
+        out = tone(out)
     if out_path.endswith('.webp'):
         out.save(out_path, quality=92, method=6)
     else:

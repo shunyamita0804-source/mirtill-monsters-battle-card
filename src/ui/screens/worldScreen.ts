@@ -329,14 +329,17 @@ class WorldView {
     const k = this.#figureH / (FRAME_H / 2);
     const f = this.#foot(p);
     el.style.transform = `translate(${f.x - (FOOT_X / 2) * k}px, ${f.y - (FOOT_Y / 2) * k - lift}px)`;
-    el.style.zIndex = String(10 + Math.round(f.y));
+    // 変わったときだけ書く（毎コマ書くと、iPhone で重なり順の計算し直しが重くなる）
+    const z = String(10 + Math.round(f.y));
+    if (el.style.zIndex !== z) el.style.zIndex = z;
     const shadow = this.#shadows.get(el);
     if (shadow) shadow.style.transform = `translate(${f.x}px, ${f.y}px)`;
   }
 
   /** 人物の足元の影（地面に置く。家具・人物より奥） */
   #addShadow(el: HTMLElement): void {
-    const shadow = h('div', { class: 'world__shadow', attrs: { 'aria-hidden': 'true' } });
+    const cls = el === this.#player ? 'world__shadow world__shadow--player' : 'world__shadow';
+    const shadow = h('div', { class: cls, attrs: { 'aria-hidden': 'true' } });
     const w = this.#figureH * 0.5;
     Object.assign(shadow.style, { width: `${w}px`, height: `${w * 0.32}px`, marginLeft: `${-w / 2}px`, marginTop: `${-w * 0.16}px` });
     this.#shadows.set(el, shadow);
@@ -813,8 +816,10 @@ class WorldView {
         sign.el.style.transform = `translate(-50%, calc(-100% + ${shift.toFixed(1)}px))`;
       }
     }
-    this.#root.dataset.px = String(this.#tile.x);
-    this.#root.dataset.py = String(this.#tile.y);
+    const px = String(this.#tile.x);
+    const py = String(this.#tile.y);
+    if (this.#root.dataset.px !== px) this.#root.dataset.px = px;
+    if (this.#root.dataset.py !== py) this.#root.dataset.py = py;
     if (!this.#move) this.#updateNear();
   }
 
