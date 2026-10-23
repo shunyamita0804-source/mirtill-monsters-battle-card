@@ -84,12 +84,30 @@ export const WORLD = {
   },
 
   // ダンジョン選択（家の壁の地図・街のダンジョン入口）
-  'world.dungeonSelect.title': { ja: 'ダンジョン選択', en: 'Choose a Dungeon' },
-  'world.dungeonSelect.header': { ja: '壁の地図', en: 'Wall Map' },
+  'world.dungeonSelect.title': { ja: '世界地図', en: 'World Map' },
+  'world.dungeonSelect.header': { ja: '世界地図', en: 'World Map' },
   'world.dungeonSelect.notice': {
-    ja: '行き先を選んでください。敵に触れるとバトル。負けても家に戻るだけで、何度でも挑戦できます。',
-    en: 'Choose where to go. Touch an enemy to battle. If you lose, you just go home, so try as often as you like.',
+    ja: '丸い印を押すと、行き先を選べます。敵に触れるとバトル。負けても家に戻るだけで、何度でも挑戦できます。',
+    en: 'Tap a round marker to choose where to go. Touch an enemy to battle. If you lose, you just go home, so try as often as you like.',
   },
+  'world.dungeonSelect.viewNotice': {
+    ja: '丸い印を押すと、その場所のことが分かります。ダンジョンへは、街の南の出口から出発します。',
+    en: 'Tap a round marker to learn about the place. Dungeons are reached from the south exit of town.',
+  },
+  'world.dungeonSelect.viewOnly': { ja: '街の南の出口から出発できます', en: 'Set out from the south exit of town' },
+  'world.dungeonSelect.here': { ja: '現在地', en: 'You are here' },
+  'world.dungeonSelect.town': { ja: '街', en: 'Town' },
+  'world.dungeonSelect.townDesc': {
+    ja: '主人公の住む街。カードショップや大会会場がある。（仮）',
+    en: 'The town where you live, with a card shop and a tournament hall. (Temp)',
+  },
+  // 地方の名前（ミスモン本編の世界地図と同じ。英語は仮訳）
+  'world.region.ferna': { ja: 'フェルナ地方', en: 'Ferna' },
+  'world.region.nordis': { ja: 'ノルディス地方', en: 'Nordis' },
+  'world.region.asteria': { ja: 'アステリア地方', en: 'Asteria' },
+  'world.region.ortiga': { ja: 'オルティガ地方', en: 'Ortiga' },
+  'world.region.seiran': { ja: 'セイラン地方', en: 'Seiran' },
+  'world.region.nebrasia': { ja: 'ネブラシア地方', en: 'Nebrasia' },
   'world.dungeonSelect.deckInvalid': {
     ja: 'デッキの構成が正しくありません。机でデッキを確認してください。',
     en: "Your deck isn't valid. Please check it at the desk.",
