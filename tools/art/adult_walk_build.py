@@ -20,6 +20,9 @@
   1.5 も試したが、iPhone で絵が大きすぎて歩くときにコマが飛んだ（2026-10-23）
 --tone：大人向けの色の落ち着かせ（彩度 0.72・明るさ 0.94・コントラスト 1.06）を絵に焼き込む（2026-10-23 追加）。
   それまでは CSS の filter で毎回計算していて、歩くたびに描き直しが重くなっていた
+--diag：斜め向きの4行を足す（主人公だけ。2026-10-23 追加）。行は 正面・背中・左・右・左下・右下・左上・右上 の8行になる。
+  届く絵は1枚に1ポーズ：{ID}_{downleft,upleft}_{stand,rightfoot,leftfoot}.png（1024×1024 か 1254×1254）。
+  絵ごとに大きさが違うので、1枚ずつ背の高さ（頭のてっぺん〜足元）を FIGURE_H にそろえる。右下・右上は左下・左上の左右反転
 """
 import sys
 
@@ -105,6 +108,29 @@ def poses(sheet: Image.Image, k: float) -> list[Image.Image]:
     return [place(wins[0], cx, k)] + [place(w, cx - body_shift(ref, alpha(w)), k) for w in wins[1:]]
 
 
+def diag_poses(folder: str, cid: str, d: str) -> list[Image.Image]:
+    """斜め向き（d＝downleft / upleft）の 立つ・右足を前・左足を前 の3コマ。
+    1枚ずつ背の高さを FIGURE_H にそろえ、足を出した2つは上半身が「立つ」と重なる位置に"""
+    ims = [Image.open(f'{folder}/{cid}_{d}_{p}.png').convert('RGBA') for p in ('stand', 'rightfoot', 'leftfoot')]
+    heights = []
+    for im in ims:
+        ys = np.nonzero(alpha(im).any(axis=1))[0]
+        heights.append(int(ys[-1] - ys[0]))
+    # 上半身の重なりは、背の高さをそろえた（REF_H）大きさの形で比べる
+    REF_H = 860
+    norm = [REF_H / hh for hh in heights]
+    masks = [np.array(Image.fromarray(alpha(im)).resize((round(im.width * n), round(im.height * n)), Image.NEAREST)) for im, n in zip(ims, norm)]
+    w = max(m.shape[1] for m in masks)
+    hh = max(m.shape[0] for m in masks)
+    padded = [np.pad(m, ((0, hh - m.shape[0]), (0, w - m.shape[1]))) for m in masks]
+    cx = body_center(padded[0])
+    out = []
+    for i, (im, n) in enumerate(zip(ims, norm)):
+        anchor = cx if i == 0 else cx - body_shift(padded[0], padded[i])
+        out.append(place(im, anchor / n, FIGURE_H / heights[i]))
+    return out
+
+
 def figure_height(sheet: Image.Image) -> int:
     """正面の「立つ」ポーズの人物の高さ（頭のてっぺん〜足元）"""
     ys = np.nonzero(alpha(split_poses(sheet)[0]).any(axis=1))[0]
@@ -145,8 +171,14 @@ def main() -> None:
         stand, right_fwd, left_fwd = poses(sheet, k)
         rows.append([right_fwd, stand, left_fwd, stand] + ([] if npc else [stand]))
     rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[2]])
+    if '--diag' in args:
+        for d in ('downleft', 'upleft'):
+            stand, right_fwd, left_fwd = diag_poses(folder, cid, d)
+            row = [right_fwd, stand, left_fwd, stand] + ([] if npc else [stand])
+            rows.append(row)
+            rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in row])
     cols = len(rows[0])
-    out = Image.new('RGBA', (FW * cols, FH * 4), (0, 0, 0, 0))
+    out = Image.new('RGBA', (FW * cols, FH * len(rows)), (0, 0, 0, 0))
     for r, frames in enumerate(rows):
         for c, f in enumerate(frames):
             out.alpha_composite(f, (c * FW, r * FH))
