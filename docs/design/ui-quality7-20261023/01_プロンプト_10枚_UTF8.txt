@@ -1,0 +1,221 @@
+【プロンプト】チープに見える部品のデザイン10枚・第7弾（2026-10-23）
+
+使い方：1枚ごとに新しい会話で、「共通ルール」とその番号の文を貼る。日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（毎回、最初に付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の画面の部品を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本と同じ、筆で塗り重ねた手描きの質感。ベクター風・フラット・3DCG風にしない。金の線と飾りの描き方は、添付のゲームの部品（勝ちの帯・窓の枠・カードの裏面）にそろえる
+【雰囲気】大人向けの落ち着いた雰囲気。色は濃い灰色・こげ茶・くすんだ金・紺。紫・明るい黄色・ピンクは使わない。宝石やきらきらした光は控えめに
+【形】画面を真正面から見た平らな部品（斜めにしない・影を床に落とさない）。部品どうしは重ならないように間を空ける
+【背景】透明（できなければマゼンタ一色 #FF00FF）
+【禁止】指定のない文字・数字・ロゴ・透かし・サイン。実在の作品に似せること
+▲ここまで
+▼English
+Draw a UI part for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Hand-painted with layered brush strokes, like the attached style sample. NO flat vector art, NO 3D render look. Match the gold lines and ornaments of the attached game parts (win banner, window frame, card back).
+[Mood] Calm, for adults. Dark charcoal grey, dark brown, muted gold, navy. No purple, no bright yellow, no pink. Keep gems and sparkles subtle.
+[Shape] Flat parts seen straight from the front (no perspective, no cast shadow on a floor). Leave space between parts, no overlap.
+[Background] Transparent (or solid magenta #FF00FF).
+[Forbidden] Any text, numbers, logos, watermarks or signatures unless requested. Resemblance to existing IP.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　金のボタン（いちばん大事なボタン）→ btn_primary.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/世界地図.png（「出発する」）、今の画面/タイトル.png（「続きから」）
+▼ここからコピー
+「出発する」「続きから」「参加する」など、いちばん大事なボタンの地の絵を描いてください。文字は入れない。横長 1536×1024 に、同じ形のボタンを3つ上下に並べる。
+・形：横に長い角の少し丸い板（横:縦＝5:1くらい）。いまのボタンと同じ、くすんだ金（砂金色）の地
+・質感：薄い真ちゅうの板を磨いたような、やわらかい金属のつや。上がやや明るく下がやや暗い。ふちに一段濃い金の細い縁取り
+・左右の端だけに小さな飾り（唐草の切れ端や小さな菱形）。真ん中は文字を置くので無地でなめらかに（横に伸ばして使う）
+・上：ふつう　中：押したとき（少し暗く、少しへこんだ感じ）　下：押せないとき（くすんで色が抜けた感じ）
+・ミスモンの青・赤の金枠ボタンのような派手な形にしない。落ち着いた高級感で
+▲ここまで
+▼English
+The base art for the most important buttons ("Set Out", "Continue", "Enter"). No text. Three buttons of the same shape stacked vertically on a 1536x1024 canvas.
+- Shape: a long plate with slightly rounded corners (about 5:1). Muted gold (gold-sand) base like the current button.
+- Texture: polished thin brass with a soft metallic sheen, slightly lighter at the top and darker at the bottom. A thin darker-gold trim along the edge.
+- Small ornaments ONLY at the left and right ends (a bit of scrollwork or a small diamond). The middle stays plain and smooth for text (it will be stretched horizontally).
+- Top: normal. Middle: pressed (a little darker, slightly sunken). Bottom: disabled (dull, desaturated).
+- Not flashy. Calm and premium.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　暗いボタン（ふつうのボタン）→ btn_secondary.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/タイトル.png（「最初から」「設定」）、今の画面/ベッド.png（「タイトルへ」）
+▼ここからコピー
+「最初から」「設定」「タイトルへ」「収録・提供割合」など、ふつうのボタンの地の絵を描いてください。文字は入れない。横長 1536×1024 に、同じ形のボタンを3つ上下に並べる。
+・形：1 の金のボタンと同じ形（横:縦＝5:1くらい、角の少し丸い板）
+・地：濃い灰色（すすけた鉄、または黒に近いこげ茶の革）。ふちに細いくすんだ金の線を1本
+・左右の端だけに小さな金の飾り。真ん中は文字を置くので無地（横に伸ばして使う）。白い文字がよく読める暗さに
+・上：ふつう　中：押したとき（ふちの金が少し明るく光る）　下：押せないとき（全体がくすむ）
+▲ここまで
+▼English
+The base art for ordinary buttons ("New Game", "Settings", "To Title", "Contents & Rates"). No text. Three buttons of the same shape stacked vertically on a 1536x1024 canvas.
+- Shape: same as the gold button (about 5:1, plate with slightly rounded corners).
+- Base: dark charcoal (sooty iron, or near-black dark brown leather). One thin muted-gold line along the edge.
+- Small gold ornaments ONLY at both ends. The middle is plain for text (stretched horizontally), dark enough for white text to read clearly.
+- Top: normal. Middle: pressed (the gold edge glows a little brighter). Bottom: disabled (everything dull).
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3　赤いボタン（危ない操作）→ btn_danger.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/ベッド.png（「セーブデータを消す」）
+▼ここからコピー
+「セーブデータを消す」「棄権する」など、取り消せない操作のボタンの地の絵を描いてください。文字は入れない。横長 1536×768 に、同じ形のボタンを2つ上下に並べる。
+・形：1・2 と同じ形
+・地：深いえんじ色（暗い赤茶）。ふちにくすんだ金の細い線。派手な赤にしない
+・左右の端だけに小さな飾り。真ん中は無地（横に伸ばして使う）。白い文字がよく読める暗さに
+・上：ふつう　下：押したとき（少し暗く）
+▲ここまで
+▼English
+The base art for buttons that cannot be undone ("Delete Save Data", "Withdraw"). No text. Two buttons of the same shape stacked vertically on a 1536x768 canvas.
+- Shape: same as buttons 1 and 2.
+- Base: deep wine (dark reddish brown), thin muted-gold edge line. Not a bright red.
+- Small ornaments ONLY at both ends, plain middle (stretched horizontally), dark enough for white text.
+- Top: normal. Bottom: pressed (a little darker).
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 4　切り替えのタブ → tab_chips.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/図鑑.png（「すべて」「モンスター」「技」）、今の画面/設定.png（「日本語」「English」）
+▼ここからコピー
+一覧の絞り込み（すべて／モンスター／技）や言語の切り替えに使う、小さなタブの地の絵を描いてください。文字は入れない。横長 1536×768 に、同じ形のタブを2つ上下に並べる。
+・形：横に長い小さな札（横:縦＝3:1くらい）。角を丸くした形、または両端を少し斜めに切った形
+・上：選ばれているタブ。くすんだ金の地にこげ茶の細い縁取り、下のふちに小さな菱形の飾りを1つ
+・下：選ばれていないタブ。濃い灰色の地にくすんだ金の細い線だけ。上より控えめに
+・真ん中は文字を置くので無地（横に伸ばして使う）
+▲ここまで
+▼English
+Small tabs used for list filters (All / Monsters / Skills) and the language switch. No text. Two tabs of the same shape stacked vertically on a 1536x768 canvas.
+- Shape: a small long tag (about 3:1), with rounded corners or slightly angled ends.
+- Top: SELECTED tab. Muted-gold base with a thin dark-brown trim and one small diamond ornament on the bottom edge.
+- Bottom: UNSELECTED tab. Dark charcoal base with only a thin muted-gold line. Quieter than the top.
+- Plain middle for text (stretched horizontally).
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 5　戻るボタン・閉じるボタン → nav_buttons.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/デッキ編集.png（左上の「‹ 戻る」）
+▼ここからコピー
+画面の左上の「戻る」ボタンと、窓の右上の「閉じる」ボタンの絵を、横長 1536×768 に左右に並べて描いてください。
+・左：戻るボタン。丸い小さな盾（または丸いメダル）の形。濃い灰色の地にくすんだ金の縁取り、真ん中に左向きの金の矢印（‹ の形）
+・右：閉じるボタン。同じ丸い形で、真ん中に金の × 印
+・どちらも同じ大きさ。小さく表示しても（直径 36 ピクセルくらい）形が分かるよう、太めではっきりと
+・矢印と × 以外の文字は描かない
+▲ここまで
+▼English
+A "Back" button (top-left of screens) and a "Close" button (top-right of windows), side by side on a 1536x768 canvas.
+- Left: BACK. A small round shield (or round medallion), dark charcoal base, muted-gold rim, a gold left-pointing chevron (‹) in the center.
+- Right: CLOSE. The same round shape with a gold "×" in the center.
+- Same size. Bold and clear so the shape reads even at about 36 px in diameter.
+- No text other than the arrow and the ×.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 6　枚数の増減ボタン → stepper.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/デッキ編集.png（右の「− 3 ＋」）
+▼ここからコピー
+デッキに入れるカードの枚数を増やす・減らすボタンと、その間の数字の台を、横長 1536×768 に描いてください。
+・上の段：左から「−のボタン」「数字の台」「＋のボタン」の3つを横に並べる（重ねない）
+  −と＋のボタン：角の丸い小さな四角い板。濃い灰色の地にくすんだ金の縁取り、真ん中に金の「−」「＋」
+  数字の台：少し横長の、くぼんだ暗い小窓（数字はゲームが書くので空っぽ）
+・下の段：「−のボタン」「＋のボタン」の押せないとき（くすんで暗い）を2つ並べる
+・「−」「＋」以外の文字・数字は描かない
+▲ここまで
+▼English
+Buttons to add/remove copies of a card in the deck, and the number holder between them, on a 1536x768 canvas.
+- Top row, left to right, side by side (no overlap): a "−" button, the number holder, a "+" button.
+  "−" and "+" buttons: small square plates with rounded corners, dark charcoal base, muted-gold rim, a gold "−" / "+" in the center.
+  Number holder: a slightly wide, recessed dark little window (EMPTY — the game writes the number).
+- Bottom row: the DISABLED "−" and "+" buttons (dull and dark), side by side.
+- No text or numbers other than "−" and "+".
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 7　音量のつまみと溝 → slider.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/設定.png（効果音・BGM の音量）
+▼ここからコピー
+設定画面の音量を変える「つまみ」と「溝」の絵を、横長 1536×768 に描いてください。
+・上の段：横に長い細い溝（空っぽのとき）。暗くくぼんだ細い溝に、くすんだ金の細い縁。左右の端に小さな留め金
+・中の段：同じ溝に、左から金色の光が満ちている版（音量が入っているところの色。横に伸ばして使うので、真ん中はくり返しの模様か無地）
+・下の段：つまみを1つ。丸いメダルの形で、くすんだ金、真ん中に小さな宝石（紺）。指で押さえやすい大きさ感
+・溝とつまみは重ねない。数字・文字は描かない
+▲ここまで
+▼English
+A "knob" and a "track" for the volume sliders on the settings screen, on a 1536x768 canvas.
+- Top row: a long thin EMPTY track. A dark recessed groove with a thin muted-gold rim and small clasps at both ends.
+- Middle row: the same track FILLED with golden light from the left (the filled part of the volume; plain or a repeating pattern in the middle so it can be stretched).
+- Bottom row: one knob. A round medallion in muted gold with a small navy gem in the center. Feels easy to press with a finger.
+- Do not overlap the track and the knob. No numbers or text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 8　説明の文を置く台 → notice_panel.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/図鑑.png、今の画面/世界地図.png（地図の下の「丸い印を押すと…」の青灰色の四角）
+▼ここからコピー
+画面の上や地図の下に出す、短い説明の文（2〜3行）を置く横長の台を描いてください。文字は入れない。横長 1536×512。
+・形：横:縦＝5:1くらいの、うすい板。古い羊皮紙を暗く染めたような、または紺の布を張ったような地
+・ふちに細いくすんだ金の線。左端に小さな飾り（羽根ペンの先、または小さな菱形）を1つ
+・真ん中は文字（白っぽい字）を置くので無地で暗め。横にも縦にも伸ばして使うので、四すみ以外は単純に
+▲ここまで
+▼English
+A wide plate for short explanatory text (2–3 lines) shown at the top of screens or under the map. No text. 1536x512.
+- Shape: a thin board about 5:1. Base like old parchment stained dark, or navy cloth stretched over a board.
+- Thin muted-gold line along the edge. One small ornament at the left end (a quill tip or a small diamond).
+- Plain and dark in the middle for light-colored text. It will be stretched both horizontally and vertically, so keep everything except the four corners simple.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 9　世界地図の印と地名の札 → map_pins.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/世界地図.png（いまは金と赤の丸）、世界地図の絵（ユーザーが送ったもの）
+▼ここからコピー
+世界地図の上に置く「場所の印」と「地名の札」を、横長 1536×1024 に描いてください。地図の絵（添付）の上に小さく重ねて使う。
+・上の段：印を4つ横に並べる。どれも同じ大きさの丸いメダル（くすんだ金の縁）で、真ん中の絵だけちがう
+  ① 街：小さな家と塔のシルエット（紺の地）
+  ② ダンジョン（まだクリアしていない）：洞窟の入口のシルエット（えんじの地）
+  ③ ダンジョン（クリア済み）：②と同じ絵に、小さな金の星を1つ（えんじの地を少し明るく）
+  ④ 現在地の目印：①の街の印に重ねる、細い金の輪（中が空いた輪だけ）
+・下の段：地名の札を1つ。小さな横長の巻物（または細い木の札）、こげ茶の地にくすんだ金の縁。真ん中は文字を置くので無地（横に伸ばして使う）
+・地図の上で小さく見えるので、形ははっきり、細かすぎない飾りで。文字は描かない
+▲ここまで
+▼English
+"Place markers" and a "place-name label" to put on the world map, on a 1536x1024 canvas. They are shown small on top of the attached world map.
+- Top row: four markers side by side. All are round medallions of the same size (muted-gold rim); only the center picture differs.
+  1) Town: silhouette of small houses and a tower (navy base).
+  2) Dungeon (not cleared): silhouette of a cave entrance (deep wine base).
+  3) Dungeon (cleared): same as 2 with one small gold star (wine base slightly brighter).
+  4) "You are here" ring: a thin gold ring (hollow) to overlay on the town marker.
+- Bottom row: one place-name label. A small horizontal scroll (or a thin wooden tag), dark brown base, muted-gold edge, plain middle for text (stretched horizontally).
+- Clear shapes, not too detailed, since they appear small on the map. No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 10　対戦の上の小さなボタンの絵 → battle_top_icons.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/対戦.png（左上の「降参」・右上の「ルール」の文字だけのボタン）
+▼ここからコピー
+対戦画面の上の端に置く、小さなボタンの絵を2つ、横長 1536×768 に左右に並べて描いてください。
+・どちらも同じ大きさの丸いメダル（濃い灰色の地、くすんだ金の縁）
+・左：降参。真ん中に白い小さな旗（白旗）のシルエット
+・右：ルール。真ん中に開いた本のシルエット（金）
+・直径 36 ピクセルくらいに小さくしても分かるよう、太くはっきりと。文字は描かない（「降参」「ルール」の字はゲームが下に小さく書く）
+▲ここまで
+▼English
+Two small buttons for the top edge of the battle screen, side by side on a 1536x768 canvas.
+- Both are round medallions of the same size (dark charcoal base, muted-gold rim).
+- Left: SURRENDER. A small white flag silhouette in the center.
+- Right: RULES. An open book silhouette (gold) in the center.
+- Bold and clear enough to read at about 36 px in diameter. No text (the game writes the labels small underneath).
+▲
