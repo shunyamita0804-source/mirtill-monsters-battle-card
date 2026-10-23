@@ -651,7 +651,7 @@ class WorldView {
         this.#busy = true;
         this.#ctx.navigate('dungeonSelect');
       } else {
-        this.#confirmLeave(true);
+        this.#confirmLeave();
       }
     }
   }
@@ -1027,18 +1027,16 @@ class WorldView {
     this.#message(t('world.encounter', { name: opponentName(opponent), monsters: names }), () => ctx.navigate('battle'));
   }
 
-  #confirmLeave(fromStairs = false): void {
+  #confirmLeave(): void {
     this.#busy = true;
     confirmModal(
       this.#root,
       t('world.leaveTitle'),
       [h('p', { class: 'modal__text', text: t('world.leaveText') })],
-      t('world.leaveOk'),
       () => {
         this.#store.update((s) => leaveDungeon(s));
         this.load();
       },
-      fromStairs ? t('world.keepExploring') : t('common.cancel'),
       () => {
         this.#busy = false;
       },

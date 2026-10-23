@@ -59,7 +59,7 @@ export const shopMenuScreen: ScreenDefinition = {
         return;
       }
       const tx = newId('restore');
-      confirmModal(element, t('shop.restoreTitle'), [h('p', { class: 'modal__text', text: t('shop.restoreConfirm') })], t('shop.restoreYes'), () => {
+      confirmModal(element, t('shop.restoreTitle'), [h('p', { class: 'modal__text', text: t('shop.restoreConfirm') })], () => {
         const r = restoreHidden(store.save, tx);
         if (r.status !== 'ok') return;
         store.update(() => r.save);
@@ -142,7 +142,6 @@ export const gachaScreen: ScreenDefinition = {
           h('p', { class: 'modal__text', text: t('gacha.confirmCoins', { before: save.coins, after: save.coins - pack.price }) }),
           h('p', { class: 'modal__text modal__text--sub', text: t('gacha.confirmNote') }),
         ],
-        t('gacha.buy'),
         () => {
           const before = store.save.collection;
           const r = purchasePack(store.save, pack.id, tx, randomSeed());

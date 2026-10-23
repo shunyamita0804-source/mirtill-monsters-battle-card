@@ -82,7 +82,6 @@ export const BATTLE = {
   'battle.surrender': { ja: '降参', en: 'Give Up' },
   'battle.surrenderTitle': { ja: '降参しますか？', en: 'Give up?' },
   'battle.surrenderText': { ja: '負けとして扱われます。', en: 'It will count as a loss.' },
-  'battle.surrenderOk': { ja: '降参する', en: 'Give Up' },
   'battle.rules': { ja: 'ルール', en: 'Rules' },
   'battle.rulesTitle': { ja: 'ルール（仮）', en: 'Rules (Temp)' },
   'battle.rulesLead': {

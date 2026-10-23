@@ -60,25 +60,17 @@ export function openModal(parent: HTMLElement, options: ModalOptions): ModalHand
   return { element: overlay, close };
 }
 
-/** はい／いいえの確認。onYes は1回だけ呼ばれる（二重タップ防止） */
-export function confirmModal(
-  parent: HTMLElement,
-  title: string,
-  body: readonly Child[],
-  yesLabel: string,
-  onYes: () => void,
-  noLabel = t('common.cancel'),
-  onClose?: () => void,
-): ModalHandle {
+/** はい／いいえの確認（2026-10-23 ユーザー指示：確認の窓はすべて「はい／いいえ」）。onYes は1回だけ呼ばれる（二重タップ防止） */
+export function confirmModal(parent: HTMLElement, title: string, body: readonly Child[], onYes: () => void, onClose?: () => void): ModalHandle {
   let done = false;
   const handle = openModal(parent, {
     title,
     body,
     ...(onClose ? { onClose } : {}),
     actions: [
-      { label: noLabel, onTap: () => handle.close() },
+      { label: t('common.no'), onTap: () => handle.close() },
       {
-        label: yesLabel,
+        label: t('common.yes'),
         primary: true,
         onTap: () => {
           if (done) return;

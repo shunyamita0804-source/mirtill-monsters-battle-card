@@ -105,7 +105,7 @@ export const deckScreen: ScreenDefinition = {
         ctx.back('world');
         return;
       }
-      confirmModal(element, t('deck.leaveConfirm'), [h('p', { class: 'modal__text', text: t('deck.leaveConfirmText') })], t('deck.leaveYes'), () => ctx.back('world'));
+      confirmModal(element, t('deck.leaveConfirm'), [h('p', { class: 'modal__text', text: t('deck.leaveConfirmText') })], () => ctx.back('world'));
     };
 
     const render = (): void => {

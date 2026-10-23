@@ -57,8 +57,8 @@ export const settingsScreen: ScreenDefinition = {
           ),
           button(t('common.toTitle'), () => ctx.reset('title'), 'btn'),
           button(t('bed.delete'), () => {
-            confirmModal(element, t('bed.deleteConfirm'), [h('p', { class: 'modal__text', text: t('bed.deleteConfirmText') })], t('bed.deleteYes'), () => {
-              confirmModal(element, t('bed.deleteConfirm2'), [h('p', { class: 'modal__text', text: t('bed.deleteConfirm2Text') })], t('bed.deleteYes2'), () => {
+            confirmModal(element, t('bed.deleteConfirm'), [h('p', { class: 'modal__text', text: t('bed.deleteConfirmText') })], () => {
+              confirmModal(element, t('bed.deleteConfirm2'), [h('p', { class: 'modal__text', text: t('bed.deleteConfirm2Text') })], () => {
                 store.deleteSave();
                 ctx.reset('title');
               });

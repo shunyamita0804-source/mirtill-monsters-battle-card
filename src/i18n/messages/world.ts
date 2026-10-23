@@ -71,8 +71,6 @@ export const WORLD = {
     ja: '探索を終えて家に戻ります。倒した敵は次の探索で復活します。',
     en: 'You will stop exploring and go home. Defeated enemies come back next time.',
   },
-  'world.leaveOk': { ja: '帰る', en: 'Return' },
-  'world.keepExploring': { ja: 'まだ探索する', en: 'Keep exploring' },
 
   // メニュー
   'world.menuStatus': { ja: 'ランク：{rank}　所持金：{coins}', en: 'Rank: {rank}   Money: {coins}' },
