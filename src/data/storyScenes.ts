@@ -40,7 +40,7 @@ export const INTRO_STATES: readonly IntroState[] = [
 export type Expression = 'normal' | 'smile' | 'explain' | 'surprised' | 'troubled' | 'happy';
 
 /** 話している人。system は地の文（名前の札なし）。住人は会話の絵が無いので名前の札だけ */
-export type Speaker = 'neighbor_guide' | ResidentId | 'system';
+export type Speaker = 'neighbor_guide' | ResidentId | 'teacher' | 'system';
 
 /** 住人の会話の場面（話しかけるたびに 1・2 を交互に） */
 export type ResidentSceneId = `${ResidentId}_${1 | 2}`;
@@ -189,7 +189,8 @@ export const SCENES: Readonly<Record<SceneId, Scene>> = {
   tableOffer: {
     id: 'tableOffer',
     steps: [
-      system('story.sys.tableOffer'),
+      // 練習場の先生が勧める（2026-10-23 顔の絵が届いたので先生の台詞に。台詞は仮）
+      { kind: 'line', text: 'story.teacher.offer', speaker: 'teacher' },
       { kind: 'choice', options: [{ label: 'story.sys.tableYes', next: 'practiceGo' }, { label: 'story.sys.tableNo', next: null }] },
     ],
     skipEffects: [],

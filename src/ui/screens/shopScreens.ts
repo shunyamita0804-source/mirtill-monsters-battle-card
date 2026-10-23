@@ -17,6 +17,7 @@ import { newId } from '../gameStore.ts';
 import type { ScreenDefinition } from './types.ts';
 import faceClerk from '@assets/images/characters/face_clerk.webp';
 import pack01Art from '@assets/images/ui/packs/pack_01.webp';
+import gachaMachineArt from '@assets/images/ui/gacha_machine.webp';
 import pack02Art from '@assets/images/ui/packs/pack_02.webp';
 import pack03Art from '@assets/images/ui/packs/pack_03.webp';
 
@@ -228,21 +229,8 @@ export const gachaScreen: ScreenDefinition = {
       });
       element.replaceChildren(
         createScreenHeader({ title: t('shop.gacha'), back: { label: t('common.back'), onTap: () => ctx.back('shopMenu') } }),
-        h(
-          'div',
-          { class: 'gacha__machine', attrs: { 'aria-hidden': 'true' } },
-          h('div', { class: 'gacha__machine-top', text: t('gacha.machine') }),
-          h(
-            'div',
-            { class: 'gacha__machine-slot' },
-            (() => {
-              const el = h('div', { class: 'gacha__machine-pack has-art' });
-              el.style.setProperty('--pack-art', `url("${pack01Art}")`);
-              return el;
-            })(),
-          ),
-          h('p', { class: 'gacha__machine-note', text: t('gacha.machineNote') }),
-        ),
+        // パックの販売機の絵（デザイン第4弾）
+        h('img', { class: 'gacha__machine-art', attrs: { src: gachaMachineArt, alt: t('gacha.machine'), draggable: 'false' } }),
         h('p', { class: 'gacha__coins' }, coinIcon(), t('shop.coins', { n: save.coins })),
         h('div', { class: 'gacha__packs' }, ...packs),
       );

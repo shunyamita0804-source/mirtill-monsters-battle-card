@@ -1,0 +1,222 @@
+【プロンプト】見た目を上げるデザイン10枚・第4弾（2026-10-23）
+
+使い方：
+・画像を作るAIに、▼〜▲ の間をそのまま貼り付ける。1枚ごとに新しい会話で
+・最初に「共通ルール」を貼り、続けてその番号の文を貼る（1回で送ってよい）
+・日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（毎回、最初に付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の画面の絵を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本と同じ、筆で塗り重ねた手描きの質感。ファンタジーの石と木の世界。ベクター風・フラット・3DCG風にしない
+【雰囲気】大人向けの落ち着いた雰囲気。色は濃い灰色・こげ茶・くすんだ金・紺を中心に。紫・明るい黄色・ピンクは使わない。金の線の太さと飾りの描き方は、添付のゲームの部品（窓の枠・カードの裏面など）にそろえる
+【禁止】文字・数字・ロゴ・透かし・サイン（日本語・英語とも）。実在の作品に似せること
+▲ここまで
+▼English
+Draw an image for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Hand-painted with layered brush strokes, like the attached style sample. A fantasy world of stone and wood. NO flat vector art, NO 3D render look.
+[Mood] Calm, for adults. Mainly dark charcoal grey, dark brown, muted gold and navy. No purple, no bright yellow, no pink. Match the gold line thickness and ornament style of the attached game parts (window frame, card back, etc.).
+[Forbidden] Any text, numbers, logos, watermarks or signatures (Japanese or English). Resemblance to existing IP.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　対戦の情報箱の枠（2つを1枚に）→ battle_info_frames.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/対戦.png（左の「相手」「あなた」の縦長の箱）
+▼ここからコピー
+カードバトルの画面の左に置く、相手と自分の情報（マナ・山札・手札の数）を書く縦長の枠を2つ、横長 1536×1024 に左右に並べて描いてください。
+・どちらも縦長（横:縦＝2:3くらい）の板。地は濃い色の無地で、ふちに細いくすんだ金の線、四隅だけに小さな飾り
+・左：相手用。地は深いえんじ色（暗い赤茶）
+・右：自分用。地は深い紺
+・辺の真ん中には飾りを置かない（ゲームで縦横に伸ばして使う）。中は無地（文字・アイコンはゲームが重ねる）
+・2つは同じ大きさ・同じ形。重ならないように間を空ける
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字は描かない
+▲ここまで
+▼English
+Two tall info frames for the left side of the card battle screen (they show mana, deck and hand counts), side by side on a 1536x1024 canvas.
+- Both are tall plates (about 2:3). Plain dark base, a thin muted-gold line along the edge, small ornaments only at the four corners.
+- Left: for the OPPONENT, deep wine (dark reddish brown) base.
+- Right: for the PLAYER, deep navy base.
+- No ornaments in the middle of the sides (the game stretches them). Plain inside (the game adds text and icons).
+- Same size and shape, with space between them.
+- Transparent around them (or solid magenta #FF00FF). No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　対戦の上の手番の帯 → battle_turn_bar.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/対戦.png（上の「2手番・あなた・攻撃」の帯）
+▼ここからコピー
+カードバトルの画面の上に置く、手番を書く細長い帯を1本描いてください。横長 1536×1024 の真ん中に、横いっぱいの帯（横:縦＝10:1くらい）。
+・こげ茶から濃い金茶の地に、上下のふちに細いくすんだ金の線。左右の端は小さくとがった飾り
+・帯の中は無地（文字はゲームが重ねる）。辺の真ん中には飾りを置かない（横に伸ばして使う）
+・帯の外は透明（できなければマゼンタ一色 #FF00FF）。文字は描かない
+▲ここまで
+▼English
+One long thin turn bar for the top of the card battle screen: a bar across the full width (about 10:1), centered on a 1536x1024 canvas.
+- Dark brown to deep golden-brown base, thin muted-gold lines along the top and bottom edges, small pointed ornaments at the left and right ends.
+- Plain inside (the game adds text). No ornaments in the middle (it will be stretched horizontally).
+- Transparent outside the bar (or solid magenta #FF00FF). No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3　対戦のアイコン（4つを1枚に）→ battle_icons.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/カードの裏面.png、今の画面/対戦.png（「山札×55」「手札×5」の文字の所）
+▼ここからコピー
+カードバトルの画面で数の横に置く小さなアイコンを4つ、横長 1536×1024 に横一列（または2×2）に並べて描いてください。どれも正方形に収まる形で、正面から。
+・山札：裏向きのカードが何枚か重なった束（裏面は添付のカードの裏面に似た紺と金）
+・手札：裏向きのカードが3枚、扇の形に開いている
+・捨て札：表を伏せたカードが少し乱れて重なり、ふちが少し暗い
+・マナ：青く光るひし形の結晶（小さな金の台座つき）
+・小さく表示しても形が分かる、はっきりした輪郭。4つは同じ大きさで間を空ける
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字・数字は描かない
+▲ここまで
+▼English
+Four small icons placed next to counts on the card battle screen, in one row (or 2x2) on a 1536x1024 canvas. Each fits in a square, front view.
+- Deck: a stack of several face-down cards (backs in navy and gold, like the attached card back).
+- Hand: three face-down cards fanned out.
+- Discard pile: face-down cards stacked a little messily, edges slightly darker.
+- Mana: a glowing blue diamond-shaped crystal on a small gold base.
+- Clear silhouettes that read at small sizes. Same size, spaced apart.
+- Transparent around them (or solid magenta #FF00FF). No text, no numbers.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 4　図鑑の「まだ持っていないカード」の影 → card_unknown.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/カードの裏面.png、今の画面/図鑑.png（点線の四角に「？」の所）
+▼ここからコピー
+カード図鑑で「まだ持っていないカード」の場所に置く絵を1枚描いてください。縦長 1024×1536 の中に、カード1枚（縦:横＝3:2）を真っすぐ正面から、ほぼいっぱいに。
+・カードの形をした、暗く沈んだ石板のような影。ふちにだけ、色あせた細い金の線
+・真ん中に、うっすらと浮かぶ紋章の形（添付のカードの裏面の紋章を、ごく薄く暗くしたもの）。全体に「まだ封じられている」雰囲気
+・明るさは控えめ（持っているカードより目立たないこと）
+・カードの角は少し丸い。カードの外は透明（できなければマゼンタ一色 #FF00FF）。文字・「？」は描かない
+▲ここまで
+▼English
+A placeholder for "cards you don't own yet" in the card album: one card (3:2 tall) seen straight from the front, almost filling a portrait 1024x1536 canvas.
+- A dark, sunken card-shaped slab like a shadow, with only a faded thin gold line along the edge.
+- A faint emblem shape in the center (the attached card-back emblem, very faint and dark), giving a "still sealed" feeling.
+- Keep it dim (it must stand out less than owned cards).
+- Slightly rounded corners. Outside the card is transparent (or solid magenta #FF00FF). No text, no question mark.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 5　カードパックの販売機 → gacha_machine.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、見本/パック.png、見本/カードの裏面.png、今の画面/ガチャ.png（上の「カードガチャマシン」の箱）
+▼ここからコピー
+カードショップに置く、カードパックの販売機を1台描いてください。正方形 1024×1024 の真ん中に、正面から少し見上げた向きで。
+・木と真ちゅうでできた、背の低い古風な販売機。上に小さな紋章（カードの裏面と同じ形）
+・真ん中のガラス窓の中に、添付のパック（紺・緑・赤）が立てて並んでいるのが見える
+・下に、パックが出てくる取り出し口と、小さなレバー
+・やわらかい金色の灯りがガラスの中から。全体は落ち着いた暗さ
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字・値札・数字は描かない
+▲ここまで
+▼English
+One card-pack vending machine for the card shop, centered on a square 1024x1024 canvas, front view from slightly below.
+- A short, old-fashioned machine of wood and brass, with a small emblem on top (the same shape as the card-back emblem).
+- Through a glass window in the middle, the attached packs (navy, green, red) stand in a row.
+- At the bottom, an opening where packs come out, and a small lever.
+- Soft golden light from inside the glass; overall calm and slightly dark.
+- Transparent around it (or solid magenta #FF00FF). No text, no price tags, no numbers.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 6　主人公を選ぶ画面の背景 → newgame_bg.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、今の画面/主人公を選ぶ.png
+▼ここからコピー
+ゲームを始めたとき、男性・女性の主人公を選ぶ画面の背景を1枚描いてください。縦長 1024×1536。
+・朝の光が差しこむ、石と木の家の2階の部屋の窓辺。窓の外に、遠く街の屋根と大会会場の丸い屋根がかすむ
+・部屋の手前の机に、カードの束と小さな革のかばん（旅立ちの準備）。物は画面の下のほうにまとめる
+・画面の真ん中（主人公の2人の絵と名前を重ねる所）は、物を置かず、明るすぎない落ち着いた空間に
+・人物・モンスター・文字は描かない
+▲ここまで
+▼English
+Background for the screen where the player chooses the male or female hero at the start, portrait 1024x1536.
+- A window corner of an upstairs room in a stone-and-wood house, with morning light coming in. Through the window, distant town roofs and the round roof of the tournament arena, softly hazy.
+- On a desk in the foreground, a stack of cards and a small leather bag (getting ready to set out). Keep objects in the lower part.
+- Keep the middle (where the two hero pictures and names go) empty and calm, not too bright.
+- No people, no monsters, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 7　画面の上の場所の絵（3枚を1枚に）→ screen_banners.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、今の画面/ショップ.png・大会受付.png・図鑑.png（見出しの帯のすぐ下の所）
+▼ここからコピー
+ショップ・大会会場・研究所の画面の上に飾る、横長の場所の絵を3枚、正方形 1536×1536 に上下に並べて描いてください。どれも横:縦＝3:1くらいの横長で、同じ大きさ。
+・上：カードショップの店内。棚にカードパックが並び、カウンターと吊りランプ
+・中：大会会場の中。石の観客席と旗、奥に対戦の台
+・下：カード研究所の中。本棚と、机の上の本と虫めがね、壁に貼られたカードの図
+・どれも人物はいない。明るさは控えめで、下の端に向かって少し暗く（下に文字や一覧が続くため）
+・3枚の間は、細い透明のすき間か、はっきり分かる境目を空ける。文字は描かない
+▲ここまで
+▼English
+Three wide location banners for the top of the shop, tournament hall and lab screens, stacked top to bottom on a square 1536x1536 canvas. Each about 3:1, all the same size.
+- Top: inside the card shop. Shelves of card packs, a counter, hanging lamps.
+- Middle: inside the tournament hall. Stone audience seats and banners, a battle table in the back.
+- Bottom: inside the card research lab. Bookshelves, a book and a magnifying glass on a desk, card diagrams pinned on the wall.
+- No people. Moderate brightness, slightly darker toward the bottom edge (text and lists follow below).
+- Leave a thin transparent gap or a clear border between the three. No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 8　歩くときのスティック（台の輪とつまみ）→ joystick_parts.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/街.png
+▼ここからコピー
+街を歩くとき、指を置いた所に出るスティックの部品を2つ、横長 1536×1024 に左右に並べて描いてください。どちらも真上から見た丸い形。
+・左：台の輪。大きめの丸い輪（中は空いている、またはごく薄い紺）。輪はくすんだ金の細い縁で、上下左右の4か所に小さな三角の印（方向の目印）
+・右：つまみ。台の輪の半分くらいの丸いつまみ。紺の地に金の縁、真ん中がわずかにふくらんで見える
+・街の絵の上に半透明で重ねるので、輪の内側は透けてよい。形はすっきりと
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字は描かない
+▲ここまで
+▼English
+Two parts of the on-screen joystick that appears where the finger touches while walking in town, side by side on a 1536x1024 canvas, both round and seen from straight above.
+- Left: the base ring. A fairly large ring (inside empty or very faint navy), a thin muted-gold rim, with small triangle marks at the top, bottom, left and right (direction markers).
+- Right: the knob, about half the size of the ring. Navy with a gold rim, slightly domed in the middle.
+- It will be drawn semi-transparent over the town, so the inside of the ring may be see-through. Keep shapes clean.
+- Transparent around them (or solid magenta #FF00FF). No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 9　ダンジョンのボスのしるし → boss_symbol.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/魔物のしるし.png
+▼ここからコピー
+ダンジョンのいちばん奥にいるボスの、地図の上のしるしを1つ描いてください。正方形 1024×1024 の真ん中に、少し斜め上から見た形で。
+・添付の魔物のしるし（黒い霧の影）と同じ仲間で、ひと回り大きく、ひと目で「ボス」と分かる形
+・黒い霧が大きく渦巻き、頭の上に角のような影が2本、目は落ち着いた金色に強く光る。足元に古い石の台座と、薄い金の光の輪
+・特定のモンスターに見えないこと。こわすぎない、ゲームらしい迫力
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字は描かない
+▲ここまで
+▼English
+One map marker for the boss at the deepest part of the dungeon, centered on a square 1024x1024 canvas, viewed slightly from above.
+- Same family as the attached monster marker (a clump of dark mist), but noticeably larger and clearly a "boss" at a glance.
+- Large swirling dark mist, two horn-like shadows on top, eyes glowing strongly in muted gold. An old stone pedestal at its base with a faint golden ring of light.
+- Must NOT look like any specific monster. Impressive in a game-like way, not too scary.
+- Transparent around it (or solid magenta #FF00FF). No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 10　景品をもらうときの光の輪 → reward_glow.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/勝ちの帯.png、見本/カードの裏面.png
+▼ここからコピー
+大会の景品・宝箱の中身・ランクアップのときに、もらった物の後ろに置く光の飾りを1枚描いてください。正方形 1024×1024 の真ん中に。
+・やわらかい金色の光の輪と、放射状に広がる細い光の筋。輪のまわりに小さな金の粒
+・真ん中（物を重ねる所）は明るすぎず、少し空ける
+・外側に向かって自然に消えていく（四角い端が見えない）
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。物・文字は描かない
+▲ここまで
+▼English
+One glowing decoration placed behind items you receive (tournament prizes, treasure chest contents, rank-ups), centered on a square 1024x1024 canvas.
+- A soft golden ring of light with thin rays spreading outward and small gold particles around the ring.
+- The center (where the item goes) must not be too bright; leave it a little open.
+- Fades out naturally toward the outside (no visible square edges).
+- Transparent around it (or solid magenta #FF00FF). No objects, no text.
+▲

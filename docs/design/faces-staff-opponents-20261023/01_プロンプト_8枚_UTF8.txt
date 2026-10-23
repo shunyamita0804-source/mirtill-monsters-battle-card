@@ -1,0 +1,151 @@
+【プロンプト】研究員・練習場の先生・大会の対戦相手の顔の絵（2026-10-23）
+
+使い方：
+・画像を作るAIに、▼〜▲ の間をそのまま貼り付ける
+・同じ会話で続けて頼むと、大きさ・向きがそろいやすい。「共通ルール」と 1 を送り、できたら 2 → 3 … と続ける
+・そろわなくなったら、新しい会話で「共通ルール」と、できあがった絵を見本として添付して続きを頼む
+・日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（最初に1回付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、face_clerk.png、face_receptionist.png、face_resident_a.png、face_resident_e.png、neighbor_guide_talk_normal.png
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の登場人物の「顔の絵」を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【形】添付の顔の絵（店員・受付・住人）とまったく同じ形にそろえる。正方形 1024×1024。胸から上。顔は少し右を向き（体は斜め右向き）、目はこちら。頭のてっぺんから胸までが正方形にちょうど収まる大きさで、顔は真ん中より少し上
+【画風】顔の描き方・塗り・線は、添付の顔の絵と会話の絵（金髪の女性）と同じ。筆で塗り重ねた手描きの質感。大人向けの落ち着いた雰囲気。色は落ち着いた色（紫・明るい黄色・ピンクは使わない）
+【人物】設定画があるときは、服・髪型・色・持ち物をまったく同じに。年齢は指定どおり（子どもやお年寄りに見せない）
+【背景】透明（できなければマゼンタ一色 #FF00FF）。枠・影の板・文字は描かない
+【禁止】文字・数字・ロゴ・透かし・サイン。本やカードにも読める文字・絵柄を入れない。実在の作品・実在の人物に似せること
+▲ここまで
+▼English
+Draw a "face portrait" of a character for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Format] Exactly the same format as the attached portraits (clerk, receptionist, residents). Square 1024x1024, from the chest up, face turned slightly to the right (body three-quarter right), eyes looking at the viewer. Head top to chest fits the square exactly; the face sits slightly above the center.
+[Style] Same face style, painting and lines as the attached portraits and the conversation portrait (the blonde woman). Hand-painted with layered brush strokes. Calm mood, for adults. Muted colors (no purple, no bright yellow, no pink).
+[Character] When a design sheet is attached, copy the clothes, hair, colors and held items exactly. Age exactly as specified (do not make them look like children or very old people).
+[Background] Transparent (or solid magenta #FF00FF). No frame, no backing plate, no text.
+[Forbidden] Any text, numbers, logos, watermarks or signatures. No readable text or pictures on books or cards. Resemblance to existing IP or real people.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　研究員 → face_researcher.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：設定画/npc_researcher_design.png（と npc_researcher_stand.png）
+▼ここからコピー
+1人目：添付の設定画の、カード研究所の研究員（30代の男性）。
+・短い黒髪、丸い金縁の眼鏡、すっきりした顔立ち
+・青緑のローブ（金の刺しゅう、えりと裏地はクリーム色）、胸元に金の小さな飾り
+・片腕に茶色の厚い本（金の飾りの留め金。表紙に文字なし）をかかえ、本の上のほうが胸の前に少し見える
+・知的で穏やかなほほえみ
+▲ここまで
+▼English
+Person 1: the card researcher in the attached design sheet (a man in his 30s).
+- Short black hair, round gold-rimmed glasses, neat features.
+- Teal robe with gold embroidery, cream collar and lining, a small gold ornament at the chest.
+- Holding a thick brown book with a gold clasp (no text on the cover) in one arm; the top of the book shows a little in front of his chest.
+- A calm, intelligent smile.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　練習場の先生 → face_teacher.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：設定画/npc_teacher_design.png（と npc_teacher_stand.png）
+▼ここからコピー
+同じ形・同じ大きさ・同じ向きで、2人目：添付の設定画の、カード練習場の先生（50代の男性）。
+・白髪まじりの灰色の髪を後ろへ流し、短く整えたひげ
+・白いシャツ（袖をまくる）、赤いベスト
+・片手に細い木の指し棒を持ち、棒の先が肩の横に少し見える（顔にかからないように）
+・面倒見のよさそうな、頼もしいほほえみ
+▲ここまで
+▼English
+Same format, size and angle. Person 2: the card practice-hall teacher in the attached design sheet (a man in his 50s).
+- Grey hair with white streaks swept back, a short trimmed beard.
+- White shirt with rolled sleeves, red vest.
+- Holding a thin wooden pointer in one hand; its tip shows a little beside his shoulder (not covering the face).
+- A warm, reliable smile, like a caring mentor.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3〜8　大会の対戦相手（仮の人物像。設定画なし）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・人物像は Claude の仮の案。変えたいときは書き換えてから頼んでよい
+・E ランク（3・4・5）→ D ランク（6・7・8）の順に、だんだん手慣れて強そうに
+・カードゲームの大会に出る人。モンスターは描かない。カードを持たせる場合は無地（絵・文字なし）
+
+▼ここからコピー（3　E-1回戦 → face_opponent_e1.png）
+同じ形・同じ大きさ・同じ向きで、3人目：カード大会の最初の対戦相手。20代前半の女性、大会に出始めたばかりの見習い。
+・明るい茶色の短めの髪（肩につかない長さ）、そばかすが少し
+・深い緑のフード付きの短いマント、その下にクリーム色のシャツ、肩から斜めに革のかばんのひも
+・少し緊張しながらも元気な笑顔
+▲ここまで
+▼English (3  E round 1 → face_opponent_e1.png)
+Same format, size and angle. Person 3: the first opponent at the card tournament. A woman in her early 20s, a newcomer who just started entering tournaments.
+- Short light-brown hair (above the shoulders), a few freckles.
+- A short dark-green hooded cape over a cream shirt, a leather bag strap across her chest.
+- A cheerful smile, a little nervous.
+▲
+
+▼ここからコピー（4　E-準決勝 → face_opponent_e2.png）
+同じ形・同じ大きさ・同じ向きで、4人目：カード大会の対戦相手。20代後半の男性、裕福な商人の家の息子。
+・金色がかった明るい茶髪をきちんとなでつけた髪型
+・赤茶色の上等な上着（金のボタン）、白いえり飾り
+・自信たっぷりの、少し得意げな笑み
+▲ここまで
+▼English (4  E semifinal → face_opponent_e2.png)
+Same format, size and angle. Person 4: a card tournament opponent. A man in his late 20s, the son of a wealthy merchant family.
+- Light golden-brown hair neatly combed back.
+- A fine russet coat with gold buttons, a white cravat.
+- A very confident, slightly smug smile.
+▲
+
+▼ここからコピー（5　E-決勝 → face_opponent_e3.png）
+同じ形・同じ大きさ・同じ向きで、5人目：Eランク大会の決勝の相手。30代の女性、各地の大会を回る旅のカード使い。
+・黒髪の長い三つ編みを肩から前に垂らす
+・紺の旅の外套（えりを立てる）、その下に革の胸当て、首元に銀の小さな留め具
+・落ち着いた、鋭いまなざしと小さなほほえみ
+▲ここまで
+▼English (5  E final → face_opponent_e3.png)
+Same format, size and angle. Person 5: the final opponent of the Rank E tournament. A woman in her 30s, a traveling card player who tours tournaments.
+- A long black braid hanging over her shoulder to the front.
+- A navy travel cloak with a raised collar, a leather chest guard underneath, a small silver clasp at the neck.
+- A calm, sharp gaze with a slight smile.
+▲
+
+▼ここからコピー（6　D-1回戦 → face_opponent_d1.png）
+同じ形・同じ大きさ・同じ向きで、6人目：Dランク大会の最初の相手。30代の男性、港町の漁師。
+・日に焼けた肌、短く刈った茶色の髪、短いあごひげ、がっしりした肩
+・紺と白の横じまのシャツ、その上に袖なしの厚手の作業用ベスト
+・豪快で人なつこい笑顔
+▲ここまで
+▼English (6  D round 1 → face_opponent_d1.png)
+Same format, size and angle. Person 6: the first opponent of the Rank D tournament. A man in his 30s, a fisherman from a port town.
+- Tanned skin, short-cropped brown hair, a short beard, broad shoulders.
+- A navy-and-white striped shirt with a thick sleeveless work vest over it.
+- A big, friendly grin.
+▲
+
+▼ここからコピー（7　D-準決勝 → face_opponent_d2.png）
+同じ形・同じ大きさ・同じ向きで、7人目：Dランク大会の対戦相手。40代の女性、上品な貴族の婦人。
+・こげ茶の髪を上品にまとめ、小さな羽根飾りのついた帽子（深い緑）
+・深い緑のドレス（えりに金の縁取り）、真珠の首飾り
+・余裕のある、上品で少し挑むようなほほえみ
+▲ここまで
+▼English (7  D semifinal → face_opponent_d2.png)
+Same format, size and angle. Person 7: a Rank D tournament opponent. A woman in her 40s, an elegant noblewoman.
+- Dark-brown hair elegantly pinned up, a small deep-green hat with a feather ornament.
+- A deep-green dress with gold trim at the collar, a pearl necklace.
+- A composed, elegant, slightly challenging smile.
+▲
+
+▼ここからコピー（8　D-決勝 → face_opponent_d3.png）
+同じ形・同じ大きさ・同じ向きで、8人目：Dランク大会の決勝の相手。40代の男性、かつての大会の常連の強者。
+・短く刈った黒髪に白髪がまじる、頬に古い小さな傷、引きしまった顔
+・黒い外套に、くすんだ金の肩飾り、えりもとに古い勲章
+・静かで落ち着いた、強そうな表情（口元だけ少しゆるむ）
+▲ここまで
+▼English (8  D final → face_opponent_d3.png)
+Same format, size and angle. Person 8: the final opponent of the Rank D tournament. A man in his 40s, a veteran who used to be a tournament regular.
+- Short-cropped black hair with some grey, a small old scar on his cheek, a lean face.
+- A black coat with muted-gold shoulder ornaments, an old medal at the collar.
+- A quiet, composed, strong expression (only the corners of his mouth slightly relaxed).
+▲

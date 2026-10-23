@@ -201,3 +201,143 @@
     url('@assets/images/backgrounds/pack_open_bg.webp') center / cover no-repeat,
     #07080b;
 }
+
+/* ===== デザイン第4弾（2026-10-23） ===== */
+
+/* 対戦の情報箱の枠（相手＝えんじ・自分＝紺。四隅を固定して伸ばす） */
+.battle-info {
+  border: 10px solid transparent;
+  border-image: url('@assets/images/ui/battle/info_frame_player.webp') 34 fill / 10px / 0 stretch;
+  border-radius: 0;
+  background: none;
+  padding: 0 0 0 1px;
+}
+
+.battle-info--opponent {
+  border-image-source: url('@assets/images/ui/battle/info_frame_opponent.webp');
+}
+
+.battle-info__icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  flex: none;
+}
+
+.battle-info__mana {
+  align-items: center;
+}
+
+.battle-info__count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.battle-info__name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.battle-info__name > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 対戦の上の手番の帯 */
+.battle-turn {
+  border: 0;
+  border-radius: 0;
+  background: url('@assets/images/ui/battle/turn_bar.webp') center / 100% 100% no-repeat;
+  /* 左右の端のとがった飾りに文字がかからないように */
+  padding: 0 18px 0 24px;
+}
+
+/* 顔の絵の小さな丸（大会の対戦相手） */
+.opponent-face {
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 10%;
+  background: rgb(20 22 28 / 0.9);
+  box-shadow: 0 0 0 1.5px rgb(201 162 74 / 0.9);
+}
+
+.tournament__round-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 図鑑の「まだ持っていないカード」 */
+.card-unknown {
+  border: 0;
+  border-radius: 0;
+  background: url('@assets/images/ui/card_unknown.webp') center / contain no-repeat;
+  color: transparent;
+}
+
+/* パックの販売機 */
+.gacha__machine-art {
+  flex: none;
+  display: block;
+  width: 168px;
+  height: auto;
+  margin: 6px auto 0;
+  filter: drop-shadow(0 6px 12px rgb(0 0 0 / 0.5));
+}
+
+/* 主人公を選ぶ画面の背景（共通背景の指定より強くするため .screen を付ける） */
+.screen.new-game:not(.world) {
+  background:
+    linear-gradient(180deg, rgb(10 11 14 / 0.25) 0%, rgb(10 11 14 / 0.55) 35%, rgb(10 11 14 / 0.55) 70%, rgb(10 11 14 / 0.3) 100%),
+    url('@assets/images/backgrounds/newgame_bg.webp') center / cover no-repeat,
+    var(--color-stage);
+}
+
+/* 画面の上の場所の絵（ショップ・大会受付は顔と吹き出しの後ろに、図鑑は帯で） */
+.shop-menu__clerk,
+.tournament__desk {
+  margin: 0;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgb(10 11 14 / 0.15) 0%, rgb(10 11 14 / 0.55) 100%),
+    url('@assets/images/ui/banners/banner_shop.webp') center / cover no-repeat;
+}
+
+.tournament__desk {
+  background:
+    linear-gradient(180deg, rgb(10 11 14 / 0.15) 0%, rgb(10 11 14 / 0.55) 100%),
+    url('@assets/images/ui/banners/banner_tournament.webp') center / cover no-repeat;
+}
+
+/* 景品の光の輪 */
+.reward-glow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 150px;
+  height: 150px;
+  margin: -8px auto -4px;
+  background: center / contain no-repeat;
+}
+
+.reward-glow__icon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 0.5));
+}
+
+/* 図鑑：研究所の場所の絵の上に研究員の顔と吹き出し */
+.collection__desk {
+  background:
+    linear-gradient(180deg, rgb(10 11 14 / 0.15) 0%, rgb(10 11 14 / 0.55) 100%),
+    url('@assets/images/ui/banners/banner_lab.webp') center / cover no-repeat;
+}
+
+.collection__desk .shop-menu__bubble {
+  font-size: 13px;
+}

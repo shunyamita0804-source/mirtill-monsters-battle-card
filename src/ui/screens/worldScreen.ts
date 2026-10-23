@@ -71,6 +71,7 @@ import { coinIcon } from '../components/coinIcon.ts';
 import { t, type Params } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
 import { cardName, dungeonName, mapName, objectLabel, objectMessage, opponentName } from '../../i18n/content.ts';
+import { rewardGlow } from '../components/rewardGlow.ts';
 import type { ScreenContext, ScreenDefinition } from './types.ts';
 
 /** 仮マップ（ダンジョン）の1マスの大きさ（論理px） */
@@ -1181,7 +1182,7 @@ class WorldView {
     const parts: string[] = [];
     if (chest.reward.coins > 0) parts.push(coins(chest.reward.coins));
     for (const c of chest.reward.cards) parts.push(t(c.cardId.startsWith('skl') ? 'world.chestCardSkill' : 'world.chestCardMonster', { n: c.count }));
-    this.#message(t('world.chestOpened', { items: parts.join(t('world.rewardSeparator')) }));
+    this.#message(t('world.chestOpened', { items: parts.join(t('world.rewardSeparator')) }), undefined, rewardGlow(CHEST_ART[chest.look].opening.at(-1) ?? CHEST_ART[chest.look].closed));
   }
 
   #encounter(enemy: EnemyObject): void {
@@ -1240,13 +1241,19 @@ class WorldView {
     );
   }
 
-  #message(text: string, onClose?: () => void): void {
+  #message(text: string, onClose?: () => void, visual?: HTMLElement): void {
     this.#busy = true;
     this.#held = null;
-    messageModal(this.#root, text, () => {
-      this.#busy = false;
-      onClose?.();
-    });
+    messageModal(
+      this.#root,
+      text,
+      () => {
+        this.#busy = false;
+        onClose?.();
+      },
+      undefined,
+      visual,
+    );
   }
 
   #menu(): void {

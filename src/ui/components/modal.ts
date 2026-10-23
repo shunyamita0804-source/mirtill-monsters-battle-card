@@ -85,10 +85,10 @@ export function confirmModal(parent: HTMLElement, title: string, body: readonly 
 }
 
 /** お知らせ（閉じるボタンのみ） */
-export function messageModal(parent: HTMLElement, text: string, onClose?: () => void, title?: string): ModalHandle {
+export function messageModal(parent: HTMLElement, text: string, onClose?: () => void, title?: string, visual?: HTMLElement): ModalHandle {
   const handle = openModal(parent, {
     ...(title ? { title } : {}),
-    body: text.split('\n').map((line) => h('p', { class: 'modal__text', text: line })),
+    body: [...(visual ? [visual] : []), ...text.split('\n').map((line) => h('p', { class: 'modal__text', text: line }))],
     actions: [{ label: t('common.ok'), primary: true, onTap: () => handle.close() }],
     ...(onClose ? { onClose } : {}),
   });

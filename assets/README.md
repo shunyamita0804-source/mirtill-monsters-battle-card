@@ -90,3 +90,5 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 | `images/backgrounds/battle_dungeon.webp`・`pack_open_bg.webp` | ダンジョンの対戦の背景・パックを開けるときの光（同） | WebP |
 | `images/ui/result_{win,lose}.webp`・`images/ui/rank/rank_?.webp`・`images/ui/hud/*.webp` | 勝ち負けの帯・ランクの紋章6つ・街の上の札とボタン（同） | 切り抜きと縮小。描き換えなし |
 | `images/characters/face_resident_{a,b,c,d,e}.webp` | 住人A〜E の顔の絵（ZIP「Seimon_Faces_Residents_20261023」） | ユーザー提供（画像生成）。384px に縮小。会話の絵として使う |
+| `images/ui/battle/*.webp`・`images/ui/card_unknown.webp`・`images/ui/gacha_machine.webp`・`images/ui/banners/*.webp`・`images/ui/hud/joystick_*.webp`・`images/ui/reward_glow.webp`・`images/maps/dungeon/boss_symbol.webp`・`images/backgrounds/newgame_bg.webp` | デザイン第4弾10種（ZIP「Seimon_UI_Quality4_20261023」） | ユーザー提供（画像生成）。切り抜きと縮小。描き換えなし |
+| `images/characters/face_{researcher,teacher,opponent_e1〜e3,opponent_d1〜d3}.webp` | 研究員・先生・大会の対戦相手6人の顔の絵（ZIP「Seimon_Faces_FIXED」） | ユーザー提供（画像生成）。384px に縮小 |

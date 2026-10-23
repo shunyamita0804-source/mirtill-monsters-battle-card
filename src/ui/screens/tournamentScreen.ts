@@ -20,6 +20,8 @@ import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import { newId, once } from '../gameStore.ts';
 import type { ScreenDefinition } from './types.ts';
+import { opponentFace } from '../components/opponentFace.ts';
+import { rewardGlow } from '../components/rewardGlow.ts';
 import faceReceptionist from '@assets/images/characters/face_receptionist.webp';
 import arenaBg from '@assets/images/backgrounds/battle_arena.webp';
 
@@ -108,7 +110,7 @@ export const tournamentScreen: ScreenDefinition = {
       ];
       const handle = openModal(element, {
         title: tr(s.won ? (s.firstWin ? 'tournament.rewardFirst' : 'tournament.rewardWin') : 'tournament.rewardEntry'),
-        body: lines.map((t) => h('p', { class: 'modal__text', text: t })),
+        body: [rewardGlow(s.won ? medalIcon : coinIcon), ...lines.map((t) => h('p', { class: 'modal__text', text: t }))],
         actions: [{ label: tr('common.ok'), primary: true, onTap: () => handle.close() }],
         onClose: render,
       });
@@ -177,7 +179,7 @@ export const tournamentScreen: ScreenDefinition = {
                 'li',
                 { class: `tournament__round${i < active.round ? ' is-won' : i === active.round ? ' is-next' : ''}` },
                 h('span', { class: 'tournament__round-label', text: roundLabel(t, i) }),
-                h('span', { class: 'tournament__round-name', text: opponentName(r) }),
+                h('span', { class: 'tournament__round-name' }, opponentFace(r.id, 34), h('span', { text: opponentName(r) })),
                 h('span', { class: 'tournament__round-state', text: i < active.round ? tr('tournament.stateWon') : i === active.round ? tr('tournament.stateNext') : tr('common.none') }),
               ),
             ),

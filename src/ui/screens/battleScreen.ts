@@ -17,6 +17,10 @@ import {
   type BattleState,
   type Side,
 } from '../../game/battle/engine.ts';
+import iconDeck from '@assets/images/ui/battle/icon_deck.webp';
+import iconHand from '@assets/images/ui/battle/icon_hand.webp';
+import iconMana from '@assets/images/ui/battle/icon_mana.webp';
+import { opponentFace } from '../components/opponentFace.ts';
 import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { nextBattleHint, type BattleHintId } from '../../game/story/battleTutorial.ts';
@@ -584,15 +588,33 @@ export const battleScreen: ScreenDefinition = {
         'div',
         { class: `battle-info battle-info--${side}${active ? ' is-active' : ''}` },
         h('span', { class: 'battle-info__tag', text: t(`battle.side.${side}`) }),
-        h('span', { class: 'battle-info__name', text: side === 'player' ? t('battle.side.player') : st.name }),
+        // 大会の相手は顔の絵（第5弾）を名前の横に
+        h(
+          'span',
+          { class: 'battle-info__name' },
+          side === 'opponent' && req.opponent.id ? opponentFace(req.opponent.id, 22) : null,
+          h('span', { text: side === 'player' ? t('battle.side.player') : st.name }),
+        ),
         h(
           'div',
           { class: 'battle-info__mana', attrs: { 'aria-label': t('battle.info.manaAria', { n: manaOf(st) }) } },
+          h('img', { class: 'battle-info__icon', attrs: { src: iconMana, alt: '', draggable: 'false' } }),
           h('span', { class: 'battle-info__mana-label', text: t('card.detail.mana') }),
           h('span', { class: 'battle-info__mana-value', text: String(manaOf(st)) }),
         ),
-        h('span', { class: 'battle-info__count', text: t('battle.info.deck', { n: st.deck.length }) }),
-        h('span', { class: 'battle-info__count', text: t('battle.info.hand', { n: st.hand.length }) }),
+        // 山札・手札の数（アイコンはデザイン第4弾）
+        h(
+          'span',
+          { class: 'battle-info__count' },
+          h('img', { class: 'battle-info__icon', attrs: { src: iconDeck, alt: '', draggable: 'false' } }),
+          h('span', { text: t('battle.info.deck', { n: st.deck.length }) }),
+        ),
+        h(
+          'span',
+          { class: 'battle-info__count' },
+          h('img', { class: 'battle-info__icon', attrs: { src: iconHand, alt: '', draggable: 'false' } }),
+          h('span', { text: t('battle.info.hand', { n: st.hand.length }) }),
+        ),
       );
     };
 
