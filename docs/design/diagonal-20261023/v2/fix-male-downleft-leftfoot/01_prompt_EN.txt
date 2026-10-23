@@ -1,0 +1,29 @@
+Attach all 4 images in the "attach" folder, then paste the text between the markers.
+
+▼ COPY FROM HERE
+Draw ONE game sprite: the young man (22 years old) in image 02 walking toward the viewer and to the LEFT of the screen (3/4 front-left view), with his LEFT foot forward.
+
+Image 01 is the leg pose reference:
+- A = front view, LEFT foot forward
+- B = left side view, LEFT foot forward
+- C = 3/4 front-left view, RIGHT foot forward (approved image, same as image 03)
+The legs of the new image must be exactly halfway between A and B. The new image is the mirror-pair of C: the same body angle, lean, stride and size as C, with only the legs and arms swapped.
+
+MOST IMPORTANT — NO TWISTED LEGS:
+- Hips, belly, both knees and BOTH toes all point down-left, the same direction as his face in image 02. Each knee points the same way as its toe.
+- LEFT foot (the foot on the RIGHT side of the picture) steps forward, straight toward the lower-left, and lands closer to the viewer (lower in the picture). Its toe points down-left.
+- RIGHT foot (the foot on the LEFT side of the picture) stays behind the body (higher in the picture), heel slightly lifted. Its toe also points down-left. Do NOT move it to the left or to the side.
+- Same stride as image 03. No wide stance, no big step.
+- Arms close to the body, swinging lightly forward/back (right arm slightly forward, left arm slightly back). Do NOT spread the arms outward.
+
+CHARACTER: exactly the same as image 02 — face, hair, blue cap with gold emblem and gold band, white shirt with rolled sleeves, long sleeveless blue vest with gold trim and gold embroidery, two brown leather straps crossing in an "X" on the chest, belt with gold buckle, satchel, hanging gold ornament, plain dark gray trousers, tall brown boots with gold laces and gold trim, fingerless brown gloves. Same colors, same smooth hand-painted style, same size. Do not redesign anything.
+
+FORMAT: square 1024x1024, ONE figure only. Top of the head on the "top of head" line and the planted foot on the "feet" line of image 04; body centered on the dotted line. Transparent background (if impossible, solid magenta #FF00FF). Do NOT draw the guide lines, labels, or the reference figures A/B/C. No text, no ground, no shadow.
+▲ COPY TO HERE
+
+If it goes wrong, send one of these:
+- Legs twisted again: "Hips, knees and both toes must all point down-left. Make it the mirror-pair of C: same angle, only the legs swapped."
+- Front foot goes to the right: "The front (left) foot must step straight toward the lower-left, not to the right."
+- Back foot drifts left: "Keep the back (right) foot behind the body, higher in the picture. Not to the left."
+- Character changed: "Keep the character exactly the same as image 02. Only the legs and arms change."
+- Background or lines appear: "Only the character. Transparent background, no guide lines or labels."
