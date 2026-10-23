@@ -185,7 +185,7 @@ npx vite preview --port 4173 --host 127.0.0.1   # 画面の確認（ビルド後
 - ダンジョンから帰ると家に戻る（街の入口の前には戻らない）。対戦の途中でアプリを閉じると、その対戦は最初からやり直し
 - 不要になった作業ブランチ（main に取り込み済み）：`fix/town-dungeon-gate`・`feature/battle-layout-deal`・`claude/cool-gauss-emyae1`・`feature/sacred-rename-i18n`・
   `feature/official-town-integration`・`feature/quality-pass`・`fix/walk-portrait`・`fix/walk-flicker`・`feature/env-assets-a`・
-  `feature/hand-swipe`・`fix/mana-convert-se`・`fix/adult-labels`・`assets/town-parts`・`feature/mismon-assets`・`feature/compact-town`。消すかどうかはユーザーに確認してから
+  `feature/hand-swipe`・`fix/mana-convert-se`・`fix/adult-labels`・`assets/town-parts`・`feature/mismon-assets`・`feature/compact-town`・`feature/plain-buttons`・`feature/adult-style`（この2つは 2026-10-23 に main へ取り込み済み）。消すかどうかはユーザーに確認してから
   （`nightbatch/2026-10-22`・`claude/sacred-monsters-battle-card-btgeie` は中身未確認）
 
 ## 7. 主なファイル
