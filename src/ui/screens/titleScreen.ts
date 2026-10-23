@@ -19,8 +19,9 @@ export const titleScreen: ScreenDefinition = {
           element,
           t('title.confirmNew'),
           [h('p', { class: 'modal__text', text: t('title.confirmNewText') })],
-          t('title.newGame'),
+          t('common.yes'),
           () => ctx.navigate('newGame'),
+          t('common.no'),
         );
       } else {
         ctx.navigate('newGame');

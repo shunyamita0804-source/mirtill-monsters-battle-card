@@ -6,6 +6,8 @@ export const COMMON = {
   'common.close': { ja: '閉じる', en: 'Close' },
   'common.cancel': { ja: 'やめる', en: 'Cancel' },
   'common.ok': { ja: 'OK', en: 'OK' },
+  'common.yes': { ja: 'はい', en: 'Yes' },
+  'common.no': { ja: 'いいえ', en: 'No' },
   'common.all': { ja: 'すべて', en: 'All' },
   'common.toTitle': { ja: 'タイトルへ', en: 'To Title' },
   'common.none': { ja: '—', en: '—' },
