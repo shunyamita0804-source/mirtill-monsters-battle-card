@@ -48,6 +48,11 @@ export const BATTLE = {
     en: "{name}'s next {stat} skill deals {n} less damage.",
   },
   'battle.log.seal': { ja: '{name}は次のターン攻撃できない。', en: "{name} can't attack next turn." },
+  'battle.log.weakenTurn': {
+    ja: '{name}は次のターン、{stat}の技のダメージ−{n}。',
+    en: "{name}'s {stat} skills deal {n} less damage next turn.",
+  },
+  'battle.log.taunt': { ja: '{name}は次のターン、{only}にしか攻撃できない。', en: '{name} can only attack {only} next turn.' },
 
   // 使えない理由（engine.ts の cardUsability）
   'battle.ng.defenseOnly': { ja: 'いまは防御・回避カードしか使えません', en: 'Only Guard/Dodge cards now' },
@@ -74,6 +79,15 @@ export const BATTLE = {
   'battle.showcase': { ja: '{side}の「{card}」！', en: '{side}: {card}!' },
   'battle.status.weaken': { ja: '{stat}−{n}', en: '{stat} -{n}' },
   'battle.status.sealed': { ja: '攻撃不可', en: 'No attack' },
+  'battle.oppHand.count': { ja: '相手の手札 {n}枚', en: "Opponent's hand: {n} {n|card|cards}" },
+  'battle.cmd.menu': { ja: 'コマンド', en: 'Command' },
+  // 対戦相手のひと言（【仮】台詞。正式な台詞・人物ごとの言い回しは未定）
+  'battle.talk.start': { ja: 'よろしく。いい勝負にしよう！', en: "Let's have a good match!" },
+  'battle.talk.knock': { ja: 'よし、まず1体！', en: 'Got one!' },
+  'battle.talk.ownDown': { ja: 'くっ……まだまだ！', en: "Ugh... I'm not done yet!" },
+  'battle.talk.win': { ja: '今回はわたしの勝ちだね。', en: 'This one goes to me.' },
+  'battle.talk.lose': { ja: '参った……強いね。', en: "I give up... you're strong." },
+  'battle.status.taunted': { ja: '{only}だけ', en: '{only} only' },
   'battle.ng.sealed': { ja: 'このターンは攻撃できません（すなかけ）', en: "Can't attack this turn (Sand Throw)" },
   'battle.ng.noAttackTarget': { ja: '攻撃できる相手がいません', en: 'No enemy to attack' },
 

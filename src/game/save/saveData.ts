@@ -3,6 +3,7 @@ import { CURRENCY, PACKS, RANK_ORDER, type RankId } from '../../data/economy.ts'
 import {
   buildDeckFromCollection,
   countCards,
+  createMixedTestDeck,
   createPlaceholderStarterDeck,
   createSoramoTestDeck,
   createStarterCollection,
@@ -20,7 +21,7 @@ import { isIntroState, recoverIntro } from '../story/intro.ts';
  * - 読み込み時は normalizeSave() で型・範囲を確認し、壊れた値は既定値に戻す
  * - 変更はすべて「古いセーブを受け取り新しいセーブを返す」純粋関数で行う
  */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export type Gender = 'male' | 'female';
 export type Direction = 'down' | 'up' | 'left' | 'right';
@@ -203,6 +204,37 @@ function migrateSoramoTestV6(raw: RawObject): RawObject {
   return { ...raw, collection, deck };
 }
 
+/** 同じカードが同じ枚数ずつ入っているか（並び順は問わない） */
+function sameCards(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  const ca = countCards(a);
+  const cb = countCards(b);
+  return Object.keys(ca).length === Object.keys(cb).length && Object.entries(ca).every(([id, n]) => cb[id] === n);
+}
+
+/**
+ * version 6 → 7（2026-10-23）：ユーザー指示「仮置きで、ソラモしかいない所にラズックも出して」。
+ * 1回だけ、テスト用のソラモとラズックのデッキ（createMixedTestDeck）に入っているカードを所持カードに足す（足りない分だけ）。
+ * デッキは、version 6 で配ったソラモのデッキのまま（自分で組み直していない）ときだけ、新しいデッキに替える。組み直したデッキはそのまま
+ */
+function migrateLazuckTestV7(raw: RawObject): RawObject {
+  const collection: Record<string, number> = isObject(raw.collection) ? { ...(raw.collection as Record<string, number>) } : {};
+  const mixed = createMixedTestDeck();
+  for (const [id, count] of Object.entries(countCards([...mixed.monsters, ...mixed.skills]))) {
+    const owned = typeof collection[id] === 'number' ? collection[id] : 0;
+    collection[id] = Math.max(owned, count);
+  }
+  const old = createSoramoTestDeck();
+  const deck = raw.deck;
+  const untouched =
+    isObject(deck) &&
+    Array.isArray(deck.monsters) &&
+    Array.isArray(deck.skills) &&
+    sameCards(deck.monsters as string[], old.monsters) &&
+    sameCards(deck.skills as string[], old.skills);
+  return untouched ? { ...raw, collection, deck: mixed } : { ...raw, collection };
+}
+
 /** version n → n+1 の変換。形式を変えるときはここに足し、SAVE_VERSION を上げる */
 const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
   1: migrateDeckRulesV2,
@@ -210,6 +242,7 @@ const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
   3: migrateWorldV4,
   4: migrateTownV5,
   5: migrateSoramoTestV6,
+  6: migrateLazuckTestV7,
 };
 
 export function migrate(raw: RawObject): RawObject | null {

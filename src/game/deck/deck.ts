@@ -1,5 +1,7 @@
 import { cardCatalog, monsterId, skillId, skillsOf, supportId, SUPPORTS } from '../../data/cards.ts';
+import { LAZUCK_SKILLS } from '../../data/lazuck.ts';
 import { SORAMO_SKILLS, SORAMO_TEAM } from '../../data/soramo.ts';
+import { TEST_TEAM } from '../../data/testTeams.ts';
 import { DECK_RULES } from '../../data/rules.ts';
 import { cardName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
@@ -141,9 +143,25 @@ export function createSoramoTestDeck(): Deck {
   return { monsters: [...SORAMO_TEAM], skills };
 }
 
-/** 新しく始めたときのデッキ。いまはテスト用のソラモのデッキ（仮モンスターA〜C の旧スターターは createPlaceholderStarterDeck） */
+/**
+ * 【テスト用】ソラモとラズックのデッキ（2026-10-23 ユーザー指示「仮置きで、ソラモしかいない所にラズックも出して」）。
+ * ソラモ・ラズック・ソラモ（TEST_TEAM）＋両方の技16種を1枚ずつ（32枚）＋両方の技01〜08をもう1枚ずつ（16枚）＋仮サポート1〜6を2枚ずつ（12枚）＝60枚。
+ * 正式なスターターデッキの内訳は未承認（これは技を試すための仮の組み合わせ）
+ */
+const TEST_EXTRA_COPY_UPTO = 8;
+export function createMixedTestDeck(): Deck {
+  const both = [SORAMO_SKILLS, LAZUCK_SKILLS];
+  const skills: string[] = both.flatMap((list) => list.map((s) => s.id));
+  for (const list of both) skills.push(...list.slice(0, TEST_EXTRA_COPY_UPTO).map((s) => s.id));
+  for (const card of SUPPORTS) {
+    for (let i = 0; i < TEST_SORAMO_SUPPORT_COPIES && skills.length < DECK_RULES.skillCount; i++) skills.push(card.id);
+  }
+  return { monsters: [...TEST_TEAM], skills };
+}
+
+/** 新しく始めたときのデッキ。いまはテスト用のソラモとラズックのデッキ（仮モンスターA〜C の旧スターターは createPlaceholderStarterDeck） */
 export function createStarterDeck(): Deck {
-  return createSoramoTestDeck();
+  return createMixedTestDeck();
 }
 
 /** 旧スターター（仮モンスターA〜C）と同じ内容の所持カード（テスト用） */

@@ -52,8 +52,8 @@ describe('セーブデータ', () => {
     expect(migrated?.version).toBe(SAVE_VERSION);
     const save = normalizeSave(raw);
     if (!save) throw new Error('save');
-    // version 2 で仮モンスターのデッキに直り、version 6（2026-10-23）でテスト用のソラモのデッキに替わる
-    expect(save.deck.monsters).toEqual(['mon-soramo', 'mon-soramo', 'mon-soramo']);
+    // version 2 で仮モンスターのデッキに直り、version 6（2026-10-23）でテスト用のソラモのデッキ、version 7 でソラモとラズックのデッキに替わる
+    expect(save.deck.monsters).toEqual(['mon-soramo', 'mon-lazuck', 'mon-soramo']);
     expect(validateDeck(save.deck, save.collection)).toEqual([]);
     expect(save.collection['mon-a']).toBe(1);
     // 持っていた枚数は減らさない

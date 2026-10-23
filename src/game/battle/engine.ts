@@ -44,6 +44,10 @@ export interface BattleMonster {
   readonly weaken?: { readonly stat: StatType; readonly amount: number } | null;
   /** この手番（turn）の間は攻撃の技を使えない（正式：すなかけ） */
   readonly sealedTurn?: number | null;
+  /** この手番（turn）の間だけ、stat の技のダメージを amount 減らす（正式：ラズックのダストキック。吠えると違い、使っても消えず、手番が過ぎたら効かない） */
+  readonly weakenTurn?: { readonly stat: StatType; readonly amount: number; readonly turn: number } | null;
+  /** この手番（turn）の間は、monsterId の種類のモンスターにしか攻撃できない（正式：ラズックのちょうはつ） */
+  readonly taunt?: { readonly monsterId: string; readonly turn: number } | null;
 }
 
 export interface HandCard {
@@ -330,9 +334,34 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
   return YES;
 }
 
-/** 対象を選ぶ必要があるカードなら、選べる対象を返す */
-export function targetsFor(state: BattleState, side: Side, card: PlayCard): BattleMonster[] {
-  if (card.kind === 'skill' && targetsEnemy(card)) return aliveMonsters(state.sides[otherSide(side)]);
+/**
+ * ちょうはつで、このモンスターがこの手番に攻撃できる相手が限られているなら、その種類（モンスター ID）。限られていなければ null。
+ * 【要仕様確定】相手の場にその種類（ラズック）が1体も生きていなければ、制限なしとした（対戦が止まらないように）。
+ * ラズックが複数いれば、どのラズックにも攻撃できる
+ */
+export function tauntRestriction(state: BattleState, side: Side, user: BattleMonster): string | null {
+  const taunt = user.taunt;
+  if (!taunt || taunt.turn !== state.turn) return null;
+  return aliveMonsters(state.sides[otherSide(side)]).some((m) => m.cardId === taunt.monsterId) ? taunt.monsterId : null;
+}
+
+/**
+ * 対象を選ぶ必要があるカードなら、選べる対象を返す。
+ * 攻撃の技は、ちょうはつで相手が限られていればそれに従う。user を渡さなければ、使えるモンスターのだれかが攻撃できる相手すべて。
+ * 【要仕様確定】ちょうはつが限るのは攻撃の技だけ（特殊の技・防御・回避・サポートは限らない）
+ */
+export function targetsFor(state: BattleState, side: Side, card: PlayCard, user?: BattleMonster): BattleMonster[] {
+  if (card.kind === 'skill' && targetsEnemy(card)) {
+    const enemies = aliveMonsters(state.sides[otherSide(side)]);
+    if (card.effect.type !== 'attack') return enemies;
+    const users = user ? [user] : availableUsers(state, side, card);
+    return enemies.filter((e) =>
+      users.some((u) => {
+        const only = tauntRestriction(state, side, u);
+        return only === null || e.cardId === only;
+      }),
+    );
+  }
   if (card.effect.type === 'heal') return aliveMonsters(state.sides[side]);
   return [];
 }
@@ -351,10 +380,16 @@ export function weakenOf(user: BattleMonster | undefined, skill: SkillCard): num
   return w && skill.stat && w.stat === skill.stat.type ? w.amount : 0;
 }
 
-/** 攻撃の威力（場の増減と、使うモンスターへの「吠える」を反映。0未満にはならない） */
+/** 使うモンスターにかかっている「この手番の技のダメージ−」（ダストキック）。この手番で、その技の種類に効くときだけ */
+export function weakenTurnOf(state: BattleState, user: BattleMonster | undefined, skill: SkillCard): number {
+  const w = user?.weakenTurn;
+  return w && w.turn === state.turn && skill.stat && w.stat === skill.stat.type ? w.amount : 0;
+}
+
+/** 攻撃の威力（場の増減と、使うモンスターへの「吠える」「ダストキック」を反映。0未満にはならない） */
 export function attackPower(state: BattleState, skill: SkillCard, user?: BattleMonster): number {
   if (!skill.stat) return 0;
-  return Math.max(0, skill.stat.value + fieldModifier(state, skill.stat.type) - weakenOf(user, skill));
+  return Math.max(0, skill.stat.value + fieldModifier(state, skill.stat.type) - weakenOf(user, skill) - weakenTurnOf(state, user, skill));
 }
 
 /** 手札をマナにできるか（攻撃のあとのマナ化の間だけ。枚数の制限なし） */
@@ -560,10 +595,13 @@ function useCard(
   if (card.kind === 'support') return useSupport(state, side, cardUid, card, targetUid);
   const skill = card;
   const users = availableUsers(state, side, skill);
-  const user = userUid ? users.find((m) => m.uid === userUid) : users[0];
+  // 使うモンスターの指定がなければ、選んだ相手に攻撃できるモンスター（ちょうはつで限られていないもの）を選ぶ
+  const user = userUid
+    ? users.find((m) => m.uid === userUid)
+    : (targetUid ? users.find((u) => targetsFor(state, side, skill, u).some((m) => m.uid === targetUid)) : undefined) ?? users[0];
   if (!user) return state;
 
-  const targets = targetsFor(state, side, skill);
+  const targets = targetsFor(state, side, skill, user);
   let target: BattleMonster | undefined;
   if (targetsEnemy(skill) || skill.effect.type === 'heal') {
     target = targetUid ? targets.find((m) => m.uid === targetUid) : undefined;
@@ -610,6 +648,11 @@ function useCard(
       // 【要仕様確定】重ねがけはしない（すでにかかっていても同じ量のまま）
       if (!target) return state;
       const e = skill.effect;
+      if (e.duration === 'nextTurn') {
+        // ダストキック：相手の次の手番（turn + 1）の間だけ。手番が過ぎたら何もしなくても効かない
+        next = updateMonster(next, target.uid, { weakenTurn: { stat: e.stat, amount: e.amount, turn: state.turn + 1 } });
+        return addLog(next, t('battle.log.weakenTurn', { name: nameOf(target.cardId), stat: statLabel(e.stat), n: e.amount }));
+      }
       next = updateMonster(next, target.uid, { weaken: { stat: e.stat, amount: e.amount } });
       return addLog(next, t('battle.log.weaken', { name: nameOf(target.cardId), stat: statLabel(e.stat), n: e.amount }));
     }
@@ -618,6 +661,12 @@ function useCard(
       if (!target) return state;
       next = updateMonster(next, target.uid, { sealedTurn: state.turn + 1 });
       return addLog(next, t('battle.log.seal', { name: nameOf(target.cardId) }));
+    }
+    case 'taunt': {
+      // ちょうはつ：相手の次の手番（turn + 1）の間、使ったモンスターと同じ種類にしか攻撃できない
+      if (!target) return state;
+      next = updateMonster(next, target.uid, { taunt: { monsterId: user.cardId, turn: state.turn + 1 } });
+      return addLog(next, t('battle.log.taunt', { name: nameOf(target.cardId), only: nameOf(user.cardId) }));
     }
     case 'defense':
     case 'evade':

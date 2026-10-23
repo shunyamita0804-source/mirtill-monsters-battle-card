@@ -118,8 +118,8 @@ describe('ソラモのモンスターカード', () => {
     for (const a of [SORAMO_MONSTER.art, SORAMO_MONSTER.battleArt]) expect(existsSync(`assets/images/cards/monsters/${a?.file}`)).toBe(true);
   });
 
-  it('用途の決まっていないモンスター（ガウル・ラズック）は登録だけで、カードの一覧には入れない', () => {
-    expect(REGISTERED_ONLY_MONSTERS.map((m) => m.nameJa)).toEqual(['ガウル', 'ラズック']);
+  it('用途の決まっていないモンスター（ガウル）は登録だけで、カードの一覧には入れない（ラズックは技が届いたので正式に）', () => {
+    expect(REGISTERED_ONLY_MONSTERS.map((m) => m.nameJa)).toEqual(['ガウル']);
     for (const m of REGISTERED_ONLY_MONSTERS) {
       expect(existsSync(`assets/images/cards/monsters/${m.officialArt}`)).toBe(true);
       expect(existsSync(`assets/images/cards/monsters/${m.battleArt}`)).toBe(true);
@@ -128,19 +128,21 @@ describe('ソラモのモンスターカード', () => {
   });
 });
 
-describe('テスト用：仮のカードをソラモに（2026-10-23 ユーザー指示）', () => {
-  it('新しく始めたときのデッキはソラモ3体＋ソラモの技16種×3＋仮サポート12枚で、正しい構成', () => {
+describe('テスト用：仮のカードをソラモとラズックに（2026-10-23 ユーザー指示）', () => {
+  it('新しく始めたときのデッキはソラモ・ラズック・ソラモ＋両方の技で、正しい構成', () => {
     const deck = createStarterDeck();
-    expect(deck).toEqual(createSoramoTestDeck());
-    expect(deck.monsters).toEqual(['mon-soramo', 'mon-soramo', 'mon-soramo']);
-    expect(deck.skills.filter((id) => id.startsWith('skl-soramo-'))).toHaveLength(48);
+    expect(deck.monsters).toEqual(['mon-soramo', 'mon-lazuck', 'mon-soramo']);
+    expect(new Set(deck.skills.filter((id) => id.startsWith('skl-soramo-'))).size).toBe(16);
+    expect(new Set(deck.skills.filter((id) => id.startsWith('skl-lazuck-'))).size).toBe(16);
     expect(validateDeck(deck, createNewSave().collection)).toEqual([]);
   });
 
-  it('大会・ダンジョン・練習の相手はすべてソラモ3体で、デッキが組める', () => {
+  it('大会・ダンジョン・練習の相手は、ソラモとラズックの仮の編成で、デッキが組める', () => {
     const teams = [...Object.values(ENCOUNTERS).map((e) => e.monsters), ...TOURNAMENTS.flatMap((t) => t.rounds.map((r) => r.monsters))];
     for (const team of teams) {
-      expect(team).toEqual(['mon-soramo', 'mon-soramo', 'mon-soramo']);
+      expect(team.every((id) => id === 'mon-soramo' || id === 'mon-lazuck')).toBe(true);
+      expect(team).toContain('mon-soramo');
+      expect(team).toContain('mon-lazuck');
       expect(validateDeck(buildAutoDeck(team))).toEqual([]);
     }
   });
