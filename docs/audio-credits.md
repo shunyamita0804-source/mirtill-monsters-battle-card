@@ -78,7 +78,7 @@
 | ダンジョンの宝箱（木・鉄・金）と開く動き | `assets/images/maps/dungeon/chest_0{1,2,3}_{base,anim_01〜04}.webp` | chests/chest_0{1,2,3}_*.webp | 高さ 160px に縮小 |
 | 大会の景品のアイコン（初回優勝＝勲章・再優勝＝小袋） | `assets/images/icons/prize_{medal,pouch}.webp` | items/body_1012/27・15.webp | 128px に縮小 |
 | 金貨（所持金・参加報酬） | `assets/images/icons/coin.png` | ui/gold/coin.png | なし |
-| ボタン（行う＝青・やめる＝赤） | `assets/images/ui/button/mm_btn_blue_ornate.png`・`mm_btn_red.webp` | ui/a_group/a19・a04 | なし（両端の飾りはのばさない表示） |
+| ボタン（行う＝青・やめる＝赤） | `assets/images/ui/button/mm_btn_blue_ornate.png`・`mm_btn_red.webp` | ui/a_group/a19・a04 | **2026-10-23 から使っていない**（ユーザー指示でふつうのボタンに戻した。ファイルだけ残している） |
 
 ## 本編の画像素材（会話の UI）
 

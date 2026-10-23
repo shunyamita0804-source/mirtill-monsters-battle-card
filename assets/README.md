@@ -49,7 +49,7 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 | `audio/se/mana_convert.ogg`・`mana_convert.m4a`（原本 `mana_convert_original_44100.wav`） | マナ化の効果音（09）。ChatGPT 作の独自の電子音（2026-10-22 ユーザー送付・指示） | 受け取ったまま（`docs/audio-credits.md`）。原本 WAV はビルドに含めない |
 | `audio/se/evade_success.mp3`・`hit_normal.mp3`・`hit_strong.mp3`・`mana_spend.mp3` | 正式採用の効果音（回避成功・通常命中・強攻撃命中・マナ消費） | ユーザー承認の MP3 をそのまま（`docs/audio-credits.md`） |
 
-ミスモン（本編）の素材（2026-10-22）：ダンジョンの対戦の背景（`images/backgrounds/battle_field_*`）・宝箱（`images/maps/dungeon/chest_*`）・景品のアイコンと金貨（`images/icons/`）・ボタン（`images/ui/button/mm_*`）・BGM（`audio/bgm/bgm_*.mp3`）。出どころは `docs/audio-credits.md`。
+ミスモン（本編）の素材（2026-10-22）：ダンジョンの対戦の背景（`images/backgrounds/battle_field_*`）・宝箱（`images/maps/dungeon/chest_*`）・景品のアイコンと金貨（`images/icons/`）・ボタン（`images/ui/button/mm_*`。2026-10-23 から未使用）・BGM（`audio/bgm/bgm_*.mp3`）。出どころは `docs/audio-credits.md`。
 
 街・部屋の部品の原本（絵を作り直すときの材料。ゲームには直接入らない）は `design-parts/seimon-world/`（2026-10-22〜。何がそろっているかは中の README）。
 
