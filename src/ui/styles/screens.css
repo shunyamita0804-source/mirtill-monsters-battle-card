@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 48px 24px 28px;
-  background: radial-gradient(circle at 50% 30%, #4b3d8f 0%, var(--color-stage) 70%);
+  background: radial-gradient(circle at 50% 30%, #2f343e 0%, var(--color-stage) 70%);
 }
 
 .title__logo {
@@ -29,10 +29,13 @@
 
 .title__name {
   margin-top: 4px;
-  font-size: 40px;
-  letter-spacing: 0.08em;
+  /* 2026-10-23：大人向けに、明朝体・くすんだ金・控えめな影 */
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   color: var(--color-accent);
-  text-shadow: 0 3px 0 #7a4b00;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.6);
 }
 
 .title__en {
@@ -281,7 +284,7 @@
   flex: 1;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #f4f0ff;
+  background: #ebe7df;
   color: #2a1d3a;
   font-size: 14px;
 }
@@ -320,8 +323,8 @@
 }
 
 .shop-menu__item--special {
-  border-color: #b98cff;
-  background: linear-gradient(90deg, #4b2f7a, var(--color-panel));
+  border-color: #c8a45d;
+  background: linear-gradient(90deg, #4a3a22, var(--color-panel));
 }
 
 .shop-menu__disabled {
@@ -352,7 +355,7 @@
   padding: 10px;
   border: 3px solid #c9a24a;
   border-radius: 16px 16px 8px 8px;
-  background: linear-gradient(180deg, #3d3270, #2a2150);
+  background: linear-gradient(180deg, #2e333c, #1d2026);
 }
 
 .gacha__machine-top {
@@ -368,7 +371,7 @@
   height: 64px;
   margin-top: 8px;
   border-radius: 8px;
-  background: #15102c;
+  background: #101215;
   overflow: hidden;
 }
 
@@ -377,7 +380,7 @@
   height: 60px;
   margin-top: 14px;
   border-radius: 4px;
-  background: linear-gradient(135deg, #ffcf5a, #e07a3a);
+  background: linear-gradient(135deg, #c8a45d, #e07a3a);
   animation: pack-peek 2.4s ease-in-out infinite;
 }
 
@@ -429,7 +432,7 @@
   height: 88px;
   padding: 4px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #ffcf5a, #e07a3a);
+  background: linear-gradient(135deg, #c8a45d, #e07a3a);
   color: #3b2410;
   font-size: 11px;
   font-weight: 800;
@@ -437,7 +440,7 @@
 }
 
 .gacha__pack.is-locked .gacha__pack-art {
-  background: #3a3358;
+  background: #33363d;
   color: var(--color-sub);
   font-size: 28px;
 }
@@ -506,7 +509,7 @@
   justify-content: center;
   gap: 14px;
   padding: 16px;
-  background: rgb(8 4 20 / 0.9);
+  background: rgb(6 7 9 / 0.9);
 }
 
 .pack-open__pack {
@@ -517,7 +520,7 @@
   height: 200px;
   padding: 10px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #ffcf5a, #e07a3a);
+  background: linear-gradient(135deg, #c8a45d, #e07a3a);
   color: #3b2410;
   font-size: 15px;
   font-weight: 800;
@@ -571,11 +574,11 @@
   left: 4px;
   width: 92px;
   height: 153px;
-  border: 2px solid #8a7bd0;
+  border: 2px solid #8a8577;
   border-radius: 8px;
   background:
     repeating-linear-gradient(45deg, rgb(255 255 255 / 0.12) 0 4px, transparent 4px 8px),
-    #4b3d8f;
+    #2f343e;
   transition: opacity 200ms;
 }
 
