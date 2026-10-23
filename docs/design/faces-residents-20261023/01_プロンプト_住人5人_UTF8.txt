@@ -1,0 +1,119 @@
+【プロンプト】住人5人の顔の絵（2026-10-23）
+
+使い方：
+・画像を作るAIに、▼〜▲ の間をそのまま貼り付ける
+・5人とも同じ会話で続けて頼むと、大きさ・向きがそろいやすい。まず「共通ルール」と 1 を送り、できたら 2 → 3 … と続ける
+・そろわなくなったら、新しい会話で「共通ルール」と、できあがった1枚目を見本として添付して続きを頼む
+・日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（最初に1回付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、face_clerk.png、face_receptionist.png、neighbor_guide_talk_normal.png
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の、街の住人の「顔の絵」を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【形】添付の店員・受付の顔の絵（face_clerk・face_receptionist）とまったく同じ形にそろえる。正方形 1024×1024。胸から上。顔は少し右を向き（体は斜め右向き）、目はこちら。頭のてっぺんから胸までが正方形にちょうど収まる大きさで、顔は真ん中より少し上
+【画風】顔の描き方・塗り・線は、添付の会話の絵（金髪の女性）と店員・受付の絵と同じ。筆で塗り重ねた手描きの質感。大人向けの落ち着いた雰囲気
+【人物】服・髪型・色・持ち物は、その人の設定画とまったく同じ。年齢は指定どおり（子どもやお年寄りに見せない）
+【背景】透明（できなければマゼンタ一色 #FF00FF）。枠・影の板・文字は描かない
+【禁止】文字・数字・ロゴ・透かし・サイン。新聞やカードにも読める文字・絵柄を入れない。実在の作品に似せること
+▲ここまで
+▼English
+Draw a "face portrait" of a town resident for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Format] Exactly the same format as the attached clerk and receptionist portraits (face_clerk, face_receptionist). Square 1024x1024, from the chest up, face turned slightly to the right (body three-quarter right), eyes looking at the viewer. Head top to chest fits the square exactly; the face sits slightly above the center.
+[Style] Same face style, painting and lines as the attached conversation portrait (the blonde woman) and the clerk/receptionist. Hand-painted with layered brush strokes. Calm mood, for adults.
+[Character] Clothes, hair, colors and held items exactly as the attached design sheet. Age exactly as specified (do not make them look like children or very old people).
+[Background] Transparent (or solid magenta #FF00FF). No frame, no backing plate, no text.
+[Forbidden] Any text, numbers, logos, watermarks or signatures. No readable text or pictures on the newspaper or card. Resemblance to existing IP.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　住人A　花かごの婦人 → face_resident_a.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：設定画/npc_resident_a_design.png（と npc_resident_a_stand.png）
+▼ここからコピー
+1人目：添付の設定画の女性（50代）。
+・銀色の髪を後ろでまとめた上品な髪型、赤い小さな耳飾り
+・クリーム色のブラウス、こげ茶の胴着（ひも締め）、肩に茶色のふさ飾りのショール
+・腕に花かご（白・黄色・桃色の小さな花）を下げ、かごの上のほうが胸の前に少し見える
+・おだやかで、やさしいほほえみ。上品で落ち着いた50代の女性
+▲ここまで
+▼English
+Person 1: the woman in the attached design sheet (in her 50s).
+- Silver hair neatly tied up at the back, small red earrings.
+- Cream blouse, dark-brown laced bodice, a brown fringed shawl over the shoulders.
+- A flower basket (small white, yellow and soft-pink flowers) on her arm; the top of the basket shows a little in front of her chest.
+- A calm, gentle smile. An elegant, composed woman in her 50s.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　住人B　カード好きの青年 → face_resident_b.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：設定画/npc_resident_b_design.png（と npc_resident_b_stand.png）
+▼ここからコピー
+同じ形・同じ大きさ・同じ向きで、2人目：添付の設定画の青年（20代前半）。
+・はねた茶色の短い髪
+・青い上着（金の飾り、白いふち）、えりもとをひもで結んだ白いシャツ
+・片手でカードを1枚、顔の横あたりに得意げに見せている。カードは裏向きの無地か、表は白い無地（絵・文字なし）。手が顔にかからないように
+・明るく自信のある笑顔
+▲ここまで
+▼English
+Same format, size and angle. Person 2: the young man in the attached design sheet (early 20s).
+- Messy short brown hair.
+- Blue jacket with gold ornaments and white trim, white shirt laced at the collar.
+- Proudly showing one card near the side of his face with one hand. The card is plain (back side or blank white front; no picture, no text). The hand must not cover the face.
+- A bright, confident grin.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3　住人C　大工 → face_resident_c.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：設定画/npc_resident_c_design.png（と npc_resident_c_stand.png）
+▼ここからコピー
+同じ形・同じ大きさ・同じ向きで、3人目：添付の設定画の大工の男性（30代）。
+・短い茶色の髪、うすい無精ひげ、がっしりした体
+・緑のシャツ（袖をまくっている）、茶色の革の前掛け（肩ひも付き）
+・気さくで頼もしい笑顔
+▲ここまで
+▼English
+Same format, size and angle. Person 3: the carpenter in the attached design sheet (in his 30s).
+- Short brown hair, light stubble, sturdy build.
+- Green shirt with rolled-up sleeves, a brown leather work apron with shoulder straps.
+- A friendly, reliable smile.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 4　住人D　赤い服の女性 → face_resident_d.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：設定画/npc_resident_d_design.png（と npc_resident_d_stand.png）
+▼ここからコピー
+同じ形・同じ大きさ・同じ向きで、4人目：添付の設定画の女性（20代）。
+・こげ茶の長い髪を高い位置でひとつに結んでいる（毛先が肩に流れる）
+・赤いワンピース（四角く開いた襟、ふくらんだ短い袖）
+・明るく親しみやすい笑顔。大人の女性らしく、落ち着いた品のある雰囲気
+▲ここまで
+▼English
+Same format, size and angle. Person 4: the woman in the attached design sheet (in her 20s).
+- Long dark-brown hair tied high in a ponytail, the ends falling over her shoulder.
+- Red dress with a square neckline and short puffed sleeves.
+- A bright, friendly smile, with the calm grace of an adult woman.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 5　住人E　新聞を読む紳士 → face_resident_e.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：設定画/npc_resident_e_design.png（と npc_resident_e_stand.png）
+▼ここからコピー
+同じ形・同じ大きさ・同じ向きで、5人目：添付の設定画の紳士（50代）。
+・白髪まじりの灰色の髪をきちんと整え、口ひげ
+・白いシャツ（袖を少しまくる）、紺のベスト
+・たたんだ新聞を脇にはさみ、新聞の端が胸の横に少し見える（読める文字は入れない）
+・落ち着いた、少し物知りそうなほほえみ
+▲ここまで
+▼English
+Same format, size and angle. Person 5: the gentleman in the attached design sheet (in his 50s).
+- Neatly combed grey hair with some white, a moustache.
+- White shirt with slightly rolled sleeves, a navy vest.
+- A folded newspaper tucked under his arm; its edge shows a little beside his chest (no readable text).
+- A calm, knowing smile.
+▲
