@@ -4,17 +4,25 @@
  * 技カードの表示は「技カード UI テンプレート V4」（マナ＝青、ちから＝赤、かしこさ＝緑、数字1〜10）に合わせる。
  * 数値・効果の具体的な値は正式仕様が未確定のため、src/data/ の仮データで与える。
  */
+import { OFFICIAL_DRAFT_EN } from '../../i18n/contentEnOfficialDraft.ts';
 import { getLanguage, t } from '../../i18n/i18n.ts';
 
 /** カードの種類は3つ：モンスター／技／サポート（原作の全体カード・ブリーダーカードはサポートにまとめる） */
 export type CardKind = 'monster' | 'skill' | 'support';
 export type StatType = 'force' | 'wisdom';
 export type Rarity = 'C' | 'U' | 'R';
+/**
+ * 技の種別（カード右側のバー）：ちから・かしこさ（数値のある攻撃）／特殊・防御・回避（2026-10-23 正式カードから）。
+ * 仮カードは種別を持たず、stat.type（ちから or かしこさ）をそのまま使う
+ */
+export type SkillCategory = StatType | 'special' | 'defense' | 'evade';
 
 /* 表示名はいまの言語で返す（辞書は src/i18n/messages/cards.ts） */
 export const kindLabel = (kind: CardKind): string => t(`card.kind.${kind}`);
 export const statLabel = (stat: StatType): string => t(`card.stat.${stat}`);
-export const rarityLabel = (rarity: Rarity): string => t(`card.rarity.${rarity}`);
+/** レアリティの表示（正式カードでまだ決まっていないものは null →「未定」） */
+export const rarityLabel = (rarity: Rarity | null): string => t(rarity ? `card.rarity.${rarity}` : 'card.rarity.none');
+export const categoryLabel = (category: SkillCategory): string => t(`card.category.${category}`);
 
 /**
  * カード画像の参照先。assets/ のカテゴリとファイル名で指定する。
@@ -30,7 +38,15 @@ export interface CardArt {
 interface CardBase {
   readonly id: string;
   readonly name: string;
-  readonly rarity: Rarity;
+  /** レアリティ（C/U/R）。正式カードでまだ決まっていなければ null（モンスターのランクとは別物） */
+  readonly rarity: Rarity | null;
+  /** 正式カードのデザイン上の ID（例：SOR-SK-01）。ゲームの ID（id）とは別 */
+  readonly designId?: string;
+  /**
+   * 正式カードで、まだ決まっていない項目（例：['life', 'art']）。
+   * 動かすために仮の値を入れているものは画面にも「仮」と出す
+   */
+  readonly pendingSpec?: readonly string[];
   /** 仮カード（正式データではない）なら true */
   readonly isPlaceholder: boolean;
   /** 正式画像。未指定なら仮の絵で表示する */
@@ -48,6 +64,11 @@ export interface MonsterCard extends CardBase {
   readonly hidden?: boolean;
   /** 正式名称・画像が未確定 */
   readonly undetermined?: boolean;
+  /**
+   * バトル用の絵（文字・UIなし。2026-10-23 正式）。art はショップ・図鑑・自宅などで見せる正式カード（名前・ライフ入り）。
+   * バトルでは battleArt に、ゲーム側で名前とライフを重ねる
+   */
+  readonly battleArt?: CardArt;
 }
 
 /**
@@ -60,9 +81,20 @@ export type SkillEffect =
       readonly unblockable?: boolean;
       readonly undodgeable?: boolean;
       readonly halfOnEvade?: boolean;
+      /** 技が当たったとき、使ったモンスターのライフを減らす量（正式：すてみタックル） */
+      readonly selfDamageOnHit?: number;
     }
-  | { readonly type: 'defense' }
-  | { readonly type: 'evade' }
+  /**
+   * 防御：ダメージを減らす。正式カードは reduce（減らす量）と against（効く攻撃の種類。'all'＝攻撃すべて）を持つ。
+   * 仮カードは持たず、stat の値と種類を使う
+   */
+  | { readonly type: 'defense'; readonly reduce?: number; readonly against?: StatType | 'all' }
+  /** 回避：ダメージを0に。正式カードは against（'all'＝攻撃すべて）。仮カードは stat の種類 */
+  | { readonly type: 'evade'; readonly against?: StatType | 'all' }
+  /** 特殊（正式：吠える）：選んだ相手モンスターの、次に使う stat の技のダメージを amount 減らす */
+  | { readonly type: 'weaken'; readonly stat: StatType; readonly amount: number }
+  /** 特殊（正式：すなかけ）：選んだ相手モンスターは次回攻撃できない */
+  | { readonly type: 'seal' }
   | { readonly type: 'heal' }
   | { readonly type: 'mana' }
   | { readonly type: 'draw' };
@@ -75,11 +107,48 @@ export interface SkillCard extends CardBase {
   readonly kind: 'skill';
   /** 使えるモンスター（適合技） */
   readonly monsterId: string;
-  /** 使用に必要なマナ（1〜10） */
+  /** 使用に必要なマナ（0〜10。0 も正式に使える） */
   readonly cost: number;
-  /** 右側の能力（ちから or かしこさ の一方のみ）と数値（1〜10） */
-  readonly stat: { readonly type: StatType; readonly value: number };
+  /**
+   * 右側の能力（ちから or かしこさ の一方のみ）と数値（1〜10）。
+   * 正式カードの特殊・防御・回避は攻撃の数値を持たないので null（ダミーの値は作らない）
+   */
+  readonly stat: { readonly type: StatType; readonly value: number } | null;
+  /** 技の種別（正式カード）。仮カードは持たず stat.type を使う */
+  readonly category?: SkillCategory;
+  /** 正式の効果テキスト（日本語。ユーザー確定の文をそのまま）。なければ null */
+  readonly effectTextJa?: string | null;
+  /** 正式カードの区分：initial＝初期、collect＝収集（配布の枚数・入手場所は未定） */
+  readonly availability?: 'initial' | 'collect';
   readonly effect: SkillEffect;
+}
+
+/** 技の種別（右側のバー）。仮カードは stat.type */
+export function skillCategory(skill: SkillCard): SkillCategory {
+  return skill.category ?? skill.stat?.type ?? 'special';
+}
+
+/** 攻撃のダメージの数値（数値のない技は 0） */
+export function skillValue(skill: SkillCard): number {
+  return skill.stat?.value ?? 0;
+}
+
+/** 防御で減らす量 */
+export function guardReduction(skill: SkillCard): number {
+  return skill.effect.type === 'defense' ? (skill.effect.reduce ?? skillValue(skill)) : 0;
+}
+
+/** 防御・回避が効く攻撃の種類（'all'＝攻撃すべて）。仮カードは stat の種類 */
+export function guardAgainst(skill: SkillCard): StatType | 'all' {
+  const e = skill.effect;
+  const against = e.type === 'defense' || e.type === 'evade' ? e.against : undefined;
+  return against ?? skill.stat?.type ?? 'all';
+}
+
+/** 相手モンスター1体を選んで使う技か（攻撃・特殊） */
+export function targetsEnemy(skill: SkillCard): boolean {
+  const type = skill.effect.type;
+  return type === 'attack' || type === 'weaken' || type === 'seal';
 }
 
 /**
@@ -160,19 +229,38 @@ export function describePlayCard(card: PlayCard): string {
   return card.kind === 'skill' ? describeSkill(card) : describeSupport(card);
 }
 
+/**
+ * 正式の効果テキスト（いまの言語）。日本語はデータの文そのまま、英語は仮訳（src/i18n/contentEnOfficialDraft.ts）。
+ * 英語の仮訳がなければ日本語のまま。効果テキストのない正式カード（数値だけの攻撃）と仮カードは null
+ */
+export function officialEffectText(skill: SkillCard): string | null {
+  const ja = skill.effectTextJa ?? null;
+  if (ja === null || getLanguage() !== 'en') return ja;
+  return OFFICIAL_DRAFT_EN[`card:${skill.id}:effect`] ?? ja;
+}
+
 /** 技カードの効果説明（ゲーム側で表示する文字） */
 export function describeSkill(card: SkillCard): string {
-  const stat = statLabel(card.stat.type);
-  const v = card.stat.value;
-  if (card.effect.type === 'attack') return t('card.skill.attack', { stat, v, note: attackNote(card.effect) }).trim();
+  const official = officialEffectText(card);
+  const stat = card.stat ? statLabel(card.stat.type) : '';
+  const v = skillValue(card);
+  if (card.effect.type === 'attack') {
+    const base = card.stat ? t('card.skill.attack', { stat, v, note: attackNote(card.effect) }).trim() : '';
+    return official ? `${base}${getLanguage() === 'en' ? ' ' : ''}${official}`.trim() : base;
+  }
+  if (official) return official;
+  if (card.effect.type === 'weaken' || card.effect.type === 'seal') return '';
   return t(`card.skill.${card.effect.type}`, { stat, v });
 }
 
-/** 技カードの短い説明（カード面に書く文字） */
+/** 技カードの短い説明（カード面に書く文字）。正式カードは効果テキストをそのまま */
 export function skillShortText(skill: SkillCard): string {
-  const v = skill.stat.value;
+  const official = officialEffectText(skill);
+  if (official) return official;
+  const v = skillValue(skill);
   const e = skill.effect;
   if (e.type === 'attack') return t(e.unblockable && e.undodgeable ? 'card.short.attackSure' : 'card.short.attack', { v });
+  if (e.type === 'weaken' || e.type === 'seal') return '';
   return t(`card.short.${e.type}`, { v });
 }
 

@@ -1,6 +1,6 @@
 import { cardCatalog, getMonster, MONSTERS, skillsOf, SUPPORTS } from '../../data/cards.ts';
 import { DECK_RULES } from '../../data/rules.ts';
-import { effectLabel, statLabel, type PlayCard } from '../../game/cards/cardTypes.ts';
+import { categoryLabel, effectLabel, skillCategory, type PlayCard } from '../../game/cards/cardTypes.ts';
 import { cardName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
 import { buildDeckFromCollection, countCards, validateDeck, type Deck } from '../../game/deck/deck.ts';
@@ -38,8 +38,15 @@ export const deckScreen: ScreenDefinition = {
       render();
     };
 
+    /**
+     * モンスターをタップ：入れる／外す。同じモンスターを何体も入れられる決まり（DECK_RULES.allowDuplicateMonsters）のときは、
+     * 持っている数までタップするたびに1体ずつ足し、それ以上は外す（全部）
+     */
     const toggleMonster = (id: string): void => {
-      if (draft.monsters.includes(id)) {
+      const inDraft = draft.monsters.filter((m) => m === id).length;
+      const canAddCopy =
+        DECK_RULES.allowDuplicateMonsters && inDraft > 0 && inDraft < (collection()[id] ?? 0) && draft.monsters.length < DECK_RULES.monsterCount;
+      if (inDraft > 0 && !canAddCopy) {
         const removed = draft.skills.filter((s) => cardCatalog.get(s)?.kind === 'skill' && skillsOf(id).some((k) => k.id === s)).length;
         setDraft({ monsters: draft.monsters.filter((m) => m !== id), skills: draft.skills.filter((s) => !skillsOf(id).some((k) => k.id === s)) });
         if (removed > 0) messageModal(element, t('deck.removedSkills', { name: cardName(getMonster(id)), n: removed }));
@@ -136,6 +143,9 @@ export const deckScreen: ScreenDefinition = {
               on: { click: () => toggleMonster(m.id) },
             },
             createMonsterCard(m, { width: 68, showName: true }),
+            draft.monsters.filter((x) => x === m.id).length > 1
+              ? h('span', { class: 'deck__monster-count', text: `×${draft.monsters.filter((x) => x === m.id).length}` })
+              : null,
           ),
         ),
       );
@@ -143,7 +153,7 @@ export const deckScreen: ScreenDefinition = {
       const tabs = h(
         'div',
         { class: 'deck__tabs' },
-        ...[null, ...draft.monsters, SUPPORT_TAB].map((id) =>
+        ...[null, ...new Set(draft.monsters), SUPPORT_TAB].map((id) =>
           button(id === SUPPORT_TAB ? t('card.kind.support') : id ? cardName(getMonster(id)) : t('common.all'), () => {
             tab = id;
             listScroll = 0;
@@ -156,10 +166,12 @@ export const deckScreen: ScreenDefinition = {
       // サポートはモンスターに関係なく入れられる。持っているものだけ並べる
       const supports: PlayCard[] = SUPPORTS.filter((c) => (coll[c.id] ?? 0) > 0 || (counts[c.id] ?? 0) > 0);
       const listed: PlayCard[] =
-        tab === SUPPORT_TAB ? supports : [...(tab ? [tab] : draft.monsters).flatMap((mid) => skillsOf(mid)), ...(tab ? [] : supports)];
+        tab === SUPPORT_TAB ? supports : [...(tab ? [tab] : [...new Set(draft.monsters)]).flatMap((mid) => skillsOf(mid)), ...(tab ? [] : supports)];
       const meta = (card: PlayCard): string =>
         card.kind === 'skill'
-          ? t('deck.metaSkill', { effect: effectLabel(card.effect.type), cost: card.cost, stat: statLabel(card.stat.type), v: card.stat.value })
+          ? card.stat
+            ? t('deck.metaSkill', { effect: effectLabel(card.effect.type), cost: card.cost, stat: categoryLabel(skillCategory(card)), v: card.stat.value })
+            : t('deck.metaSkillNoValue', { category: categoryLabel(skillCategory(card)), cost: card.cost })
           : t('deck.metaSupport', { kind: t(card.duration === 'field' ? 'card.supportKind.field' : 'card.kind.support'), cost: card.cost });
       const skillRows = listed.map((skill) => {
         const owned = coll[skill.id] ?? 0;

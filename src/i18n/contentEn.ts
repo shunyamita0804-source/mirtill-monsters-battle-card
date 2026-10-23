@@ -1,4 +1,5 @@
 import { HIDDEN_MONSTER_ID, MONSTERS, SKILLS, SUPPORTS } from '../data/cards.ts';
+import { OFFICIAL_DRAFT_EN } from './contentEnOfficialDraft.ts';
 
 /**
  * data/ の固有名・説明の英語（固定 ID → 英語）。日本語は data/ 側の値をそのまま使う（同じ文を二重に持たない）。
@@ -11,10 +12,11 @@ import { HIDDEN_MONSTER_ID, MONSTERS, SKILLS, SUPPORTS } from '../data/cards.ts'
 function placeholderCardNames(): Record<string, string> {
   const names: Record<string, string> = {};
   for (const m of MONSTERS) {
-    if (m.id === HIDDEN_MONSTER_ID) continue;
+    if (m.id === HIDDEN_MONSTER_ID || !m.isPlaceholder) continue;
     names[`card:${m.id}:name`] = m.name.replace(/^仮モンスター/, 'Temp Monster ');
   }
   for (const s of SKILLS) {
+    if (!s.isPlaceholder) continue;
     names[`card:${s.id}:name`] = s.name.replace(/^仮技/, 'Temp Skill ').replace(/^隠し技（未確定）/, 'Hidden Skill (TBD) ');
   }
   for (const s of SUPPORTS) {
@@ -25,6 +27,8 @@ function placeholderCardNames(): Record<string, string> {
 
 export const CONTENT_EN: Readonly<Record<string, string>> = {
   ...placeholderCardNames(),
+  // 正式カード（ソラモ）の英語は仮訳。別のファイルで管理する
+  ...OFFICIAL_DRAFT_EN,
   [`card:${HIDDEN_MONSTER_ID}:name`]: '??? (Hidden monster, TBD)',
   [`card:${HIDDEN_MONSTER_ID}:description`]:
     'A hidden monster you can restore by collecting 10 shards. Its official name, art and abilities are not decided yet.',

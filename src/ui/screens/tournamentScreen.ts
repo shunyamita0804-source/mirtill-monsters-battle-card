@@ -20,6 +20,11 @@ import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import { newId, once } from '../gameStore.ts';
 import type { ScreenDefinition } from './types.ts';
+import faceReceptionist from '@assets/images/characters/face_receptionist.webp';
+import arenaBg from '@assets/images/backgrounds/battle_arena.webp';
+
+/** 大会の対戦の背景（2026-10-23 納品「UI画像10種」の対戦背景：中央が空の紺のテーブル） */
+export const TOURNAMENT_BATTLE_BG = arenaBg;
 
 function roundLabel(t: TournamentDefinition, i: number): string {
   const left = t.rounds.length - i;
@@ -74,6 +79,7 @@ export const tournamentScreen: ScreenDefinition = {
         opponent,
         allowSurrender: true,
         bgm: 'tournamentBattle',
+        background: TOURNAMENT_BATTLE_BG,
         onFinish: (winner) => {
           const won = winner === 'player';
           store.update((s) => ({
@@ -156,7 +162,7 @@ export const tournamentScreen: ScreenDefinition = {
       const body: (HTMLElement | null)[] = [];
       if (!active || !t) {
         body.push(
-          h('div', { class: 'tournament__desk' }, h('div', { class: 'tournament__clerk', text: tr('tournament.clerk'), attrs: { 'aria-hidden': 'true' } }), h('p', { class: 'shop-menu__bubble', text: tr('tournament.welcome', { rank: save.rank }) })),
+          h('div', { class: 'tournament__desk' }, h('img', { class: 'tournament__clerk shop-menu__face', attrs: { src: faceReceptionist, alt: tr('tournament.clerk'), draggable: 'false' } }), h('p', { class: 'shop-menu__bubble', text: tr('tournament.welcome', { rank: save.rank }) })),
           ...TOURNAMENTS.map(tournamentCard),
         );
       } else if (active.status === 'inProgress') {

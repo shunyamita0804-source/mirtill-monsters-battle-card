@@ -3,6 +3,8 @@ import { CURRENCY, PACKS, RANK_ORDER, type RankId } from '../../data/economy.ts'
 import {
   buildDeckFromCollection,
   countCards,
+  createPlaceholderStarterDeck,
+  createSoramoTestDeck,
   createStarterCollection,
   createStarterDeck,
   isDeckValid,
@@ -18,7 +20,7 @@ import { isIntroState, recoverIntro } from '../story/intro.ts';
  * - 読み込み時は normalizeSave() で型・範囲を確認し、壊れた値は既定値に戻す
  * - 変更はすべて「古いセーブを受け取り新しいセーブを返す」純粋関数で行う
  */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export type Gender = 'male' | 'female';
 export type Direction = 'down' | 'up' | 'left' | 'right';
@@ -140,7 +142,8 @@ type RawObject = Record<string, unknown>;
  */
 function migrateDeckRulesV2(raw: RawObject): RawObject {
   const collection: Record<string, number> = isObject(raw.collection) ? { ...(raw.collection as Record<string, number>) } : {};
-  for (const [id, count] of Object.entries(countCards(createStarterDeck().skills))) {
+  // 当時のスターター（仮モンスターA〜C）のまま補填する（2026-10-23 にスターターがソラモになっても、この変換の意味は変えない）
+  for (const [id, count] of Object.entries(countCards(createPlaceholderStarterDeck().skills))) {
     const owned = typeof collection[id] === 'number' ? collection[id] : 0;
     collection[id] = Math.max(owned, count);
   }
@@ -149,7 +152,7 @@ function migrateDeckRulesV2(raw: RawObject): RawObject {
   let next: Deck = deck;
   if (!isDeckValid(deck, collection)) {
     const rebuilt = buildDeckFromCollection(deck.monsters, collection);
-    next = isDeckValid(rebuilt, collection) ? rebuilt : createStarterDeck();
+    next = isDeckValid(rebuilt, collection) ? rebuilt : createPlaceholderStarterDeck();
   }
   return { ...raw, collection, deck: next };
 }
@@ -185,12 +188,28 @@ function migrateTownV5(raw: RawObject): RawObject {
   return raw;
 }
 
+/**
+ * version 5 → 6（2026-10-23）：ユーザー指示「技の発動を見るため、仮のカードはすべてソラモに」。
+ * 1回だけ、テスト用のソラモのデッキ（createSoramoTestDeck）に入っているカードを所持カードに足し（足りない分だけ）、デッキをそれに替える。
+ * それまでの所持カード（仮カード）は消さない。デッキ編集で、前の仮カードのデッキに組み直すこともできる
+ */
+function migrateSoramoTestV6(raw: RawObject): RawObject {
+  const collection: Record<string, number> = isObject(raw.collection) ? { ...(raw.collection as Record<string, number>) } : {};
+  const deck = createSoramoTestDeck();
+  for (const [id, count] of Object.entries(countCards([...deck.monsters, ...deck.skills]))) {
+    const owned = typeof collection[id] === 'number' ? collection[id] : 0;
+    collection[id] = Math.max(owned, count);
+  }
+  return { ...raw, collection, deck };
+}
+
 /** version n → n+1 の変換。形式を変えるときはここに足し、SAVE_VERSION を上げる */
 const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
   1: migrateDeckRulesV2,
   2: migrateStoryV3,
   3: migrateWorldV4,
   4: migrateTownV5,
+  5: migrateSoramoTestV6,
 };
 
 export function migrate(raw: RawObject): RawObject | null {

@@ -1,0 +1,141 @@
+/*
+ * 画面のデザイン（2026-10-23 納品「UI画像10種」。原本は docs/design/ui-quality-20261023/ の依頼で作ったもの）。
+ * - 共通背景（革調・唐草）：メニュー系の画面の背景に敷き詰める。いまの色に合わせて暗く重ねる
+ * - 見出しの帯：画面の上の見出し
+ * - 窓の枠：確認の窓（四隅を固定して伸ばす。縮小した素材で角は約50px）
+ * - 一覧のパネル：ショップの項目・パック・大会・ダンジョンの一覧（左上と右下だけ飾り）
+ * 素材は assets/images/ui/frame/（元の 1/2 に縮小・切り抜き。描き換えなし）
+ */
+
+/* 共通背景：歩く画面・対戦・タイトル以外 */
+.screen:not(.world, .battle, .title) {
+  background:
+    linear-gradient(rgb(16 17 20 / 0.62), rgb(16 17 20 / 0.62)),
+    url('@assets/images/ui/frame/bg_pattern.webp') 0 0 / 256px 256px repeat,
+    var(--color-stage);
+}
+
+/* 見出しの帯 */
+.screen-header {
+  border-bottom: 0;
+  background: url('@assets/images/ui/frame/header_bar.webp') center / 100% 100% no-repeat;
+}
+
+/* 確認の窓 */
+.modal__panel {
+  border: 22px solid transparent;
+  border-image: url('@assets/images/ui/frame/window_frame.webp') 50 fill / 22px / 0 stretch;
+  border-radius: 0;
+  background: none;
+  padding: 4px 4px 0;
+}
+
+/* 一覧のパネル（左上・右下の飾りは小さめに） */
+.shop-menu__item,
+.gacha__pack,
+.tournament__item,
+.dungeon-select__item {
+  border: 14px solid transparent;
+  border-image: url('@assets/images/ui/frame/list_panel.webp') 70 fill / 14px / 0 stretch;
+  border-radius: 0;
+  background: none;
+}
+
+.shop-menu__item {
+  padding: 0 4px;
+}
+
+.gacha__pack {
+  padding: 0;
+}
+
+.shop-menu__item--special {
+  border-image-source: url('@assets/images/ui/frame/list_panel.webp');
+  background: linear-gradient(90deg, rgb(200 164 93 / 0.18), transparent);
+  background-clip: padding-box;
+}
+
+.tournament__item,
+.dungeon-select__item {
+  padding: 2px 4px;
+}
+
+/* ===== カードの裏面（先攻・後攻の伏せカード、パックを開けるとき、マナ化で飛ぶカード） ===== */
+.battle-order__back {
+  border: 0;
+  background: url('@assets/images/ui/card_back.webp') center / 100% 100% no-repeat;
+}
+
+.pack-open__back {
+  border: 0;
+  background: url('@assets/images/ui/card_back.webp') center / 100% 100% no-repeat;
+}
+
+.battle__mana-fly::after {
+  border: 0;
+  background: url('@assets/images/ui/card_back.webp') center / 100% 100% no-repeat;
+  box-shadow: none;
+}
+
+/* ===== 店員・受付の顔（ショップ・大会受付） ===== */
+.shop-menu__face {
+  display: block;
+  padding: 0;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 35%, rgb(200 164 93 / 0.25), transparent 70%);
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+/* ===== パックの絵 ===== */
+.gacha__pack-art.has-art {
+  padding: 0;
+  background: none;
+}
+
+.gacha__pack-art.has-art > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.gacha__machine-pack.has-art {
+  background: var(--pack-art) center / contain no-repeat;
+}
+
+.pack-open__pack.has-art {
+  align-items: flex-end;
+  padding: 0 6px 18px;
+  background: var(--pack-art) center / contain no-repeat;
+  box-shadow: none;
+  color: #f3e3b6;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.9);
+}
+
+/* ===== タイトル：背景の絵（上と下は暗めに描かれている） ===== */
+.title {
+  background:
+    linear-gradient(
+      180deg,
+      rgb(10 11 14 / 0.3) 0%,
+      rgb(10 11 14 / 0.55) 30%,
+      rgb(10 11 14 / 0.7) 45%,
+      rgb(10 11 14 / 0.15) 58%,
+      rgb(10 11 14 / 0.35) 80%,
+      rgb(10 11 14 / 0.7) 100%
+    ),
+    url('@assets/images/backgrounds/title_bg.webp') center / cover no-repeat,
+    var(--color-stage);
+}
+
+.title .title__icon {
+  width: 170px;
+  height: 170px;
+  border-radius: 32px;
+}
+
+.title .title__series,
+.title .title__en {
+  color: #d8d2c4;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 0.9);
+}

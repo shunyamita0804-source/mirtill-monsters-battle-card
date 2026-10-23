@@ -111,9 +111,9 @@ describe('カードの文字（ID と表示を分ける）', () => {
     const ja = describeSkill(skill);
     setLanguage('en');
     const en = describeSkill(skill);
-    expect(ja).toContain(String(skill.stat.value));
-    expect(en).toContain(String(skill.stat.value));
-    expect(en).toContain(statLabel(skill.stat.type));
+    expect(ja).toContain(String(skill.stat?.value));
+    expect(en).toContain(String(skill.stat?.value));
+    expect(en).toContain(statLabel(skill.stat?.type ?? 'force'));
     expect(en).not.toMatch(/[ぁ-んァ-ヶ一-龠]/);
   });
 

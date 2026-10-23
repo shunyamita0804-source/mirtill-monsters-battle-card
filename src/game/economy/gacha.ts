@@ -18,7 +18,8 @@ function cardsByRarity(pack: PackDefinition): Record<Rarity, string[]> {
   const result: Record<Rarity, string[]> = { C: [], U: [], R: [] };
   for (const id of pack.cardIds) {
     const card = cardCatalog.get(id);
-    if (card) result[card.rarity].push(id);
+    // レアリティ未定の正式カードはパックに入れない（validatePack が知らせる）
+    if (card?.rarity) result[card.rarity].push(id);
   }
   return result;
 }
@@ -43,6 +44,7 @@ export function validatePack(pack: PackDefinition): string[] {
   for (const id of pack.cardIds) {
     if (!cardCatalog.get(id)) issues.push(`${pack.id}: 存在しないカード ${id}`);
     if (NEVER_IN_PACKS.includes(id)) issues.push(`${pack.id}: 排出禁止カード ${id} が入っています`);
+    if (cardCatalog.get(id)?.rarity === null) issues.push(`${pack.id}: レアリティ未定のカード ${id} が入っています`);
   }
   const sum = packCardRates(pack).reduce((s, c) => s + c.rate, 0);
   if (Math.abs(sum - 100) > 1e-6) issues.push(`${pack.id}: カード別割合の合計が100%ではありません（${sum}）`);

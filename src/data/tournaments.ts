@@ -1,3 +1,4 @@
+import { SORAMO_TEAM } from './soramo.ts';
 import { monsterId, skillId } from './cards.ts';
 import type { RankId } from './economy.ts';
 
@@ -53,9 +54,9 @@ export const TOURNAMENTS: readonly TournamentDefinition[] = [
     description: 'はじめての公式大会（内容は仮）。3連勝で優勝。',
     participants: 8,
     rounds: [
-      { id: 'e-1', name: '仮の対戦相手（E-1回戦）', monsters: ['d', 'a', 'b'].map(monsterId), lifeScale: 0.6 },
-      { id: 'e-2', name: '仮の対戦相手（E-準決勝）', monsters: ['c', 'd', 'e'].map(monsterId), lifeScale: 0.65 },
-      { id: 'e-3', name: '仮の対戦相手（E-決勝）', monsters: ['e', 'f', 'g'].map(monsterId), lifeScale: 0.7 },
+      { id: 'e-1', name: '仮の対戦相手（E-1回戦）', monsters: SORAMO_TEAM, lifeScale: 0.6 },
+      { id: 'e-2', name: '仮の対戦相手（E-準決勝）', monsters: SORAMO_TEAM, lifeScale: 0.65 },
+      { id: 'e-3', name: '仮の対戦相手（E-決勝）', monsters: SORAMO_TEAM, lifeScale: 0.7 },
     ],
     rewards: {
       participationCoins: 20,
@@ -76,9 +77,9 @@ export const TOURNAMENTS: readonly TournamentDefinition[] = [
     description: 'Eランク優勝者向けの大会（内容は仮）。',
     participants: 8,
     rounds: [
-      { id: 'd-1', name: '仮の対戦相手（D-1回戦）', monsters: ['f', 'g', 'h'].map(monsterId), lifeScale: 1 },
-      { id: 'd-2', name: '仮の対戦相手（D-準決勝）', monsters: ['g', 'h', 'i'].map(monsterId), lifeScale: 1.05 },
-      { id: 'd-3', name: '仮の対戦相手（D-決勝）', monsters: ['i', 'e', 'b'].map(monsterId), lifeScale: 1.1 },
+      { id: 'd-1', name: '仮の対戦相手（D-1回戦）', monsters: SORAMO_TEAM, lifeScale: 1 },
+      { id: 'd-2', name: '仮の対戦相手（D-準決勝）', monsters: SORAMO_TEAM, lifeScale: 1.05 },
+      { id: 'd-3', name: '仮の対戦相手（D-決勝）', monsters: SORAMO_TEAM, lifeScale: 1.1 },
     ],
     rewards: {
       participationCoins: 30,

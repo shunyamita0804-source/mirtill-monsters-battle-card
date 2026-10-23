@@ -1,5 +1,5 @@
 import { getPlayCard, getSupport, skillsOf } from '../../data/cards.ts';
-import type { PlayCard, SkillCard, StatType, SupportCard } from '../cards/cardTypes.ts';
+import { guardReduction, skillValue, type PlayCard, type SkillCard, type StatType, type SupportCard } from '../cards/cardTypes.ts';
 import {
   aliveMonsters,
   attackPower,
@@ -40,7 +40,7 @@ function usableOptions(state: BattleState, side: Side): Option[] {
 /** その能力の攻撃技を持つ、生きているモンスターの数（'all' はどれかの攻撃技を持つ数） */
 function attackersWith(state: BattleState, side: Side, stat: StatType | 'all'): number {
   return aliveMonsters(state.sides[side]).filter((m) =>
-    skillsOf(m.cardId).some((k) => k.effect.type === 'attack' && (stat === 'all' || k.stat.type === stat)),
+    skillsOf(m.cardId).some((k) => k.effect.type === 'attack' && k.stat !== null && (stat === 'all' || k.stat.type === stat)),
   ).length;
 }
 
@@ -53,7 +53,7 @@ function fieldScore(state: BattleState, side: Side, card: SupportCard): number {
 
 /** 山札を動かす効果の枚数（ドロー・山札からマナ） */
 function deckAmount(card: PlayCard): number {
-  if (card.kind === 'skill') return card.stat.value;
+  if (card.kind === 'skill') return skillValue(card);
   const e = card.effect;
   return e.type === 'draw' || e.type === 'mana' ? e.value : 0;
 }
@@ -89,9 +89,10 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
   // 3. 攻撃：倒せる相手がいれば倒し、いなければ一番強い攻撃をライフの少ない相手へ
   const attacks = options.filter(isSkillOption).filter((o) => o.def.effect.type === 'attack');
   if (attacks.length > 0 && enemies.length > 0) {
-    const byPower = [...attacks].sort((a, b) => attackPower(state, b.def) - attackPower(state, a.def));
+    const power = (o: SkillOption): number => attackPower(state, o.def, availableUsers(state, side, o.def)[0]);
+    const byPower = [...attacks].sort((a, b) => power(b) - power(a));
     for (const option of byPower) {
-      const kill = enemies.filter((e) => e.life <= attackPower(state, option.def)).sort((a, b) => b.life - a.life)[0];
+      const kill = enemies.filter((e) => e.life <= power(option)).sort((a, b) => b.life - a.life)[0];
       if (kill) return attackAction(state, side, option, kill.uid);
     }
     const weakest = [...enemies].sort((a, b) => a.life - b.life)[0];
@@ -99,7 +100,12 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
     if (weakest && strongest) return attackAction(state, side, strongest, weakest.uid);
   }
 
-  // 4. マナ・ドロー
+  // 4. 特殊（吠える・すなかけ）：一番ライフの多い相手に使う（仮の思考）
+  const special = options.filter(isSkillOption).find((o) => o.def.effect.type === 'weaken' || o.def.effect.type === 'seal');
+  const strongestEnemy = [...enemies].sort((a, b) => b.life - a.life)[0];
+  if (special && strongestEnemy) return attackAction(state, side, special, strongestEnemy.uid);
+
+  // 5. マナ・ドロー
   // 山札が足りないと負けになるので、山札を動かす効果は山札に余裕があるときだけ。
   // ドローは手札が少ないとき、山札からマナはマナが少ないときだけ使う
   const support = options.find((o) => {
@@ -110,7 +116,7 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
   });
   if (support) return { type: 'useCard', side, cardUid: support.card.uid };
 
-  // 5. 使えるカードがなければ攻撃を終えてマナ化へ
+  // 6. 使えるカードがなければ攻撃を終えてマナ化へ
   return { type: 'endAttack', side };
 }
 
@@ -120,7 +126,8 @@ const isGuard = (c: HandCard): boolean => ['defense', 'evade'].includes(getPlayC
 /** 守備カードの強さ（並べ替え用） */
 const guardValue = (c: HandCard): number => {
   const card = getPlayCard(c.cardId);
-  return card.kind === 'skill' ? card.stat.value : 0;
+  if (card.kind !== 'skill') return 0;
+  return card.effect.type === 'defense' ? guardReduction(card) : skillValue(card);
 };
 
 /**
@@ -158,7 +165,7 @@ function chooseDefense(state: BattleState, side: Side): BattleAction | null {
   if (evade && (damage >= 3 || (target !== undefined && damage >= target.life))) {
     return { type: 'defend', side, cardUid: evade.card.uid };
   }
-  const defense = options.filter((o) => o.def.effect.type === 'defense').sort((a, b) => b.def.stat.value - a.def.stat.value)[0];
+  const defense = options.filter((o) => o.def.effect.type === 'defense').sort((a, b) => guardReduction(b.def) - guardReduction(a.def))[0];
   if (defense) return { type: 'defend', side, cardUid: defense.card.uid };
   return end;
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getSkill, monsterId, skillId, SKILLS, supportId } from '../src/data/cards.ts';
 import { BATTLE_RULES } from '../src/data/rules.ts';
+import { skillValue } from '../src/game/cards/cardTypes.ts';
 import { chooseAction } from '../src/game/battle/ai.ts';
 import {
   actingSide,
@@ -12,9 +13,9 @@ import {
   type BattleState,
   type Side,
 } from '../src/game/battle/engine.ts';
-import { buildAutoDeck, createStarterDeck, type Deck } from '../src/game/deck/deck.ts';
+import { buildAutoDeck, createPlaceholderStarterDeck, type Deck } from '../src/game/deck/deck.ts';
 
-const playerDeck = createStarterDeck();
+const playerDeck = createPlaceholderStarterDeck();
 const enemyDeck = buildAutoDeck(['d', 'e', 'f'].map(monsterId));
 
 function battle(seed = 1, first: Side = 'player'): BattleState {
@@ -124,8 +125,8 @@ describe('攻撃と守備', () => {
     expect(s.pending?.responses).toHaveLength(2);
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
     expect(s.phase).toBe('main');
-    const reduction = getSkill(skillId('e', 4)).stat.value * 2;
-    expect(lifeOf(s, target)).toBe(before - (getSkill(skillId('a', 2)).stat.value - reduction));
+    const reduction = skillValue(getSkill(skillId('e', 4))) * 2;
+    expect(lifeOf(s, target)).toBe(before - (skillValue(getSkill(skillId('a', 2))) - reduction));
     expect(manaOf(s.sides.opponent)).toBe(3 - getSkill(skillId('e', 4)).cost * 2);
   });
 
@@ -151,7 +152,7 @@ describe('攻撃と守備', () => {
     expect(applyAction(s, { type: 'defend', side: 'opponent', cardUid: 't0' })).toBe(s);
     const before = lifeOf(s, target);
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
-    expect(lifeOf(s, target)).toBe(before - getSkill(skillId('a', 2)).stat.value);
+    expect(lifeOf(s, target)).toBe(before - skillValue(getSkill(skillId('a', 2))));
   });
 
   it('防御も回避もできない攻撃は、守備を待たずにすぐダメージ', () => {
@@ -160,7 +161,7 @@ describe('攻撃と守備', () => {
     const target = s.sides.opponent.monsters[1];
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0', targetUid: target?.uid ?? '' });
     expect(s.phase).toBe('main');
-    expect(s.sides.opponent.monsters[1]?.life).toBe(Math.max(0, (target?.life ?? 0) - getSkill(skillId('d', 6)).stat.value));
+    expect(s.sides.opponent.monsters[1]?.life).toBe(Math.max(0, (target?.life ?? 0) - skillValue(getSkill(skillId('d', 6)))));
   });
 
   it('防御・回避カードは自分のターンには使えない', () => {
@@ -277,11 +278,11 @@ describe('ターン進行とドロー', () => {
     const manaSkill = SKILLS.find((k) => k.effect.type === 'mana');
     if (!manaSkill) throw new Error('mana skill');
     let s = withSkillUser(withHand(battle(), 'player', [manaSkill.id], manaSkill.cost), manaSkill.monsterId);
-    const top = s.sides.player.deck.slice(0, manaSkill.stat.value);
+    const top = s.sides.player.deck.slice(0, skillValue(manaSkill));
     const deck = s.sides.player.deck.length;
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0' });
     expect(s.sides.player.manaPile).toEqual(top);
-    expect(s.sides.player.deck).toHaveLength(deck - manaSkill.stat.value);
+    expect(s.sides.player.deck).toHaveLength(deck - skillValue(manaSkill));
   });
 
   it('手番の上限はない（手番が進んでも打ち切られない）', () => {
@@ -337,7 +338,7 @@ describe('山札切れ', () => {
     const drawSkill = SKILLS.find((k) => k.effect.type === 'draw');
     if (!drawSkill) throw new Error('draw skill');
     let s = withSkillUser(withHand(battle(), 'player', [drawSkill.id], drawSkill.cost), drawSkill.monsterId);
-    s = withDeck(s, 'player', drawSkill.stat.value - 1);
+    s = withDeck(s, 'player', skillValue(drawSkill) - 1);
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't0' });
     expect(s.winner).toBe('opponent');
     expect(s.endReason).toBe('deckOut');
@@ -376,7 +377,7 @@ describe('サポートカード', () => {
     // ちから5の攻撃が4になる
     const target = enemyUid(s, 'e');
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 't1', targetUid: target });
-    expect(s.pending?.power).toBe(getSkill(skillId('a', 2)).stat.value - 1);
+    expect(s.pending?.power).toBe(skillValue(getSkill(skillId('a', 2))) - 1);
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
     // 相手が別の全体カードを出すと入れ替わる
     s = applyAction(s, { type: 'endAttack', side: 'player' });

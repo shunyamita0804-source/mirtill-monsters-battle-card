@@ -2,7 +2,17 @@ import { getMonster, getPlayCard, getSkill, getSupport } from '../../data/cards.
 import { BATTLE_RULES } from '../../data/rules.ts';
 import { cardName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
-import { statLabel, type PlayCard, type SkillCard, type StatType, type SupportCard } from '../cards/cardTypes.ts';
+import {
+  guardAgainst,
+  guardReduction,
+  skillValue,
+  statLabel,
+  targetsEnemy,
+  type PlayCard,
+  type SkillCard,
+  type StatType,
+  type SupportCard,
+} from '../cards/cardTypes.ts';
 import type { Deck } from '../deck/deck.ts';
 import { nextRandom, shuffle } from '../rng.ts';
 
@@ -30,6 +40,10 @@ export interface BattleMonster {
   readonly life: number;
   /** このターンに技を使ったか */
   readonly acted: boolean;
+  /** 次に使う stat の技のダメージを amount 減らす（正式：吠える）。使ったら消える */
+  readonly weaken?: { readonly stat: StatType; readonly amount: number } | null;
+  /** この手番（turn）の間は攻撃の技を使えない（正式：すなかけ） */
+  readonly sealedTurn?: number | null;
 }
 
 export interface HandCard {
@@ -238,9 +252,12 @@ export function findHandCard(state: BattleState, side: Side, cardUid: string): H
   return state.sides[side].hand.find((c) => c.uid === cardUid);
 }
 
-/** その技を使えるモンスター（適合・生存・未行動） */
+/** その技を使えるモンスター（適合・生存・未行動。攻撃の技は、すなかけで封じられていないこと） */
 export function availableUsers(state: BattleState, side: Side, skill: SkillCard): BattleMonster[] {
-  return state.sides[side].monsters.filter((m) => m.cardId === skill.monsterId && m.life > 0 && !m.acted);
+  const attack = skill.effect.type === 'attack';
+  return state.sides[side].monsters.filter(
+    (m) => m.cardId === skill.monsterId && m.life > 0 && !m.acted && !(attack && m.sealedTurn === state.turn),
+  );
 }
 
 export interface Usability {
@@ -288,7 +305,8 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
     // 守備に使えるのは、狙われたモンスターの防御・回避カードだけ
     const target = state.sides[side].monsters.find((m) => m.uid === pending.targetUid);
     if (!target || target.cardId !== skill.monsterId) return NO(t('battle.ng.notTarget'));
-    if (skill.stat.type !== pending.stat) return NO(t('battle.ng.wrongStat', { stat: statLabel(pending.stat) }));
+    const against = guardAgainst(skill);
+    if (against !== 'all' && against !== pending.stat) return NO(t('battle.ng.wrongStat', { stat: statLabel(pending.stat) }));
     const attack = getSkill(pending.cardId).effect;
     if (attack.type === 'attack' && type === 'defense' && attack.unblockable) return NO(t('battle.ng.unblockable'));
     if (attack.type === 'attack' && type === 'evade' && attack.undodgeable) return NO(t('battle.ng.undodgeable'));
@@ -300,8 +318,12 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
   if (state.phase === 'mana') return NO(t('battle.ng.manaPhase'));
   if (skill.effect.type === 'defense' || skill.effect.type === 'evade') return NO(t('battle.ng.defenseOnAttack'));
   if (manaOf(state.sides[side]) < skill.cost) return NO(t('battle.ng.noMana'));
-  if (availableUsers(state, side, skill).length === 0) return NO(t('battle.ng.acted'));
-  if (skill.effect.type === 'attack' && aliveMonsters(state.sides[otherSide(side)]).length === 0) {
+  if (availableUsers(state, side, skill).length === 0) {
+    // すなかけで攻撃を封じられているだけのとき
+    const sealed = owner.some((m) => m.life > 0 && !m.acted && m.sealedTurn === state.turn);
+    return NO(t(sealed && skill.effect.type === 'attack' ? 'battle.ng.sealed' : 'battle.ng.acted'));
+  }
+  if (targetsEnemy(skill) && aliveMonsters(state.sides[otherSide(side)]).length === 0) {
     return NO(t('battle.ng.noAttackTarget'));
   }
   return YES;
@@ -309,7 +331,7 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
 
 /** 対象を選ぶ必要があるカードなら、選べる対象を返す */
 export function targetsFor(state: BattleState, side: Side, card: PlayCard): BattleMonster[] {
-  if (card.effect.type === 'attack') return aliveMonsters(state.sides[otherSide(side)]);
+  if (card.kind === 'skill' && targetsEnemy(card)) return aliveMonsters(state.sides[otherSide(side)]);
   if (card.effect.type === 'heal') return aliveMonsters(state.sides[side]);
   return [];
 }
@@ -322,9 +344,16 @@ export function fieldModifier(state: BattleState, stat: StatType): number {
   return e.stat === 'all' || e.stat === stat ? e.modifier : 0;
 }
 
-/** 攻撃の威力（場の増減を反映。0未満にはならない） */
-export function attackPower(state: BattleState, skill: SkillCard): number {
-  return Math.max(0, skill.stat.value + fieldModifier(state, skill.stat.type));
+/** 使うモンスターにかかっている「次の技のダメージ−」（吠える）。その技の種類に効くときだけ */
+export function weakenOf(user: BattleMonster | undefined, skill: SkillCard): number {
+  const w = user?.weaken;
+  return w && skill.stat && w.stat === skill.stat.type ? w.amount : 0;
+}
+
+/** 攻撃の威力（場の増減と、使うモンスターへの「吠える」を反映。0未満にはならない） */
+export function attackPower(state: BattleState, skill: SkillCard, user?: BattleMonster): number {
+  if (!skill.stat) return 0;
+  return Math.max(0, skill.stat.value + fieldModifier(state, skill.stat.type) - weakenOf(user, skill));
 }
 
 /** 手札をマナにできるか（攻撃のあとのマナ化の間だけ。枚数の制限なし） */
@@ -419,7 +448,7 @@ export function pendingDamage(pending: PendingAttack): number {
     const attack = getSkill(pending.cardId).effect;
     return attack.type === 'attack' && attack.halfOnEvade ? Math.floor(pending.power / 2) : 0;
   }
-  const reduction = cards.filter((c) => c.effect.type === 'defense').reduce((sum, c) => sum + c.stat.value, 0);
+  const reduction = cards.filter((c) => c.effect.type === 'defense').reduce((sum, c) => sum + guardReduction(c), 0);
   return Math.max(0, pending.power - reduction);
 }
 
@@ -433,7 +462,21 @@ function resolvePending(state: BattleState): BattleState {
   let withFx = next;
   if (damage > 0) withFx = addFx(next, hitKind(pending.cardId), pending.attacker);
   else if (evaded) withFx = addFx(next, 'evade', target?.side ?? otherSide(pending.attacker));
-  return applyDamage(withFx, pending.targetUid, damage);
+  const after = applyDamage(withFx, pending.targetUid, damage);
+  return damage > 0 ? selfDamageOnHit(after, pending.cardId, pending.userUid) : after;
+}
+
+/**
+ * 技が当たったときの反動（正式：すてみタックル「技が当たった場合、自分のライフ−1」）。
+ * 【要仕様確定】「当たった」はダメージが1以上のときとした（回避・防御で0のときは反動なし）。勝負がついたあとは何もしない
+ */
+function selfDamageOnHit(state: BattleState, skillId: string, userUid: string): BattleState {
+  const e = getSkill(skillId).effect;
+  if (e.type !== 'attack' || !e.selfDamageOnHit || state.phase === 'ended') return state;
+  const user = findMonster(state, userUid);
+  if (!user || user.monster.life <= 0) return state;
+  const next = addLog(state, t('battle.log.recoil', { name: nameOf(user.monster.cardId), n: e.selfDamageOnHit }));
+  return applyDamage(next, userUid, e.selfDamageOnHit);
 }
 
 /** 命中の音の種類（強攻撃は仮に必要マナ STRONG_ATTACK_COST 以上の技） */
@@ -448,6 +491,7 @@ function hitKind(skillId: string): BattleFxKind {
  */
 function startTurn(state: BattleState, side: Side): BattleState {
   const s = state.sides[side];
+  // すなかけの「攻撃できない」は手番の番号（sealedTurn）で決まるので、過ぎた手番のものは何もしなくても効かない
   const monsters = s.monsters.map((m) => ({ ...m, acted: false }));
   let next: BattleState = { ...state, active: side, phase: 'main', manaConvertLimit: null };
   next = addLog(updateSide(next, side, { monsters, turnUsage: {} }), t(`battle.log.turn.${side}`));
@@ -520,7 +564,7 @@ function useCard(
 
   const targets = targetsFor(state, side, skill);
   let target: BattleMonster | undefined;
-  if (skill.effect.type === 'attack' || skill.effect.type === 'heal') {
+  if (targetsEnemy(skill) || skill.effect.type === 'heal') {
     target = targetUid ? targets.find((m) => m.uid === targetUid) : undefined;
     if (!target) return state;
   }
@@ -532,11 +576,14 @@ function useCard(
 
   switch (skill.effect.type) {
     case 'attack': {
-      if (!target) return state;
-      const power = attackPower(state, skill);
+      if (!target || !skill.stat) return state;
+      const power = attackPower(state, skill, user);
+      // 吠える（次の技のダメージ−）は、その種類の技を使ったら消える
+      if (weakenOf(user, skill) > 0) next = updateMonster(next, user.uid, { weaken: null });
       // 防御も回避もできない攻撃は、守備を待たずにダメージ
       if (skill.effect.unblockable && skill.effect.undodgeable) {
-        return applyDamage(power > 0 ? addFx(next, hitKind(skill.id), side) : next, target.uid, power);
+        const hit = applyDamage(power > 0 ? addFx(next, hitKind(skill.id), side) : next, target.uid, power);
+        return power > 0 ? selfDamageOnHit(hit, skill.id, user.uid) : hit;
       }
       return {
         ...next,
@@ -553,11 +600,24 @@ function useCard(
       };
     }
     case 'heal':
-      return target ? healMonster(next, target, skill.stat.value) : state;
+      return target ? healMonster(next, target, skillValue(skill)) : state;
     case 'mana':
-      return deckToMana(next, side, skill.stat.value);
+      return deckToMana(next, side, skillValue(skill));
     case 'draw':
-      return drawByEffect(next, side, skill.stat.value);
+      return drawByEffect(next, side, skillValue(skill));
+    case 'weaken': {
+      // 【要仕様確定】重ねがけはしない（すでにかかっていても同じ量のまま）
+      if (!target) return state;
+      const e = skill.effect;
+      next = updateMonster(next, target.uid, { weaken: { stat: e.stat, amount: e.amount } });
+      return addLog(next, t('battle.log.weaken', { name: nameOf(target.cardId), stat: statLabel(e.stat), n: e.amount }));
+    }
+    case 'seal': {
+      // 相手の次の手番（turn + 1）の間、攻撃の技を使えない
+      if (!target) return state;
+      next = updateMonster(next, target.uid, { sealedTurn: state.turn + 1 });
+      return addLog(next, t('battle.log.seal', { name: nameOf(target.cardId) }));
+    }
     case 'defense':
     case 'evade':
       return state;
@@ -649,7 +709,7 @@ function defend(state: BattleState, side: Side, cardUid: string | null): BattleS
   let next = removeFromHand(state, side, cardUid);
   next = payMana(next, side, skill.cost);
   next = { ...next, pending: { ...pending, responses: [...pending.responses, skill.id] } };
-  const params = { side: sideLabel(side), skill: cardName(skill), v: skill.stat.value };
+  const params = { side: sideLabel(side), skill: cardName(skill), v: guardReduction(skill) };
   return addLog(next, t(skill.effect.type === 'evade' ? 'battle.log.evade' : 'battle.log.guard', params));
 }
 
