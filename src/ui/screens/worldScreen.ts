@@ -1,7 +1,7 @@
 import { getDungeon, ENCOUNTERS } from '../../data/dungeons.ts';
 import { FRAGMENT_TOTAL } from '../../data/fragments.ts';
-import { getMap, TOWN_SIGNS, type ChestObject, type EnemyObject, type MapDefinition, type MapObject, type NpcObject } from '../../data/maps.ts';
-import type { SceneId } from '../../data/storyScenes.ts';
+import { getMap, isResidentId, TOWN_SIGNS, type ChestObject, type EnemyObject, type MapDefinition, type MapObject, type NpcId, type NpcObject } from '../../data/maps.ts';
+import { residentScene, type SceneId } from '../../data/storyScenes.ts';
 import { getMonster } from '../../data/cards.ts';
 import { isDeckValid } from '../../game/deck/deck.ts';
 import {
@@ -41,6 +41,15 @@ import { button, h } from '../dom.ts';
 import maleSheet from '@assets/images/characters/player_male_sheet.png';
 import femaleSheet from '@assets/images/characters/player_female_sheet.png';
 import guideSheet from '@assets/images/characters/npc_neighbor_guide_walk.png';
+import clerkSheet from '@assets/images/characters/npc_clerk_walk.png';
+import researcherSheet from '@assets/images/characters/npc_researcher_walk.png';
+import receptionistSheet from '@assets/images/characters/npc_receptionist_walk.png';
+import teacherSheet from '@assets/images/characters/npc_teacher_walk.png';
+import residentASheet from '@assets/images/characters/npc_resident_a_walk.png';
+import residentBSheet from '@assets/images/characters/npc_resident_b_walk.png';
+import residentCSheet from '@assets/images/characters/npc_resident_c_walk.png';
+import residentDSheet from '@assets/images/characters/npc_resident_d_walk.png';
+import residentESheet from '@assets/images/characters/npc_resident_e_walk.png';
 import chestWood from '@assets/images/maps/dungeon/chest_01_base.webp';
 import chestWood1 from '@assets/images/maps/dungeon/chest_01_anim_01.webp';
 import chestWood2 from '@assets/images/maps/dungeon/chest_01_anim_02.webp';
@@ -84,10 +93,16 @@ const STICK_RADIUS = 42;
 const STICK_DEAD = 16;
 /** 歩行速度（論理px/秒・仮。実機で調整）。2026-10-22 に街を詰めたとき 185 から 1.25 倍に（ユーザー指示） */
 const WALK_PX = 231;
-/** 歩行のコマ送り（コマ/秒。素材の推奨は約7） */
-const WALK_FPS = 7;
-/** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目で少し体が上がる */
+/**
+ * 1歩で進む距離（人物の背たけに対する割合）。コマ送りを時間ではなく進んだ距離で決め、足が地面をすべって見えないようにする
+ * （2026-10-23。それまでは 7コマ/秒で、1歩に背たけの約0.8倍進み、足がすべって見えた）。
+ * いまの歩く速さ・背たけ（街・部屋 81 論理px）では 1歩 約36 論理px＝約6.4歩/秒（約13コマ/秒）
+ */
+const STEP_PER_HEIGHT = 0.45;
+/** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目（足がそろう「立つ」コマ）で少し体が上がる */
 const WALK_BOB = 0.03;
+/** スティックの向きを変えるまでの余裕（ラジアン）。8方向の境目（22.5度）を 8度こえるまで前の向きのまま */
+const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
 /** 宝箱の絵（ミスモンの正式素材）：閉じた絵と、開く動きの4コマ（4コマ目が開いたあとの絵） */
 const CHEST_ART: Readonly<Record<ChestObject['look'], { readonly closed: string; readonly opening: readonly string[] }>> = {
   wood: { closed: chestWood, opening: [chestWood1, chestWood2, chestWood3, chestWood4] },
@@ -113,20 +128,46 @@ const FRAME_H = 288;
 const FOOT_X = 108;
 const FOOT_Y = 270;
 const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, right: 3 };
-/** 待機の絵が歩行シートの何列目と同じか（案内役の待機は2コマ目と同じ絵） */
+/** 待機の絵が歩行シートの何列目と同じか（歩き4コマは「右足を前・立つ・左足を前・立つ」なので2列目） */
 const NPC_IDLE_COL = 1;
 
 /**
- * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×4行。tools/art/walk_passing.py が作る）。
+ * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×4行）。
  * 歩く・止まるで別の画像に切り替えると、iPhone で読み込み直しの間だけ人物が消えるので、1枚の中で位置だけ動かす。
- * 横向きの2・4コマ目は、届いた絵（4コマとも足を開いた形）から足を寄せて作った「足がそろう」コマ（描き直しが届くまでの応急処置）
+ * 2026-10-23 の大人の絵（男性・女性。tools/art/adult_walk_build.py が作る。右足を前・立つ・左足を前・立つ・立ち止まり）
  */
 const PLAYER_SHEET: Readonly<Record<'male' | 'female', string>> = { male: maleSheet, female: femaleSheet };
 const PLAYER_SHEET_COLS = 5;
 /** シートの立ち止まりの列 */
 const IDLE_COL = 4;
 
-const NPC_SHEET: Readonly<Record<NpcObject['npcId'], string>> = { neighbor_guide: guideSheet };
+/** 人の歩行の絵（4列×4行。2026-10-23 の大人の絵。tools/art/adult_walk_build.py --npc が作る） */
+const NPC_SHEET: Readonly<Record<NpcId, string>> = {
+  neighbor_guide: guideSheet,
+  clerk: clerkSheet,
+  researcher: researcherSheet,
+  receptionist: receptionistSheet,
+  teacher: teacherSheet,
+  resident_a: residentASheet,
+  resident_b: residentBSheet,
+  resident_c: residentCSheet,
+  resident_d: residentDSheet,
+  resident_e: residentESheet,
+};
+
+/** 人の呼び名（読み上げ用） */
+const NPC_NAME: Readonly<Record<NpcId, MessageKey>> = {
+  neighbor_guide: 'story.speaker.neighborGuide',
+  clerk: 'story.speaker.clerk',
+  researcher: 'story.speaker.researcher',
+  receptionist: 'story.speaker.receptionist',
+  teacher: 'story.speaker.teacher',
+  resident_a: 'story.speaker.residentA',
+  resident_b: 'story.speaker.residentB',
+  resident_c: 'story.speaker.residentC',
+  resident_d: 'story.speaker.residentD',
+  resident_e: 'story.speaker.residentE',
+};
 
 const TILE_CLASS: Readonly<Record<string, string>> = {
   '#': 'wall', '.': 'floor', ',': 'grass', '=': 'road', T: 'tree', '~': 'water', H: 'bld-hall', A: 'bld-home',
@@ -136,9 +177,20 @@ const TILE_CLASS: Readonly<Record<string, string>> = {
 
 const coins = (n: number): string => t('common.coins', { n } satisfies Params);
 
-/** 向き → 1歩の向き（斜めの絵は無いので、斜めに歩くときは左右の絵） */
-const facing = (dx: number, dy: number, prev: Direction): Direction =>
-  dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : dy < 0 ? 'up' : prev;
+/**
+ * 1歩の向き → 人物の向き（斜めの絵は無い）。
+ * いまの向きの成分がある斜め（例：右を向いて右下へ）は向きを変えない。斜め45度あたりで正面と横の絵が細かく入れ替わらないように。
+ * それ以外の斜めは左右の絵
+ */
+const facing = (dx: number, dy: number, prev: Direction): Direction => {
+  if (dx === 0 && dy === 0) return prev;
+  const p = DIR_DELTA[prev];
+  if ((p.x !== 0 && p.x === dx) || (p.y !== 0 && p.y === dy)) return prev;
+  return dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
+};
+
+/** 2つの角度の差（-π〜π） */
+const angleDiff = (a: number, b: number): number => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 
 export const worldScreen: ScreenDefinition = {
   id: 'world',
@@ -176,8 +228,8 @@ class WorldView {
   #busy = false;
   #raf = 0;
   #last = 0;
-  /** 歩いている時間（コマ送り用）・最後に歩いていた時刻 */
-  #walkTime = 0;
+  /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
+  #walkDist = 0;
   #lastMoving = 0;
   #playerLook = '';
   #destroyed = false;
@@ -201,6 +253,8 @@ class WorldView {
   #nearKey = '';
   /** スティック操作中の指（1本だけ） */
   #touch: { id: number; x: number; y: number; dragging: boolean } | null = null;
+  /** 住人に話しかけた回数（人の ID → 回数。アプリを開いている間） */
+  static #talkCount = new Map<string, number>();
   /** 一度スティックを使ったら操作の説明を出さない（アプリを開いている間） */
   static #stickUsed = false;
   readonly #onKeyDown = (e: KeyboardEvent): void => this.#key(e, true);
@@ -528,7 +582,7 @@ class WorldView {
     if (obj.type === 'npc') {
       if (!this.#isVisible(obj)) return null;
       // 人物の歩行の絵（待機の向き）。足元のマスに立つ
-      const el = h('div', { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': t('story.speaker.neighborGuide') } });
+      const el = h('div', { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': t(NPC_NAME[obj.npcId]) } });
       this.#sizeFigure(el);
       this.#addShadow(el);
       el.style.backgroundImage = `url("${NPC_SHEET[obj.npcId]}")`;
@@ -562,7 +616,7 @@ class WorldView {
     this.#last = time;
     if (!this.#busy) this.#step(dt);
     if (this.#move) {
-      this.#walkTime += dt;
+      if (!this.#busy) this.#walkDist += WALK_PX * dt;
       this.#lastMoving = time;
     }
     this.#render(time);
@@ -662,14 +716,15 @@ class WorldView {
     const walking = this.#move !== null || time - this.#lastMoving < 90;
     const w = parseFloat(this.#player.style.width);
     const hgt = parseFloat(this.#player.style.height);
-    if (!walking) this.#walkTime = 0;
-    const col = walking ? Math.floor(this.#walkTime * WALK_FPS) % 4 : IDLE_COL;
+    if (!walking) this.#walkDist = 0;
+    // 半歩（1コマ）ごとに次のコマ。背たけが小さいダンジョンでは歩幅も小さく
+    const step = Math.floor(this.#walkDist / ((this.#figureH * STEP_PER_HEIGHT) / 2)) % 4;
+    const col = walking ? step : IDLE_COL;
     const look = `${this.#dir}:${col}`;
     if (look !== this.#playerLook) {
       this.#player.style.backgroundPosition = `${-col * w}px ${-DIR_ROW[this.#dir] * hgt}px`;
       this.#playerLook = look;
     }
-    const step = Math.floor(this.#walkTime * WALK_FPS) % 4;
     this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * WALK_BOB : 0);
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
@@ -739,8 +794,11 @@ class WorldView {
       this.#held = null;
       return;
     }
-    // 8方向：45度ずつ
-    const sector = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+    // 8方向：45度ずつ。境目のあたりで指がふるえても向きが行ったり来たりしないよう、少しこえるまで前の向きのまま
+    const angle = Math.atan2(dy, dx);
+    const held = this.#held;
+    if (held && Math.abs(angleDiff(angle, Math.atan2(held.y, held.x))) <= STICK_HOLD) return;
+    const sector = Math.round(angle / (Math.PI / 4));
     const a = (sector * Math.PI) / 4;
     this.#held = { x: Math.round(Math.cos(a)), y: Math.round(Math.sin(a)) };
   }
@@ -906,6 +964,13 @@ class WorldView {
       this.#faceNpc(el, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up');
     }
     if (npc.npcId === 'neighbor_guide') this.#playScene(sceneOnTalk(this.#store.save));
+    else if (npc.action) this.#action(npc.action);
+    else if (isResidentId(npc.npcId)) {
+      // 住人：話しかけるたびに 2つの話を交互に（回数はアプリを開いている間だけ覚える）
+      const count = WorldView.#talkCount.get(npc.id) ?? 0;
+      WorldView.#talkCount.set(npc.id, count + 1);
+      this.#playScene(residentScene(npc.npcId, count));
+    }
   }
 
   #playScene(id: SceneId): void {
@@ -938,13 +1003,15 @@ class WorldView {
     this.#busy = true;
     const ctx = this.#ctx;
     store.update((s) => startPractice(s, tutorial));
+    // 案内役のいる所で始めたら、終わったあとに案内役が話す
+    const withGuide = this.#map.objects.some((o) => o.type === 'npc' && o.npcId === 'neighbor_guide' && this.#isVisible(o));
     store.pendingBattle = {
       title: t('story.practice.title'),
       opponent,
       allowSurrender: true,
       tutorial: tutorial && store.save.story.intro !== 'completed',
       onFinish: (winner) => {
-        store.practiceResult = { winner, tutorial };
+        store.practiceResult = { winner, tutorial, withGuide };
         ctx.reset('world');
       },
     };

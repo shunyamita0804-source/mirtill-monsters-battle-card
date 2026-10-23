@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getMap, PRACTICE, TOWN, type MapDefinition, type NpcObject } from '../src/data/maps.ts';
-import { INTRO_STATES, SCENES, type IntroState, type Scene, type SceneId, type SceneStep } from '../src/data/storyScenes.ts';
+import { getMap, HALL, HOUSES, LAB, NEIGHBOR, PRACTICE, SHOP, TOWN, type MapDefinition, type NpcObject } from '../src/data/maps.ts';
+import { INTRO_STATES, residentScene, SCENES, type IntroState, type Scene, type SceneId, type SceneStep } from '../src/data/storyScenes.ts';
 import { createNewSave, normalizeSave, SAVE_VERSION, type SaveData } from '../src/game/save/saveData.ts';
 import {
   applySceneEffects,
@@ -122,11 +122,16 @@ describe('序盤イベント：場面のつながり', () => {
     s = play(s, after).save;
     expect(s.story.intro).toBe('completed');
     expect(showsPracticeGoal(s, 'town')).toBe(false);
+    // 最初の練習試合のあとは家に戻っている。家で話しかけるとまた練習できる
+    expect(guidePlace(s.story.intro)).toBe('home');
     expect(sceneOnTalk(s)).toBe('replay');
     const again = play(s, 'replay', [0]);
     expect(again.practice).toBe(false);
     expect(startPractice(again.save, false).story.intro).toBe('completed');
-    expect(sceneAfterPractice(again.save, { winner: 'player', tutorial: false })).toBe('afterReplay');
+    expect(sceneAfterPractice(again.save, { winner: 'player', tutorial: false, withGuide: true })).toBe('afterReplay');
+    // 練習場の練習テーブルは、案内役がいないので地の文で勧める
+    expect(sceneOnTable(s)).toBe('tableOffer');
+    expect(sceneAfterPractice(s, { winner: 'player', tutorial: false, withGuide: false })).toBe('afterTable');
   });
 
   it('勝っても負けても最初の練習は終わる', () => {
@@ -166,19 +171,25 @@ describe('序盤イベント：場面のつながり', () => {
 });
 
 describe('序盤イベント：案内役の位置', () => {
-  const guides = [...TOWN.objects, ...PRACTICE.objects].filter((o): o is NpcObject => o.type === 'npc');
+  const guideMaps = [TOWN, PRACTICE, NEIGHBOR];
+  const guides = guideMaps
+    .flatMap((m) => m.objects)
+    .filter((o): o is NpcObject => o.type === 'npc' && o.npcId === 'neighbor_guide');
 
-  it('どの進み具合でも、案内役は街か練習場のどちらか一方だけにいる', () => {
+  it('案内役は街・練習場・自分の家の3か所に置いてある', () => {
+    expect(guides.map((g) => g.id).sort()).toEqual(['guide-home', 'guide-practice', 'guide-town']);
+  });
+
+  it('どの進み具合でも、案内役は街・練習場・家のどこか1か所だけにいる', () => {
     for (const intro of INTRO_STATES) {
       const present = guides.filter((g) => isNpcPresent(withIntro(intro), g));
       expect(present, intro).toHaveLength(1);
     }
   });
 
-  it.each([TOWN, PRACTICE].map((m) => [m.id, m] as const))('%s：案内役がいても、すべての出入口・調べる物に行ける（道・入口をふさがない）', (_id, map) => {
+  it.each([TOWN, PRACTICE, NEIGHBOR, SHOP, LAB, HALL, ...HOUSES].map((m) => [m.id, m] as const))('%s：人がいても、すべての出入口・調べる物・人に行ける（道・入口をふさがない）', (_id, map) => {
     const blocked = (x: number, y: number): boolean => isBlocked(map, x, y, () => true);
     for (const obj of map.objects) {
-      if (obj.type === 'npc') continue;
       const goals: { x: number; y: number }[] = [];
       const w = 'w' in obj ? obj.w : 1;
       const h = 'h' in obj ? obj.h : 1;
@@ -188,11 +199,37 @@ describe('序盤イベント：案内役の位置', () => {
     }
   });
 
-  it('案内役は出入口の上・前に立たない', () => {
-    for (const g of guides) {
-      const map = g.id === 'guide-town' ? TOWN : PRACTICE;
-      for (const [dx, dy] of [[0, 0], [0, 1], [0, -1], [1, 0], [-1, 0]] as const) {
-        expect(objectsAt(map, g.x + dx, g.y + dy).some((o) => o.type === 'warp'), g.id).toBe(false);
+  it('人は出入口の上・前に立たない', () => {
+    for (const map of [TOWN, PRACTICE, NEIGHBOR, SHOP, LAB, HALL, ...HOUSES]) {
+      for (const g of map.objects.filter((o): o is NpcObject => o.type === 'npc')) {
+        for (const [dx, dy] of [[0, 0], [0, 1], [0, -1], [1, 0], [-1, 0]] as const) {
+          expect(objectsAt(map, g.x + dx, g.y + dy).some((o) => o.type === 'warp'), g.id).toBe(false);
+        }
+      }
+    }
+  });
+});
+
+describe('街の人', () => {
+  it('店員・研究員・受付・先生は、カウンターなどと同じ画面を開く', () => {
+    const staff = [SHOP, LAB, HALL, PRACTICE].flatMap((m) => m.objects).filter((o): o is NpcObject => o.type === 'npc' && o.npcId !== 'neighbor_guide');
+    expect(Object.fromEntries(staff.map((n) => [n.npcId, n.action]))).toEqual({
+      clerk: 'shopClerk',
+      researcher: 'collection',
+      receptionist: 'tournamentDesk',
+      teacher: 'practiceTable',
+    });
+  });
+
+  it('民家A〜E にそれぞれ住人A〜E がいて、話しかけるたびに2つの話を交互にする', () => {
+    const residents = HOUSES.map((m) => m.objects.find((o): o is NpcObject => o.type === 'npc'));
+    expect(residents.map((r) => r?.npcId)).toEqual(['resident_a', 'resident_b', 'resident_c', 'resident_d', 'resident_e']);
+    expect([0, 1, 2].map((n) => residentScene('resident_c', n))).toEqual(['resident_c_1', 'resident_c_2', 'resident_c_1']);
+    for (const r of residents) {
+      for (const n of [0, 1]) {
+        const scene = SCENES[residentScene(r!.npcId as 'resident_a', n)];
+        expect(scene.steps.length).toBeGreaterThan(0);
+        expect(scene.effects ?? []).toEqual([]);
       }
     }
   });

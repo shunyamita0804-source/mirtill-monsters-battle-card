@@ -23,8 +23,8 @@ import { button, h } from '../dom.ts';
  * - 絵が無い表情は「仮」の札を出す（いまは全部そろっている）
  */
 
-/** 会話の絵（人物 → 表情 → 画像の URL）。困り顔（troubled）の絵は 05_worried */
-const PORTRAITS: Readonly<Record<Exclude<Speaker, 'system'>, Partial<Record<Expression, string>>>> = {
+/** 会話の絵（人物 → 表情 → 画像の URL）。困り顔（troubled）の絵は 05_worried。住人は絵が無いので名前の札だけ出す */
+const PORTRAITS: Readonly<Partial<Record<Exclude<Speaker, 'system'>, Partial<Record<Expression, string>>>>> = {
   neighbor_guide: {
     normal: guideNormal,
     smile: guideSmile,
@@ -52,6 +52,11 @@ function preloadPortraits(): void {
 
 const SPEAKER_NAME: Readonly<Record<Exclude<Speaker, 'system'>, MessageKey>> = {
   neighbor_guide: 'story.speaker.neighborGuide',
+  resident_a: 'story.speaker.residentA',
+  resident_b: 'story.speaker.residentB',
+  resident_c: 'story.speaker.residentC',
+  resident_d: 'story.speaker.residentD',
+  resident_e: 'story.speaker.residentE',
 };
 
 /** 1文字を出す間隔（ミリ秒） */
@@ -121,8 +126,10 @@ export function playScene(parent: HTMLElement, start: SceneId, options: Dialogue
     }
     name.hidden = false;
     name.textContent = t(SPEAKER_NAME[speaker]);
-    portrait.hidden = false;
-    const url = expression ? PORTRAITS[speaker][expression] : undefined;
+    const set = PORTRAITS[speaker];
+    portrait.hidden = !set;
+    if (!set) return;
+    const url = expression ? set[expression] : undefined;
     portrait.dataset.expression = expression ?? 'normal';
     portrait.classList.toggle('is-temp', !url);
     if (url) {
