@@ -512,3 +512,111 @@
 @keyframes exit-bob {
   50% { transform: translateY(3px); }
 }
+
+/*
+ * ダンジョンの床・壁・階段・魔物のしるし（2026-10-23 デザイン第2弾。素材は assets/images/maps/dungeon/）。
+ * 床と壁の上面はつなげて敷ける絵を 160px（4マス）ごとに敷き、マスの位置（--tx・--ty）でずらして続けて見せる。
+ * 壁の下が通れるマスなら、壁の正面の帯を下の方に重ねる
+ */
+.world__map--dungeon .tile--floor,
+.world__map--dungeon .tile--stairs-down,
+.world__map--dungeon .tile--stairs-up {
+  /* 通れる床は少し明るく、通れない壁の上面ははっきり暗く（見分けやすさのため絵の上に色を重ねる） */
+  background:
+    linear-gradient(rgb(255 236 200 / 0.1), rgb(255 236 200 / 0.1)),
+    url('@assets/images/maps/dungeon/dungeon_floor.webp') var(--tx, 0) var(--ty, 0) / 160px 160px repeat;
+  box-shadow: none;
+}
+
+.world__map--dungeon .tile--wall {
+  background:
+    linear-gradient(rgb(6 7 10 / 0.58), rgb(6 7 10 / 0.58)),
+    url('@assets/images/maps/dungeon/dungeon_wall_top.webp') var(--tx, 0) var(--ty, 0) / 160px 160px repeat;
+  box-shadow: none;
+}
+
+.world__map--dungeon .tile--wall.tile--wall-face {
+  background:
+    url('@assets/images/maps/dungeon/dungeon_wall_face.webp') var(--tx, 0) 100% / 175px 32px repeat-x,
+    linear-gradient(rgb(6 7 10 / 0.58), rgb(6 7 10 / 0.58)),
+    url('@assets/images/maps/dungeon/dungeon_wall_top.webp') var(--tx, 0) var(--ty, 0) / 160px 160px repeat;
+  box-shadow: 0 6px 6px -4px rgb(0 0 0 / 0.55);
+  position: relative;
+  z-index: 1;
+}
+
+.world__map--dungeon .tile--stairs-down,
+.world__map--dungeon .tile--stairs-up {
+  position: relative;
+}
+
+.world__map--dungeon .tile--stairs-down::after,
+.world__map--dungeon .tile--stairs-up::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: center / contain no-repeat;
+}
+
+.world__map--dungeon .tile--stairs-down::after {
+  background-image: url('@assets/images/maps/dungeon/stairs_down.webp');
+}
+
+.world__map--dungeon .tile--stairs-up::after {
+  background-image: url('@assets/images/maps/dungeon/stairs_up.webp');
+}
+
+/* 魔物のしるし（黒い霧の影）。文字は読み上げ用に残して見せない */
+.world__enemy {
+  border-radius: 0;
+  background: url('@assets/images/maps/dungeon/enemy_symbol.webp') center bottom / contain no-repeat;
+  box-shadow: none;
+  color: transparent;
+  font-size: 0;
+  transform-origin: 50% 100%;
+  scale: 1.15;
+}
+
+.world__enemy--boss {
+  background: url('@assets/images/maps/dungeon/enemy_symbol.webp') center bottom / contain no-repeat;
+  scale: 1.6;
+  filter: drop-shadow(0 0 6px rgb(216 184 106 / 0.75));
+}
+
+/* ===== 街・部屋の上の札とボタン（デザイン第2弾の部品。素材は assets/images/ui/hud/） ===== */
+.world__place-name {
+  padding: 6px 26px 7px;
+  border: 0;
+  border-radius: 0;
+  background: url('@assets/images/ui/hud/place_plate.webp') center / 100% 100% no-repeat;
+  box-shadow: none;
+}
+
+.world__hud .btn--small {
+  border: 0;
+  border-radius: 0;
+  background: url('@assets/images/ui/hud/button_base.webp') center / 100% 100% no-repeat;
+  box-shadow: none;
+}
+
+.world__action {
+  border: 0;
+  background: url('@assets/images/ui/hud/round_button.webp') center / 100% 100% no-repeat;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.35);
+}
+
+.world__action:active {
+  background: url('@assets/images/ui/hud/round_button.webp') center / 100% 100% no-repeat;
+  filter: brightness(1.2);
+}
+
+.world__action.is-ready {
+  animation: action-ready-art 1.3s ease-in-out infinite;
+}
+
+@keyframes action-ready-art {
+  0%, 100% { box-shadow: 0 3px 10px rgb(0 0 0 / 0.35), 0 0 0 0 rgb(255 215 106 / 0.5); }
+  50% { box-shadow: 0 3px 10px rgb(0 0 0 / 0.35), 0 0 18px 2px rgb(255 215 106 / 0.75); }
+}

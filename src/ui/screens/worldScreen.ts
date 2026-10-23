@@ -65,9 +65,7 @@ import chestGold1 from '@assets/images/maps/dungeon/chest_03_anim_01.webp';
 import chestGold2 from '@assets/images/maps/dungeon/chest_03_anim_02.webp';
 import chestGold3 from '@assets/images/maps/dungeon/chest_03_anim_03.webp';
 import chestGold4 from '@assets/images/maps/dungeon/chest_03_anim_04.webp';
-import fieldMeadow from '@assets/images/backgrounds/battle_field_meadow.webp';
-import fieldCoast from '@assets/images/backgrounds/battle_field_coast.webp';
-import fieldVolcano from '@assets/images/backgrounds/battle_field_volcano.webp';
+import dungeonBattleBg from '@assets/images/backgrounds/battle_dungeon.webp';
 import { bgm } from '../bgm.ts';
 import { coinIcon } from '../components/coinIcon.ts';
 import { t, type Params } from '../../i18n/i18n.ts';
@@ -77,6 +75,8 @@ import type { ScreenContext, ScreenDefinition } from './types.ts';
 
 /** 仮マップ（ダンジョン）の1マスの大きさ（論理px） */
 const TILE = 40;
+/** ダンジョンの床・壁の絵を1回敷く大きさ（論理px。4マス分） */
+const DUNGEON_TEX = 160;
 /** 正式な絵の街：設計図の 1 単位 → 論理px（主人公 108×144 が 61×81 になる） */
 const ART_SCALE = 0.5625;
 /** 部屋は画面の高さに合わせて少し大きく見せる（街の何倍までか。人物の絵がぼやけない範囲） */
@@ -134,11 +134,15 @@ const CHEST_ART: Readonly<Record<ChestObject['look'], { readonly closed: string;
 };
 /** 宝箱が開く動きの1コマの時間（ミリ秒） */
 const CHEST_FRAME_MS = 110;
-/** ダンジョンの階ごとの対戦の背景（ミスモンの野外のバトル背景。仮の割り当て） */
+/**
+ * ダンジョンの階ごとの対戦の背景。
+ * 2026-10-23 デザイン第2弾の地下ダンジョンの背景に入れ替えた（それまではミスモンの野外の背景：
+ * battle_field_meadow / coast / volcano.webp。ファイルは assets に残してあるので、戻すときはここを元に戻す）
+ */
 const DUNGEON_BATTLE_BG: Readonly<Record<string, string>> = {
-  'dungeon-01-b1': fieldMeadow,
-  'dungeon-01-b2': fieldCoast,
-  'dungeon-01-b3': fieldVolcano,
+  'dungeon-01-b1': dungeonBattleBg,
+  'dungeon-01-b2': dungeonBattleBg,
+  'dungeon-01-b3': dungeonBattleBg,
 };
 /** 施設の看板を上の帯の下に保つ位置（論理px） */
 const SIGN_MIN_BOTTOM = 98;
@@ -501,9 +505,22 @@ class WorldView {
     } else {
       const tiles = h('div', { class: 'world__tiles' });
       tiles.style.gridTemplateColumns = `repeat(${width}, ${TILE}px)`;
-      for (const row of map.tiles) {
-        for (const ch of row) tiles.append(h('div', { class: `tile tile--${TILE_CLASS[ch] ?? 'wall'}` }));
-      }
+      const dungeon = map.area === 'dungeon';
+      map.tiles.forEach((row, y) => {
+        [...row].forEach((ch, x) => {
+          const kind = TILE_CLASS[ch] ?? 'wall';
+          const el = h('div', { class: `tile tile--${kind}` });
+          if (dungeon) {
+            // ダンジョンの床・壁の絵（2026-10-23 デザイン第2弾）は、つなげて敷く絵なので、マスの位置だけずらして続けて見せる
+            el.style.setProperty('--tx', `${-((x * TILE) % DUNGEON_TEX)}px`);
+            el.style.setProperty('--ty', `${-((y * TILE) % DUNGEON_TEX)}px`);
+            // 壁の下が通れるマスなら、壁の正面（手前を向いた面）を描く
+            const below = map.tiles[y + 1]?.[x];
+            if (kind === 'wall' && below !== undefined && (TILE_CLASS[below] ?? 'wall') !== 'wall') el.classList.add('tile--wall-face');
+          }
+          tiles.append(el);
+        });
+      });
       this.#mapLayer.append(tiles);
     }
     this.#addLabels();
