@@ -38,18 +38,18 @@ import {
 import { playScene } from '../components/dialogue.ts';
 import { confirmModal, messageModal, openModal } from '../components/modal.ts';
 import { button, h } from '../dom.ts';
-import maleSheet from '@assets/images/characters/player_male_sheet.png';
-import femaleSheet from '@assets/images/characters/player_female_sheet.png';
-import guideSheet from '@assets/images/characters/npc_neighbor_guide_walk.png';
-import clerkSheet from '@assets/images/characters/npc_clerk_walk.png';
-import researcherSheet from '@assets/images/characters/npc_researcher_walk.png';
-import receptionistSheet from '@assets/images/characters/npc_receptionist_walk.png';
-import teacherSheet from '@assets/images/characters/npc_teacher_walk.png';
-import residentASheet from '@assets/images/characters/npc_resident_a_walk.png';
-import residentBSheet from '@assets/images/characters/npc_resident_b_walk.png';
-import residentCSheet from '@assets/images/characters/npc_resident_c_walk.png';
-import residentDSheet from '@assets/images/characters/npc_resident_d_walk.png';
-import residentESheet from '@assets/images/characters/npc_resident_e_walk.png';
+import maleSheet from '@assets/images/characters/player_male_sheet.webp';
+import femaleSheet from '@assets/images/characters/player_female_sheet.webp';
+import guideSheet from '@assets/images/characters/npc_neighbor_guide_walk.webp';
+import clerkSheet from '@assets/images/characters/npc_clerk_walk.webp';
+import researcherSheet from '@assets/images/characters/npc_researcher_walk.webp';
+import receptionistSheet from '@assets/images/characters/npc_receptionist_walk.webp';
+import teacherSheet from '@assets/images/characters/npc_teacher_walk.webp';
+import residentASheet from '@assets/images/characters/npc_resident_a_walk.webp';
+import residentBSheet from '@assets/images/characters/npc_resident_b_walk.webp';
+import residentCSheet from '@assets/images/characters/npc_resident_c_walk.webp';
+import residentDSheet from '@assets/images/characters/npc_resident_d_walk.webp';
+import residentESheet from '@assets/images/characters/npc_resident_e_walk.webp';
 import chestWood from '@assets/images/maps/dungeon/chest_01_base.webp';
 import chestWood1 from '@assets/images/maps/dungeon/chest_01_anim_01.webp';
 import chestWood2 from '@assets/images/maps/dungeon/chest_01_anim_02.webp';
@@ -81,6 +81,8 @@ const TILE = 40;
 const ART_SCALE = 0.5625;
 /** 部屋は画面の高さに合わせて少し大きく見せる（街の何倍までか。人物の絵がぼやけない範囲） */
 const ROOM_ZOOM_MAX = 1.35;
+/** 街・部屋の人物の大きさ（設計図の 144 単位に対する倍率）。2026-10-23 に街に対して小さすぎたので 1.2 倍に（ユーザー承認） */
+const FIGURE_ZOOM = 1.2;
 /** 部屋の絵が画面の高さのどれくらいを占めるか */
 const ROOM_FILL = 0.9;
 /** 場所を移るときの暗転（ミリ秒） */
@@ -101,6 +103,25 @@ const WALK_PX = 231;
 const STEP_PER_HEIGHT = 0.45;
 /** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目（足がそろう「立つ」コマ）で少し体が上がる */
 const WALK_BOB = 0.03;
+/**
+ * 走る（2026-10-23・ユーザー承認）：スティックを大きく倒すと走る。速さは歩きの倍率、1歩・弾みは背たけに対する割合。
+ * 走る絵はまだ無いので、歩きの絵を大きな歩幅・大きな弾みで使う
+ */
+const RUN_RATE = 1.7;
+const RUN_STEP_PER_HEIGHT = 0.6;
+const RUN_BOB = 0.05;
+/** スティックをこれ以上倒すと走る／これより戻すと歩きに戻る（論理px。行ったり来たりしないよう差をつける） */
+const STICK_RUN = 36;
+const STICK_WALK_BACK = 28;
+/**
+ * 歩き出し・止まり方（2026-10-23）：歩き出しは ACCEL_FROM の速さから ACCEL_S 秒でふつうの速さに。
+ * 止まる最後のマスでは、マスの終わりで DECEL_TO の速さまで落とす
+ */
+const ACCEL_S = 0.15;
+const ACCEL_FROM = 0.45;
+const DECEL_TO = 0.55;
+/** カメラが人物を追う強さ（1秒あたり）。ぴったり付けず少し遅れて追い、止まるとなめらかに追いつく */
+const CAMERA_FOLLOW = 9;
 /** スティックの向きを変えるまでの余裕（ラジアン）。8方向の境目（22.5度）を 8度こえるまで前の向きのまま */
 const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
 /** 宝箱の絵（ミスモンの正式素材）：閉じた絵と、開く動きの4コマ（4コマ目が開いたあとの絵） */
@@ -231,6 +252,12 @@ class WorldView {
   /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
   #walkDist = 0;
   #lastMoving = 0;
+  /** 走っているか（止まるまで続く）・歩き出してからの時間（秒。加速用） */
+  #running = false;
+  #moveTime = 0;
+  /** カメラの位置（地図をずらす量。論理px）。null なら次の描画で人物にぴったり合わせる */
+  #cam: Point | null = null;
+  #camTime = 0;
   /** 1論理px あたりの画面の画素（地図の位置をそろえる単位）と、それを測ったときの画面の大きさ */
   #snap = 1;
   #snapKey = '';
@@ -286,9 +313,9 @@ class WorldView {
     return this.#map.art ? this.#map.art.cell * this.#scale : TILE;
   }
 
-  /** 人物の絵の高さ（論理px）。街・部屋は設計図どおり 144 単位、仮マップは小さめ */
+  /** 人物の絵の高さ（論理px）。街・部屋は設計図の 144 単位の FIGURE_ZOOM 倍、仮マップは小さめ */
   get #figureH(): number {
-    return this.#map.art ? 144 * this.#scale : 54;
+    return this.#map.art ? 144 * this.#scale * FIGURE_ZOOM : 54;
   }
 
   /** マス (x, y) に立つ人の足元（論理px） */
@@ -519,6 +546,7 @@ class WorldView {
     this.#root.replaceChildren(this.#viewport, hud, examine, hint ?? '', goal ?? '', this.#fade);
     this.#root.dataset.map = map.id;
     this.#root.dataset.intro = save.story.intro;
+    this.#cam = null;
     this.#render();
     if (fade) this.#reveal();
   }
@@ -619,8 +647,11 @@ class WorldView {
     this.#last = time;
     if (!this.#busy) this.#step(dt);
     if (this.#move) {
-      if (!this.#busy) this.#walkDist += WALK_PX * dt;
       this.#lastMoving = time;
+      this.#moveTime += dt;
+    } else {
+      this.#moveTime = 0;
+      if (!this.#held) this.#running = false;
     }
     this.#render(time);
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
@@ -635,8 +666,10 @@ class WorldView {
       this.#startNext();
       if (!this.#move) return;
     }
-    const speed = WALK_PX / this.#cell;
+    const speed = this.#speed() / this.#cell;
+    const t0 = this.#move.t;
     this.#move.t += (dt * speed) / this.#move.len;
+    this.#walkDist += (Math.min(1, this.#move.t) - t0) * this.#move.len * this.#cell;
     if (this.#move.t >= 1) {
       const rest = ((this.#move.t - 1) * this.#move.len) / speed;
       this.#tile = this.#move.to;
@@ -648,6 +681,14 @@ class WorldView {
     }
     const { from, to, t } = this.#move;
     this.#pos = { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
+  }
+
+  /** いまの歩く速さ（論理px/秒）。走る・歩き出しの加速・止まる最後のマスの減速 */
+  #speed(): number {
+    let v = WALK_PX * (this.#running ? RUN_RATE : 1);
+    v *= Math.min(1, ACCEL_FROM + ((1 - ACCEL_FROM) * this.#moveTime) / ACCEL_S);
+    if (this.#move && !this.#held && this.#path.length === 0) v *= 1 - (1 - DECEL_TO) * this.#move.t;
+    return v;
   }
 
   /** 止まっているとき：道順・調べる予約・押している向きから、次の1歩を始める */
@@ -731,15 +772,16 @@ class WorldView {
     const w = parseFloat(this.#player.style.width);
     const hgt = parseFloat(this.#player.style.height);
     if (!walking) this.#walkDist = 0;
-    // 半歩（1コマ）ごとに次のコマ。背たけが小さいダンジョンでは歩幅も小さく
-    const step = Math.floor(this.#walkDist / ((this.#figureH * STEP_PER_HEIGHT) / 2)) % 4;
+    // 半歩（1コマ）ごとに次のコマ。背たけが小さいダンジョンでは歩幅も小さく、走るときは歩幅を大きく
+    const stride = this.#figureH * (this.#running ? RUN_STEP_PER_HEIGHT : STEP_PER_HEIGHT);
+    const step = Math.floor(this.#walkDist / (stride / 2)) % 4;
     const col = walking ? step : IDLE_COL;
     const look = `${this.#dir}:${col}`;
     if (look !== this.#playerLook) {
       this.#player.style.backgroundPosition = `${-col * w}px ${-DIR_ROW[this.#dir] * hgt}px`;
       this.#playerLook = look;
     }
-    this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * WALK_BOB : 0);
+    this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0);
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
     const vw = this.#viewport.clientWidth || 390;
@@ -749,8 +791,17 @@ class WorldView {
     const f = this.#foot(p);
     // カメラは人物の体の真ん中を追う
     const fy = f.y - this.#figureH / 2;
-    const cx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(f.x - vw / 2, 0), mw - vw);
-    const cy = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fy - vh / 2, 0), mh - vh);
+    const tx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(f.x - vw / 2, 0), mw - vw);
+    const ty = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fy - vh / 2, 0), mh - vh);
+    // カメラは少し遅れて追う（場所に入ったときはぴったり）
+    const camDt = Math.min(0.05, Math.max(0, (time - this.#camTime) / 1000));
+    this.#camTime = time;
+    if (!this.#cam) this.#cam = { x: tx, y: ty };
+    else {
+      const a = 1 - Math.exp(-CAMERA_FOLLOW * camDt);
+      this.#cam = { x: this.#cam.x + (tx - this.#cam.x) * a, y: this.#cam.y + (ty - this.#cam.y) * a };
+    }
+    const { x: cx, y: cy } = this.#cam;
     // 画面の実際の点（デバイスの画素）にそろえる。論理px で丸めると、人物が地図に対して半px ずつ揺れて見える
     const snap = this.#pixelSnap();
     this.#mapLayer.style.transform = `translate(${Math.round(cx * snap) / snap}px, ${Math.round(cy * snap) / snap}px)`;
@@ -810,6 +861,10 @@ class WorldView {
       this.#held = null;
       return;
     }
+    // 大きく倒すと走る。少し戻しただけでは歩きに戻さない
+    if (dist >= STICK_RUN) this.#running = true;
+    else if (dist < STICK_WALK_BACK) this.#running = false;
+    this.#stick.classList.toggle('is-run', this.#running);
     // 8方向：45度ずつ。境目のあたりで指がふるえても向きが行ったり来たりしないよう、少しこえるまで前の向きのまま
     const angle = Math.atan2(dy, dx);
     const held = this.#held;
@@ -823,7 +878,7 @@ class WorldView {
     const touch = this.#touch;
     if (!touch || touch.id !== e.pointerId) return;
     this.#touch = null;
-    this.#stick.classList.remove('is-on');
+    this.#stick.classList.remove('is-on', 'is-run');
     if (touch.dragging) {
       this.#held = null;
       return;
@@ -854,6 +909,8 @@ class WorldView {
     const dir = ({ ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' } as const)[e.key as 'ArrowUp'];
     if (dir) {
       e.preventDefault();
+      // パソコンでは Shift を押しながらで走る
+      this.#running = e.shiftKey;
       if (down) {
         this.#path = [];
         this.#keys.add(dir);
