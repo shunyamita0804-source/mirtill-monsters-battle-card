@@ -1,0 +1,221 @@
+【プロンプト】見た目を上げるデザイン10枚・第2弾（2026-10-23）
+
+使い方：
+・画像を作るAIに、▼〜▲ の間をそのまま貼り付ける。1枚ごとに新しい会話で
+・最初に「共通ルール」を貼り、続けてその番号の文を貼る（1回で送ってよい）
+・日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（毎回、最初に付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の画面の絵を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本と同じ、筆で塗り重ねた手描きの質感。ファンタジーの石と木の世界。ベクター風・フラット・3DCG風にしない
+【雰囲気】大人向けの落ち着いた雰囲気。色は濃い灰色・こげ茶・くすんだ金・紺を中心に。紫・明るい黄色・ピンクは使わない
+【禁止】文字・数字・ロゴ・透かし・サイン（日本語・英語とも）。実在の作品に似せること
+▲ここまで
+▼English
+Draw an image for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Hand-painted with layered brush strokes, like the attached style sample. A fantasy world of stone and wood. NO flat vector art, NO 3D render look.
+[Mood] Calm, for adults. Mainly dark charcoal grey, dark brown, muted gold and navy. No purple, no bright yellow, no pink.
+[Forbidden] Any text, numbers, logos, watermarks or signatures (Japanese or English). Resemblance to existing IP.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　ダンジョンの床（つなげて敷ける）→ dungeon_floor.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/街の石畳.png、見本/宝箱.png、今の画面/ダンジョン.png
+▼ここからコピー
+地下ダンジョンの床の質感を1枚描いてください。正方形 1024×1024。真上から見下ろした絵。
+・古い地下迷宮の、すり減った大きめの石畳。石のすき間に少し土と苔。ところどころひび
+・明るさはやや暗め（洞窟の中）。ただし人物と宝箱がはっきり見える程度には明るく
+・上下左右につなげて敷いたとき、つなぎ目が見えないように（シームレス）
+・目立つ一点物（大きな穴・骨・宝・水たまり）は置かない。同じ模様がくり返して見えないよう、むらは小さく均一に
+・影の向きは左上から光が当たる形。物・人物・文字は描かない
+▲ここまで
+▼English
+Floor texture for an underground dungeon, square 1024x1024, seen straight from above.
+- Worn, fairly large old flagstones of an ancient underground labyrinth, with a little dirt and moss in the gaps and a few cracks.
+- Slightly dark (inside a cave), but bright enough that characters and treasure chests stand out clearly.
+- Seamless: it must tile left-right and top-bottom without visible seams.
+- No eye-catching unique objects (no big holes, bones, treasure or puddles). Keep variation small and even so repetition is not obvious.
+- Light comes from the top-left. No objects, no people, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　ダンジョンの壁の上面（つなげて敷ける）→ dungeon_wall_top.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/街の石畳.png、今の画面/ダンジョン.png（濃い灰色のマスが壁）
+▼ここからコピー
+地下ダンジョンの「通れない壁」の部分を、真上から見た質感で1枚描いてください。正方形 1024×1024。
+・ごつごつした暗い岩盤、または積み上げた大きな石の上面。床（明るめの石畳）よりはっきり暗く、ひと目で「通れない」と分かること
+・上下左右につなげて敷いたとき、つなぎ目が見えないように（シームレス）
+・目立つ一点物は置かない。明暗の差は小さめ
+・物・人物・文字は描かない
+▲ここまで
+▼English
+The impassable wall area of an underground dungeon, seen straight from above, square 1024x1024.
+- Rough dark bedrock, or the top surface of stacked large stones. Clearly darker than the floor (lighter flagstones) so it reads as "cannot walk here" at a glance.
+- Seamless in all directions. No eye-catching unique objects. Low contrast.
+- No objects, no people, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3　ダンジョンの壁の正面（横につなげる帯）→ dungeon_wall_face.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/街の石畳.png、今の画面/ダンジョン.png
+▼ここからコピー
+地下ダンジョンの壁の「正面（手前を向いた面）」を、横に長い帯で1枚描いてください。横長 1536×512（横:縦＝3:1）。
+・少し斜め上から見た、積み上げた古い石の壁の正面。下の端は床に接していて、根元に薄い影
+・上の端は壁の上面（岩盤）につながる角。角は少し明るく
+・左右につなげて並べたとき、つなぎ目が見えないように（横方向だけシームレス）
+・松明・扉・窓など目立つ一点物は置かない
+・物・人物・文字は描かない
+▲ここまで
+▼English
+The front face of a dungeon wall as a long horizontal strip, 1536x512 (3:1).
+- The front of an old stacked-stone wall seen slightly from above. The bottom edge meets the floor with a soft shadow at the base.
+- The top edge is the corner where it meets the wall top (bedrock); the corner is slightly lighter.
+- Seamless left-right only (it will be repeated horizontally).
+- No torches, doors, windows or other unique objects. No people, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 4　ダンジョンの階段（下り・上りを1枚に）→ dungeon_stairs.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/宝箱.png、今の画面/ダンジョン.png（「B3Fへ」「B1Fへ」の箱の所）
+▼ここからコピー
+地下ダンジョンの階段を2つ、横長 1536×1024 に左右に並べて描いてください。少し斜め上から見下ろした向き（宝箱の見本と同じ角度）。
+・左：下へ降りる階段。床に開いた四角い穴に石段が下へ続き、奥は暗い。穴のふちは石で囲む
+・右：上へ上る階段。床から上へ向かう石段。上の先がほんのり明るい
+・2つは同じ大きさ（どちらも床の1マス分の正方形に収まる形）で、重ならないように間を空ける
+・下りと上りがひと目で区別できること
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。床の質感は描かない。文字・矢印は描かない
+▲ここまで
+▼English
+Two dungeon staircases side by side on a 1536x1024 canvas, viewed slightly from above (same angle as the treasure chest sample).
+- Left: stairs going DOWN. A square opening in the floor with stone steps descending into darkness, rimmed with stone.
+- Right: stairs going UP. Stone steps rising from the floor, faintly lit at the top.
+- Both the same size (each fits in a square floor tile), with space between them, not overlapping. Down and up must be easy to tell apart.
+- Transparent around them (or solid magenta #FF00FF). Do not paint the floor. No text, no arrows.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 5　ダンジョンを歩き回る魔物のしるし → enemy_symbol.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/宝箱.png、今の画面/ダンジョン.png（「敵」の赤い丸）
+▼ここからコピー
+ダンジョンの地図の上に置く「触れると対戦になる魔物のしるし」を1つ描いてください。正方形 1024×1024 の真ん中に、少し斜め上から見た形で。
+・特定のモンスターに見えない、黒い霧のかたまり（影）。中に光る目が2つ。足元に薄い影
+・こわすぎない、ゲームらしい不気味さ。小さく表示しても「敵がいる」と分かる形
+・霧のふちの色は紺から濃い灰色。目は落ち着いた金色
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字は描かない
+▲ここまで
+▼English
+One map marker for a "wandering monster you fight when you touch it" in the dungeon, centered on a square 1024x1024 canvas, viewed slightly from above.
+- A clump of dark mist (a shadow) that does NOT look like any specific monster, with two glowing eyes inside and a soft shadow at its base.
+- Eerie in a game-like way, not too scary. Must read as "an enemy is here" even when small.
+- Mist edges navy to dark grey; the eyes muted gold.
+- Transparent around it (or solid magenta #FF00FF). No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 6　ダンジョンの対戦の背景 → battle_bg_dungeon.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、今の画面/バトル.png、今の画面/大会の対戦.png（第1弾の対戦背景。明るさの見本）
+▼ここからコピー
+地下ダンジョンでのカードバトルの画面の背景を1枚描いてください。縦長 1024×1536。
+・地下迷宮の広い部屋。床の真ん中に、上から見下ろした大きな平たい石の台（古い祭壇のような石板）。台は画面のほぼ全体に広がる
+・台の上半分が相手の場、下半分が自分の場。真ん中に細い、薄く光る線で区切り
+・台のまわりは暗い石の床と岩壁。いちばん上の奥にだけ、壁の松明の灯りがぼんやり
+・この上にカードと文字がたくさん重なるので、全体を暗めに、模様は控えめに。台の真ん中に明るい所・細かい模様を置かない
+・人物・モンスター・カード・文字は描かない
+▲ここまで
+▼English
+Card battle background for fights inside the underground dungeon, portrait 1024x1536.
+- A wide chamber in an underground labyrinth. A large flat stone slab (like an old altar) seen from above in the middle of the floor, filling almost the whole picture.
+- Upper half of the slab is the opponent's side, lower half the player's, divided by a thin, faintly glowing line.
+- Dark stone floor and rock walls around it; only at the very top, torchlight from the far wall glows softly.
+- Cards and text go on top, so keep it dark with subtle patterns. No bright spots or busy patterns in the middle of the slab.
+- No people, no monsters, no cards, no text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 7　勝ち・負けの帯（2本を1枚に）→ battle_result_banners.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、見本/カードの裏面.png、見本/窓の枠.png、今の画面/バトルの結果.png
+▼ここからコピー
+対戦の結果に出す、文字の入っていない帯（リボン型の飾り板）を2本、横長 1536×1024 に上下に並べて描いてください。
+・上：勝ったとき用。紺の地に、くすんだ金の縁取りと、左右の端に翼の飾り。真ん中は文字を書くための無地の広い面。後ろからやわらかい金の光
+・下：負けたとき用。同じ形で、色は濃い灰色と古びた銅色。光はなく、少し欠けた落ち着いた雰囲気
+・2本は同じ大きさ・同じ形（横:縦＝4:1くらい）。重ならないように間を空ける
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字は描かない
+▲ここまで
+▼English
+Two text-free result banners (ribbon-shaped plaques), stacked top and bottom on a 1536x1024 canvas.
+- Top: for a WIN. Navy base, muted-gold trim, wing ornaments at both ends, a wide plain area in the middle for text, soft golden light behind it.
+- Bottom: for a LOSS. Same shape, in dark grey and aged copper, no glow, slightly chipped and subdued.
+- Both the same size and shape (about 4:1), with space between them.
+- Transparent around them (or solid magenta #FF00FF). No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 8　ランクの紋章（6つを1枚に）→ rank_badges.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、見本/カードの裏面.png、今の画面/ベッド.png（「ランク E」と文字だけの所）
+▼ここからコピー
+プレイヤーのランク（低い順に E・D・C・B・A・S）を表す紋章を6つ、横長 1536×1024 に3つずつ2段で並べて描いてください。
+・どれも同じ形の盾形の紋章で、真ん中に文字を書くための無地の丸い面（文字はゲームが重ねる）
+・ランクが上がるほど豪華に：E＝鉄、D＝銅、C＝銀、B＝金、A＝金に翼、S＝金に翼と星と淡い光
+・左上から E・D・C、下の段が B・A・S の順
+・6つは同じ大きさで、重ならないように間を空ける。正面から、斜めにしない
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字・数字は描かない
+▲ここまで
+▼English
+Six rank emblems for the player rank (lowest to highest: E, D, C, B, A, S), arranged in 2 rows of 3 on a 1536x1024 canvas.
+- All the same shield shape, with a plain round area in the center for a letter (the game draws the letter).
+- More lavish as the rank rises: E = iron, D = bronze, C = silver, B = gold, A = gold with wings, S = gold with wings, a star and a soft glow.
+- Order: top row E, D, C (left to right); bottom row B, A, S.
+- Same size, evenly spaced, not overlapping. Straight front view, no tilt.
+- Transparent around them (or solid magenta #FF00FF). No letters, no numbers.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 9　街の上の札と丸いボタン（部品を1枚に）→ hud_parts.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/街.png（左上の「街」の札、右上の所持金とメニュー、右下の「調べる」の丸）
+▼ここからコピー
+街を歩く画面の上に重ねる、文字の入っていない部品を3つ、横長 1536×1024 に描いてください。どれも正面から、斜めにしない。
+・左上：場所の名前を書く札。横長（横:縦＝4:1くらい）の、紺の地にくすんだ金の縁の板。左右の端に小さな飾り。真ん中は無地
+・右上：四角いボタンの台。横長（横:縦＝2:1くらい）の、濃い灰色の地に金の細い縁。角は少し丸い。真ん中は無地
+・下の真ん中：丸いボタン。濃い紺の円に金の縁、縁に小さな飾りが4つ。真ん中は無地（虫めがねの印はゲームが重ねる）
+・3つは重ならないように間を空ける。少し透けて街の絵が見えてもよいよう、地の色は落ち着いた濃さで
+・まわりは透明（できなければマゼンタ一色 #FF00FF）。文字・アイコンは描かない
+▲ここまで
+▼English
+Three text-free UI parts for the town-walking screen on a 1536x1024 canvas, all straight front view, no tilt.
+- Top-left: a place-name plate. Horizontal (about 4:1), navy base with muted-gold trim, small ornaments at both ends, plain middle.
+- Top-right: a rectangular button base. Horizontal (about 2:1), dark grey with a thin gold edge, slightly rounded corners, plain middle.
+- Bottom-center: a round button. Dark navy circle with a gold rim and four small ornaments on the rim, plain middle (the game draws a magnifier icon).
+- Space between the three, not overlapping. Calm, fairly dark base colors.
+- Transparent around them (or solid magenta #FF00FF). No text, no icons.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 10　パックを開けるときの光の背景 → pack_open_bg.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、official_icon.png、見本/カードの裏面.png、今の画面/ガチャ.png
+▼ここからコピー
+カードパックを開けて、カードが出てくる瞬間の画面の背景を1枚描いてください。縦長 1024×1536。
+・暗い紺の空間の真ん中から、やわらかい金色の光が放射状に広がる。光の中心は画面の真ん中よりやや上
+・金の粒と、細い光の筋がゆっくり舞う。まわりに向かってだんだん暗く
+・この上にカード5枚と文字が重なるので、真ん中の光は明るすぎず、模様は細かくしすぎない
+・カード・パック・人物・モンスター・文字は描かない
+▲ここまで
+▼English
+Background for the moment cards come out of an opened card pack, portrait 1024x1536.
+- A dark navy space with soft golden light radiating from the center (slightly above the middle).
+- Gold particles and thin light streaks drifting slowly, getting darker toward the edges.
+- Five cards and text will be placed on top, so the center light must not be too bright and the details not too busy.
+- No cards, no packs, no people, no monsters, no text.
+▲

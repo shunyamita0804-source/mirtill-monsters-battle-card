@@ -7,6 +7,7 @@ import { confirmModal, messageModal } from '../components/modal.ts';
 import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import type { ScreenDefinition } from './types.ts';
+import { rankBadge } from '../components/rankBadge.ts';
 
 /** 日時の表示（いまの言語の書き方） */
 export const formatDateTime = (iso: string): string => {
@@ -23,9 +24,9 @@ export const settingsScreen: ScreenDefinition = {
     const element = h('main', { class: 'screen settings' });
     const render = (): void => {
       const s = store.save;
-      const rows: [string, string][] = [
+      const rows: [string, string | HTMLElement][] = [
         [t('bed.hero'), t(s.player.gender === 'female' ? 'newGame.female' : 'newGame.male')],
-        [t('bed.rank'), s.rank],
+        [t('bed.rank'), h('span', { class: 'settings__rank' }, rankBadge(s.rank, 36))],
         [t('bed.coins'), t('common.coins', { n: s.coins })],
         [t('bed.cards'), t('common.cardCount', { n: Object.values(s.collection).reduce((a, b) => a + b, 0) })],
         [t('bed.battles'), t('bed.battlesValue', { won: s.stats.battlesWon, lost: s.stats.battlesLost })],
@@ -43,7 +44,7 @@ export const settingsScreen: ScreenDefinition = {
             messageModal(element, store.lastSaveOk ? t('bed.rested') : t('common.saveFailed'), render);
           }, 'btn btn--primary btn--large'),
           h('p', { class: 'settings__note', text: t('bed.autoSaveNote') }),
-          h('dl', { class: 'settings__rows' }, ...rows.flatMap(([k, v]) => [h('dt', { text: k }), h('dd', { text: v })])),
+          h('dl', { class: 'settings__rows' }, ...rows.flatMap(([k, v]) => [h('dt', { text: k }), typeof v === 'string' ? h('dd', { text: v }) : h('dd', {}, v)])),
           button(t('bed.settings'), () => ctx.navigate('options'), 'btn'),
           h('h2', { class: 'settings__heading', text: t('bed.about') }),
           h(

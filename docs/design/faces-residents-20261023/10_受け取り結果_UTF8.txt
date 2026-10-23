@@ -1,0 +1,6 @@
+住人5人の顔の絵の受け取り結果（2026-10-23）
+
+5枚とも設定画どおりで、形（正方形・胸から上・少し右向き）もそろっていたので、そのまま使った。
+・会話の窓の右上（案内役と同じ場所）に、196px の正方形で出す（dialogue.ts の PORTRAITS・FACE_FORMAT、dialogue.css の .is-face）
+・表情は1種類（normal）。左右の端はやわらかく消す
+・素材：assets/images/characters/face_resident_{a〜e}.webp（384px に縮小。描き換えなし）

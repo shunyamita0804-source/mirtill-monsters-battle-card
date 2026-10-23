@@ -139,3 +139,65 @@
   color: #d8d2c4;
   text-shadow: 0 1px 4px rgb(0 0 0 / 0.9);
 }
+
+/* ===== デザイン第2弾（2026-10-23） ===== */
+
+/* ランクの紋章：真ん中の丸に文字 */
+.rank-badge {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  background: center / contain no-repeat;
+}
+
+.rank-badge__letter {
+  margin-top: 4%;
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  font-weight: 800;
+  color: #fbf3da;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.9);
+}
+
+.settings__rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 勝ち・負けの帯：結果の文字を帯の真ん中に */
+.battle__result-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 108%;
+  aspect-ratio: 760 / 248;
+  margin: -6px 0 2px;
+  background: url('@assets/images/ui/result_lose.webp') center / contain no-repeat;
+}
+
+.battle__result--player .battle__result-banner {
+  background-image: url('@assets/images/ui/result_win.webp');
+}
+
+.battle__result-banner .battle__result-title {
+  margin-top: -2%;
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  font-size: 30px;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.85);
+}
+
+.battle__result--opponent .battle__result-banner .battle__result-title,
+.battle__result--draw .battle__result-banner .battle__result-title {
+  color: #d9c7b2;
+}
+
+/* パックを開けるときの光の背景 */
+.pack-open {
+  background:
+    linear-gradient(rgb(6 7 10 / 0.25), rgb(6 7 10 / 0.25)),
+    url('@assets/images/backgrounds/pack_open_bg.webp') center / cover no-repeat,
+    #07080b;
+}

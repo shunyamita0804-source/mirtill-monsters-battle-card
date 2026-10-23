@@ -860,7 +860,8 @@ export const battleScreen: ScreenDefinition = {
         h(
           'div',
           { class: 'battle__result-panel' },
-          h('p', { class: 'battle__result-title', text: title }),
+          // 勝ち・負けの帯（デザイン第2弾）の真ん中に結果の文字
+          h('div', { class: 'battle__result-banner' }, h('p', { class: 'battle__result-title', text: title })),
           h('p', { class: 'battle__result-sub', text: t('battle.result.sub', { title: req.title, n: s.turn }) }),
           reason ? h('p', { class: 'battle__result-sub', text: reason }) : null,
           go,
