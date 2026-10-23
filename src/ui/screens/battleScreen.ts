@@ -47,6 +47,7 @@ const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
   evade: 'evade',
   hitNormal: 'hitNormal',
   hitStrong: 'hitStrong',
+  recoil: 'recoil',
 };
 
 /** 使ったカードを大きく見せるときの音（カードの種類ごと） */
@@ -58,10 +59,11 @@ function showcaseSound(card: PlayCard): SoundId {
     case 'evade':
       return 'cardEvade';
     case 'weaken':
-    case 'seal':
       return 'cardSpecial';
+    case 'seal':
+      return 'cardSeal';
     default:
-      return 'cardAttack';
+      return card.stat?.type === 'wisdom' ? 'cardWisdom' : 'cardAttack';
   }
 }
 
@@ -149,6 +151,10 @@ export const battleScreen: ScreenDefinition = {
     ctx.store.pendingBattle = null;
     const req: BattleRequest = request;
     bgm.play(req.bgm ?? 'battle');
+    // 対戦の始まり（先攻・後攻を決める画面が出たとき）
+    sound.play('battleStart', 150);
+    /** 勝ち・負けの音を鳴らしたか（結果の表示は描き直しで何度も作られるので1回だけ） */
+    let resultSounded = false;
     if (req.background) {
       // 対戦の背景の絵（ダンジョン）。上に暗い膜を重ねて、カードや文字を読みやすくする
       element.classList.add('has-bg');
@@ -937,6 +943,10 @@ export const battleScreen: ScreenDefinition = {
     const resultOverlay = (s: BattleState): HTMLElement | null => {
       if (s.phase !== 'ended') return null;
       const w = s.winner;
+      if (!resultSounded) {
+        resultSounded = true;
+        sound.play(w === 'player' ? 'battleWin' : 'battleLose', 500);
+      }
       const title = t(w === 'player' ? 'battle.result.win' : w === 'opponent' ? 'battle.result.lose' : 'battle.result.draw');
       const reason = s.endReason === 'deckOut' ? t(w === 'player' ? 'battle.result.deckOutOpponent' : 'battle.result.deckOutPlayer') : '';
       const go = commandButton(t('battle.result.next'), () => {

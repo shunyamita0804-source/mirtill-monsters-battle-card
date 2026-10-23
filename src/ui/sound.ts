@@ -17,6 +17,15 @@ import cardSupportMp3 from '@assets/audio/se/card_support.mp3';
 import cardEvadeMp3 from '@assets/audio/se/card_evade.mp3';
 import knockoutMp3 from '@assets/audio/se/knockout.mp3';
 import healMp3 from '@assets/audio/se/heal.mp3';
+import cardWisdomMp3 from '@assets/audio/se/card_wisdom.mp3';
+import cardSealMp3 from '@assets/audio/se/card_seal.mp3';
+import recoilMp3 from '@assets/audio/se/recoil.mp3';
+import battleStartMp3 from '@assets/audio/se/battle_start.mp3';
+import battleWinMp3 from '@assets/audio/se/battle_win.mp3';
+import battleLoseMp3 from '@assets/audio/se/battle_lose.mp3';
+import packOpenMp3 from '@assets/audio/se/pack_open.mp3';
+import rewardMp3 from '@assets/audio/se/reward.mp3';
+import fragmentMp3 from '@assets/audio/se/fragment.mp3';
 
 /**
  * 効果音（SE）。
@@ -43,7 +52,16 @@ export type SoundId =
   | 'cardSupport'
   | 'cardEvade'
   | 'knockout'
-  | 'heal';
+  | 'heal'
+  | 'cardWisdom'
+  | 'cardSeal'
+  | 'recoil'
+  | 'battleStart'
+  | 'battleWin'
+  | 'battleLose'
+  | 'packOpen'
+  | 'reward'
+  | 'fragment';
 
 type SoundEntry = (
   | {
@@ -86,6 +104,16 @@ export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   cardEvade: { mp3: cardEvadeMp3, gain: 1.2 },
   knockout: { mp3: knockoutMp3, gain: 0.8 },
   heal: { mp3: healMp3, gain: 0.6 },
+  // 2026-10-23 追加（同じ ZIP。ユーザー「全て利用可・必要な所に使って」）
+  cardWisdom: { mp3: cardWisdomMp3, gain: 0.7 },
+  cardSeal: { mp3: cardSealMp3, gain: 0.7 },
+  recoil: { mp3: recoilMp3, gain: 0.9 },
+  battleStart: { mp3: battleStartMp3, gain: 1.0 },
+  battleWin: { mp3: battleWinMp3, gain: 1.1 },
+  battleLose: { mp3: battleLoseMp3, gain: 0.9 },
+  packOpen: { mp3: packOpenMp3, gain: 1.0 },
+  reward: { mp3: rewardMp3, gain: 0.7 },
+  fragment: { mp3: fragmentMp3, gain: 1.0 },
 };
 
 type AudioContextCtor = typeof AudioContext;

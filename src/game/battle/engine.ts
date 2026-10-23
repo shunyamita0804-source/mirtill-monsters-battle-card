@@ -104,9 +104,10 @@ export interface LogEntry {
  * - manaGain：山札からマナが増えた（手札5枚のときのドロー・カードの効果。1回で1件）
  * - evade：回避が成功してダメージ0が確定した
  * - hit：攻撃が命中してダメージを与えた（strong＝強攻撃。いまは仮に「必要マナ3以上の技」）
+ * - recoil：技の反動で使ったモンスターのライフが減った（正式：すてみタックル）
  * 防御でダメージ0になったときは記録しない（防御の音は未承認のため無音）
  */
-export type BattleFxKind = 'manaSpend' | 'manaConvert' | 'manaGain' | 'evade' | 'hitNormal' | 'hitStrong';
+export type BattleFxKind = 'manaSpend' | 'manaConvert' | 'manaGain' | 'evade' | 'hitNormal' | 'hitStrong' | 'recoil';
 export interface BattleFx {
   readonly seq: number;
   readonly kind: BattleFxKind;
@@ -475,7 +476,7 @@ function selfDamageOnHit(state: BattleState, skillId: string, userUid: string): 
   if (e.type !== 'attack' || !e.selfDamageOnHit || state.phase === 'ended') return state;
   const user = findMonster(state, userUid);
   if (!user || user.monster.life <= 0) return state;
-  const next = addLog(state, t('battle.log.recoil', { name: nameOf(user.monster.cardId), n: e.selfDamageOnHit }));
+  const next = addLog(addFx(state, 'recoil', user.side), t('battle.log.recoil', { name: nameOf(user.monster.cardId), n: e.selfDamageOnHit }));
   return applyDamage(next, userUid, e.selfDamageOnHit);
 }
 

@@ -15,6 +15,7 @@ import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import { newId } from '../gameStore.ts';
 import type { ScreenDefinition } from './types.ts';
+import { sound } from '../sound.ts';
 import faceClerk from '@assets/images/characters/face_clerk.webp';
 import pack01Art from '@assets/images/ui/packs/pack_01.webp';
 import gachaMachineArt from '@assets/images/ui/gacha_machine.webp';
@@ -74,6 +75,7 @@ export const shopMenuScreen: ScreenDefinition = {
         const r = restoreHidden(store.save, tx);
         if (r.status !== 'ok') return;
         store.update(() => r.save);
+        sound.play('reward');
         const monster = getMonster(HIDDEN_MONSTER_ID);
         const handle = openModal(element, {
           title: t('shop.restoreSuccess'),
@@ -196,6 +198,7 @@ export const gachaScreen: ScreenDefinition = {
       overlay.append(packEl, cardsEl, h('p', { class: 'pack-open__hint', text: t('gacha.openHint') }), done);
       element.append(overlay);
       setTimeout(() => packEl.classList.add('is-opening'), 50);
+      sound.play('packOpen', 120);
       setTimeout(() => {
         packEl.classList.add('is-open');
         slots.forEach((s, i) => setTimeout(() => s.classList.add('is-revealed'), 250 * i));
