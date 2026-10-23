@@ -1,0 +1,53 @@
+Start a NEW chat for each task. Attach all images in that task's "attach" folder, then paste the text between the markers.
+
+==================================================
+TASK B — right foot forward, touch-up (do this first)
+Attach: B_rightfoot/attach/01_skirt_reference.png, 02_current_rightfoot.png, 03_guide_frame_1024.png
+Save as: player_female_downleft_rightfoot.png
+==================================================
+▼ COPY FROM HERE
+Redraw image 02 with two small changes. Everything else must stay exactly the same as image 02: the same young woman (22 years old), the same 3/4 front-left view walking toward the viewer and to the LEFT, the same legs (right foot forward toward the lower-left), the same body, face, hair, red cap with white frills and red ribbon, white blouse, red vest with gold lacing, brown belts and pouches, red skirt pattern with gold embroidery and white frills, brown tights, brown lace-up boots, fingerless gloves, colors, smooth hand-painted style and size.
+
+Change only:
+1. Skirt: make it calm, close to the standing image A in image 01. The hem swings just a little behind her as she walks. It must NOT flare out widely to the right.
+2. Her left hand (on the right side of the picture): let it swing lightly forward next to her body, instead of holding the belt. Her right arm swings slightly back. Arms stay close to the body.
+
+FORMAT: square 1024x1024, ONE figure. Top of the head on the "top of head" line and the planted foot on the "feet" line of image 03; body centered on the dotted line. Transparent background (if impossible, solid magenta #FF00FF). Do NOT draw guide lines, labels or reference figures. No text, no ground, no shadow.
+▲ COPY TO HERE
+
+==================================================
+TASK A — left foot forward
+Attach: A_leftfoot/attach/01_leg_pose_reference.png, 02_stand_3q_front_left.png, 03_rightfoot_3q_front_left.png (replace with the new TASK B result if you have it), 04_guide_frame_1024.png
+Save as: player_female_downleft_leftfoot.png
+==================================================
+▼ COPY FROM HERE
+Draw ONE game sprite: the young woman (22 years old) in image 02 walking toward the viewer and to the LEFT of the screen (3/4 front-left view), with her LEFT foot forward.
+
+Image 01 is the leg pose reference:
+- A = front view, LEFT foot forward
+- B = left side view, LEFT foot forward
+- C = 3/4 front-left view, RIGHT foot forward (same as image 03)
+The legs of the new image must be exactly halfway between A and B. The new image is the mirror-pair of image 03: the same body angle, lean, stride and size, with only the legs and arms swapped.
+
+MOST IMPORTANT — NO TWISTED LEGS:
+- Hips, belly, both knees and BOTH toes all point down-left, the same direction as her face in image 02. Each knee points the same way as its toe.
+- LEFT foot (the foot on the RIGHT side of the picture) steps forward, straight toward the lower-left, and lands closer to the viewer (lower in the picture). Its toe points down-left.
+- RIGHT foot (the foot on the LEFT side of the picture) stays behind the body (higher in the picture), heel slightly lifted. Its toe also points down-left. Do NOT move it to the left or to the side.
+- Same stride as image 03. No wide stance, no big step.
+- Body and face turned exactly like image 02 (not more toward the front).
+- Arms close to the body, swinging lightly forward/back (right arm slightly forward, left arm slightly back). Do not hold the belt. Do not spread the arms.
+- Skirt: calm, swinging just a little behind her. Not flaring out.
+
+CHARACTER: exactly the same as image 02 — face, long wavy light-brown hair, red cap with white frills, gold line and red ribbon bow, white blouse with puffed short sleeves, red vest with gold trim, gold lacing and gold flower buttons, two brown belts with gold buckles and small pouches, red skirt with gold trim and gold embroidery over white frills, brown tights, tall brown boots with gold laces, fingerless brown gloves. Same colors, same smooth hand-painted style, same size. Do not redesign anything.
+
+FORMAT: square 1024x1024, ONE figure only. Top of the head on the "top of head" line and the planted foot on the "feet" line of image 04; body centered on the dotted line. Transparent background (if impossible, solid magenta #FF00FF). Do NOT draw the guide lines, labels, or the reference figures A/B/C. No text, no ground, no shadow.
+▲ COPY TO HERE
+
+If it goes wrong, send one of these:
+- Legs twisted: "Hips, knees and both toes must all point down-left. Make it the mirror-pair of image 03: same angle, only the legs swapped."
+- Front foot goes to the right: "The front (left) foot must step straight toward the lower-left, not to the right."
+- Back foot drifts left: "Keep the back (right) foot behind the body, higher in the picture. Not to the left."
+- Body faces the front: "Turn the body and face exactly like image 02 (3/4 toward the lower-left)."
+- Skirt flares: "Make the skirt calmer, like the standing image. Only a small swing behind her."
+- Character changed: "Keep the character exactly the same as image 02. Only the legs, arms and a small skirt swing change."
+- Background or lines appear: "Only the character. Transparent background, no guide lines or labels."
