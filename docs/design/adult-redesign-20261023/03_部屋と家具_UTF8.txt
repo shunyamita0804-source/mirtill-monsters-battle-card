@@ -1,0 +1,70 @@
+【部屋の箱と家具】の依頼文（2026-10-23）
+毎回、01 の【共通ルール】を最初に付けてから、下の文を付ける。元の絵は design-parts/seimon-world/ の同じ名前のファイル。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 部屋の箱（7枚・1024×1024・透明なし）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+※ 奥の壁の帯の高さ・床の広さ・下の真ん中の出入口は元の絵と同じ。家具は描かない（家具は別の絵）。
+　 English: "Keep the back wall band height, floor area and the bottom-center doorway exactly as the original. Do not draw any furniture."
+※ 部屋全体：真昼の強い日差しをやめ、窓からのやわらかい光と、部屋の隅の暗がり。床と壁に使い込まれた傷やすり減り。
+
+【R1】主人公の家　room_shell_player.png
+▼日本語：こげ茶の古い板張りの床、しっくいの壁と黒っぽい木の梁。窓は1つ。若い大人のひとり暮らしの、質素で落ち着いた部屋。
+▼English: Old dark wooden floorboards, plaster walls with dark timber beams, one window. A plain, calm room of a young adult living alone.
+
+【R2】案内役の家　room_shell_guide.png
+▼日本語：R1 と同じ作りで、壁を灰色がかった青緑の塗り壁に。床は少し明るい木。
+▼English: Same structure as R1, walls painted in a greyish teal, slightly lighter wooden floor.
+
+【R3】民家　room_shell_house.png
+▼日本語：ふつうの家の部屋。灰褐色の木の床と、色あせたクリーム色の壁。
+▼English: An ordinary home. Grey-brown wooden floor, faded cream walls.
+
+【R4】カードショップ　room_shell_shop.png
+▼日本語：オレンジと白の市松模様の床とトランプ柄の壁をやめ、深緑とこげ茶の老舗の店内。床は濃い木または灰色の石、壁は深緑の板張り、金具はくすんだ金。
+▼English: Replace the orange-and-white checkered floor and playing-card wall pattern with a long-established shop interior: dark wood or grey stone floor, deep green wood paneling, antique gold fittings.
+
+【R5】カード研究所　room_shell_lab.png
+▼日本語：いまの紺の壁の雰囲気を残して、より落ち着いた古い研究室に。濃い木の床、紺の壁、真鍮の金具、高い窓。
+▼English: Keep the navy wall mood but make it a calmer old study: dark wood floor, navy walls, brass fittings, tall windows.
+
+【R6】カード練習場　room_shell_training.png
+▼日本語：赤い旗をやめ、灰色の石の壁とこげ茶の木の床の、道場のように落ち着いた部屋。壁の旗は深い紺か深緑に落ち着いた紋章（文字なし）。
+▼English: No red banners: a calm, dojo-like hall with grey stone walls and a dark wood floor. Wall banners in deep navy or deep green with restrained crests (no text).
+
+【R7】大会会場　room_shell_arena.png
+▼日本語：白と明るい青をやめ、灰色の大理石の床と、深い紺とくすんだ金の模様。歴史のある劇場のような重厚さ。床の円い模様の位置と大きさは元の絵と同じ。
+▼English: Replace white and bright blue with grey marble floor, deep navy and antique gold patterns, solid and historic like an old theater. Keep the round floor pattern's position and size.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 家具（7枚。並べ方と大きさは元の絵と同じ。背景は透明）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+※ 共通：赤いベッドカバー・赤い敷物・花柄のテーブルクロスなどの明るい色をやめ、こげ茶・深緑・紺・生成り（きなり）の布。花は控えめに。
+
+【F1】主人公の家　furn_player.png（1024×1024・ベッド／机／本棚／壁の地図）
+▼日本語：ベッドは灰色と生成りの寝具、机は使い込んだ木、本棚は古い革の本、壁の地図は色あせた羊皮紙。
+▼English: Bed with grey and off-white bedding, a well-used wooden desk, a bookshelf of old leather-bound books, a faded parchment wall map.
+
+【F2】共通の家具　furn_common.png（1024×1024・敷物／観葉植物／食卓／食器棚）
+▼日本語：敷物は赤をやめ、紺とこげ茶の落ち着いた柄。食卓のクロスは生成り。
+▼English: The rug in navy and dark brown (not red); off-white tablecloth on the dining table.
+
+【F3】案内役の家　furn_guide.png（1024×1024・暖炉／食器棚／お茶のテーブル／花台）
+▼日本語：石の暖炉、白い陶器、生成りのクロスのお茶のテーブル。花台の花は白を少しだけ。
+▼English: Stone fireplace, white ceramics, a tea table with an off-white cloth, a plant stand with a few white flowers.
+
+【F4】カード研究所　furn_lab.png（1536×1024・本棚／装置／標本棚／机／小物）
+▼日本語：光る青い結晶の装置は、真鍮と古いガラスの観測装置のような落ち着いた見た目に（光は控えめ）。
+▼English: Turn the glowing blue crystal device into a calm brass-and-old-glass instrument (subtle glow only).
+
+【F5】カードショップ　furn_shop.png（1024×1024・陳列棚／自動販売機／カウンター／ガラスケース）
+▼日本語：パックの陳列は落ち着いた色の箱に。自動販売機は古いアンティークの機械のような真鍮と木。
+▼English: Card packs in muted-colored boxes. The vending machine looks like an antique machine of brass and wood.
+
+【F6】カード練習場　furn_training.png（1024×1024・黒板／対戦テーブル／ベンチ／本棚）
+▼日本語：黒板・対戦テーブル・ベンチ・本棚。テーブルクロスは生成りか深緑。
+▼English: Blackboard, match table, bench, bookshelf. Tablecloth in off-white or deep green.
+
+【F7】大会会場　furn_arena.png（1024×1024・垂れ幕／対戦台／客席／受付カウンター）
+▼日本語：垂れ幕は深い紺とくすんだ金。対戦台と受付は濃い木と真鍮。
+▼English: Banners in deep navy and antique gold; match stage and reception counter in dark wood and brass.

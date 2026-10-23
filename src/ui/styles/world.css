@@ -217,7 +217,7 @@
   height: 40px;
 }
 
-.tile--wall { background: #2b2440; box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.3); }
+.tile--wall { background: #2a2a2e; box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.3); }
 .tile--floor { background: #8c7a5e; }
 .tile--grass { background: #5d9b4f; background-image: radial-gradient(circle at 30% 40%, rgb(255 255 255 / 0.08) 0 2px, transparent 3px); }
 .tile--road { background: #d8c49a; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.05); }
@@ -245,9 +245,9 @@
 .tile--table { background: #2f7a4a; box-shadow: inset 0 0 0 3px #c9a24a; }
 .tile--rug { background: #9a4a5a; }
 
-.world__map--dungeon .tile--floor { background: #4a4258; }
-.world__map--dungeon .tile--wall { background: #1a1528; }
-.world__map--interior .tile--wall { background: #4a3a5a; }
+.world__map--dungeon .tile--floor { background: #48474a; }
+.world__map--dungeon .tile--wall { background: #18181b; }
+.world__map--interior .tile--wall { background: #4a4540; }
 
 .tile--npc::after {
   content: '';
