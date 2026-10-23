@@ -120,12 +120,10 @@ export const tournamentScreen: ScreenDefinition = {
             ...prizeLines(t).map((l) => h('p', { class: 'modal__text', text: l.text })),
             h('p', { class: 'modal__text modal__text--sub', text: tr('tournament.resumeNote') }),
           ],
-          tr('tournament.enter'),
           () => {
             store.update((s) => enterTournament(s, t.id, newId('entry')));
             render();
           },
-          tr('common.cancel'),
         );
       }, 'btn btn--primary');
       join.disabled = !check.ok;
@@ -184,10 +182,10 @@ export const tournamentScreen: ScreenDefinition = {
           button(tr('tournament.fight', { round: roundLabel(t, active.round) }), () => startMatch(t, active.round), 'btn btn--primary btn--large'),
           h('p', { class: 'notice', text: tr('tournament.leaveNote') }),
           button(tr('tournament.withdraw'), () => {
-            confirmModal(element, tr('tournament.withdrawConfirm'), [h('p', { class: 'modal__text', text: tr('tournament.withdrawText') })], tr('tournament.withdraw'), () => {
+            confirmModal(element, tr('tournament.withdrawConfirm'), [h('p', { class: 'modal__text', text: tr('tournament.withdrawText') })], () => {
               store.update(withdraw);
               render();
-            }, tr('common.cancel'));
+            });
           }, 'btn btn--ghost'),
         );
       } else {

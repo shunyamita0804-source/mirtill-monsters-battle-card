@@ -7,7 +7,7 @@
   flex-direction: column;
   justify-content: flex-end;
   padding: 0 10px calc(14px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(rgb(4 10 32 / 0) 35%, rgb(4 10 32 / 0.55));
+  background: linear-gradient(rgb(6 7 9 / 0) 35%, rgb(6 7 9 / 0.55));
   animation: fade-in 160ms ease-out;
   cursor: pointer;
   user-select: none;
@@ -156,7 +156,7 @@
   z-index: 21;
   padding: 6px 14px;
   border-radius: 16px;
-  background: rgb(20 40 80 / 0.85);
+  background: rgb(26 29 34 / 0.85);
   border: 1px solid #c9a24a;
   color: #fff;
   font-size: 13px;

@@ -1,18 +1,18 @@
 /* スマートフォン縦持ち前提のベーススタイル */
 :root {
-  --color-bg: #1b1530;
-  --color-stage: #241c40;
-  --color-panel: #322857;
-  --color-panel-strong: #43367a;
-  --color-line: #5a4b98;
-  --color-text: #f4f0ff;
-  --color-sub: #b9addc;
-  --color-accent: #ffcf5a;
-  --color-accent-text: #2a1d00;
-  --color-monster: #e59a4f;
-  --color-skill: #4fc3c8;
-  --color-player: #6fb6ff;
-  --color-opponent: #ff7a8a;
+  --color-bg: #111317;
+  --color-stage: #171a1f;
+  --color-panel: #22262d;
+  --color-panel-strong: #2e333c;
+  --color-line: #4a505b;
+  --color-text: #ebe7df;
+  --color-sub: #a7a399;
+  --color-accent: #c8a45d;
+  --color-accent-text: #1b1508;
+  --color-monster: #cf8f55;
+  --color-skill: #5fadb0;
+  --color-player: #7fa9d6;
+  --color-opponent: #d67884;
   --font-base: system-ui, -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
   color-scheme: dark;
 }

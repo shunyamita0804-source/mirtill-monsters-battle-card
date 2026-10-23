@@ -556,7 +556,7 @@ export const battleScreen: ScreenDefinition = {
     };
 
     const surrender = (): void => {
-      confirmModal(element, t('battle.surrenderTitle'), [h('p', { text: t('battle.surrenderText') })], t('battle.surrenderOk'), () => {
+      confirmModal(element, t('battle.surrenderTitle'), [h('p', { text: t('battle.surrenderText') })], () => {
         if (!state) return;
         state = { ...state, phase: 'ended', winner: 'opponent', endReason: 'knockout' };
         render();

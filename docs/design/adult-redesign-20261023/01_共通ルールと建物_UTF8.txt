@@ -1,0 +1,72 @@
+【共通ルール】と【建物11棟＋噴水】の依頼文（2026-10-23）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（毎回の依頼の最初に付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー（style_master.png・描き直す元の絵・2枚目からは「大人向けの見本」を添付する）
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の素材を、大人向けの見た目で1つ描き直してください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【描き直し】添付の「元の絵」と同じ大きさ（ピクセル数）・同じ構図で。建物（家具）が絵の中で占める位置・大きさ・玄関（出入口）の位置は変えない。変えるのは色・形の細部・質感・飾り。
+【大人向け】対象は大人のプレイヤー。子ども向けのかわいい絵にしない。
+・彩度を抑えた自然な色（くすんだ赤茶・こげ茶・灰色がかった緑・石の灰色・深い紺・くすんだ金）。原色・パステル・蛍光色は使わない
+・古い欧州の町並みに近い比率。窓と扉は小さめ、屋根は少し高め。丸っこいおもちゃの家にしない
+・雨だれの跡・ひび・苔・すり減り・色あせ。何十年も使われてきた建物
+・花の飾りは控えめ。ハート・スペード・星・リボンなどのかわいい飾りは使わない。飾りは落ち着いた紋章・鉄の金具・石の彫刻
+・やわらかい午後の光、影は少し濃いめ
+【画風】添付の画風見本と同じ「筆で塗り重ねた手描きの質感」（色のむら・ハイライト・影のグラデーション・細かい描き込み・濃い茶色系の輪郭線）。画風見本の色づかいはまねしない。写真風・3DCG・ベクター風・ローポリ風は禁止。
+【視点・光】斜め上から見下ろす正面の視点。光は左上から。地面に影を描かない。
+【禁止】文字・数字・ロゴ・透かし・サイン。人・動物・聖獣・像。実在の作品のキャラクターや紋章に似せること。依頼していない物を足すこと。
+【形式】背景は透明（できなければマゼンタ一色 #FF00FF）。PNG。
+▲ここまで
+
+▼English version
+Redraw ONE asset for the commercial smartphone 2D card game "Sacred Monsters Battle Card" with a more mature, adult-oriented look. Quality must match commercial mobile RPGs.
+[Redraw] Same pixel size and same composition as the attached "original". Keep the position and size of the building (or furniture) and the door/entrance position exactly. Change only colors, shape details, materials and decoration.
+[Mature look] The audience is adults. Do NOT make it cute or childish.
+- Muted, natural colors: dusty red-brown, dark brown, greyish green, stone grey, deep navy, antique gold. No primary colors, no pastels, no neon.
+- Proportions of a real old European town: smaller windows and doors, slightly taller roofs. Not a chubby toy house.
+- Weathering: rain streaks, cracks, moss, worn edges, faded paint. A building that has been used for decades.
+- Few flowers. No hearts, spades, stars or ribbons. Use restrained crests, wrought-iron fittings and stone carvings instead.
+- Soft afternoon light, slightly deeper shading.
+[Style] Same hand-painted look as the attached style sample (layered brush strokes, color variation, highlights, soft shading, fine detail, dark-brown outlines). Do NOT copy the sample's colors. No photo look, no 3D render, no flat vector, no low-poly.
+[View/Light] Three-quarter top-down front view. Light from the upper left. No cast shadow on the ground.
+[Forbidden] Text, numbers, logos, watermarks, signatures. People, animals, creatures, statues. Resemblance to existing IP. Anything not requested.
+[Format] Transparent background (if impossible, solid magenta #FF00FF). PNG.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 建物ごとの依頼（共通ルールのあとに付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+※ 元の絵は design-parts/seimon-world/ の同じ名前のファイル。大きさも同じにする
+※ まず B1（主人公の家）だけ作って Claude に送る（00 の「進める順番」）
+
+【B1】主人公の家　town_player_home.png（1254×1254）
+▼日本語：20代の若い大人が一人で暮らす、小さな石造りの家。こげ茶の木組みとくすんだ赤茶の瓦屋根。窓辺に小さな植木鉢が1つ。手入れはされているが新品ではない。
+▼English: A small stone cottage where a young adult in their twenties lives alone. Dark timber framing, dusty red-brown tile roof, one small flower pot on a windowsill. Well kept but not new.
+
+【B2】案内役の家　town_guide_home.png（1254×1254）
+▼日本語：主人公の家のとなりの家。20代の女性の家。灰色がかった青緑のしっくい壁と、濃い灰色のスレート屋根。主人公の家と色・屋根の形をはっきり変える。紫は使わない。
+▼English: The neighbor's house, home of a woman in her twenties. Greyish teal plaster walls, dark grey slate roof. Clearly different color and roof shape from the hero's house. No purple.
+
+【B3〜B7】住宅A〜E　town_house_a〜e.png（A〜D：1254×1254、E：1024×1024）
+▼日本語：ふつうの民家。それぞれ壁の材料と屋根の色を少しずつ変える（A：こげ茶の木と石／B：くすんだ紺の板壁／C：灰緑のしっくい／D：赤茶のれんが／E：明るい灰色の石）。看板・大きなガラス窓・旗は付けない。
+▼English: Ordinary town houses. Vary wall material and roof color slightly (A: dark timber and stone / B: dusty navy wooden siding / C: greyish green plaster / D: red-brown brick / E: light grey stone). No signs, no large shop windows, no flags.
+
+【B8】カードショップ　town_shop.png（1536×1024）
+▼日本語：カードを売る老舗の店。オレンジのしましま屋根をやめ、深緑またはこげ茶の布のひさしと、くすんだ金の金具。ショーウインドーは小さめの格子窓。トランプ柄は使わない。
+▼English: A long-established card shop. Replace the orange striped roof with a deep green or dark brown fabric awning and antique gold fittings. Small paned display windows. No playing-card suit motifs.
+
+【B9】カード研究所　town_lab.png（1254×1254）
+▼日本語：カードと聖獣を研究する施設。灰色の石造り、銅板の屋根（緑青で青緑にくすんだ色）、丸い天窓。大学の古い研究棟のような落ち着いた雰囲気。
+▼English: A research institute for cards and sacred beasts. Grey stone, copper roof weathered to a verdigris teal, a round skylight. Calm atmosphere like an old university building.
+
+【B10】カード練習場　town_training.png（1536×1024）
+▼日本語：対戦の練習ができる横長の建物。赤をやめ、こげ茶の木の梁と白っぽいしっくい、濃い灰色の屋根。入口の上に落ち着いた紋章（文字なし）。
+▼English: A wide building for practice matches. No bright red: dark wooden beams, off-white plaster, dark grey roof. A restrained crest above the entrance (no text).
+
+【B11】大会会場　town_arena.png（1536×1024）
+▼日本語：街でいちばん大きく格式のある建物。明るい青のドームをやめ、深い紺の銅板（または灰色の石）のドームと、石の柱、くすんだ金の装飾。歴史のある劇場や議事堂のような重厚さ。
+▼English: The largest and most prestigious building in town. Replace the bright blue dome with a deep navy (or grey stone) dome, stone columns and antique gold ornaments. Solid and historic, like an old theater or assembly hall.
+
+【B12】噴水　town_fountain.png（1024×1024）
+▼日本語：広場の円い噴水。灰色の石の水盤、水は澄んだ深い色。像は置かない。縁はすり減って苔が少し。
+▼English: A round fountain in the plaza. Grey stone basin, clear deep-colored water, no statue. Worn rim with a little moss.

@@ -69,7 +69,7 @@ export const BATTLE = {
   // 先攻・後攻を決める
   'battle.order.faceFirst': { ja: '先攻', en: '1st' },
   'battle.order.faceSecond': { ja: '後攻', en: '2nd' },
-  'battle.order.title': { ja: '先攻・後攻を決めよう', en: 'Who goes first?' },
+  'battle.order.title': { ja: '先攻・後攻の決定', en: 'Who goes first?' },
   'battle.order.hint': { ja: '伏せられたカードを1枚選んでください', en: 'Pick one face-down card' },
   'battle.order.resultFirst': { ja: 'あなたは先攻！', en: 'You go first!' },
   'battle.order.resultSecond': { ja: 'あなたは後攻！', en: 'You go second!' },
@@ -82,7 +82,6 @@ export const BATTLE = {
   'battle.surrender': { ja: '降参', en: 'Give Up' },
   'battle.surrenderTitle': { ja: '降参しますか？', en: 'Give up?' },
   'battle.surrenderText': { ja: '負けとして扱われます。', en: 'It will count as a loss.' },
-  'battle.surrenderOk': { ja: '降参する', en: 'Give Up' },
   'battle.rules': { ja: 'ルール', en: 'Rules' },
   'battle.rulesTitle': { ja: 'ルール（仮）', en: 'Rules (Temp)' },
   'battle.rulesLead': {
@@ -173,7 +172,7 @@ export const BATTLE = {
   'battle.result.deckOutOpponent': { ja: '相手の山札切れ', en: 'Opponent ran out of cards' },
   'battle.result.deckOutPlayer': { ja: 'あなたの山札切れ', en: 'You ran out of cards' },
   'battle.result.sub': { ja: '{title}・{n}手番', en: '{title} · Turn {n}' },
-  'battle.result.next': { ja: 'つづける', en: 'Next' },
+  'battle.result.next': { ja: '続ける', en: 'Next' },
 
   // 場面の表示・上の帯
   'battle.banner.turn.player': { ja: 'あなたのターン', en: 'Your Turn' },
@@ -212,7 +211,7 @@ export const BATTLE = {
     en: "You haven't turned the picked cards into mana. End your turn anyway?",
   },
   'battle.confirm.endAnyway': { ja: 'このまま終える', en: 'End Anyway' },
-  'battle.confirm.backToMana': { ja: 'マナ化にもどる', en: 'Back' },
+  'battle.confirm.backToMana': { ja: 'マナ化に戻る', en: 'Back' },
 
   // ルール説明（仮。src/data/rules.ts の PROVISIONAL_RULE_NOTES）
   'battle.ruleNote.deck': {

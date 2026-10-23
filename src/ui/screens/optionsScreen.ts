@@ -110,7 +110,6 @@ export const optionsScreen: ScreenDefinition = {
         element,
         t('options.importConfirm'),
         lines.map((l) => h('p', { class: 'modal__text', text: l })),
-        t('options.importYes'),
         () => {
           if (!store.restoreSave(check.save)) {
             messageModal(element, t('options.importWriteFailed'));

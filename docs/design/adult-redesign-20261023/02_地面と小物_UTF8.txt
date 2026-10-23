@@ -1,0 +1,47 @@
+【地面と小物】の依頼文（2026-10-23）
+毎回、01 の【共通ルール】を最初に付けてから、下の文を付ける。元の絵は design-parts/seimon-world/ の同じ名前のファイル。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 地面（3枚。透明なし。上下左右につなげて敷きつめる）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+※ 地面だけは「背景は透明」の代わりに「絵のふちが上下左右でつながること（継ぎ目が出ない）」と書き添える。真上から見た視点。
+　 English: "No transparency. The texture must tile seamlessly on all four sides. Straight top-down view."
+
+【G1】芝生　tex_grass.png（1024×1024）
+▼日本語：明るい黄緑の芝生をやめ、少しくすんだ自然な緑（灰色がかった緑）。ところどころ枯れ草の黄土色や土が見える。手入れはされているが、芝生の公園のような均一さはない。
+▼English: Not bright yellow-green: a muted natural green with a slight grey tint, patches of dry ochre grass and bits of soil. Maintained, but not as uniform as a park lawn.
+
+【G2】石畳　tex_stone.png（1024×1024）
+▼日本語：白っぽいれんが模様をやめ、大きさのそろわない灰色〜灰褐色の石畳。石のすき間に土と小さな草、すり減って丸くなった角、雨のしみ。
+▼English: Not whitish brick: irregular grey to grey-brown cobblestones, soil and tiny grass in the gaps, worn rounded edges, rain stains.
+
+【G3】土の道　tex_dirt.png（1024×1024）
+▼日本語：オレンジがかった土をやめ、こげ茶〜灰褐色の踏み固められた土。小石と轍（わだち）のかすかな跡。
+▼English: Not orange: packed earth in dark brown to grey-brown, small pebbles, faint wheel ruts.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 小物（並べ方と大きさは元の絵と同じ。背景は透明）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【P1】木　props_trees.png（1024×1024・4本）
+▼日本語：元の絵と同じ位置に4本。落葉樹（大・小）、針葉樹、低い木。葉の色は深い緑〜灰緑。まん丸のかたまりにせず、枝が少し見える自然な形。
+▼English: Four trees in the same positions as the original: deciduous (large, small), a conifer, a low tree. Deep green to grey-green foliage, natural irregular silhouettes with some visible branches, not perfect round blobs.
+
+【P2】街の小物　props_street.png（1024×1024・4個）
+▼日本語：街灯（黒い鉄の古い街灯）、木のベンチ（すり減った木と鉄の脚）、旗（深い紺に落ち着いた紋章。文字なし）、道しるべ（古い木）。
+▼English: Street lamp (old black wrought iron), wooden bench (worn wood, iron legs), banner (deep navy with a restrained crest, no text), signpost (old weathered wood).
+
+【P3】いろいろな小物　props_misc.png（1024×1024・4個）
+▼日本語：樽、木箱、木の柵、苔の付いた岩。どれも使い古して色あせた感じ。
+▼English: Barrel, wooden crates, wooden fence, mossy rock. All worn and faded from long use.
+
+【P4】花壇　props_flowers.png（1024×1024・4個）
+▼日本語：石の花壇・丸い花壇・植木鉢・木の花壇。花は白・薄紫・くすんだ黄色を少しだけ。緑の葉を多めにして、花畑のような華やかさにしない。
+▼English: Stone planter, round planter, flower pot, wooden planter box. Only a few flowers in white, pale lilac and muted yellow; mostly green foliage. Not a colorful flower bed.
+
+【P5】植え込み　props_bush_v2.png（2256×466・4個を横に並べる）
+▼日本語：丸い植え込み4個。深い緑〜灰緑。葉のかたまりが重なり、上は日が当たって明るく、下は暗い。まん丸にしない。
+▼English: Four bushes in a row. Deep green to grey-green, overlapping leaf clusters, sunlit top and darker bottom. Not perfect circles.
+
+【P6】草むら・小花　decal_grass.png（1072×780・11個）・decal_flowers.png（1176×520・8個）
+▼日本語：芝生の上に散らす小さな草むらと小花。元の絵と同じ数・同じ並び。新しい芝生（G1）の色になじむ、くすんだ緑と白・薄紫の小さな花。
+▼English: Small grass tufts and tiny wildflowers scattered on the lawn; same count and layout as the original. Muted green that matches the new lawn (G1), with tiny white and pale lilac flowers.
