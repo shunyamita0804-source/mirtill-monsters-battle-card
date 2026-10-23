@@ -112,6 +112,8 @@ export const STORY = {
 
   // 案内役がいないときの練習テーブル（地の文）
   'story.sys.tableOffer': { ja: '練習テーブルだ。練習試合をしてみる？', en: 'A practice table. Play a practice match?' },
+  // 【仮】練習場の先生の台詞（2026-10-23。正式な台詞は未定）
+  'story.teacher.offer': { ja: '練習試合をしていくかい？ 相手ならいつでも用意してあるよ。', en: 'Up for a practice match? I always have an opponent ready.' },
   'story.sys.tableYes': { ja: '練習試合をする', en: 'Play a match' },
   'story.sys.tableNo': { ja: 'やめておく', en: 'Not now' },
   'story.sys.practiceDone': { ja: '練習試合が終わった。', en: 'The practice match is over.' },

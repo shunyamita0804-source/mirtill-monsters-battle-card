@@ -620,3 +620,33 @@
   0%, 100% { box-shadow: 0 3px 10px rgb(0 0 0 / 0.35), 0 0 0 0 rgb(255 215 106 / 0.5); }
   50% { box-shadow: 0 3px 10px rgb(0 0 0 / 0.35), 0 0 18px 2px rgb(255 215 106 / 0.75); }
 }
+
+/* 歩くときのスティック（デザイン第4弾：台の輪とつまみ） */
+.world__stick {
+  border: 0;
+  background: url('@assets/images/ui/hud/joystick_ring.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+
+.world__stick.is-on {
+  opacity: 0.85;
+}
+
+.world__stick-knob {
+  border: 0;
+  background: url('@assets/images/ui/hud/joystick_knob.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+
+/* ボスのしるし（デザイン第4弾） */
+.world__enemy--boss {
+  background-image: url('@assets/images/maps/dungeon/boss_symbol.webp');
+  filter: none;
+  scale: 1.7;
+}
+
+.world__stick.is-run .world__stick-knob {
+  border: 0;
+  background: url('@assets/images/ui/hud/joystick_knob.webp') center / contain no-repeat;
+  filter: sepia(0.7) brightness(1.25);
+}
