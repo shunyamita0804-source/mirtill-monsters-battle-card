@@ -13,7 +13,7 @@ export const STORY = {
 
   // 会話の操作
   'story.ui.skip': { ja: 'スキップ', en: 'Skip' },
-  'story.ui.next': { ja: 'つぎへ', en: 'Next' },
+  'story.ui.next': { ja: '次へ', en: 'Next' },
   'story.ui.portraitTemp': { ja: '仮', en: 'Temp' },
   'story.ui.portraitNote': { ja: '会話の絵は制作中', en: 'Portrait in progress' },
   'story.expr.normal': { ja: '通常', en: 'Normal' },
@@ -36,7 +36,7 @@ export const STORY = {
   'story.T003.a': { ja: 'まだ', en: 'Not yet' },
   'story.T003.b': { ja: '少しだけ', en: 'Just a little' },
   'story.T004A': { ja: 'それなら、ちょうどよかった。', en: "Then I've got perfect timing." },
-  'story.T004B': { ja: 'じゃあ、今度は一緒に遊んでみようよ。', en: "Then let's play together sometime." },
+  'story.T004B': { ja: 'じゃあ、今度一緒にやってみない？', en: "Then why don't we try it together sometime?" },
 
   // E02 世界と遊びへの誘い
   'story.T005': {
@@ -75,7 +75,7 @@ export const STORY = {
   },
 
   // E07 対戦後
-  'story.T018W': { ja: 'すごい、初めてとは思えないね！', en: 'That was amazing for your first match!' },
+  'story.T018W': { ja: '初めてとは思えないね。なかなかやるじゃない。', en: 'Not bad at all for your first match.' },
   'story.T018L': {
     ja: 'いい勝負だったね。最初は少しずつ慣れれば大丈夫。',
     en: "That was a good match! You'll get the hang of it with practice.",

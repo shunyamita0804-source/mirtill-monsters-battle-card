@@ -5,10 +5,10 @@ export const SCREENS = {
   // タイトル
   'title.title': { ja: 'タイトル', en: 'Title' },
   'title.battleCard': { ja: 'バトルカード', en: 'Battle Card' },
-  'title.continue': { ja: 'つづきから', en: 'Continue' },
-  'title.newGame': { ja: 'はじめから', en: 'New Game' },
+  'title.continue': { ja: '続きから', en: 'Continue' },
+  'title.newGame': { ja: '最初から', en: 'New Game' },
   'title.settings': { ja: '設定', en: 'Settings' },
-  'title.confirmNew': { ja: 'はじめから遊びますか？', en: 'Start a new game?' },
+  'title.confirmNew': { ja: '最初から始めますか？', en: 'Start a new game?' },
   'title.confirmNewText': { ja: '今のセーブデータは消えます。よろしいですか？', en: 'Your current save will be erased. Are you sure?' },
   'title.unreadable': {
     ja: 'セーブデータを読み込めませんでした（{reason}）。元のデータは退避してあります。',
@@ -35,7 +35,7 @@ export const SCREENS = {
   // ベッド
   'bed.title': { ja: 'ベッド', en: 'Bed' },
   'bed.rest': { ja: '休む（セーブする）', en: 'Rest (Save)' },
-  'bed.rested': { ja: 'ぐっすり休んだ。\nセーブしました。', en: 'You had a good rest.\nGame saved.' },
+  'bed.rested': { ja: 'ゆっくり休んだ。\nセーブしました。', en: 'You had a good rest.\nGame saved.' },
   'bed.autoSaveNote': {
     ja: '進行状況はカードの入手・移動・対戦のたびに自動でも保存されます（この端末のブラウザ内）。',
     en: 'Progress is also saved automatically whenever you get cards, move or battle (in this device’s browser).',
@@ -48,7 +48,7 @@ export const SCREENS = {
   'bed.battlesValue': { ja: '{won}勝 {lost}敗', en: '{won}W {lost}L' },
   'bed.packs': { ja: '開封したパック', en: 'Packs opened' },
   'bed.packsValue': { ja: '{n}個', en: '{n}' },
-  'bed.createdAt': { ja: 'はじめた日時', en: 'Started' },
+  'bed.createdAt': { ja: '開始日時', en: 'Started' },
   'bed.updatedAt': { ja: '最後に保存', en: 'Last saved' },
   'bed.settings': { ja: '設定（言語・音量・バックアップ）', en: 'Settings (Language, Sound, Backup)' },
   'bed.about': { ja: 'このバージョンについて', en: 'About this version' },
@@ -217,7 +217,7 @@ export const SCREENS = {
     en: 'You have no support cards (get them from packs)',
   },
   'deck.chooseMonsters': { ja: 'モンスターを選ぶと適合技が表示されます', en: 'Choose monsters to see their skills' },
-  'deck.auto': { ja: 'おまかせ', en: 'Auto' },
+  'deck.auto': { ja: '自動編成', en: 'Auto' },
   'deck.rulesNote': { ja: 'ルールは仮です', en: 'Rules are temporary' },
   // デッキの決まりの確認（src/game/deck/deck.ts）
   'deck.issue.monsterCount': { ja: 'モンスターは{n}体必要です（現在{current}体）', en: 'You need {n} monsters (now {current})' },
@@ -242,7 +242,7 @@ export const SCREENS = {
   // ショップ
   'shop.title': { ja: 'カードショップ', en: 'Card Shop' },
   'shop.clerk': { ja: '店員', en: 'Clerk' },
-  'shop.greeting': { ja: 'いらっしゃいませ！ご用件は何でしょう？', en: 'Welcome! How can I help you?' },
+  'shop.greeting': { ja: 'いらっしゃいませ。ご用件をどうぞ。', en: 'Welcome! How can I help you?' },
   'shop.coins': { ja: '所持金 {n}G', en: 'Money {n}G' },
   'shop.viewCards': { ja: 'カードを見る', en: 'View Cards' },
   'shop.sell': { ja: '売る', en: 'Sell' },
@@ -252,7 +252,7 @@ export const SCREENS = {
   'shop.restoreTitle': { ja: '特別復元', en: 'Special Restore' },
   'shop.restoreDone': { ja: '隠しモンスターはすでに復元済みです。', en: 'The hidden monster has already been restored.' },
   'shop.restoreNotReady': {
-    ja: 'ふしぎな欠片が {n}/{total} 個。\n10個集めると、欠片に眠るモンスターを1体だけ復元できます。\n（欠片は街やダンジョンのどこかに隠れています）',
+    ja: '不思議な欠片が {n}/{total} 個。\n10個集めると、欠片に眠るモンスターを1体だけ復元できます。\n（欠片は街やダンジョンのどこかに隠れています）',
     en: 'Mysterious Shards: {n}/{total}.\nCollect 10 to restore the monster sleeping in them (once only).\n(Shards are hidden somewhere in town and the dungeon)',
   },
   'shop.restoreConfirm': {
@@ -334,7 +334,7 @@ export const SCREENS = {
   'tournament.recordClaimed': { ja: '参加{entries}回・優勝{wins}回（初回景品受取済）', en: 'Entered {entries} · Won {wins} (first-win prizes received)' },
   'tournament.issueSeparator': { ja: ' / ', en: ' / ' },
   'tournament.clerk': { ja: '受付', en: 'Desk' },
-  'tournament.welcome': { ja: '大会会場へようこそ！あなたのランクは {rank} です。', en: 'Welcome to the hall! Your rank is {rank}.' },
+  'tournament.welcome': { ja: '大会会場へようこそ。あなたのランクは {rank} です。', en: 'Welcome to the hall! Your rank is {rank}.' },
   'tournament.inProgress': { ja: '{name} 参加中', en: 'In the {name}' },
   'tournament.stateWon': { ja: '勝利', en: 'Won' },
   'tournament.stateNext': { ja: '次の対戦', en: 'Next' },
