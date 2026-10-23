@@ -1,7 +1,7 @@
 import { getDungeon, ENCOUNTERS } from '../../data/dungeons.ts';
 import { FRAGMENT_TOTAL } from '../../data/fragments.ts';
-import { getMap, TOWN_SIGNS, type ChestObject, type EnemyObject, type MapDefinition, type MapObject, type NpcObject } from '../../data/maps.ts';
-import type { SceneId } from '../../data/storyScenes.ts';
+import { getMap, isResidentId, TOWN_SIGNS, type ChestObject, type EnemyObject, type MapDefinition, type MapObject, type NpcId, type NpcObject } from '../../data/maps.ts';
+import { residentScene, type SceneId } from '../../data/storyScenes.ts';
 import { getMonster } from '../../data/cards.ts';
 import { isDeckValid } from '../../game/deck/deck.ts';
 import {
@@ -41,6 +41,15 @@ import { button, h } from '../dom.ts';
 import maleSheet from '@assets/images/characters/player_male_sheet.png';
 import femaleSheet from '@assets/images/characters/player_female_sheet.png';
 import guideSheet from '@assets/images/characters/npc_neighbor_guide_walk.png';
+import clerkSheet from '@assets/images/characters/npc_clerk_walk.png';
+import researcherSheet from '@assets/images/characters/npc_researcher_walk.png';
+import receptionistSheet from '@assets/images/characters/npc_receptionist_walk.png';
+import teacherSheet from '@assets/images/characters/npc_teacher_walk.png';
+import residentASheet from '@assets/images/characters/npc_resident_a_walk.png';
+import residentBSheet from '@assets/images/characters/npc_resident_b_walk.png';
+import residentCSheet from '@assets/images/characters/npc_resident_c_walk.png';
+import residentDSheet from '@assets/images/characters/npc_resident_d_walk.png';
+import residentESheet from '@assets/images/characters/npc_resident_e_walk.png';
 import chestWood from '@assets/images/maps/dungeon/chest_01_base.webp';
 import chestWood1 from '@assets/images/maps/dungeon/chest_01_anim_01.webp';
 import chestWood2 from '@assets/images/maps/dungeon/chest_01_anim_02.webp';
@@ -125,15 +134,40 @@ const NPC_IDLE_COL = 1;
 /**
  * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×4行）。
  * 歩く・止まるで別の画像に切り替えると、iPhone で読み込み直しの間だけ人物が消えるので、1枚の中で位置だけ動かす。
- * 女性：2026-10-23 の大人の絵（tools/art/adult_walk_build.py が作る。右足を前・立つ・左足を前・立つ・立ち止まり）。
- * 男性：前の絵（tools/art/walk_passing.py。横向きの2・4コマ目は足を寄せて作った応急処置のコマ。大人の絵が届いたら作り直す）
+ * 2026-10-23 の大人の絵（男性・女性。tools/art/adult_walk_build.py が作る。右足を前・立つ・左足を前・立つ・立ち止まり）
  */
 const PLAYER_SHEET: Readonly<Record<'male' | 'female', string>> = { male: maleSheet, female: femaleSheet };
 const PLAYER_SHEET_COLS = 5;
 /** シートの立ち止まりの列 */
 const IDLE_COL = 4;
 
-const NPC_SHEET: Readonly<Record<NpcObject['npcId'], string>> = { neighbor_guide: guideSheet };
+/** 人の歩行の絵（4列×4行。2026-10-23 の大人の絵。tools/art/adult_walk_build.py --npc が作る） */
+const NPC_SHEET: Readonly<Record<NpcId, string>> = {
+  neighbor_guide: guideSheet,
+  clerk: clerkSheet,
+  researcher: researcherSheet,
+  receptionist: receptionistSheet,
+  teacher: teacherSheet,
+  resident_a: residentASheet,
+  resident_b: residentBSheet,
+  resident_c: residentCSheet,
+  resident_d: residentDSheet,
+  resident_e: residentESheet,
+};
+
+/** 人の呼び名（読み上げ用） */
+const NPC_NAME: Readonly<Record<NpcId, MessageKey>> = {
+  neighbor_guide: 'story.speaker.neighborGuide',
+  clerk: 'story.speaker.clerk',
+  researcher: 'story.speaker.researcher',
+  receptionist: 'story.speaker.receptionist',
+  teacher: 'story.speaker.teacher',
+  resident_a: 'story.speaker.residentA',
+  resident_b: 'story.speaker.residentB',
+  resident_c: 'story.speaker.residentC',
+  resident_d: 'story.speaker.residentD',
+  resident_e: 'story.speaker.residentE',
+};
 
 const TILE_CLASS: Readonly<Record<string, string>> = {
   '#': 'wall', '.': 'floor', ',': 'grass', '=': 'road', T: 'tree', '~': 'water', H: 'bld-hall', A: 'bld-home',
@@ -219,6 +253,8 @@ class WorldView {
   #nearKey = '';
   /** スティック操作中の指（1本だけ） */
   #touch: { id: number; x: number; y: number; dragging: boolean } | null = null;
+  /** 住人に話しかけた回数（人の ID → 回数。アプリを開いている間） */
+  static #talkCount = new Map<string, number>();
   /** 一度スティックを使ったら操作の説明を出さない（アプリを開いている間） */
   static #stickUsed = false;
   readonly #onKeyDown = (e: KeyboardEvent): void => this.#key(e, true);
@@ -546,7 +582,7 @@ class WorldView {
     if (obj.type === 'npc') {
       if (!this.#isVisible(obj)) return null;
       // 人物の歩行の絵（待機の向き）。足元のマスに立つ
-      const el = h('div', { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': t('story.speaker.neighborGuide') } });
+      const el = h('div', { class: 'world__npc', dataset: { npc: obj.npcId }, attrs: { 'aria-label': t(NPC_NAME[obj.npcId]) } });
       this.#sizeFigure(el);
       this.#addShadow(el);
       el.style.backgroundImage = `url("${NPC_SHEET[obj.npcId]}")`;
@@ -928,6 +964,13 @@ class WorldView {
       this.#faceNpc(el, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up');
     }
     if (npc.npcId === 'neighbor_guide') this.#playScene(sceneOnTalk(this.#store.save));
+    else if (npc.action) this.#action(npc.action);
+    else if (isResidentId(npc.npcId)) {
+      // 住人：話しかけるたびに 2つの話を交互に（回数はアプリを開いている間だけ覚える）
+      const count = WorldView.#talkCount.get(npc.id) ?? 0;
+      WorldView.#talkCount.set(npc.id, count + 1);
+      this.#playScene(residentScene(npc.npcId, count));
+    }
   }
 
   #playScene(id: SceneId): void {
@@ -960,13 +1003,15 @@ class WorldView {
     this.#busy = true;
     const ctx = this.#ctx;
     store.update((s) => startPractice(s, tutorial));
+    // 案内役のいる所で始めたら、終わったあとに案内役が話す
+    const withGuide = this.#map.objects.some((o) => o.type === 'npc' && o.npcId === 'neighbor_guide' && this.#isVisible(o));
     store.pendingBattle = {
       title: t('story.practice.title'),
       opponent,
       allowSurrender: true,
       tutorial: tutorial && store.save.story.intro !== 'completed',
       onFinish: (winner) => {
-        store.practiceResult = { winner, tutorial };
+        store.practiceResult = { winner, tutorial, withGuide };
         ctx.reset('world');
       },
     };

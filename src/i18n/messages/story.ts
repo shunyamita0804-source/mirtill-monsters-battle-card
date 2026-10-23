@@ -10,6 +10,16 @@ import type { MessageEntry } from '../i18n.ts';
 export const STORY = {
   // 名前の札（話している人）
   'story.speaker.neighborGuide': { ja: '隣家の女性', en: 'Neighbor' },
+  // 【仮】街の人の呼び名（正式な名前は未定。2026-10-23）
+  'story.speaker.clerk': { ja: '店員', en: 'Clerk' },
+  'story.speaker.researcher': { ja: '研究員', en: 'Researcher' },
+  'story.speaker.receptionist': { ja: '受付', en: 'Receptionist' },
+  'story.speaker.teacher': { ja: '練習場の先生', en: 'Instructor' },
+  'story.speaker.residentA': { ja: '花かごの婦人', en: 'Flower Lady' },
+  'story.speaker.residentB': { ja: 'カード好きの青年', en: 'Card Fan' },
+  'story.speaker.residentC': { ja: '大工', en: 'Carpenter' },
+  'story.speaker.residentD': { ja: '赤い服の女性', en: 'Woman in Red' },
+  'story.speaker.residentE': { ja: '新聞を読む紳士', en: 'Gentleman' },
 
   // 会話の操作
   'story.ui.skip': { ja: 'スキップ', en: 'Skip' },
@@ -88,7 +98,12 @@ export const STORY = {
     ja: '街にはほかにもいろんな場所があるし、自由に見て回ってね。',
     en: "There's plenty more to see around town, so feel free to explore.",
   },
-  'story.T021': { ja: 'また練習したくなったら、ここで声をかけて。', en: 'If you want another practice match, just come find me here.' },
+  // 2026-10-23：最初の練習試合のあと、案内役は家に戻る（ユーザー決定。台詞は仮）
+  'story.T021': {
+    ja: 'じゃあ、私はそろそろ家に戻るね。また練習したくなったら、となりの家に声をかけに来て。',
+    en: "I'll head back home now. If you want another practice match, come knock on my door next door.",
+  },
+  'story.T024': { ja: 'おつかれさま。また練習したくなったら、いつでも声をかけて。', en: 'Good game. Come find me whenever you want to practice again.' },
 
   // 後日の再開
   'story.T022': { ja: 'カードの練習、またしてみる？', en: 'Want to practice card battles again?' },
@@ -127,6 +142,28 @@ export const STORY = {
     ja: '相手の攻撃！狙われたモンスターの防御・回避カードで、ダメージを減らせます。使わないときは「守備しない」。',
     en: "Enemy attack! Use the targeted monster's Guard or Dodge cards to reduce the damage. Tap Pass if you don't want to.",
   },
+  // 【仮】住人A〜E の会話（2026-10-23 ユーザー指示「それっぽい会話」。話しかけるたびに1と2を交互に）
+  'story.residentA.1a': { ja: '庭の花がちょうど見ごろでね。朝のうちに摘んできたの。', en: 'The flowers in my garden are at their best. I picked these this morning.' },
+  'story.residentA.1b': { ja: '噴水のそばのベンチで休むと、気持ちがいいわよ。', en: 'Take a rest on the benches by the fountain. It\'s lovely there.' },
+  'story.residentA.2a': { ja: '若い人たちは、みんなカードに夢中ね。', en: 'All the young people are crazy about cards these days.' },
+  'story.residentA.2b': { ja: 'うちの息子も、昔は大会に出ていたのよ。', en: 'My son used to enter the tournaments too, back in the day.' },
+  'story.residentB.1a': { ja: '見てくれよ。この前のパックで出たカードなんだ。', en: 'Check this out. I pulled it from a pack the other day.' },
+  'story.residentB.1b': { ja: 'ショップの販売機、たまにすごいのが出るんだよな。', en: 'The pack machine at the shop gives you something amazing once in a while.' },
+  'story.residentB.2a': { ja: '大会で勝ち上がるには、デッキの組み方が大事らしい。', en: 'They say deck building is the key to winning tournaments.' },
+  'story.residentB.2b': { ja: '出かける前に、家の机でデッキを見直すといいよ。', en: 'Check your deck at the desk at home before you head out.' },
+  'story.residentC.1a': { ja: 'この街の家は、ほとんどが祖父の代に建てたものさ。', en: 'Most houses in this town were built back in my grandfather\'s day.' },
+  'story.residentC.1b': { ja: '屋根の修理の頼みが多くて、休む暇もないよ。', en: 'So many roofs to fix, I hardly get a day off.' },
+  'story.residentC.2a': { ja: '南の道を抜けると草原に出る。その先にダンジョンがあるって話だ。', en: 'Take the south road and you\'ll reach the meadow. They say there\'s a dungeon past it.' },
+  'story.residentC.2b': { ja: '行くなら、準備はしっかりな。', en: 'If you go, make sure you\'re well prepared.' },
+  'story.residentD.1a': { ja: '今度の大会、友だちと見に行く約束をしているの。', en: 'My friends and I are going to watch the next tournament.' },
+  'story.residentD.1b': { ja: '会場の丸い天井、近くで見るととてもきれいなのよ。', en: 'The dome of the hall is beautiful up close.' },
+  'story.residentD.2a': { ja: '研究所って、いつも遅くまで明かりがついているわね。', en: 'The lights at the lab are always on until late.' },
+  'story.residentD.2b': { ja: '何をそんなに調べているのかしら。', en: 'I wonder what they\'re researching so hard.' },
+  'story.residentE.1a': { ja: '新聞によると、今年の大会は参加者が多いそうだ。', en: 'The paper says this year\'s tournament has a lot of entrants.' },
+  'story.residentE.1b': { ja: '腕に覚えがあるなら、会場の受付で話を聞いてみるといい。', en: 'If you\'re confident in your skills, ask at the tournament hall\'s front desk.' },
+  'story.residentE.2a': { ja: '街のあちこちに、光る欠片が落ちていることがあるらしい。', en: 'They say glowing fragments turn up here and there around town.' },
+  'story.residentE.2b': { ja: '……まあ、ただの噂かもしれんがね。', en: '...Then again, it might just be a rumor.' },
+
   'story.hint.result': {
     ja: '相手のモンスター3体をすべて倒すか、相手が山札からカードを引けなくなると勝ちです。',
     en: "You win by knocking out all three of your opponent's monsters, or when your opponent can't draw a card from their deck.",

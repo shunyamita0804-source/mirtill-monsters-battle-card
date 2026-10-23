@@ -1,4 +1,5 @@
 import type { MessageKey } from '../i18n/messages/index.ts';
+import { RESIDENT_IDS, type ResidentId } from './maps.ts';
 
 /**
  * 【仮】序盤イベントの場面（会話の順番・選択肢・場面の終わりにすること）。
@@ -38,8 +39,11 @@ export const INTRO_STATES: readonly IntroState[] = [
 /** 会話の表情（表情の絵の参照名。絵が届くまでは仮の表示） */
 export type Expression = 'normal' | 'smile' | 'explain' | 'surprised' | 'troubled' | 'happy';
 
-/** 話している人。system は地の文（名前の札なし） */
-export type Speaker = 'neighbor_guide' | 'system';
+/** 話している人。system は地の文（名前の札なし）。住人は会話の絵が無いので名前の札だけ */
+export type Speaker = 'neighbor_guide' | ResidentId | 'system';
+
+/** 住人の会話の場面（話しかけるたびに 1・2 を交互に） */
+export type ResidentSceneId = `${ResidentId}_${1 | 2}`;
 
 export type SceneId =
   | 'invite'
@@ -58,7 +62,8 @@ export type SceneId =
   | 'practiceGo'
   | 'afterReplay'
   | 'tableOffer'
-  | 'afterTable';
+  | 'afterTable'
+  | ResidentSceneId;
 
 /** 場面の終わり（またはスキップ）にすること */
 export type SceneEffect =
@@ -179,7 +184,7 @@ export const SCENES: Readonly<Record<SceneId, Scene>> = {
     skipEffects: [],
   },
   practiceGo: { id: 'practiceGo', steps: [], effects: [{ kind: 'practice', tutorial: false }] },
-  afterReplay: { id: 'afterReplay', steps: [guide('story.T021', 'normal')] },
+  afterReplay: { id: 'afterReplay', steps: [guide('story.T024', 'smile')] },
   // 案内役がいないときの練習テーブル
   tableOffer: {
     id: 'tableOffer',
@@ -190,4 +195,25 @@ export const SCENES: Readonly<Record<SceneId, Scene>> = {
     skipEffects: [],
   },
   afterTable: { id: 'afterTable', steps: [system('story.sys.practiceDone')] },
+  ...residentScenes(),
 };
+
+/** 【仮】住人の会話（2行ずつ。台詞は src/i18n/messages/story.ts の story.residentA〜E） */
+function residentScenes(): Record<ResidentSceneId, Scene> {
+  const out = {} as Record<ResidentSceneId, Scene>;
+  for (const r of RESIDENT_IDS) {
+    for (const n of [1, 2] as const) {
+      const id: ResidentSceneId = `${r}_${n}`;
+      // メッセージのキーは story.residentA.1a のように（キーに _ は使わない）
+      const key = `resident${r.slice(-1).toUpperCase()}`;
+      const line = (part: 'a' | 'b'): SceneStep => ({ kind: 'line', text: `story.${key}.${n}${part}` as MessageKey, speaker: r });
+      out[id] = { id, steps: [line('a'), line('b')], skipEffects: [] };
+    }
+  }
+  return out;
+}
+
+/** 住人に話しかけたときの場面。count は話しかけた回数（0 から） */
+export function residentScene(resident: ResidentId, count: number): ResidentSceneId {
+  return `${resident}_${count % 2 === 0 ? 1 : 2}`;
+}

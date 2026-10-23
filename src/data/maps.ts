@@ -109,15 +109,24 @@ export interface ChestObject {
   readonly look: 'wood' | 'iron' | 'gold';
 }
 
+/** 街の住人（民家A〜E にいる人。話しかけると短い会話。台詞は仮） */
+export type ResidentId = 'resident_a' | 'resident_b' | 'resident_c' | 'resident_d' | 'resident_e';
+export const RESIDENT_IDS: readonly ResidentId[] = ['resident_a', 'resident_b', 'resident_c', 'resident_d', 'resident_e'];
+export const isResidentId = (id: string): id is ResidentId => (RESIDENT_IDS as readonly string[]).includes(id);
+
+/** 人物（会話の名前・歩行の絵の参照に使う） */
+export type NpcId = 'neighbor_guide' | 'clerk' | 'researcher' | 'receptionist' | 'teacher' | ResidentId;
+
 /**
- * 人（NPC）。表示するかどうか・話しかけたときの会話は、物語の進み具合で決まる（src/game/story/）。
- * 足元の1マスが歩けない。絵は人物ごとの歩行の絵（worldScreen.ts）
+ * 人（NPC）。足元の1マスが歩けない。絵は人物ごとの歩行の絵（worldScreen.ts）。
+ * 案内役の表示・会話は物語の進み具合で決まる（src/game/story/）。
+ * 店員・研究員・受付・先生は action があり、話しかけるとカウンターなどを調べたときと同じ画面を開く
  */
 export interface NpcObject extends Rect {
   readonly type: 'npc';
   readonly id: string;
-  /** どの人物か（会話の名前・顔の絵の参照に使う） */
-  readonly npcId: 'neighbor_guide';
+  readonly npcId: NpcId;
+  readonly action?: InteractAction;
 }
 
 export type MapObject = InteractObject | WarpObject | EnemyObject | ChestObject | NpcObject;
@@ -167,7 +176,16 @@ const enemy = (id: string, x: number, y: number, encounterId: string, boss = fal
   boss,
 });
 
-const npc = (id: string, x: number, y: number, npcId: NpcObject['npcId']): NpcObject => ({ type: 'npc', id, x, y, w: 1, h: 1, npcId });
+const npc = (id: string, x: number, y: number, npcId: NpcId, action?: InteractAction): NpcObject => ({
+  type: 'npc',
+  id,
+  x,
+  y,
+  w: 1,
+  h: 1,
+  npcId,
+  ...(action ? { action } : {}),
+});
 
 const chest = (
   id: string,
@@ -203,6 +221,12 @@ const itemOf = (art: ArtMap, id: string): CellRect => {
   const r = art.items?.[id];
   if (!r) throw new Error(`item: ${id}`);
   return r;
+};
+
+/** 人の立ち位置（設計図の *_SPOT の枠）の足元のマス。dx で横にずらす */
+const spotOf = (art: ArtMap, id: string, dx = 0): { x: number; y: number } => {
+  const r = itemOf(art, id);
+  return { x: r.x + Math.floor(r.w / 2) + dx, y: r.y + r.h - 2 };
 };
 
 const interactAt = (id: string, r: CellRect, label: string, action: InteractAction, message?: string): InteractObject =>
@@ -299,13 +323,14 @@ export const HOME: MapDefinition = artMap('home', '家', 'interior', HOME_ART, [
 ], entryOf(HOME_ART));
 
 const NEIGHBOR_ART = artOf('guide');
-/** となりの家（案内役の家）。案内役はいま街か練習場にいるので、家の中には出さない（同じ人が2か所に出ないように） */
+/** となりの家（案内役の家）。最初の練習試合が終わると、案内役は家に戻ってここにいる（話しかけるとまた練習できる） */
 export const NEIGHBOR: MapDefinition = artMap('neighbor', 'となりの家', 'interior', NEIGHBOR_ART, [
   interactAt('neighbor-fireplace', itemOf(NEIGHBOR_ART, 'FIREPLACE'), '暖炉', 'message', '暖炉の火がぱちぱちと燃えている。'),
   interactAt('neighbor-kitchen', itemOf(NEIGHBOR_ART, 'KITCHEN'), '台所の棚', 'message', 'お茶の道具がきれいに並んでいる。'),
   interactAt('neighbor-shelf', itemOf(NEIGHBOR_ART, 'BOOKSHELF'), '本棚', 'message', 'カードの本がたくさん並んでいる。'),
   interactAt('neighbor-table', itemOf(NEIGHBOR_ART, 'TABLE'), '丸テーブル', 'message', 'テーブルの上にティーセットが置いてある。'),
   interactAt('neighbor-flower', itemOf(NEIGHBOR_ART, 'FLOWER'), '花台', 'message', 'きれいな花が飾ってある。'),
+  npc('guide-home', spotOf(NEIGHBOR_ART, 'GUIDE_SPOT').x, spotOf(NEIGHBOR_ART, 'GUIDE_SPOT').y, 'neighbor_guide'),
   roomExit('neighbor-exit', NEIGHBOR_ART, 'GUIDE_HOME'),
 ], entryOf(NEIGHBOR_ART));
 
@@ -317,6 +342,7 @@ export const SHOP: MapDefinition = artMap('shop', 'カードショップ', 'inte
   interactAt('shop-shelf', itemOf(SHOP_ART, 'SHELF_WALL'), '商品棚', 'message', 'カードとパックがきれいに並んでいる。'),
   interactAt('shop-case-l', itemOf(SHOP_ART, 'CASE_L'), 'ショーケース', 'message', '珍しいカードが飾ってある。'),
   interactAt('shop-case-r', itemOf(SHOP_ART, 'CASE_R'), 'ショーケース', 'message', '珍しいカードが飾ってある。'),
+  npc('shop-clerk', spotOf(SHOP_ART, 'CLERK_SPOT').x, spotOf(SHOP_ART, 'CLERK_SPOT').y, 'clerk', 'shopClerk'),
   roomExit('shop-exit', SHOP_ART, 'SHOP'),
 ], entryOf(SHOP_ART));
 
@@ -329,6 +355,8 @@ export const LAB: MapDefinition = artMap('lab', 'カード研究所', 'interior'
   interactAt('lab-desk', itemOf(LAB_ART, 'DESK'), '研究机', 'message', '研究の資料が広げてある。'),
   interactAt('lab-shelf2', itemOf(LAB_ART, 'SHELF2'), '資料棚', 'message', '資料がぎっしり詰まっている。'),
   interactAt('lab-table', itemOf(LAB_ART, 'TABLE'), '閲覧テーブル', 'message', '本を読むためのテーブル。'),
+  // 研究員：設計図の立ち位置（研究机の奥）では机の絵に全身が隠れるので、机の右どなり（天球儀と標本ケースの間）に立つ
+  npc('lab-researcher', spotOf(LAB_ART, 'RESEARCHER_SPOT', 9).x, spotOf(LAB_ART, 'RESEARCHER_SPOT').y, 'researcher', 'collection'),
   roomExit('lab-exit', LAB_ART, 'LAB'),
 ], entryOf(LAB_ART));
 
@@ -339,6 +367,7 @@ export const HALL: MapDefinition = artMap('hall', '大会会場', 'interior', HA
   interactAt('hall-table', itemOf(HALL_ART, 'STAGE'), '対戦テーブル', 'message', '屋根付きの会場の中央にある対戦テーブル。大会の対戦はここで行われる。'),
   interactAt('hall-seats-l', itemOf(HALL_ART, 'SEATS_L'), '客席', 'message', '観客席。'),
   interactAt('hall-seats-r', itemOf(HALL_ART, 'SEATS_R'), '客席', 'message', '観客席。'),
+  npc('hall-receptionist', spotOf(HALL_ART, 'RECEPTIONIST_SPOT').x, spotOf(HALL_ART, 'RECEPTIONIST_SPOT').y, 'receptionist', 'tournamentDesk'),
   roomExit('hall-exit', HALL_ART, 'ARENA'),
 ], entryOf(HALL_ART));
 
@@ -351,17 +380,19 @@ export const PRACTICE: MapDefinition = artMap('practice', 'カード練習場', 
   interactAt('practice-table-2', itemOf(PRACTICE_ART, 'TABLE_2'), '練習テーブル', 'practiceTable'),
   interactAt('practice-bench-l', itemOf(PRACTICE_ART, 'BENCH_L'), 'ベンチ', 'message', '順番を待つ人のためのベンチ。'),
   interactAt('practice-bench-r', itemOf(PRACTICE_ART, 'BENCH_R'), 'ベンチ', 'message', '順番を待つ人のためのベンチ。'),
-  // 案内役は先生の立ち位置（黒板の前）にいる
-  npc('guide-practice', itemOf(PRACTICE_ART, 'TEACHER_SPOT').x + 1, itemOf(PRACTICE_ART, 'TEACHER_SPOT').y + 1, 'neighbor_guide'),
+  // 先生は黒板の前。案内役は最初の練習試合が終わるまで、先生の右どなりにいる
+  npc('practice-teacher', spotOf(PRACTICE_ART, 'TEACHER_SPOT').x, spotOf(PRACTICE_ART, 'TEACHER_SPOT').y, 'teacher', 'practiceTable'),
+  npc('guide-practice', spotOf(PRACTICE_ART, 'TEACHER_SPOT', 5).x, spotOf(PRACTICE_ART, 'TEACHER_SPOT').y + 1, 'neighbor_guide'),
   roomExit('practice-exit', PRACTICE_ART, 'TRAINING'),
 ], entryOf(PRACTICE_ART));
 
 const HOUSE_ART = artOf('house');
-/** 民家（住宅A〜E。部屋の絵は共通）。住人の絵がまだ無いので無人 */
+/** 民家（住宅A〜E。部屋の絵は共通）。住宅A〜E にそれぞれ住人A〜E がいる */
 const house = (key: 'a' | 'b' | 'c' | 'd' | 'e'): MapDefinition =>
   artMap(`house-${key}`, '民家', 'interior', HOUSE_ART, [
     interactAt(`house-${key}-shelf`, itemOf(HOUSE_ART, 'SHELF'), '棚', 'message', '食器がきちんと並んでいる。'),
     interactAt(`house-${key}-table`, itemOf(HOUSE_ART, 'TABLE'), 'テーブル', 'message', 'テーブルクロスがかかっている。'),
+    npc(`house-${key}-resident`, spotOf(HOUSE_ART, 'RESIDENT_SPOT').x, spotOf(HOUSE_ART, 'RESIDENT_SPOT').y, `resident_${key}`),
     roomExit(`house-${key}-exit`, HOUSE_ART, `HOUSE_${key.toUpperCase()}`),
   ], entryOf(HOUSE_ART));
 export const HOUSES: readonly MapDefinition[] = (['a', 'b', 'c', 'd', 'e'] as const).map(house);

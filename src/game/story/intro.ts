@@ -18,24 +18,36 @@ export function setIntro(save: SaveData, intro: IntroState): SaveData {
   return save.story.intro === intro ? save : { ...save, story: { ...save.story, intro } };
 }
 
-/** 案内役（となりの家の女性）がいる場所 */
-export function guidePlace(intro: IntroState): 'town' | 'practice' {
+/**
+ * 案内役（となりの家の女性）がいる場所。
+ * 誘う前・「あとで」・スキップは街、練習場へ案内してから最初の練習試合までは練習場、
+ * 最初の練習試合が終わったら「家に戻る」と言って自分の家（2026-10-23 ユーザー決定）
+ */
+export function guidePlace(intro: IntroState): 'town' | 'practice' | 'home' {
   switch (intro) {
     case 'notSeen':
     case 'invited':
     case 'deferred':
     case 'skipped':
       return 'town';
+    case 'completed':
+      return 'home';
     default:
       return 'practice';
   }
 }
 
-/** マップ上の人を表示するか */
+/** 案内役の各場所の人の ID（maps.ts） */
+const GUIDE_AT: Readonly<Record<ReturnType<typeof guidePlace>, string>> = {
+  town: 'guide-town',
+  practice: 'guide-practice',
+  home: 'guide-home',
+};
+
+/** マップ上の人を表示するか（案内役だけ、進み具合で1か所にいる。ほかの人はいつもいる） */
 export function isNpcPresent(save: SaveData, npc: NpcObject): boolean {
   if (npc.npcId !== 'neighbor_guide') return true;
-  const place = guidePlace(save.story.intro);
-  return (npc.id === 'guide-town' && place === 'town') || (npc.id === 'guide-practice' && place === 'practice');
+  return npc.id === GUIDE_AT[guidePlace(save.story.intro)];
 }
 
 /** マップに入ったときに自動で始まる場面（なければ null） */
@@ -74,12 +86,14 @@ export interface PracticeResult {
   readonly winner: 'player' | 'opponent' | 'draw';
   /** 最初の練習（ヒントつき）だったか */
   readonly tutorial: boolean;
+  /** 案内役のいる所で始めた練習試合か（案内役が相手）。いなければ練習テーブルだけ */
+  readonly withGuide?: boolean;
 }
 
 /** 練習試合のあとの場面 */
-export function sceneAfterPractice(save: SaveData, result: PracticeResult): SceneId {
+export function sceneAfterPractice(_save: SaveData, result: PracticeResult): SceneId {
   if (result.tutorial) return result.winner === 'player' ? 'afterWin' : 'afterLose';
-  return guidePlace(save.story.intro) === 'practice' ? 'afterReplay' : 'afterTable';
+  return result.withGuide ? 'afterReplay' : 'afterTable';
 }
 
 /** 場面の効果のうち、セーブを変えるもの（進み具合）を当てる。練習試合の開始は画面側で行う */
