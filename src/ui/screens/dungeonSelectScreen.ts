@@ -6,6 +6,7 @@ import { messageModal } from '../components/modal.ts';
 import { createScreenHeader } from '../components/screenHeader.ts';
 import { button, h } from '../dom.ts';
 import { once } from '../gameStore.ts';
+import { sound } from '../sound.ts';
 import { t } from '../../i18n/i18n.ts';
 import { dungeonDescription, dungeonName } from '../../i18n/content.ts';
 import type { ScreenDefinition } from './types.ts';
@@ -21,6 +22,8 @@ export const dungeonSelectScreen: ScreenDefinition = {
       const record = dungeonRecord(store.save, d.id);
       const chestTotal = d.floors.reduce((n, f) => n + (getMap(f)?.objects.filter((o) => o.type === 'chest').length ?? 0), 0);
       const depart = once(() => {
+        // ダンジョンの門を開けて入る
+        sound.play('gateOpen');
         store.update((s) => startDungeon(s, d.id));
         ctx.reset('world');
       });

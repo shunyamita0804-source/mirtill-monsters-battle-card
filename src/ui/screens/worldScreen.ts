@@ -72,7 +72,7 @@ import { t, type Params } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
 import { cardName, dungeonName, mapName, objectLabel, objectMessage, opponentName } from '../../i18n/content.ts';
 import { rewardGlow } from '../components/rewardGlow.ts';
-import { sound } from '../sound.ts';
+import { sound, type AmbientId, type StepSurface } from '../sound.ts';
 import type { ScreenContext, ScreenDefinition } from './types.ts';
 
 /** 仮マップ（ダンジョン）の1マスの大きさ（論理px） */
@@ -146,6 +146,18 @@ const DUNGEON_BATTLE_BG: Readonly<Record<string, string>> = {
   'dungeon-01-b2': dungeonBattleBg,
   'dungeon-01-b3': dungeonBattleBg,
 };
+/**
+ * ダンジョンごとの足音の地面と環境音（2026-10-23）。新しいダンジョンを足すときはここに1行
+ * （例：水のダンジョンなら { ground: 'wet', ambient: 'underwater' }、雪なら 'snow'、砂漠なら 'sand'）。無いダンジョンは洞窟と同じ
+ */
+const DUNGEON_SOUND: Readonly<Record<string, { readonly ground: StepSurface; readonly ambient: AmbientId | null }>> = {
+  'dungeon-01': { ground: 'gravel', ambient: 'drip' },
+};
+const DEFAULT_DUNGEON_SOUND = { ground: 'gravel', ambient: 'drip' } as const;
+/** 街の南の出口へ続く土の道（この行から下）。ほかの道は石畳 */
+const TOWN_DIRT_FROM_Y = 117;
+/** 建物の中の床（無い部屋は板）。大会会場は石 */
+const ROOM_GROUND: Readonly<Record<string, StepSurface>> = { hall: 'stone' };
 /** 施設の看板を上の帯の下に保つ位置（論理px） */
 const SIGN_MIN_BOTTOM = 98;
 /**
@@ -279,6 +291,8 @@ class WorldView {
   /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
   #walkDist = 0;
   #lastMoving = 0;
+  /** 足音を鳴らした歩きのコマ（-1＝止まっている） */
+  #stepCol = -1;
   /** 走っているか（止まるまで続く）・歩き出してからの時間（秒。加速用） */
   #running = false;
   #moveTime = 0;
@@ -331,6 +345,7 @@ class WorldView {
   destroy(): void {
     this.#destroyed = true;
     cancelAnimationFrame(this.#raf);
+    sound.ambient(null);
     window.removeEventListener('keydown', this.#onKeyDown);
     window.removeEventListener('keyup', this.#onKeyUp);
   }
@@ -397,6 +412,7 @@ class WorldView {
     this.#busy = false;
     this.#scale = this.#artScale(map);
     bgm.play(map.area === 'dungeon' ? 'dungeon' : 'town');
+    sound.ambient(map.area === 'dungeon' ? this.#dungeonSound().ambient : null);
     this.#build(true);
     cancelAnimationFrame(this.#raf);
     this.#last = performance.now();
@@ -797,9 +813,13 @@ class WorldView {
       this.#held = null;
       const target = warp.target;
       if (target.kind === 'map') {
+        // 建物に入る・出る：ドアの音
+        const to = getMap(target.mapId);
+        if (to && to.area !== this.#map.area) sound.play(to.area === 'interior' ? 'doorOpen' : 'doorClose');
         this.#store.update((s) => ({ ...s, location: { mapId: target.mapId, x: target.x, y: target.y, dir: target.dir } }));
         this.#goTo(() => this.load());
       } else if (target.kind === 'floor') {
+        sound.play('stairs');
         this.#store.update((s) => changeFloor(s, target.delta));
         this.#goTo(() => this.load());
       } else if (target.kind === 'dungeonGate') {
@@ -825,6 +845,12 @@ class WorldView {
     const stride = this.#figureH * (this.#running ? RUN_STEP_PER_HEIGHT : STEP_PER_HEIGHT);
     const step = Math.floor(this.#walkDist / (stride / 2)) % 4;
     const col = walking ? step : IDLE_COL;
+    // 足音：足が地面に着くコマ（右足前・左足前）に変わったときに1歩
+    if (!walking) this.#stepCol = -1;
+    else if (col !== this.#stepCol) {
+      this.#stepCol = col;
+      if (col % 2 === 0) sound.step(this.#ground(), this.#running);
+    }
     const row = this.#diag ? DIAG_ROW[this.#diag] : DIR_ROW[this.#dir];
     // 立ち止まっている間だけ、呼吸のような小さな動き（CSS の is-idle）。変わったときだけ書く
     if (walking === this.#player.classList.contains('is-idle')) this.#player.classList.toggle('is-idle', !walking);
@@ -1200,7 +1226,11 @@ class WorldView {
     const parts: string[] = [];
     if (chest.reward.coins > 0) parts.push(coins(chest.reward.coins));
     for (const c of chest.reward.cards) parts.push(t(c.cardId.startsWith('skl') ? 'world.chestCardSkill' : 'world.chestCardMonster', { n: c.count }));
-    sound.play('reward', 300);
+    // 鍵を開ける → ふたが開く（木の箱はきしむ音、鉄・金の箱は重い扉の音） → ごほうび（お金が入っていればお金の音も）
+    sound.play('chestUnlock');
+    sound.play(chest.look === 'wood' ? 'chestOpenWood' : 'chestOpenIron', 280);
+    sound.play('reward', 750);
+    if (chest.reward.coins > 0) sound.play('coins', 950);
     this.#message(t('world.chestOpened', { items: parts.join(t('world.rewardSeparator')) }), undefined, rewardGlow(CHEST_ART[chest.look].opening.at(-1) ?? CHEST_ART[chest.look].closed));
   }
 
@@ -1244,6 +1274,20 @@ class WorldView {
     this.#message(t('world.encounter', { name: opponentName(opponent), monsters: names }), () => ctx.navigate('battle'));
   }
 
+  /** いまのダンジョンの足音・環境音 */
+  #dungeonSound(): { readonly ground: StepSurface; readonly ambient: AmbientId | null } {
+    const id = this.#store.save.activeDungeon?.dungeonId;
+    return (id ? DUNGEON_SOUND[id] : undefined) ?? DEFAULT_DUNGEON_SOUND;
+  }
+
+  /** 立っている所の地面（足音の種類）。街は石畳、南の出口への道だけ土 */
+  #ground(): StepSurface {
+    const map = this.#map;
+    if (map.area === 'dungeon') return this.#dungeonSound().ground;
+    if (map.area === 'interior') return ROOM_GROUND[map.id] ?? 'wood';
+    return map.id === 'town' && this.#tile.y >= TOWN_DIRT_FROM_Y ? 'dirt' : 'stone';
+  }
+
   #confirmLeave(): void {
     this.#busy = true;
     confirmModal(
@@ -1251,6 +1295,7 @@ class WorldView {
       t('world.leaveTitle'),
       [h('p', { class: 'modal__text', text: t('world.leaveText') })],
       () => {
+        sound.play('gateClose');
         this.#store.update((s) => leaveDungeon(s));
         this.load();
       },

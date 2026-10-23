@@ -26,6 +26,18 @@ import battleLoseMp3 from '@assets/audio/se/battle_lose.mp3';
 import packOpenMp3 from '@assets/audio/se/pack_open.mp3';
 import rewardMp3 from '@assets/audio/se/reward.mp3';
 import fragmentMp3 from '@assets/audio/se/fragment.mp3';
+import doorOpenMp3 from '@assets/audio/se/door_open.mp3';
+import doorCloseMp3 from '@assets/audio/se/door_close.mp3';
+import gateOpenMp3 from '@assets/audio/se/gate_open.mp3';
+import gateCloseMp3 from '@assets/audio/se/gate_close.mp3';
+import stairsMp3 from '@assets/audio/se/stairs.mp3';
+import chestUnlockMp3 from '@assets/audio/se/chest_unlock.mp3';
+import chestOpenWoodMp3 from '@assets/audio/se/chest_open_wood.mp3';
+import chestOpenIronMp3 from '@assets/audio/se/chest_open_iron.mp3';
+import registerMp3 from '@assets/audio/se/register.mp3';
+import coinsMp3 from '@assets/audio/se/coins.mp3';
+import dripMp3 from '@assets/audio/se/drip.mp3';
+import underwaterLoopMp3 from '@assets/audio/se/underwater_loop.mp3';
 
 /**
  * 効果音（SE）。
@@ -61,7 +73,31 @@ export type SoundId =
   | 'battleLose'
   | 'packOpen'
   | 'reward'
-  | 'fragment';
+  | 'fragment'
+  | 'doorOpen'
+  | 'doorClose'
+  | 'gateOpen'
+  | 'gateClose'
+  | 'stairs'
+  | 'chestUnlock'
+  | 'chestOpenWood'
+  | 'chestOpenIron'
+  | 'register'
+  | 'coins'
+  | 'drip';
+
+/**
+ * 足音の地面の種類（2026-10-23。ユーザー提供の「〇〇の上を走る」から1歩ぶんずつ切り出した音。tools/audio/world_se_build.py）。
+ * 石＝街の石畳・大会会場、土＝街の南の出口への道、板＝建物の中、砂利＝洞窟のダンジョン。ほかはこれからのダンジョン用
+ */
+export type StepSurface = 'stone' | 'grass' | 'wood' | 'gravel' | 'dirt' | 'sand' | 'snow' | 'wet';
+
+/**
+ * ダンジョンの環境音（2026-10-23）。入った直後から、BGM の上に小さく重ねる。
+ * - drip：洞窟の水滴（間をあけて、ときどき1滴）
+ * - underwater：水の中のこもった音（切れ目なく繰り返す）＋水滴。水のダンジョン用（いまは使う場所なし）
+ */
+export type AmbientId = 'drip' | 'underwater';
 
 type SoundEntry = (
   | {
@@ -114,20 +150,61 @@ export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   packOpen: { mp3: packOpenMp3, gain: 1.0 },
   reward: { mp3: rewardMp3, gain: 0.7 },
   fragment: { mp3: fragmentMp3, gain: 1.0 },
+  // 2026-10-23 ユーザー提供の効果音 第2弾（ZIP「Downloads 2」。利用確認済み。docs/audio-credits.md）
+  // 建物に入る・出る（ドア）、ダンジョンに入る・出る（門・鉄の扉）、階段、宝箱（鍵→ふた）、買い物、お金、水滴
+  doorOpen: { mp3: doorOpenMp3, gain: 0.8 },
+  doorClose: { mp3: doorCloseMp3, gain: 0.9 },
+  gateOpen: { mp3: gateOpenMp3, gain: 0.7 },
+  gateClose: { mp3: gateCloseMp3, gain: 0.8 },
+  stairs: { mp3: stairsMp3, gain: 0.9 },
+  chestUnlock: { mp3: chestUnlockMp3, gain: 1.0 },
+  chestOpenWood: { mp3: chestOpenWoodMp3, gain: 0.7 },
+  chestOpenIron: { mp3: chestOpenIronMp3, gain: 0.6 },
+  register: { mp3: registerMp3, gain: 0.7 },
+  coins: { mp3: coinsMp3, gain: 0.9 },
+  drip: { mp3: dripMp3, gain: 1.6 },
 };
+
+const STEP_FILES = import.meta.glob<string>('/assets/audio/se/steps/*.mp3', { eager: true, query: '?url', import: 'default' });
+/** 地面ごとの1歩の音（4個ずつ。順に鳴らさず、毎回ちがうものを選ぶ） */
+const STEP_URLS: Readonly<Record<string, readonly string[]>> = Object.entries(STEP_FILES)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .reduce<Record<string, string[]>>((acc, [path, url]) => {
+    const surface = /\/([a-z]+)_\d+\.mp3$/.exec(path)?.[1];
+    if (surface) (acc[surface] ??= []).push(url);
+    return acc;
+  }, {});
+/** 足音の音量。歩くと1秒に6歩ほど鳴るので、ほかの音よりずっと小さく */
+const STEP_GAIN = { walk: 0.16, run: 0.24 } as const;
+/** 水中のループの音量 */
+const UNDERWATER_GAIN = 0.35;
+/** 水滴の間（ミリ秒）。この範囲でばらばらに */
+const DRIP_GAP_MS = [2200, 6500] as const;
 
 type AudioContextCtor = typeof AudioContext;
 
+interface AmbientState {
+  readonly id: AmbientId;
+  timer: number;
+  loop: AudioBufferSourceNode | null;
+  loopGain: GainNode | null;
+}
+
 class SoundPlayer {
   #ctx: AudioContext | null = null;
-  #buffers = new Map<SoundId, AudioBuffer>();
-  #loading = new Map<SoundId, Promise<void>>();
+  /** 読み込んだ音（キーはファイルの URL） */
+  #buffers = new Map<string, AudioBuffer>();
+  #loading = new Map<string, Promise<void>>();
+  #lastStep = '';
+  #ambient: AmbientState | null = null;
   #unlockInstalled = false;
   /** 設定の効果音の音量（0〜1） */
   #volume = 1;
 
   setVolume(volume: number): void {
     this.#volume = Number.isFinite(volume) ? Math.min(1, Math.max(0, volume)) : 1;
+    const loopGain = this.#ambient?.loopGain;
+    if (loopGain) loopGain.gain.value = Math.max(0.0001, UNDERWATER_GAIN * this.#volume);
   }
 
   get volume(): number {
@@ -175,15 +252,16 @@ class SoundPlayer {
   }
 
   preload(): void {
-    for (const id of Object.keys(SE_REGISTRY) as SoundId[]) void this.#load(id);
+    for (const id of Object.keys(SE_REGISTRY) as SoundId[]) void this.#load(this.#source(SE_REGISTRY[id]));
+    for (const urls of Object.values(STEP_URLS)) for (const url of urls) void this.#load(url);
   }
 
-  #load(id: SoundId): Promise<void> {
-    const existing = this.#loading.get(id);
+  #load(url: string): Promise<void> {
+    const existing = this.#loading.get(url);
     if (existing) return existing;
     const ctx = this.#context();
     if (!ctx) return Promise.resolve();
-    const task = fetch(this.#source(SE_REGISTRY[id]))
+    const task = fetch(url)
       .then((r) => r.arrayBuffer())
       .then(
         (data) =>
@@ -194,12 +272,12 @@ class SoundPlayer {
           }),
       )
       .then((buffer) => {
-        this.#buffers.set(id, buffer);
+        this.#buffers.set(url, buffer);
       })
       .catch(() => {
         // 読み込めなければ無音のまま
       });
-    this.#loading.set(id, task);
+    this.#loading.set(url, task);
     return task;
   }
 
@@ -228,20 +306,89 @@ class SoundPlayer {
   }
 
   play(id: SoundId, delayMs = 0): void {
+    this.#playUrl(this.#source(SE_REGISTRY[id]), SE_REGISTRY[id].gain, delayMs);
+  }
+
+  /** 足が地面に着いたときの1歩の音。前と同じ音が続かないように選ぶ */
+  step(surface: StepSurface, running: boolean): void {
+    const urls = STEP_URLS[surface];
+    if (!urls || urls.length === 0) return;
+    const choices = urls.length > 1 ? urls.filter((u) => u !== this.#lastStep) : urls;
+    const url = choices[Math.floor(Math.random() * choices.length)] ?? urls[0]!;
+    this.#lastStep = url;
+    this.#playUrl(url, running ? STEP_GAIN.run : STEP_GAIN.walk, 0);
+  }
+
+  /** ダンジョンの環境音を始める（同じものが鳴っていれば何もしない）。null で止める */
+  ambient(id: AmbientId | null): void {
+    if (this.#ambient?.id === id) return;
+    this.#stopAmbient();
+    if (!id || typeof window === 'undefined') return;
+    const state: AmbientState = { id, timer: 0, loop: null, loopGain: null };
+    this.#ambient = state;
+    // 水滴：入ってすぐ1滴、そのあとは間をあけてときどき
+    const drip = (delay: number): void => {
+      state.timer = window.setTimeout(() => {
+        if (this.#ambient !== state) return;
+        this.#playUrl(this.#source(SE_REGISTRY.drip), SE_REGISTRY.drip.gain * (0.55 + Math.random() * 0.45), 0);
+        drip(DRIP_GAP_MS[0] + Math.random() * (DRIP_GAP_MS[1] - DRIP_GAP_MS[0]));
+      }, delay);
+    };
+    drip(400);
+    if (id === 'underwater') {
+      void this.#load(underwaterLoopMp3).then(() => {
+        const ctx = this.#context();
+        const buffer = this.#buffers.get(underwaterLoopMp3);
+        if (this.#ambient !== state || !ctx || !buffer || this.#volume <= 0) return;
+        try {
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.loop = true;
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(UNDERWATER_GAIN * this.#volume, ctx.currentTime + 1.2);
+          source.connect(gain).connect(ctx.destination);
+          source.start();
+          state.loop = source;
+          state.loopGain = gain;
+        } catch {
+          // 鳴らせなくてもゲームは続ける
+        }
+      });
+    }
+  }
+
+  #stopAmbient(): void {
+    const state = this.#ambient;
+    this.#ambient = null;
+    if (!state) return;
+    clearTimeout(state.timer);
+    const ctx = this.#ctx;
+    if (state.loop && state.loopGain && ctx) {
+      try {
+        state.loopGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.15);
+        state.loop.stop(ctx.currentTime + 0.6);
+      } catch {
+        // すでに止まっている
+      }
+    }
+  }
+
+  #playUrl(url: string, gainValue: number, delayMs: number): void {
     if (this.#volume <= 0) return;
     const ctx = this.#context();
     if (!ctx) return;
     if (ctx.state === 'suspended') void ctx.resume().catch(() => undefined);
-    const buffer = this.#buffers.get(id);
+    const buffer = this.#buffers.get(url);
     if (!buffer) {
-      void this.#load(id);
+      void this.#load(url);
       return;
     }
     try {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       const gain = ctx.createGain();
-      gain.gain.value = SE_REGISTRY[id].gain * this.#volume;
+      gain.gain.value = gainValue * this.#volume;
       source.connect(gain).connect(ctx.destination);
       source.start(ctx.currentTime + Math.max(0, delayMs) / 1000);
     } catch {

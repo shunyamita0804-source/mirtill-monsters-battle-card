@@ -103,6 +103,7 @@ export const tournamentScreen: ScreenDefinition = {
       }
       store.update(() => r.save);
       sound.play('reward');
+      if (r.summary.coins > 0) sound.play('coins', 250);
       const s = r.summary;
       const lines = [
         tr('tournament.received', { n: s.coins }),

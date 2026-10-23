@@ -161,6 +161,8 @@ export const gachaScreen: ScreenDefinition = {
           // 先に画面を描き直してから演出を重ねる（描き直しで演出が消えないように）
           render();
           if (r.status === 'ok') {
+            // お金を払う（レジ）→ パックを開ける
+            sound.play('register');
             store.update(() => r.save);
             render();
             openPack(pack, r.cards, before);
@@ -198,7 +200,7 @@ export const gachaScreen: ScreenDefinition = {
       overlay.append(packEl, cardsEl, h('p', { class: 'pack-open__hint', text: t('gacha.openHint') }), done);
       element.append(overlay);
       setTimeout(() => packEl.classList.add('is-opening'), 50);
-      sound.play('packOpen', 120);
+      sound.play('packOpen', 450);
       setTimeout(() => {
         packEl.classList.add('is-open');
         slots.forEach((s, i) => setTimeout(() => s.classList.add('is-revealed'), 250 * i));
