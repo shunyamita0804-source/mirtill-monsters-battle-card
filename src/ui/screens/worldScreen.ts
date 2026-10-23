@@ -83,6 +83,8 @@ const ART_SCALE = 0.5625;
 const ROOM_ZOOM_MAX = 1.35;
 /** 街・部屋の人物の大きさ（設計図の 144 単位に対する倍率）。2026-10-23 に街に対して小さすぎたので 1.2 倍に（ユーザー承認） */
 const FIGURE_ZOOM = 1.2;
+/** 主人公だけ横幅を広げる倍率（2026-10-23 ユーザー指示「横幅をもう少し大きく」。比べる画像で 1.1 倍を選んだ） */
+const PLAYER_WIDEN = 1.1;
 /** 部屋の絵が画面の高さのどれくらいを占めるか */
 const ROOM_FILL = 0.9;
 /** 場所を移るときの暗転（ミリ秒） */
@@ -328,7 +330,8 @@ class WorldView {
   #placeFigure(el: HTMLElement, p: Point, lift = 0): void {
     const k = this.#figureH / (FRAME_H / 2);
     const f = this.#foot(p);
-    el.style.transform = `translate(${f.x - (FOOT_X / 2) * k}px, ${f.y - (FOOT_Y / 2) * k - lift}px)`;
+    const wk = el === this.#player ? k * PLAYER_WIDEN : k;
+    el.style.transform = `translate(${f.x - (FOOT_X / 2) * wk}px, ${f.y - (FOOT_Y / 2) * k - lift}px)`;
     // 変わったときだけ書く（毎コマ書くと、iPhone で重なり順の計算し直しが重くなる）
     const z = String(10 + Math.round(f.y));
     if (el.style.zIndex !== z) el.style.zIndex = z;
@@ -348,7 +351,7 @@ class WorldView {
 
   #sizeFigure(el: HTMLElement): void {
     const k = this.#figureH / (FRAME_H / 2);
-    el.style.width = `${(FRAME_W / 2) * k}px`;
+    el.style.width = `${(FRAME_W / 2) * k * (el === this.#player ? PLAYER_WIDEN : 1)}px`;
     el.style.height = `${(FRAME_H / 2) * k}px`;
   }
 
