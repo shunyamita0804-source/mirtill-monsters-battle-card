@@ -8,6 +8,9 @@ import guideSurprised from '@assets/images/characters/neighbor_guide_talk_surpri
 import guideWorried from '@assets/images/characters/neighbor_guide_talk_worried.webp';
 import guideHappy from '@assets/images/characters/neighbor_guide_talk_happy.webp';
 import teacherFace from '@assets/images/characters/face_teacher.webp';
+import clerkFace from '@assets/images/characters/face_clerk.webp';
+import receptionistFace from '@assets/images/characters/face_receptionist.webp';
+import researcherFace from '@assets/images/characters/face_researcher.webp';
 import residentA from '@assets/images/characters/face_resident_a.webp';
 import residentB from '@assets/images/characters/face_resident_b.webp';
 import residentC from '@assets/images/characters/face_resident_c.webp';
@@ -46,10 +49,13 @@ const PORTRAITS: Readonly<Partial<Record<Exclude<Speaker, 'system'>, Partial<Rec
   resident_d: { normal: residentD },
   resident_e: { normal: residentE },
   teacher: { normal: teacherFace },
+  clerk: { normal: clerkFace },
+  receptionist: { normal: receptionistFace },
+  researcher: { normal: researcherFace },
 };
 
 /** 正方形の「顔の絵の形」で描かれた人（案内役の会話の絵より小さく、正方形の枠で出す） */
-const FACE_FORMAT: ReadonlySet<Speaker> = new Set<Speaker>(['resident_a', 'resident_b', 'resident_c', 'resident_d', 'resident_e', 'teacher']);
+const FACE_FORMAT: ReadonlySet<Speaker> = new Set<Speaker>(['resident_a', 'resident_b', 'resident_c', 'resident_d', 'resident_e', 'teacher', 'clerk', 'receptionist', 'researcher']);
 
 /** 会話の絵を先に読み込む（表情を切り替えた瞬間に白く抜けないように） */
 const preloaded = new Set<string>();
@@ -74,6 +80,9 @@ const SPEAKER_NAME: Readonly<Record<Exclude<Speaker, 'system'>, MessageKey>> = {
   resident_d: 'story.speaker.residentD',
   resident_e: 'story.speaker.residentE',
   teacher: 'story.speaker.teacher',
+  clerk: 'story.speaker.clerk',
+  receptionist: 'story.speaker.receptionist',
+  researcher: 'story.speaker.researcher',
 };
 
 /** 1文字を出す間隔（ミリ秒） */

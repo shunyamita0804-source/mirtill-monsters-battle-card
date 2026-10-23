@@ -145,6 +145,29 @@ class SoundPlayer {
   }
 
   /** delayMs 後に鳴らす（カードを1枚ずつ配るときの時間差に使う） */
+  /**
+   * ボタンを押したときの小さな「コッ」という音（2026-10-23）。音の素材ファイルは使わず、その場で短い音を作る。
+   * 木の札を軽くたたくような、低めで短い音。効果音の音量・ミュートに従う
+   */
+  tap(): void {
+    if (this.#volume <= 0) return;
+    const ctx = this.#context();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => undefined);
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(260, now + 0.06);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.16 * this.#volume, now + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.09);
+  }
+
   play(id: SoundId, delayMs = 0): void {
     if (this.#volume <= 0) return;
     const ctx = this.#context();

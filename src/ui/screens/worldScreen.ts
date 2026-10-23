@@ -189,6 +189,13 @@ const NPC_SHEET: Readonly<Record<NpcId, string>> = {
   resident_e: residentESheet,
 };
 
+/** 話しかけるとひと言しゃべってから画面を開く人（台詞は仮。src/data/storyScenes.ts の greet〜） */
+const STAFF_GREETING: Readonly<Partial<Record<NpcId, SceneId>>> = {
+  clerk: 'greetClerk',
+  receptionist: 'greetReceptionist',
+  researcher: 'greetResearcher',
+};
+
 /** 人の呼び名（読み上げ用） */
 const NPC_NAME: Readonly<Record<NpcId, MessageKey>> = {
   neighbor_guide: 'story.speaker.neighborGuide',
@@ -360,8 +367,9 @@ class WorldView {
   #addShadow(el: HTMLElement): void {
     const cls = el === this.#player ? 'world__shadow world__shadow--player' : 'world__shadow';
     const shadow = h('div', { class: cls, attrs: { 'aria-hidden': 'true' } });
-    const w = this.#figureH * 0.5;
-    Object.assign(shadow.style, { width: `${w}px`, height: `${w * 0.32}px`, marginLeft: `${-w / 2}px`, marginTop: `${-w * 0.16}px` });
+    // 2026-10-23：人物が地面に立って見えるよう、影を大きく濃く（背景の絵の影の強さに合わせる）
+    const w = this.#figureH * 0.62;
+    Object.assign(shadow.style, { width: `${w}px`, height: `${w * 0.34}px`, marginLeft: `${-w / 2}px`, marginTop: `${-w * 0.17}px` });
     this.#shadows.set(el, shadow);
     this.#mapLayer.append(shadow);
   }
@@ -817,6 +825,8 @@ class WorldView {
     const step = Math.floor(this.#walkDist / (stride / 2)) % 4;
     const col = walking ? step : IDLE_COL;
     const row = this.#diag ? DIAG_ROW[this.#diag] : DIR_ROW[this.#dir];
+    // 立ち止まっている間だけ、呼吸のような小さな動き（CSS の is-idle）。変わったときだけ書く
+    if (walking === this.#player.classList.contains('is-idle')) this.#player.classList.toggle('is-idle', !walking);
     const look = `${row}:${col}`;
     if (look !== this.#playerLook) {
       this.#player.style.backgroundPosition = `${-col * w}px ${-row * hgt}px`;
@@ -1095,7 +1105,11 @@ class WorldView {
       this.#faceNpc(el, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up');
     }
     if (npc.npcId === 'neighbor_guide') this.#playScene(sceneOnTalk(this.#store.save));
-    else if (npc.action) this.#action(npc.action);
+    else if (npc.action && STAFF_GREETING[npc.npcId]) {
+      // 店員・受付・研究員：顔の絵つきでひと言しゃべってから、その画面を開く（2026-10-23）
+      const action = npc.action;
+      this.#playScene(STAFF_GREETING[npc.npcId] as SceneId, () => this.#action(action));
+    } else if (npc.action) this.#action(npc.action);
     else if (isResidentId(npc.npcId)) {
       // 住人：話しかけるたびに 2つの話を交互に（回数はアプリを開いている間だけ覚える）
       const count = WorldView.#talkCount.get(npc.id) ?? 0;
@@ -1104,7 +1118,8 @@ class WorldView {
     }
   }
 
-  #playScene(id: SceneId): void {
+  /** 会話を出す。after は会話が終わったあと（練習試合を始めないとき）にすること */
+  #playScene(id: SceneId, after?: () => void): void {
     this.#busy = true;
     this.#held = null;
     this.#path = [];
@@ -1118,6 +1133,7 @@ class WorldView {
         this.#build();
         this.#busy = false;
         if (practice) this.#startPractice(practice.tutorial);
+        else after?.();
       },
     });
   }

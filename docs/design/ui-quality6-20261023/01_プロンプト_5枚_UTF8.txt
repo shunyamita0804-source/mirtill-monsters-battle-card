@@ -1,0 +1,112 @@
+【プロンプト】手応えを上げるデザイン5枚・第6弾（2026-10-23）
+
+使い方：1枚ごとに新しい会話で、「共通ルール」とその番号の文を貼る。日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（毎回、最初に付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の画面の部品を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本と同じ、筆で塗り重ねた手描きの質感。ベクター風・フラット・3DCG風にしない。金の線と飾りの描き方は、添付のゲームの部品（勝ちの帯・窓の枠・カードの裏面）にそろえる
+【雰囲気】大人向けの落ち着いた雰囲気。色は濃い灰色・こげ茶・くすんだ金・紺。紫・明るい黄色・ピンクは使わない
+【背景】透明（できなければマゼンタ一色 #FF00FF）
+【禁止】指定のない文字・数字・ロゴ・透かし・サイン。実在の作品に似せること
+▲ここまで
+▼English
+Draw a UI part for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Hand-painted with layered brush strokes, like the attached style sample. NO flat vector art, NO 3D render look. Match the gold lines and ornaments of the attached game parts (win banner, window frame, card back).
+[Mood] Calm, for adults. Dark charcoal grey, dark brown, muted gold, navy. No purple, no bright yellow, no pink.
+[Background] Transparent (or solid magenta #FF00FF).
+[Forbidden] Any text, numbers, logos, watermarks or signatures unless requested. Resemblance to existing IP.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　使ったカードを見せるときの光の帯 → showcase_band.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/勝ちの帯.png、今の画面/カードを見せるところ.png
+▼ここからコピー
+対戦でカードを使った瞬間に、画面の真ん中を横切る光の帯を1本描いてください。横長 1536×768。
+・横いっぱいの、暗い紺の半透明の帯。上下のふちに細いくすんだ金の線
+・帯の真ん中から、やわらかい金色の光が左右に広がり、細い光の筋と小さな金の粒が舞う
+・帯の真ん中（カードを1枚重ねる所）は明るすぎないように。左右の端は自然に消える（四角い端が見えない）
+・文字・カードは描かない
+▲ここまで
+▼English
+A band of light that crosses the middle of the screen the moment a card is played, 1536x768.
+- A semi-transparent dark navy band across the full width, thin muted-gold lines along the top and bottom edges.
+- Soft golden light spreading left and right from the center, with thin light streaks and small drifting gold particles.
+- The center (where one card is placed on top) must not be too bright. Both ends fade out naturally (no hard square edges).
+- No text, no cards.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　ターンの切り替わりの帯（2本を1枚に）→ phase_banners.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/勝ちの帯.png、今の画面/対戦.png
+▼ここからコピー
+「あなたのターン」「相手のターン」と出すときの、文字の入っていない帯を2本、横長 1536×1024 に上下に並べて描いてください。
+・上：自分用。深い紺の細長い帯（横:縦＝6:1くらい）に、くすんだ金の縁取り、左右の端に小さな翼の飾り
+・下：相手用。同じ形で、深いえんじ色（暗い赤茶）の地
+・どちらも真ん中は文字を書くための無地。後ろにうっすら光
+・2本は同じ大きさ・同じ形。重ならないように間を空ける。文字は描かない
+▲ここまで
+▼English
+Two text-free banners for "Your turn" / "Opponent's turn", stacked on a 1536x1024 canvas.
+- Top: for the PLAYER. A long deep-navy band (about 6:1) with muted-gold trim and small wing ornaments at both ends.
+- Bottom: for the OPPONENT. Same shape with a deep wine (dark reddish brown) base.
+- Both have a plain middle area for text and a faint glow behind.
+- Same size and shape, with space between them. No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3　ダメージ・回復の数字 → battle_digits.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/勝ちの帯.png、今の画面/対戦.png（モンスターの下の「5」「7」、ダメージの「-1」）
+▼ここからコピー
+対戦でダメージと回復の数を出すための、数字の絵を描いてください。横長 1536×1024 に2段。
+・上の段：ダメージ用。左から「−」「0」「1」「2」「3」「4」「5」「6」「7」「8」「9」の11文字を、同じ大きさで横一列に等間隔
+  色は深い赤から朱色、太い金の縁取り、少し立体的。力強く読みやすい形
+・下の段：回復用。左から「＋」「0」〜「9」の11文字。色は深い緑から若草色、同じ金の縁取り
+・1文字ずつ重ならないように間を空ける。数字以外の文字・飾りは描かない
+▲ここまで
+▼English
+Number glyphs for showing damage and healing in battle, in 2 rows on a 1536x1024 canvas.
+- Top row (damage): "−" "0" "1" "2" "3" "4" "5" "6" "7" "8" "9", 11 glyphs in one evenly spaced row, all the same size. Deep red to vermilion with a thick gold outline, slightly embossed. Bold and easy to read.
+- Bottom row (heal): "+" "0" to "9", 11 glyphs. Deep green to fresh green with the same gold outline.
+- Space between glyphs, no overlap. No other text or decoration.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 4　話しかけられる人の頭の上の印 → talk_marker.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、見本/窓の枠.png、今の画面/ショップ.png
+▼ここからコピー
+街や建物の中で、話しかけられる人の頭の上に出す小さな印を1つ描いてください。正方形 1024×1024 の真ん中に。
+・丸みのある吹き出しの形（しっぽは下向き）。中に小さな点が3つ
+・吹き出しは紺の地に、くすんだ金の縁。点は金色
+・小さく表示しても形が分かる、はっきりした輪郭。正面から
+・文字は描かない
+▲ここまで
+▼English
+One small marker shown above people you can talk to in town and inside buildings, centered on a square 1024x1024 canvas.
+- A rounded speech-bubble shape (tail pointing down) with three small dots inside.
+- Navy bubble with a muted-gold rim; the dots are gold.
+- A clear silhouette that reads at small sizes. Front view. No text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 5　調べられる物のきらめき → examine_sparkle.png
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+添付：style_master.png、今の画面/街.png、今の画面/ショップ.png
+▼ここからコピー
+街や部屋で「調べられる物」の上に、ときどき光らせる小さなきらめきを1つ描いてください。正方形 1024×1024 の真ん中に。
+・4本の光の筋が十字に伸びる星形のきらめき（縦横の筋が長く、斜めの筋は短い）。中心はやわらかい白金色
+・まわりに小さな金の粒が2〜3個
+・外側に向かって自然に消える。文字は描かない
+▲ここまで
+▼English
+One small sparkle that occasionally shines above examinable objects in town and rooms, centered on a square 1024x1024 canvas.
+- A four-pointed star sparkle (long vertical and horizontal rays, short diagonal rays) with a soft white-gold center.
+- Two or three tiny gold particles around it.
+- Fades out naturally toward the edges. No text.
+▲
