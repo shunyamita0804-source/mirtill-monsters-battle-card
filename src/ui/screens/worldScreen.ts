@@ -84,10 +84,16 @@ const STICK_RADIUS = 42;
 const STICK_DEAD = 16;
 /** 歩行速度（論理px/秒・仮。実機で調整）。2026-10-22 に街を詰めたとき 185 から 1.25 倍に（ユーザー指示） */
 const WALK_PX = 231;
-/** 歩行のコマ送り（コマ/秒。素材の推奨は約7） */
-const WALK_FPS = 7;
-/** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目で少し体が上がる */
+/**
+ * 1歩で進む距離（人物の背たけに対する割合）。コマ送りを時間ではなく進んだ距離で決め、足が地面をすべって見えないようにする
+ * （2026-10-23。それまでは 7コマ/秒で、1歩に背たけの約0.8倍進み、足がすべって見えた）。
+ * いまの歩く速さ・背たけ（街・部屋 81 論理px）では 1歩 約36 論理px＝約6.4歩/秒（約13コマ/秒）
+ */
+const STEP_PER_HEIGHT = 0.45;
+/** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目（足がそろう「立つ」コマ）で少し体が上がる */
 const WALK_BOB = 0.03;
+/** スティックの向きを変えるまでの余裕（ラジアン）。8方向の境目（22.5度）を 8度こえるまで前の向きのまま */
+const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
 /** 宝箱の絵（ミスモンの正式素材）：閉じた絵と、開く動きの4コマ（4コマ目が開いたあとの絵） */
 const CHEST_ART: Readonly<Record<ChestObject['look'], { readonly closed: string; readonly opening: readonly string[] }>> = {
   wood: { closed: chestWood, opening: [chestWood1, chestWood2, chestWood3, chestWood4] },
@@ -113,13 +119,14 @@ const FRAME_H = 288;
 const FOOT_X = 108;
 const FOOT_Y = 270;
 const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, right: 3 };
-/** 待機の絵が歩行シートの何列目と同じか（案内役の待機は2コマ目と同じ絵） */
+/** 待機の絵が歩行シートの何列目と同じか（歩き4コマは「右足を前・立つ・左足を前・立つ」なので2列目） */
 const NPC_IDLE_COL = 1;
 
 /**
- * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×4行。tools/art/walk_passing.py が作る）。
+ * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×4行）。
  * 歩く・止まるで別の画像に切り替えると、iPhone で読み込み直しの間だけ人物が消えるので、1枚の中で位置だけ動かす。
- * 横向きの2・4コマ目は、届いた絵（4コマとも足を開いた形）から足を寄せて作った「足がそろう」コマ（描き直しが届くまでの応急処置）
+ * 女性：2026-10-23 の大人の絵（tools/art/adult_walk_build.py が作る。右足を前・立つ・左足を前・立つ・立ち止まり）。
+ * 男性：前の絵（tools/art/walk_passing.py。横向きの2・4コマ目は足を寄せて作った応急処置のコマ。大人の絵が届いたら作り直す）
  */
 const PLAYER_SHEET: Readonly<Record<'male' | 'female', string>> = { male: maleSheet, female: femaleSheet };
 const PLAYER_SHEET_COLS = 5;
@@ -136,9 +143,20 @@ const TILE_CLASS: Readonly<Record<string, string>> = {
 
 const coins = (n: number): string => t('common.coins', { n } satisfies Params);
 
-/** 向き → 1歩の向き（斜めの絵は無いので、斜めに歩くときは左右の絵） */
-const facing = (dx: number, dy: number, prev: Direction): Direction =>
-  dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : dy < 0 ? 'up' : prev;
+/**
+ * 1歩の向き → 人物の向き（斜めの絵は無い）。
+ * いまの向きの成分がある斜め（例：右を向いて右下へ）は向きを変えない。斜め45度あたりで正面と横の絵が細かく入れ替わらないように。
+ * それ以外の斜めは左右の絵
+ */
+const facing = (dx: number, dy: number, prev: Direction): Direction => {
+  if (dx === 0 && dy === 0) return prev;
+  const p = DIR_DELTA[prev];
+  if ((p.x !== 0 && p.x === dx) || (p.y !== 0 && p.y === dy)) return prev;
+  return dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
+};
+
+/** 2つの角度の差（-π〜π） */
+const angleDiff = (a: number, b: number): number => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 
 export const worldScreen: ScreenDefinition = {
   id: 'world',
@@ -176,8 +194,8 @@ class WorldView {
   #busy = false;
   #raf = 0;
   #last = 0;
-  /** 歩いている時間（コマ送り用）・最後に歩いていた時刻 */
-  #walkTime = 0;
+  /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
+  #walkDist = 0;
   #lastMoving = 0;
   #playerLook = '';
   #destroyed = false;
@@ -562,7 +580,7 @@ class WorldView {
     this.#last = time;
     if (!this.#busy) this.#step(dt);
     if (this.#move) {
-      this.#walkTime += dt;
+      if (!this.#busy) this.#walkDist += WALK_PX * dt;
       this.#lastMoving = time;
     }
     this.#render(time);
@@ -662,14 +680,15 @@ class WorldView {
     const walking = this.#move !== null || time - this.#lastMoving < 90;
     const w = parseFloat(this.#player.style.width);
     const hgt = parseFloat(this.#player.style.height);
-    if (!walking) this.#walkTime = 0;
-    const col = walking ? Math.floor(this.#walkTime * WALK_FPS) % 4 : IDLE_COL;
+    if (!walking) this.#walkDist = 0;
+    // 半歩（1コマ）ごとに次のコマ。背たけが小さいダンジョンでは歩幅も小さく
+    const step = Math.floor(this.#walkDist / ((this.#figureH * STEP_PER_HEIGHT) / 2)) % 4;
+    const col = walking ? step : IDLE_COL;
     const look = `${this.#dir}:${col}`;
     if (look !== this.#playerLook) {
       this.#player.style.backgroundPosition = `${-col * w}px ${-DIR_ROW[this.#dir] * hgt}px`;
       this.#playerLook = look;
     }
-    const step = Math.floor(this.#walkTime * WALK_FPS) % 4;
     this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * WALK_BOB : 0);
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
@@ -739,8 +758,11 @@ class WorldView {
       this.#held = null;
       return;
     }
-    // 8方向：45度ずつ
-    const sector = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+    // 8方向：45度ずつ。境目のあたりで指がふるえても向きが行ったり来たりしないよう、少しこえるまで前の向きのまま
+    const angle = Math.atan2(dy, dx);
+    const held = this.#held;
+    if (held && Math.abs(angleDiff(angle, Math.atan2(held.y, held.x))) <= STICK_HOLD) return;
+    const sector = Math.round(angle / (Math.PI / 4));
     const a = (sector * Math.PI) / 4;
     this.#held = { x: Math.round(Math.cos(a)), y: Math.round(Math.sin(a)) };
   }
