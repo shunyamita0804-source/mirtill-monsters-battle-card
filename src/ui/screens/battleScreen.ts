@@ -1195,7 +1195,6 @@ export const battleScreen: ScreenDefinition = {
       } else end();
     };
 
-    /** 上の帯の右端の小さな「攻撃終了」（自分の攻撃中だけ。画面中央をふさがずにいつでも押せる） */
     /**
      * いまできるコマンド（2026-10-23：画面中央の帯をやめ、説明の箱の下に小さく並べる）。
      * - 攻撃：カードを選ぶと「使う（使えるときだけ）／やめる」。使えるカードが1枚もなければ「攻撃終了」
@@ -1270,10 +1269,12 @@ export const battleScreen: ScreenDefinition = {
         commandMenuOpen = false;
         render();
       };
+      // 先に一覧を閉じて描き直してから実行する（実行で出る確認の窓・ルールの窓が、描き直しで消えないように。
+      // 2026-10-24 不具合：「攻撃終了」の確認が描き直しで消え、マナ化へ進めなかった）
       const run = (fn: () => void) => (): void => {
         commandMenuOpen = false;
-        fn();
         render();
+        fn();
       };
       const mine = s.active === 'player' && !auto && !blocked;
       const items: HTMLButtonElement[] = [];
