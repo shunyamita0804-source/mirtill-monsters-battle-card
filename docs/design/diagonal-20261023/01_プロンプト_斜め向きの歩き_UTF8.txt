@@ -128,3 +128,40 @@ Redraw this so it is EXACTLY the same character as the attached front and left w
 - Pose 2: right foot clearly forward. Pose 3: left foot clearly forward.
 - Transparent background. Do not draw guide lines or text.
 ▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 作り直しの一言・女性用（2026-10-23。男性で出た違いを先回りして直す）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+正面・左向きの歩きの絵（player_female_walk_front.png・player_female_walk_left.png）をもう一度添付して送る。
+細部は正面の絵を見て書いた（タイツは茶色。最初の人物一覧の「黒いタイツ」とは違うので、絵のほうに合わせる）。
+【向き】の部分は、斜め後ろを頼むときは「斜め後ろ・左上へ歩いていく」に変える。
+
+▼ここからコピー
+添付の正面・左向きの歩きの絵と、まったく同じ人物に描き直してください。向き（斜め前・左下へ歩いてくる）と3ポーズの並びはそのままで、次を直してください。
+・帽子は赤で、ふちに白いフリルと金の線。横に赤いリボンの結び目（正面の絵と同じ形・同じ側）
+・髪は明るい茶色の長いゆるいウェーブで、胸より下まで。目は茶色（正面の絵と同じ顔・目の形と大きさ）
+・白いブラウスはふくらんだ短い袖で、袖口にフリル
+・赤いベストは金の縁取り、胸の前は金のひもの編み上げ、金の花の飾りボタン
+・腰の茶色の革ベルトは2本で、金のバックル。左右の腰に茶色の小さなかばん（正面の絵と同じ位置）
+・赤いスカートは金の縁取りと金の刺しゅう模様、すそは左右で長さが違う重ね。下から白いフリルが見える
+・タイツは茶色。ブーツは茶色のロングブーツで、金色のひもの編み上げと折り返し
+・指なしの茶色の革手袋（手首にベルト）
+・体の幅は正面の絵と同じで、細くしない。塗りは正面の絵と同じなめらかな手描きの質感（ざらざらした模様にしない）
+・2は右足、3は左足を大きく前に出し、足の形をはっきり変える
+・背景は透明。枠の線・文字は描かない
+▲ここまで
+
+▼English version
+Redraw this so it is EXACTLY the same character as the attached front and left walk sheets. Keep the direction (three-quarter front, walking toward the viewer and to the left) and the three-pose layout, and fix the following:
+- Cap: red, with white frills and a gold line on the brim, and a red ribbon bow on the side (same shape and same side as the front view).
+- Hair: long, softly wavy light brown, reaching below the chest. Brown eyes. Same face, eye shape and size as the front view.
+- White blouse with short puffed sleeves and frilled cuffs.
+- Red vest with gold trim, gold lacing on the chest, gold flower-shaped buttons.
+- Two brown leather waist belts with gold buckles. Small brown pouches on both hips (same positions as the front view).
+- Red skirt with gold trim and gold embroidery, asymmetric layered hem, white frills showing underneath.
+- Brown tights. Tall brown boots laced with gold laces, with folded cuffs.
+- Fingerless brown leather gloves with a wrist strap.
+- Same body width as the front view, do not make it slimmer. Same smooth hand-painted texture as the front view (no rough, noisy texture).
+- Pose 2: right foot clearly forward. Pose 3: left foot clearly forward.
+- Transparent background. Do not draw guide lines or text.
+▲
