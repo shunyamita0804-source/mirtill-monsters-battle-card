@@ -61,11 +61,16 @@ def load_part(parts: str, name: str) -> Image.Image:
     return im.crop(im.getbbox())
 
 
-def split_sheet(parts: str, name: str, dilate: int = 3) -> list[Image.Image]:
-    """家具・小物の1枚の絵から、1つずつ切り出す（左上から読む順）"""
+def split_sheet(parts: str, name: str, dilate: int = 3, cuts: tuple = ()) -> list[Image.Image]:
+    """家具・小物の1枚の絵から、1つずつ切り出す（左上から読む順）
+    cuts：くっついて描かれた2つを横の線で分ける (x1, x2, y)。y の行から下を別の物にする"""
     im = Image.open(f'{parts}/{name}.png').convert('RGBA')
     a = np.array(im)[..., 3] > 40
-    lab, _ = ndimage.label(ndimage.binary_dilation(a, iterations=dilate))
+    grown = ndimage.binary_dilation(a, iterations=dilate)
+    for x1, x2, y in cuts:
+        grown[y - 1, x1:x2] = False
+        a[y - 1, x1:x2] = False
+    lab, _ = ndimage.label(grown)
     boxes = []
     for i, s in enumerate(ndimage.find_objects(lab)):
         ys, xs = s
@@ -135,8 +140,9 @@ USE_PLAZA_DECOR = os.environ.get('SEIMON_PLAZA_DECOR') == '1'
 def scatter_decals(parts: str, base: Image.Image, paved: np.ndarray) -> None:
     """草地に草むら・小花を散らす（地面の飾り。人より必ず奥なので、どこに置いても前後はおかしくならない）"""
     W = base.width
-    grass = split_sheet(parts, 'decal_grass', 3)
-    flowers = split_sheet(parts, 'decal_flowers', 3) if os.path.exists(f'{parts}/decal_flowers.png') else []
+    grass = fit_size(split_sheet(parts, 'decal_grass', 3), DECAL_REF_SIZE['decal_grass'])
+    flowers = fit_size(split_sheet(parts, 'decal_flowers', 3), DECAL_REF_SIZE['decal_flowers']) \
+        if os.path.exists(f'{parts}/decal_flowers.png') else []
     # 石畳・土の道・建物の枠には置かない（ふちから少し離す）
     block = ndimage.binary_dilation(paved[::4, ::4], iterations=6)
     for b in pack.TOWN['buildings']:
@@ -191,6 +197,26 @@ PROPS = {
     'props_misc': [('barrel', 0.42), ('crates', 0.45), ('fence', 0.50), ('rock', 0.45)],
 }
 
+# 2026-10-22 の部品での1つずつの大きさ（幅, 高さ）。描き直しで絵の中の大きさが変わっても、街に置く大きさはこれにそろえる
+# （2026-10-23 の大人向けの絵は 1.2〜1.5 倍に描かれていた。面積が同じになるように縮める）
+PROP_REF_SIZE = {
+    'tree_round': (358, 370), 'tree_conifer': (313, 396), 'tree_small': (223, 308), 'bush': (343, 193),
+    'flowerbed_long': (423, 167), 'planter_round': (299, 289), 'flower_pot': (149, 240), 'planter_box': (366, 224),
+    'lamp': (104, 356), 'bench': (319, 176), 'flag': (211, 381), 'signpost': (152, 323),
+    'barrel': (152, 267), 'crates': (245, 253), 'fence': (425, 303), 'rock': (326, 225),
+}
+# 草むら・小花の1つずつの大きさの平均（√(幅×高さ)。2026-10-22 の部品）
+DECAL_REF_SIZE = {'decal_grass': 100, 'decal_flowers': 118}
+
+
+def fit_size(pieces: list[Image.Image], ref: float) -> list[Image.Image]:
+    """草むら・小花：平均の大きさが ref になるように、まとめて同じ倍率で縮める"""
+    if not pieces:
+        return pieces
+    avg = sum((p.width * p.height) ** 0.5 for p in pieces) / len(pieces)
+    k = ref / avg
+    return [p.resize((max(1, round(p.width * k)), max(1, round(p.height * k))), Image.LANCZOS) for p in pieces]
+
 # 小物の置き場所（足元の座標＝絵の下辺の中央）。緑地・道のわき・街のまわり。道（歩ける所）には重ねない
 # 自動で置くもの（木立・まわりの木）は place_props() で足す
 CENTER = pack.CX
@@ -234,6 +260,8 @@ def load_props(parts: str) -> dict[str, Image.Image]:
         pieces = split_sheet(parts, sheet, 3)
         assert len(pieces) == len(items), (sheet, len(pieces))
         for piece, (name, scale) in zip(pieces, items):
+            rw, rh = PROP_REF_SIZE[name]
+            scale *= (rw * rh / (piece.width * piece.height)) ** 0.5
             out[name] = piece.resize((round(piece.width * scale), round(piece.height * scale)), Image.LANCZOS)
     if 'bush2_0' in out:
         out['bush'] = out['bush2_0']
@@ -483,6 +511,10 @@ FURN = {
     'furn_training': (3, ['board', 'table', 'bench', 'shelf']),
     'furn_arena': (12, ['flags', 'stage', 'seats', 'reception']),
 }
+# くっついて描かれた家具を分ける線（2026-10-23 の大人向けの絵：ベッドの脚と本棚の上がふれている）
+FURN_CUTS = {
+    'furn_player': ((0, 460, 496),),
+}
 
 # 設計図の家具 ID → 使う部品。kind: furniture（床に置く・歩けない）／rug（敷物・歩ける）／wall（壁に掛ける）
 ROOM_ITEMS = {
@@ -508,7 +540,7 @@ ROOM_SLUG = {'ROOM_PLAYER': 'player', 'ROOM_GUIDE': 'guide', 'ROOM_HOUSE': 'hous
 def load_furniture(parts: str) -> dict[str, Image.Image]:
     out = {}
     for sheet, (dil, names) in FURN.items():
-        pieces = split_sheet(parts, sheet, dil)
+        pieces = split_sheet(parts, sheet, dil, FURN_CUTS.get(sheet, ()))
         assert len(pieces) == len(names), (sheet, len(pieces))
         for p, n in zip(pieces, names):
             out[f'{sheet}:{n}'] = p

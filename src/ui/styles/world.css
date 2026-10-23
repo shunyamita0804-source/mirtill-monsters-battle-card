@@ -115,10 +115,9 @@
   -webkit-user-drag: none;
 }
 
-/* 2026-10-23：大人向けに、街・部屋・人物の絵の色を少し落ち着かせる（彩度を下げ、わずかに暗く）。
-   新しい絵が届いたら値を見直す */
-.world__map--art .world__bg,
-.world__map--art .world__furniture,
+/* 2026-10-23：大人向けに、人物などの絵の色を少し落ち着かせる（彩度を下げ、わずかに暗く）。
+   街・部屋・家具は大人向けに描き直した絵（2026-10-23 納品）が落ち着いた色なので、色の調整はしない。
+   人物の描き直しが届いたら、人物の値も見直す */
 .world__map--art .world__player,
 .world__map--art .world__npc,
 .world__map--art .world__chest {
