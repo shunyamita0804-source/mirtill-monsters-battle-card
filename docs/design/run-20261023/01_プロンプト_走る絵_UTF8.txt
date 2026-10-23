@@ -1,0 +1,93 @@
+【プロンプト】走る絵（1枚に3ポーズ）　横長 1536×1024　×3枚（正面・背中・左向き）（2026-10-23）
+
+■ なぜ頼むか
+・2026-10-23 に「スティックを大きく倒すと走る」をゲームに入れた。走る絵がまだ無いので、いまは歩きの絵を大きな歩幅で動かしている（速歩きに見える）
+・走る絵が届いたら、走るときだけその絵に切り替える。並べ方は「右足を前 → 浮く → 左足を前 → 浮く」の4コマ（Claude が作る）
+・右向きは Claude が左向きを左右反転して作る
+
+■ 頼む順番
+1. まず主人公（男性）の正面1枚 → Claude がゲームに入れて動画で返す → よければ残り
+2. 主人公（男性）の背中・左向き → 主人公（女性）の3枚
+・走るのは主人公だけなので、ほかの人の分はいらない
+
+■ 添付するもの（1枚ごと）
+・前に作ったその向きの歩きの絵（例：player_male_walk_front.png）← いちばん大事（同じ人物にするため）
+・その人の正面の立ち姿（例：player_male_stand.png）
+・T4_走りの3ポーズの枠_1536x1024.png
+・画風見本 style_master.png（あれば）
+
+■ 納品のしかた
+・保存名：○○_run_front.png／○○_run_back.png／○○_run_left.png（○○ は player_male・player_female）
+・背景は透明（できなければマゼンタ一色 #FF00FF）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 日本語
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の、街を走る人物の絵を描いてください。
+添付の「歩きの絵（3ポーズ）」は、すでにゲームで使っている同じ人物の絵です。この人物が走る絵を描きます。
+
+【描くもの】横長 1536×1024。添付の枠のとおり、横に3つ並べる。
+・1 走る・右足を大きく前：右足を大きく前に出し、左足は後ろへ大きくけり出す。左腕を前、右腕を後ろに大きく振る
+・2 走る・両足が浮く：両足が地面から少し離れた瞬間。足は体の下で軽く曲げる。体はいちばん高い位置
+・3 走る・左足を大きく前：1 の左右逆。左足を大きく前、右足を後ろ。右腕を前、左腕を後ろ
+・3つとも、体を少し前に傾ける。ひじは曲げる。歩きの絵より足の開きと腕の振りをはっきり大きく
+・髪や服のすそ、かばんが、走る勢いで少し後ろへなびく
+
+【いちばん大事なこと】
+・添付の歩きの絵と、まったく同じ人物・同じ絵。顔・髪型・帽子・服の模様・飾り・持ち物・色・線の太さ・塗り方を変えない
+・同じ頭身・同じ大きさ。頭の上と足元を枠の線にそろえる（2 は足元より少し上に浮かせてよい）。体の中心は点線
+
+【画風】添付の絵と同じ。筆で塗り重ねた手描きの質感。輪郭は濃い茶色系の線。ベクター風・フラット・3DCG風は禁止
+【禁止】文字・数字・ロゴ・透かし・サイン。地面・影・砂ぼこり・動きの線・背景・枠の線と文字・ほかの人物。3人が重ならない
+【形式】背景は透明（できなければマゼンタ一色 #FF00FF）。PNG
+
+【向き】正面（こちらへ走ってくる）
+【人物】22歳の男性。黒い短めの髪（少し無造作）。青い帽子（正面に小さな金の紋章）。青い袖なしの長いベストに金の縁取り、白いシャツは袖をまくる。茶色の革のたすき掛けのベルト、腰に茶色のかばん。濃い灰色のズボン、茶色のロングブーツ、指なしの革手袋
+▲ここまで
+
+【向き】の差し替え（保存名）：
+・正面（こちらへ走ってくる）　　　　　　　　　　　→ ○○_run_front.png
+・背中（奥へ走っていく。顔は見えない）　　　　　　→ ○○_run_back.png
+・左向き（画面の左へ走っていく。体の左側が見える横向き）→ ○○_run_left.png
+
+【人物】の差し替え：
+・主人公（男性）player_male：上の文のまま
+・主人公（女性）player_female：22歳の女性。明るい茶色の長い髪（ゆるいウェーブ）。赤い帽子（リボン付き）。白いブラウス（ふくらんだ短い袖）に、金の刺しゅうの赤いベスト、茶色の革ベルト。白いフリルの上に赤と金のスカート、黒いタイツ、茶色の編み上げのロングブーツ、腰に小さな革のかばん、指なしの革手袋
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ English version
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼
+Draw a RUNNING sprite of a character for the commercial smartphone 2D card game "Sacred Monsters Battle Card".
+The attached "walk sheet (3 poses)" shows the same character already used in the game. Draw this character running.
+
+[What to draw] Landscape 1536x1024. Three figures side by side, as in the attached guide frame.
+- 1 Running, right foot far forward: right leg stretched well forward, left leg pushing off far behind. Left arm forward, right arm back, swinging strongly.
+- 2 Running, both feet off the ground: the airborne moment. Legs lightly bent under the body. Body at its highest point.
+- 3 Running, left foot far forward: mirror of pose 1. Left leg forward, right leg back. Right arm forward, left arm back.
+- In all three, lean the body slightly forward, elbows bent. Leg stride and arm swing clearly larger than the walk sheet.
+- Hair, coat tails and satchel trail slightly backward from the momentum.
+
+[Most important]
+- Exactly the same character and the same drawing as the attached walk sheet. Do NOT change the face, hair, cap, clothing patterns, decorations, items, colors, line weight or painting style.
+- Same proportions and size. Top of head and feet on the guide lines (pose 2 may float slightly above the foot line); body centered on the dotted line.
+
+[Style] Same as the attached images: hand-painted, layered brush strokes, dark-brown outlines. NO flat vector art, NO 3D render look.
+[Forbidden] Any text, numbers, logos, watermarks, signatures. Ground, shadows, dust, speed lines, background, guide lines or labels, other people. The three figures must not overlap.
+[Format] Transparent background (if impossible, solid magenta #FF00FF). PNG.
+
+[Direction] Front view, running toward the viewer
+[Character] A 22-year-old man. Short, slightly messy black hair. Blue cap with a small gold emblem on the front. Long sleeveless blue vest with gold trim over a white shirt with rolled-up sleeves. Brown leather cross-body straps, brown satchel at the hip. Dark gray trousers, tall brown boots, fingerless leather gloves.
+▲
+[Direction] options: "Front view, running toward the viewer" / "Back view, running away (face not visible)" / "Side view facing LEFT, running to the left of the screen"
+[Character] female hero: A 22-year-old woman. Long, softly wavy light-brown hair. Red cap with a ribbon. White blouse with short puffed sleeves, red vest with gold embroidery, brown leather belts. Red-and-gold skirt over white frills, black tights, tall brown lace-up boots, small leather pouch at the hip, fingerless leather gloves.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ うまくいかないとき（続けて送る一言）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・歩いているように見える →「もっと走って。足を大きく開いて、腕を大きく振って、体を前に傾けて」
+・人物が変わった（顔・服・色）→「添付の歩きの絵とまったく同じ人物に」
+・大きさがばらばら →「3人とも頭の上と足元を枠の線にそろえて、同じ大きさに」
+・地面や砂ぼこり、動きの線が描かれた →「人物だけに。地面・砂ぼこり・線は描かない」
+・背景がついた →「背景を透明に（できなければマゼンタ一色 #FF00FF）」

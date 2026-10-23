@@ -13,7 +13,10 @@
   右向きは左向きの左右反転。絵は描き直さない（縮小と位置合わせだけ）
 
 使い方:
-  python3 tools/art/adult_walk_build.py 届いた絵のフォルダ ID 出力.png [--npc] [--idle 立ち絵の出力.png]
+  python3 tools/art/adult_walk_build.py 届いた絵のフォルダ ID 出力.png [--npc] [--idle 立ち絵の出力.png] [--scale 倍率]
+
+--scale：コマの大きさの倍率（2026-10-23 追加）。1.5 なら 1コマ 324×432・足元 (162, 405)。並び・位置の割合は同じなので、
+  ゲームはそのまま読める。人物を大きく表示してもぼやけないように、ゲームのシートは 1.5 で作る（出力は .webp）
 """
 import sys
 
@@ -109,7 +112,12 @@ def main() -> None:
     args = sys.argv[1:]
     npc = '--npc' in args
     idle_out = args[args.index('--idle') + 1] if '--idle' in args else None
-    folder, cid, out_path = [a for a in args if not a.startswith('--') and a != idle_out][:3]
+    scale_arg = args[args.index('--scale') + 1] if '--scale' in args else None
+    if scale_arg:
+        global FW, FH, FOOT_X, FOOT_Y, FIGURE_H
+        sc = float(scale_arg)
+        FW, FH, FOOT_X, FOOT_Y, FIGURE_H = (round(v * sc) for v in (FW, FH, FOOT_X, FOOT_Y, FIGURE_H))
+    folder, cid, out_path = [a for a in args if not a.startswith('--') and a not in (idle_out, scale_arg)][:3]
     rows = []
     k = FIGURE_H / figure_height(Image.open(f'{folder}/{cid}_walk_front.png').convert('RGBA'))
     for d in ('front', 'back', 'left'):
@@ -122,7 +130,10 @@ def main() -> None:
     for r, frames in enumerate(rows):
         for c, f in enumerate(frames):
             out.alpha_composite(f, (c * FW, r * FH))
-    out.save(out_path, optimize=True)
+    if out_path.endswith('.webp'):
+        out.save(out_path, quality=92, method=6)
+    else:
+        out.save(out_path, optimize=True)
     if idle_out:
         rows[0][1].save(idle_out, optimize=True)
 
