@@ -53,7 +53,9 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 
 街・部屋の部品の原本（絵を作り直すときの材料。ゲームには直接入らない）は `design-parts/seimon-world/`（2026-10-22〜。何がそろっているかは中の README）。
 
-アプリアイコンは `public/icons/`。2026-10-22 にユーザー承認の正式アイコンへ差し替え：
+アプリアイコンは `public/icons/`。**2026-10-23 に新しい正式アイコンへ差し替え**：原本 `images/icons/sacred-monsters-bc-official-icon-v2.png`（1254×1254。受け取った画像をそのまま保管・改変なし）から、
+高品質縮小（Lanczos）で 512・192・48・32・16 を作成。外側の黒い角だけ透明にした（絵は描き換えていない）。180（apple-touch-icon）は iPhone が角を丸めるので黒い角のまま。
+以下は前の版の記録：2026-10-22 にユーザー承認の正式アイコンへ差し替え：
 原本 `images/icons/sacred-monsters-bc-official-icon.png`（1254×1254 RGBA。受け取ったファイル「セイクリッドモンスターズBC_正式アイコン.png」をそのまま保管・改変なし）から、
 高品質縮小（Lanczos）だけで 512・192・180（apple-touch-icon）・48・32・16 を作成。透過加工・切り抜き・加筆はしていない（原本の角の外側は白）。
 原本はビルドに含めない（画面では `public/icons/icon-512.png` を使う）。

@@ -33,7 +33,7 @@ export const titleScreen: ScreenDefinition = {
       h(
         'div',
         { class: 'title__logo' },
-        // ユーザー承認の正式アイコン（同梱の原本を縮小しただけで描き換えていない）
+        // ユーザー承認の正式アイコン（2026-10-23 新しい版。原本を縮小し、外側の黒い角を透明にしただけで描き換えていない）
         h('img', { class: 'title__icon', attrs: { src: resolvePublicPath('icons/icon-512.png'), alt: '', draggable: 'false' } }),
         h('p', { class: 'title__series', text: en ? APP_INFO.seriesNameEn : APP_INFO.seriesName }),
         h('h1', { class: 'title__name', text: t('title.battleCard') }),
