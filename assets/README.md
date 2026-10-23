@@ -89,3 +89,4 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 | `images/maps/dungeon/dungeon_{floor,wall_top,wall_face}.webp`・`stairs_{down,up}.webp`・`enemy_symbol.webp` | ダンジョンの床・壁の上面・壁の正面・階段・魔物のしるし（ZIP「Seimon_UI_Quality2_20261023」） | ユーザー提供（画像生成）。床・上面は 512px、正面は上下の端を切り落として幅768、部品は切り抜きと縮小 |
 | `images/backgrounds/battle_dungeon.webp`・`pack_open_bg.webp` | ダンジョンの対戦の背景・パックを開けるときの光（同） | WebP |
 | `images/ui/result_{win,lose}.webp`・`images/ui/rank/rank_?.webp`・`images/ui/hud/*.webp` | 勝ち負けの帯・ランクの紋章6つ・街の上の札とボタン（同） | 切り抜きと縮小。描き換えなし |
+| `images/characters/face_resident_{a,b,c,d,e}.webp` | 住人A〜E の顔の絵（ZIP「Seimon_Faces_Residents_20261023」） | ユーザー提供（画像生成）。384px に縮小。会話の絵として使う |

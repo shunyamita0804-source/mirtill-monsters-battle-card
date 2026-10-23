@@ -7,6 +7,11 @@ import guideExplain from '@assets/images/characters/neighbor_guide_talk_explain.
 import guideSurprised from '@assets/images/characters/neighbor_guide_talk_surprised.webp';
 import guideWorried from '@assets/images/characters/neighbor_guide_talk_worried.webp';
 import guideHappy from '@assets/images/characters/neighbor_guide_talk_happy.webp';
+import residentA from '@assets/images/characters/face_resident_a.webp';
+import residentB from '@assets/images/characters/face_resident_b.webp';
+import residentC from '@assets/images/characters/face_resident_c.webp';
+import residentD from '@assets/images/characters/face_resident_d.webp';
+import residentE from '@assets/images/characters/face_resident_e.webp';
 import { SCENES, type Expression, type SceneEffect, type SceneId, type SceneStep, type Speaker } from '../../data/storyScenes.ts';
 import { t } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
@@ -23,7 +28,7 @@ import { button, h } from '../dom.ts';
  * - 絵が無い表情は「仮」の札を出す（いまは全部そろっている）
  */
 
-/** 会話の絵（人物 → 表情 → 画像の URL）。困り顔（troubled）の絵は 05_worried。住人は絵が無いので名前の札だけ出す */
+/** 会話の絵（人物 → 表情 → 画像の URL）。困り顔（troubled）の絵は 05_worried。表情の指定がない台詞は normal */
 const PORTRAITS: Readonly<Partial<Record<Exclude<Speaker, 'system'>, Partial<Record<Expression, string>>>>> = {
   neighbor_guide: {
     normal: guideNormal,
@@ -33,7 +38,16 @@ const PORTRAITS: Readonly<Partial<Record<Exclude<Speaker, 'system'>, Partial<Rec
     troubled: guideWorried,
     happy: guideHappy,
   },
+  // 住人A〜E の顔の絵（2026-10-23 第3弾。店員・受付と同じ「顔の絵の形」：正方形・胸から上。表情は1種類）
+  resident_a: { normal: residentA },
+  resident_b: { normal: residentB },
+  resident_c: { normal: residentC },
+  resident_d: { normal: residentD },
+  resident_e: { normal: residentE },
 };
+
+/** 正方形の「顔の絵の形」で描かれた人（案内役の会話の絵より小さく、正方形の枠で出す） */
+const FACE_FORMAT: ReadonlySet<Speaker> = new Set<Speaker>(['resident_a', 'resident_b', 'resident_c', 'resident_d', 'resident_e']);
 
 /** 会話の絵を先に読み込む（表情を切り替えた瞬間に白く抜けないように） */
 const preloaded = new Set<string>();
@@ -129,7 +143,8 @@ export function playScene(parent: HTMLElement, start: SceneId, options: Dialogue
     const set = PORTRAITS[speaker];
     portrait.hidden = !set;
     if (!set) return;
-    const url = expression ? set[expression] : undefined;
+    const url = set[expression ?? 'normal'];
+    portrait.classList.toggle('is-face', FACE_FORMAT.has(speaker));
     portrait.dataset.expression = expression ?? 'normal';
     portrait.classList.toggle('is-temp', !url);
     if (url) {
