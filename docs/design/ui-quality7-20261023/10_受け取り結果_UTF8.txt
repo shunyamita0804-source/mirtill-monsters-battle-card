@@ -1,0 +1,29 @@
+デザイン第7弾10枚の受け取り結果（2026-10-23。ZIP Seimon_UI_Quality7_20261023）
+
+10種すべて使った。切り出しは tools/design/ui67_build.py、CSS は src/ui/styles/uiParts.css
+・金・暗い・赤のボタン → ゲームのすべてのボタン（.btn）。両端は固定し、真ん中だけ伸ばす。押したとき・押せないときの絵も使用
+  （文字だけのボタンと、街の上のボタン〔第2弾の絵〕は今までどおり）
+・切り替えのタブ → 図鑑・カード一覧・デッキ編集の絞り込み、設定の言語
+・戻る → 各画面の左上（丸い絵＋小さく「戻る」）。閉じる（×）は、いまのゲームに×で閉じる所がないので、置いただけ（assets/images/ui/button/nav_close.webp）
+・枚数の増減 → デッキ編集の −・＋ と、間の数字の窓
+・音量のつまみと溝 → 設定の効果音・BGM。金色の棒は納品の絵の金色の部分を切り出して、音量に合わせて伸ばす
+・説明の台 → 画面の説明の欄（.notice）
+・世界地図の印 → 街（現在地の金の輪つき）・ダンジョン・クリアしたダンジョン（星）。地名の札 → 印の下の名前
+・対戦の上のボタン → 降参（白旗）・ルール（本）。文字は絵の右に小さく
+
+■ ユーザーの確認事項「両端の飾りを無くすように伝えた」について
+・届いた絵では、ボタン（金・暗い・赤）・タブ・説明の台・音量の溝の両端に、唐草と菱形の飾りが**残っている**（無くなっていない）
+・ゲームでは、飾りは両端に固定して真ん中に文字を置くので、ふつうの大きさのボタンでは文字に重ならない
+・ただし小さいボタン（例：デッキ編集の「保存」、パックの「収録・提供割合」）は、飾りの分だけ文字の場所がせまい
+・飾りのない版がほしいときの依頼文（下）。届いたら、絵を差し替えるだけで切り替わる
+
+▼作り直しの依頼文（共通ルールのあとに貼る）
+第7弾の 1〜4・7・8（金・暗い・赤のボタン、切り替えのタブ、音量の溝、説明の台）を描き直してください。
+前回の絵（添付）と同じ色・質感・縁取りのまま、左右の端の唐草・菱形・とがった飾りをすべて無くし、
+両端は角を丸くした縁取りだけにしてください。端から外にはみ出す飾りも無し。
+形・大きさ・並べ方（ふつう／押したとき／押せないとき）は前回と同じ。文字は描かない。
+▼English
+Redraw items 1–4, 7 and 8 of batch 7 (gold/dark/red buttons, tabs, volume track, notice plate).
+Keep the same colors, texture and rim as the attached previous art, but REMOVE all scrollwork, diamonds and pointed ornaments at the left and right ends.
+The ends should be just the rounded rim. Nothing sticking out past the ends.
+Same shapes, sizes and layout (normal / pressed / disabled) as before. No text.

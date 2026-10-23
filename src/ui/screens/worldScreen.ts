@@ -322,6 +322,8 @@ class WorldView {
   #signs: { el: HTMLElement; top: number; maxShift: number; shift: number }[] = [];
   /** しらべるボタンを光らせているマス（同じマスでは計算し直さない） */
   #nearKey = '';
+  /** 話しかけられる人の頭の上の印・調べられる物のきらめき（2026-10-23 デザイン第6弾）。となりにいる間だけ1つ出す */
+  #marker: HTMLElement | null = null;
   /** スティック操作中の指（1本だけ） */
   #touch: { id: number; x: number; y: number; dragging: boolean } | null = null;
   /** 住人に話しかけた回数（人の ID → 回数。アプリを開いている間） */
@@ -566,6 +568,8 @@ class WorldView {
     this.#addShadow(this.#player);
     this.#playerLook = '';
     this.#mapLayer.append(this.#player);
+    this.#marker = h('div', { class: 'world__marker', attrs: { 'aria-hidden': 'true' } });
+    this.#mapLayer.append(this.#marker);
 
     this.#viewport = h('div', { class: 'world__viewport' }, this.#mapLayer);
 
@@ -1067,7 +1071,32 @@ class WorldView {
     const key = `${this.#map.id}:${this.#tile.x},${this.#tile.y}`;
     if (key === this.#nearKey) return;
     this.#nearKey = key;
-    this.#examineBtn?.classList.toggle('is-ready', this.#nearTarget() !== null);
+    const near = this.#nearTarget();
+    this.#examineBtn?.classList.toggle('is-ready', near !== null);
+    this.#showMarker(near);
+  }
+
+  /** となりの人には頭の上に「…」の吹き出し、調べられる物にはきらめき。敵には出さない */
+  #showMarker(p: Point | null): void {
+    const marker = this.#marker;
+    if (!marker) return;
+    const obj = p ? objectsAt(this.#map, p.x, p.y, this.#isVisible).find((o) => o.type !== 'warp' && o.type !== 'enemy') : undefined;
+    if (!p || !obj) {
+      marker.className = 'world__marker';
+      return;
+    }
+    const talk = obj.type === 'npc';
+    marker.className = `world__marker ${talk ? 'is-talk' : 'is-examine'}`;
+    if (talk) {
+      const f = this.#foot(obj);
+      marker.style.transform = `translate(${f.x}px, ${f.y - this.#figureH * 0.84}px)`;
+      return;
+    }
+    // 物：家具などの範囲（w×h マス）の、横の真ん中・上のほうに
+    const w = 'w' in obj ? obj.w : 1;
+    const c = this.#cell;
+    const f = this.#foot({ x: obj.x + (w - 1) / 2, y: obj.y });
+    marker.style.transform = `translate(${f.x}px, ${f.y - c * 0.9}px)`;
   }
 
   /** 正面（なければ、となり）と足元を調べる */

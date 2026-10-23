@@ -1,0 +1,120 @@
+【プロンプト】第7弾の描き直し（両端の飾りなし・6枚・2026-10-23）
+
+使い方：1枚ごとに新しい会話で、「共通ルール」・「描き直しのルール」・その番号の文を貼り、前回の絵（同じ名前のファイル）を添付する。
+日本語でうまくいかないときは English version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 共通ルール（毎回、最初に付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の画面の部品を描いてください。販売する商品なので、市販のスマホRPGと並べて見劣りしない品質で。
+【画風】添付の画風見本と同じ、筆で塗り重ねた手描きの質感。ベクター風・フラット・3DCG風にしない
+【雰囲気】大人向けの落ち着いた雰囲気。色は濃い灰色・こげ茶・くすんだ金・紺。紫・明るい黄色・ピンクは使わない
+【形】画面を真正面から見た平らな部品（斜めにしない・影を床に落とさない）。部品どうしは重ならないように間を空ける
+【背景】透明（できなければマゼンタ一色 #FF00FF）
+【禁止】文字・数字・ロゴ・透かし・サイン。実在の作品に似せること
+▲ここまで
+▼English
+Draw a UI part for the commercial smartphone 2D card game "Sacred Monsters Battle Card". Quality must match commercial mobile RPGs.
+[Style] Hand-painted with layered brush strokes, like the attached style sample. NO flat vector art, NO 3D render look.
+[Mood] Calm, for adults. Dark charcoal grey, dark brown, muted gold, navy. No purple, no bright yellow, no pink.
+[Shape] Flat parts seen straight from the front (no perspective, no cast shadow on a floor). Leave space between parts, no overlap.
+[Background] Transparent (or solid magenta #FF00FF).
+[Forbidden] Any text, numbers, logos, watermarks or signatures. Resemblance to existing IP.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 描き直しのルール（毎回、共通ルールのあとに付ける）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+添付の「前回の絵」を描き直してください。色・質感・縁取りの金の線・形・大きさ・並べ方は前回の絵と同じにする。
+変えるのは1つだけ：左右の端にある唐草・菱形・とがった飾りを、すべて無くす。
+・端は、角を丸くした縁取り（前回と同じ金の線）だけ。端から外にはみ出す飾りも無し
+・上下のふちの飾り（菱形など）も無し。縁取りの線だけ
+・真ん中は文字を置くので無地のまま
+▲ここまで
+▼English
+Redraw the attached "previous art". Keep the same colors, texture, gold rim lines, shape, size and layout as the previous art.
+Change ONE thing only: REMOVE all scrollwork, diamonds and pointed ornaments at the left and right ends.
+- The ends are just the rounded rim (the same gold line as before). Nothing sticking out past the ends.
+- No ornaments on the top or bottom edges either (such as diamonds). Rim lines only.
+- Keep the middle plain for text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 1　金のボタン → btn_primary.png（添付：前回の絵/btn_primary.png）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+横長 1536×1024 に、同じ形の金のボタンを3つ上下に並べる。上：ふつう　中：押したとき（少し暗く、少しへこんだ感じ）　下：押せないとき（くすんで色が抜けた感じ）。
+形は横に長い角の丸い板（横:縦＝5:1くらい）。くすんだ金（砂金色）の、磨いた真ちゅうのような地。ふちに一段濃い金の細い縁取りだけ。
+▲ここまで
+▼English
+Three gold buttons of the same shape stacked on a 1536x1024 canvas. Top: normal. Middle: pressed (a little darker, slightly sunken). Bottom: disabled (dull, desaturated).
+A long plate with rounded corners (about 5:1), muted gold (gold-sand) polished brass, with only a thin darker-gold rim.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 2　暗いボタン → btn_secondary.png（添付：前回の絵/btn_secondary.png）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+横長 1536×1024 に、1 と同じ形のボタンを3つ上下に並べる。上：ふつう　中：押したとき（ふちの金が少し明るく光る）　下：押せないとき（全体がくすむ）。
+地は濃い灰色（すすけた鉄）。ふちに細いくすんだ金の線を1本だけ。白い文字がよく読める暗さに。
+▲ここまで
+▼English
+Three buttons of the same shape as button 1, stacked on a 1536x1024 canvas. Top: normal. Middle: pressed (the gold rim glows a little brighter). Bottom: disabled (everything dull).
+Dark charcoal base (sooty iron) with only one thin muted-gold rim line. Dark enough for white text.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 3　赤いボタン → btn_danger.png（添付：前回の絵/btn_danger.png）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+横長 1536×768 に、1・2 と同じ形のボタンを2つ上下に並べる。上：ふつう　下：押したとき（少し暗く）。
+地は深いえんじ色（暗い赤茶。派手な赤にしない）。ふちに細いくすんだ金の線だけ。
+▲ここまで
+▼English
+Two buttons of the same shape as buttons 1 and 2, stacked on a 1536x768 canvas. Top: normal. Bottom: pressed (a little darker).
+Deep wine base (dark reddish brown, not bright red), only a thin muted-gold rim line.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 4　切り替えのタブ → tab_chips.png（添付：前回の絵/tab_chips.png）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+横長 1536×768 に、同じ形の小さなタブを2つ上下に並べる。形は横に長い札（横:縦＝3:1くらい）で、角を丸くしただけ。
+上：選ばれているタブ（くすんだ金の地、こげ茶の細い縁取り）。下の菱形の飾りも無し
+下：選ばれていないタブ（濃い灰色の地、くすんだ金の細い線だけ）
+▲ここまで
+▼English
+Two small tabs of the same shape stacked on a 1536x768 canvas. A long tag (about 3:1) with simply rounded corners.
+Top: SELECTED (muted-gold base, thin dark-brown rim). No diamond on the bottom edge.
+Bottom: UNSELECTED (dark charcoal base, only a thin muted-gold line).
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 7　音量の溝 → slider.png（添付：前回の絵/slider.png）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+横長 1536×768 に、上から「空の溝」「金色が入った溝」「つまみ」を描く。
+溝：暗くくぼんだ細い溝に、くすんだ金の細い縁。左右の端の留め金・菱形は無し（端は丸い縁だけ）
+金色が入った溝：同じ溝に、左から6割くらいまで金色の光が満ちている
+つまみ：前回の絵と同じ（丸いメダル・くすんだ金・真ん中に小さな紺の宝石）
+▲ここまで
+▼English
+On a 1536x768 canvas, from top: an empty track, a track filled with gold, and a knob.
+Track: a dark recessed thin groove with a thin muted-gold rim. NO clasps or diamonds at the ends (just a rounded rim).
+Filled track: the same groove filled with golden light from the left to about 60%.
+Knob: same as the previous art (round medallion, muted gold, small navy gem in the center).
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 8　説明の台 → notice_panel.png（添付：前回の絵/notice_panel.png）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+横長 1536×512 に、説明の文（2〜3行）を置く横長の台を1つ。横:縦＝5:1くらいの、うすい板。地は前回と同じ紺の布を張ったような暗い地。
+ふちに細いくすんだ金の線だけ。左端の羽根ペン・菱形の飾りは無し。四すみは角を少し丸くするだけ
+▲ここまで
+▼English
+One wide plate for 2–3 lines of explanatory text on a 1536x512 canvas. A thin board about 5:1, the same dark navy-cloth base as before.
+Only a thin muted-gold rim line. NO quill or diamond ornament on the left end. Corners just slightly rounded.
+▲

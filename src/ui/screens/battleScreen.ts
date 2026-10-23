@@ -32,6 +32,7 @@ import { confirmModal, openModal } from '../components/modal.ts';
 import wineButtonUrl from '@assets/images/ui/button/btn_command_blank_wine.png';
 import { commandButton, confirmCommand } from '../components/commandButton.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
+import { battleDigits } from '../components/battleDigits.ts';
 import { createPlayCard, createSkillCard } from '../components/skillCard.ts';
 import { bgm } from '../bgm.ts';
 import { button, h } from '../dom.ts';
@@ -717,7 +718,7 @@ export const battleScreen: ScreenDefinition = {
                 : null,
               incoming !== null ? h('span', { class: 'battle__incoming', text: String(incoming) }) : null,
               diff < 0 ? h('span', { class: 'battle__burst', attrs: { 'aria-hidden': 'true' } }) : null,
-              diff !== 0 ? h('span', { class: `battle__float ${diff < 0 ? 'is-damage' : 'is-heal'}`, text: diff < 0 ? String(diff) : `+${diff}` }) : null,
+              diff !== 0 ? battleDigits(diff, 'battle__float') : null,
             );
           }),
         ),
@@ -997,13 +998,22 @@ export const battleScreen: ScreenDefinition = {
       );
     };
 
+    /** 上の端の小さなボタン（降参＝白旗・ルール＝本の丸い絵。2026-10-23 デザイン第7弾）。文字は絵の下に小さく */
+    const topButton = (kind: 'surrender' | 'rules', label: string, onTap: () => void): HTMLElement =>
+      h(
+        'button',
+        { class: `battle__top-btn battle__top-btn--${kind}`, attrs: { type: 'button' }, on: { click: onTap } },
+        h('span', { class: 'battle__top-icon', attrs: { 'aria-hidden': 'true' } }),
+        h('span', { class: 'battle__top-label', text: label }),
+      );
+
     const header = (): HTMLElement =>
       h(
         'header',
         { class: 'battle__header' },
-        req.allowSurrender ? button(t('battle.surrender'), surrender, 'btn btn--ghost btn--small') : h('span'),
+        req.allowSurrender ? topButton('surrender', t('battle.surrender'), surrender) : h('span'),
         h('h1', { class: 'battle__title', text: req.title }),
-        button(t('battle.rules'), showRules, 'btn btn--ghost btn--small'),
+        topButton('rules', t('battle.rules'), showRules),
       );
 
     const qaBar = (): HTMLElement | null =>
