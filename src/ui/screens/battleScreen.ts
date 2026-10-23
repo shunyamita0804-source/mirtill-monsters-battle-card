@@ -72,7 +72,12 @@ function showcaseSound(card: PlayCard): SoundId {
 /** 相手の1手ごとの間（ミリ秒） */
 const AI_STEP_MS = 1100;
 /** 場のモンスターのカードの幅（2026-10-23 に 74→88。場を大きく見せる） */
-const MONSTER_CARD_W = 88;
+const MONSTER_CARD_W = 64;
+/** 相手の手札（表向き）の小さなカードの幅（論理px） */
+const OPP_HAND_CARD_W = 40;
+/** 中段の大きなカードの幅の範囲（論理px）。画面の高さに合わせて、この間でできるだけ大きく */
+const DETAIL_CARD_MIN_W = 112;
+const DETAIL_CARD_MAX_W = 176;
 /** 使ったカードを大きく見せる時間（2026-10-23。PS版のように「何を使ったか」を見せる） */
 const SHOWCASE_MS = 1150;
 /** 命中したときの一瞬の間（ヒットストップ）と画面の揺れ */
@@ -171,6 +176,10 @@ export const battleScreen: ScreenDefinition = {
 
     let state: BattleState | null = null;
     let selectedUid: string | null = null;
+    /** 相手の手札で選んだカード（中段に大きく出すだけ。自分の手札を選んだら、そちらが優先） */
+    let oppSelectedUid: string | null = null;
+    /** 中段の大きなカードの幅（描いたあとに中段の高さを測って決め直す） */
+    let detailW = 136;
     /** 最後に使われたカード（何も選んでいないとき、中段の拡大の所に出す） */
     let lastPlayed: { cardId: string; side: Side } | null = null;
     /** 表示済みの手札（新しく来たカードだけを配る演出にする） */
@@ -230,6 +239,7 @@ export const battleScreen: ScreenDefinition = {
       state = next;
       targeting = null;
       if (selectedUid && !state.sides.player.hand.some((c) => c.uid === selectedUid)) selectedUid = null;
+      if (oppSelectedUid && !state.sides.opponent.hand.some((c) => c.uid === oppSelectedUid)) oppSelectedUid = null;
       if (played) {
         lastPlayed = played;
         busyUntil = Math.max(busyUntil, Date.now() + SHOWCASE_MS - 150);
@@ -686,7 +696,6 @@ export const battleScreen: ScreenDefinition = {
       h(
         'div',
         { class: `battle-side battle-side--${side}` },
-        infoBox(s, side),
         h(
           'div',
           { class: 'battle-side__monsters' },
@@ -731,9 +740,36 @@ export const battleScreen: ScreenDefinition = {
     };
 
     /** 中段：左に説明文、右に選んだ技カードの拡大 */
+    /** 相手の手札（表向き。2026-10-23 ユーザー指示「相手の手札も見えるように」）。押すと中段に大きく出す */
+    const opponentHand = (s: BattleState): HTMLElement =>
+      h(
+        'div',
+        { class: 'battle-opp__hand', attrs: { 'aria-label': t('battle.oppHand.aria') } },
+        ...s.sides.opponent.hand.map((c) => {
+          const card = getPlayCard(c.cardId);
+          return h(
+            'button',
+            {
+              class: `battle-opp__card${oppSelectedUid === c.uid && !selectedUid ? ' is-selected' : ''}`,
+              attrs: { type: 'button', 'aria-label': t('battle.oppHand.card', { name: cardName(card) }) },
+              on: {
+                click: () => {
+                  oppSelectedUid = c.uid;
+                  selectedUid = null;
+                  targeting = null;
+                  render();
+                },
+              },
+            },
+            createPlayCard(card, { width: OPP_HAND_CARD_W, showText: false }),
+          );
+        }),
+      );
+
     const detailPanel = (s: BattleState): HTMLElement => {
       const hand = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
-      const card = hand ? getPlayCard(hand.cardId) : undefined;
+      const oppHand = !hand && oppSelectedUid ? s.sides.opponent.hand.find((c) => c.uid === oppSelectedUid) : undefined;
+      const card = hand ? getPlayCard(hand.cardId) : oppHand ? getPlayCard(oppHand.cardId) : undefined;
       // 何も選んでいないときは、直前に使われたカードを出す（空の枠を見せない）
       const recent = !card && lastPlayed ? getPlayCard(lastPlayed.cardId) : undefined;
       const logs = s.log.slice(-2).map((l) => h('p', { class: 'battle-text__log', text: l.text }));
@@ -771,6 +807,12 @@ export const battleScreen: ScreenDefinition = {
           h('p', { class: 'battle-text__ok', text: t('battle.prompt.picked', { n: manaPicks.size }) }),
           card ? h('p', { class: 'battle-text__desc', text: t('battle.prompt.nameDesc', { name: cardName(card), desc: describePlayCard(card) }) }) : null,
         ];
+      } else if (card && oppHand) {
+        body = [
+          h('p', { class: 'battle-text__owner', text: t('battle.oppHand.label') }),
+          h('p', { class: 'battle-text__name', text: cardName(card) }),
+          card.kind === 'skill' ? h('p', { class: 'battle-text__owner', text: t('battle.prompt.owner', { name: cardName(card.monsterId) }) }) : null,
+        ];
       } else if (card && hand) {
         const usability = cardUsability(s, 'player', hand.uid);
         const owner =
@@ -801,18 +843,24 @@ export const battleScreen: ScreenDefinition = {
       return h(
         'div',
         { class: 'battle-detail' },
-        h('div', { class: 'battle-text' }, h('div', { class: 'battle-text__body' }, ...body), h('div', { class: 'battle-text__logs', attrs: { 'aria-live': 'polite' } }, ...logs)),
+        // 左：自分の情報（1行）と説明の箱、右：選んだカードを大きく
+        h(
+          'div',
+          { class: 'battle-detail__left' },
+          infoBox(s, 'player'),
+          h('div', { class: 'battle-text' }, h('div', { class: 'battle-text__body' }, ...body), h('div', { class: 'battle-text__logs', attrs: { 'aria-live': 'polite' } }, ...logs)),
+        ),
         h(
           'div',
           { class: 'battle-detail__card' },
           card
-            ? createPlayCard(card, { width: 136, showText: true })
+            ? createPlayCard(card, { width: detailW, showText: true })
             : recent && lastPlayed
               ? h(
                   'div',
                   { class: 'battle-detail__recent' },
                   h('span', { class: 'battle-detail__recent-label', text: t('battle.detail.recent', { side: t(`battle.side.${lastPlayed.side}`) }) }),
-                  createPlayCard(recent, { width: 124, showText: true }),
+                  createPlayCard(recent, { width: detailW - 12, showText: true }),
                 )
               : h('div', { class: 'battle-detail__empty', text: t('battle.detail.empty') }),
         ),
@@ -863,7 +911,7 @@ export const battleScreen: ScreenDefinition = {
                 },
               },
             },
-            createPlayCard(card, { width: 62, showText: false }),
+            createPlayCard(card, { width: 56, showText: false }),
             h('span', { class: 'battle__hand-name', text: cardName(card) }),
             picked ? h('span', { class: 'battle__hand-mana', text: t('card.detail.mana') }) : null,
           );
@@ -1188,6 +1236,22 @@ export const battleScreen: ScreenDefinition = {
       return band;
     };
 
+    /** 中段の高さに合わせて、大きなカードの幅を決め直す（変わったときだけ描き直す） */
+    const fitDetailCard = (): void => {
+      // 中段（.battle-detail）は残りの高さに縮む。その高さ（上下の余白を除く）にカードが収まる幅にする
+      const area = element.querySelector<HTMLElement>('.battle-detail');
+      const box = area?.querySelector<HTMLElement>('.battle-detail__card');
+      const shown = box?.querySelector<HTMLElement>('.skill-card, .support-card');
+      if (!area || !box || !shown || area.clientHeight === 0 || shown.offsetWidth === 0) return;
+      const ratio = shown.offsetHeight / shown.offsetWidth;
+      const label = box.querySelector<HTMLElement>('.battle-detail__recent-label')?.offsetHeight ?? 0;
+      const want = Math.round(Math.max(DETAIL_CARD_MIN_W, Math.min(DETAIL_CARD_MAX_W, (area.clientHeight - 12 - label - 4) / ratio)));
+      if (Math.abs(want - detailW) > 3) {
+        detailW = want;
+        render();
+      }
+    };
+
     const render = (): void => {
       element.dataset.stage = state ? 'play' : 'order';
       if (!state) {
@@ -1216,11 +1280,14 @@ export const battleScreen: ScreenDefinition = {
           h('span', { class: 'battle-turn__text', text: turnText }),
           h('div', { class: 'battle-turn__right' }, fieldChip(s), turnEndButton(s, blocked)),
         ),
+        // 相手：情報（小さく）と手札（表向き）→ 場のモンスター（真ん中）→ 自分のモンスター → 中段 → 手札
+        h('div', { class: 'battle-opp' }, infoBox(s, 'opponent'), opponentHand(s)),
         monsterRow(s, 'opponent'),
         monsterRow(s, 'player'),
         detailPanel(s),
         hand,
       );
+      fitDetailCard();
       const overlays = [commands, defenseOverlay(s), resultOverlay(s), phaseBanner(s), hintOverlay(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);
       const handEl = element.querySelector('.battle__hand');

@@ -1275,3 +1275,148 @@
     animation: none;
   }
 }
+
+/* ===== 2026-10-23 配置の見直し（ユーザー指示）=====
+ * 相手の手札を表向きで見せる／場のモンスターを真ん中に寄せて少し小さく（MONSTER_CARD_W）／
+ * 相手・自分の情報の箱を小さく／説明の箱を縮め、選んだカードを大きく（中段の高さに合わせて幅を決める）
+ */
+.battle-opp {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 0;
+}
+
+/* 相手の情報：2行（上：名前、下：マナ・山札・手札） */
+.battle-opp .battle-info {
+  width: 134px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 0;
+}
+
+.battle-opp .battle-info__name {
+  flex: 1 1 60%;
+  min-width: 0;
+}
+
+.battle-opp .battle-info__mana-label {
+  display: none;
+}
+
+.battle-opp__hand {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.battle-opp__hand::-webkit-scrollbar {
+  display: none;
+}
+
+.battle-opp__card {
+  flex: none;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  background: none;
+  cursor: pointer;
+}
+
+.battle-opp__card.is-selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px rgb(255 214 120 / 0.55);
+}
+
+/* 情報の箱：小さく */
+.battle-info {
+  gap: 1px;
+  font-size: 10px;
+}
+
+.battle-info__name {
+  font-size: 11px;
+}
+
+.battle-info__mana-value {
+  font-size: 17px;
+}
+
+.battle-info__icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* 場のモンスター：真ん中に寄せる */
+.battle-side {
+  justify-content: center;
+  padding: 4px 8px 0;
+}
+
+.battle-side__monsters {
+  flex: none;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* 中段：左に自分の情報（1行）と説明、右に選んだカード */
+.battle-detail {
+  padding: 6px 8px 4px;
+  gap: 6px;
+}
+
+.battle-detail__left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.battle-detail__left .battle-info {
+  width: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.battle-detail__left .battle-info__name {
+  display: none;
+}
+
+.battle-detail__left .battle-text {
+  flex: 1;
+  min-height: 0;
+}
+
+.battle-text__desc {
+  font-size: 13px;
+}
+
+.battle-detail__card {
+  width: auto;
+  align-items: center;
+}
+
+.battle-detail__empty {
+  width: 112px;
+  height: 180px;
+}
+
+/* 手札：少し低く（中段のカードを大きくするため）。カード 56px＋名前が収まる高さ */
+.battle__hand {
+  height: 128px;
+  padding-top: 8px;
+}
+
+.battle__hand-card {
+  width: 60px;
+}
