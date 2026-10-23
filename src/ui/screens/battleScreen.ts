@@ -20,7 +20,7 @@ import {
 import iconDeck from '@assets/images/ui/battle/icon_deck.webp';
 import iconHand from '@assets/images/ui/battle/icon_hand.webp';
 import iconMana from '@assets/images/ui/battle/icon_mana.webp';
-import { opponentFace } from '../components/opponentFace.ts';
+import { opponentFace, opponentFaceUrl } from '../components/opponentFace.ts';
 import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy, type PlayCard } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { nextBattleHint, type BattleHintId } from '../../game/story/battleTutorial.ts';
@@ -29,7 +29,6 @@ import { cardName, opponentName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
 import { openCardDetail } from '../components/cardDetail.ts';
 import { confirmModal, openModal } from '../components/modal.ts';
-import wineButtonUrl from '@assets/images/ui/button/btn_command_blank_wine.png';
 import { commandButton, confirmCommand } from '../components/commandButton.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
 import { battleDigits } from '../components/battleDigits.ts';
@@ -72,10 +71,11 @@ function showcaseSound(card: PlayCard): SoundId {
 /** 相手の1手ごとの間（ミリ秒） */
 const AI_STEP_MS = 1100;
 /** 場のモンスターのカードの幅（2026-10-23 に 74→88。場を大きく見せる） */
-const MONSTER_CARD_W = 64;
-/** 中段の大きなカードの幅の範囲（論理px）。画面の高さに合わせて、この間でできるだけ大きく */
-const DETAIL_CARD_MIN_W = 112;
-const DETAIL_CARD_MAX_W = 176;
+const MONSTER_CARD_W = 72;
+/** 中段の大きなカードの幅（論理px）。2026-10-23 ユーザー「上下の幅をもう少し縮めていい」で、高さいっぱいをやめて固定に */
+const DETAIL_CARD_W = 132;
+/** 相手のひと言を大きく出しておく時間（ミリ秒）。押すと先に消える */
+const TALK_MS = 2600;
 /** 使ったカードを大きく見せる時間（2026-10-23。PS版のように「何を使ったか」を見せる） */
 const SHOWCASE_MS = 1150;
 /** 命中したときの一瞬の間（ヒットストップ）と画面の揺れ */
@@ -178,8 +178,20 @@ export const battleScreen: ScreenDefinition = {
     let commandMenuOpen = false;
     /** 相手のひと言（顔の絵の横の吹き出し）。【仮】台詞は仮 */
     let oppLine: string | null = null;
-    /** 中段の大きなカードの幅（描いたあとに中段の高さを測って決め直す） */
-    let detailW = 136;
+    /** ひと言を出しておく時刻（これを過ぎたら消す）と、新しいひと言かを見分ける番号 */
+    let talkUntil = 0;
+    let talkSeq = 0;
+    let talkShownSeq = -1;
+    const detailW = DETAIL_CARD_W;
+    /** 相手のひと言（【仮】台詞）を、顔の絵と一緒に大きく出す（カードの上に重ねる） */
+    const say = (key: Parameters<typeof t>[0]): void => {
+      oppLine = t(key);
+      talkUntil = Date.now() + TALK_MS;
+      talkSeq++;
+      setTimeout(() => {
+        if (!destroyed && Date.now() >= talkUntil) render();
+      }, TALK_MS + 30);
+    };
     /** 最後に使われたカード（何も選んでいないとき、中段の拡大の所に出す） */
     let lastPlayed: { cardId: string; side: Side } | null = null;
     /** 表示済みの手札（新しく来たカードだけを配る演出にする） */
@@ -377,7 +389,7 @@ export const battleScreen: ScreenDefinition = {
           seed,
           first,
         );
-        oppLine = t('battle.talk.start');
+        say('battle.talk.start');
         render();
       }, ORDER_REVEAL_MS);
     };
@@ -696,8 +708,8 @@ export const battleScreen: ScreenDefinition = {
       h(
         'div',
         { class: `battle-side battle-side--${side}` },
-        // 情報の箱：自分は左、相手は右（モンスターを真ん中に、斜めに向かい合う）
-        side === 'player' ? infoBox(s, side) : null,
+        // 情報の箱：自分は左端（下にコマンドをまとめる。親指の届く所）、相手は右端。モンスターは残りの真ん中
+        side === 'player' ? h('div', { class: 'battle-side__panel' }, infoBox(s, side), commandColumn(s, dealing())) : null,
         h(
           'div',
           { class: 'battle-side__monsters' },
@@ -753,14 +765,40 @@ export const battleScreen: ScreenDefinition = {
         ...s.sides.opponent.hand.map(() => h('span', { class: 'battle-opp__back' })),
       );
 
-    /** 相手の顔の絵とひと言（吹き出し）。顔の絵がない相手（ダンジョンなど）は名前の札だけ */
+    /** 上の段：相手の顔の絵（小さく）と名前。ひと言は talkOverlay で大きく出す */
     const opponentTalk = (s: BattleState): HTMLElement =>
       h(
         'div',
         { class: 'battle-opp__talk' },
-        (req.opponent.id ? opponentFace(req.opponent.id, 40) : null) ?? h('span', { class: 'battle-opp__noface', text: t('battle.side.opponent') }),
-        h('p', { class: `battle-opp__line${oppLine ? '' : ' is-empty'}`, text: oppLine ?? s.sides.opponent.name }),
+        (req.opponent.id ? opponentFace(req.opponent.id, 30) : null) ?? h('span', { class: 'battle-opp__noface', text: t('battle.side.opponent') }),
+        h('span', { class: 'battle-opp__name', text: s.sides.opponent.name }),
       );
+
+    /**
+     * 相手のひと言（2026-10-23 ユーザー指示：顔の絵とセリフは大きく、カードの上に重ねてよい。PS版の対戦画面にならう）。
+     * 押すと先に消える。顔の絵がない相手（ダンジョンなど）は吹き出しだけ
+     */
+    const talkOverlay = (s: BattleState): HTMLElement | null => {
+      if (!oppLine || Date.now() >= talkUntil) return null;
+      const url = req.opponent.id ? opponentFaceUrl(req.opponent.id) : undefined;
+      const el = h(
+        'div',
+        {
+          class: `battle__talk${talkShownSeq !== talkSeq ? ' is-enter' : ''}`,
+          attrs: { role: 'status' },
+          on: {
+            click: () => {
+              talkUntil = 0;
+              render();
+            },
+          },
+        },
+        url ? h('img', { class: 'battle__talk-face', attrs: { src: url, alt: '', draggable: 'false' } }) : null,
+        h('div', { class: 'battle__talk-box' }, h('p', { class: 'battle__talk-name', text: s.sides.opponent.name }), h('p', { class: 'battle__talk-line', text: oppLine })),
+      );
+      talkShownSeq = talkSeq;
+      return el;
+    };
 
     const detailPanel = (s: BattleState): HTMLElement => {
       const hand = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
@@ -832,7 +870,7 @@ export const battleScreen: ScreenDefinition = {
       return h(
         'div',
         { class: 'battle-detail' },
-        // 左：説明の箱（下に、いまできるコマンド）、右：選んだカードを大きく
+        // 左：説明の箱、右：選んだカードを大きく
         h(
           'div',
           { class: 'battle-detail__left' },
@@ -840,7 +878,6 @@ export const battleScreen: ScreenDefinition = {
             'div',
             { class: 'battle-text' },
             h('div', { class: 'battle-text__body' }, ...body),
-            contextCommands(s, dealing()),
             h('div', { class: 'battle-text__logs', attrs: { 'aria-live': 'polite' } }, ...logs),
           ),
         ),
@@ -995,12 +1032,7 @@ export const battleScreen: ScreenDefinition = {
       if (!resultSounded) {
         resultSounded = true;
         sound.play(w === 'player' ? 'battleWin' : 'battleLose', 500);
-        oppLine = t(w === 'player' ? 'battle.talk.lose' : 'battle.talk.win');
-        const line = element.querySelector('.battle-opp__line');
-        if (line) {
-          line.textContent = oppLine;
-          line.classList.remove('is-empty');
-        }
+        say(w === 'player' ? 'battle.talk.lose' : 'battle.talk.win');
       }
       const title = t(w === 'player' ? 'battle.result.win' : w === 'opponent' ? 'battle.result.lose' : 'battle.result.draw');
       const reason = s.endReason === 'deckOut' ? t(w === 'player' ? 'battle.result.deckOutOpponent' : 'battle.result.deckOutPlayer') : '';
@@ -1172,7 +1204,7 @@ export const battleScreen: ScreenDefinition = {
      * - 相手の番・配っている間・オート中は出さない
      * ほかのコマンド（攻撃終了・ルール・降参）は、上の帯の右の「コマンド」で開く一覧（PS版の「コマンド」にならう）
      */
-    const contextCommands = (s: BattleState, blocked: boolean): HTMLElement | null => {
+    const commandColumn = (s: BattleState, blocked: boolean): HTMLElement | null => {
       const buttons: HTMLButtonElement[] = [];
       // 手札をなぞっている間は出さない（指を離すと出る）
       const mine = s.active === 'player' && !auto && !blocked && !swipe;
@@ -1197,6 +1229,9 @@ export const battleScreen: ScreenDefinition = {
         if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(t('battle.cmd.makeMana', { n: manaPicks.size }), convertPicked));
         buttons.push(commandButton(t('battle.cmd.endTurn'), () => requestEndTurn(), 'cancel'));
       }
+      // その他のコマンド（攻撃終了・ルール・降参）の一覧を開くボタン（PS版の「コマンド」）
+      const menuButton = commandMenuButton(s);
+      if (menuButton) buttons.push(menuButton as HTMLButtonElement);
       if (buttons.length === 0) {
         lastCommandKey = '';
         return null;
@@ -1215,27 +1250,20 @@ export const battleScreen: ScreenDefinition = {
       } else end();
     };
 
-    /** 上の帯の右の「コマンド」ボタン。押すとコマンドの一覧を開く */
+    /** 「コマンド」ボタン（自分の情報の下）。押すとコマンドの一覧を開く */
     const commandMenuButton = (s: BattleState): HTMLElement | null => {
       if (s.phase === 'ended') return null;
-      return h(
-        'button',
-        {
-          class: `battle-turn__end battle-turn__cmd${commandMenuOpen ? ' is-open' : ''}`,
-          attrs: { type: 'button', 'aria-label': t('battle.cmd.menu'), 'aria-expanded': String(commandMenuOpen) },
-          on: {
-            click: () => {
-              commandMenuOpen = !commandMenuOpen;
-              render();
-            },
-          },
-        },
-        h('img', { class: 'battle-turn__end-img', attrs: { src: wineButtonUrl, alt: '', draggable: 'false' } }),
-        h('span', { class: 'battle-turn__end-label', text: t('battle.cmd.menu') }),
-      );
+      const b = commandButton(t('battle.cmd.menu'), () => {
+        commandMenuOpen = !commandMenuOpen;
+        render();
+      });
+      b.classList.add('battle__cmd-open');
+      b.classList.toggle('is-open', commandMenuOpen);
+      b.setAttribute('aria-expanded', String(commandMenuOpen));
+      return b;
     };
 
-    /** コマンドの一覧（上の帯の下に開く）。外側を押すと閉じる */
+    /** コマンドの一覧（「コマンド」ボタンの右に開く）。外側を押すと閉じる */
     const commandMenu = (s: BattleState, blocked: boolean): HTMLElement | null => {
       if (!commandMenuOpen || s.phase === 'ended') return null;
       const close = (): void => {
@@ -1258,22 +1286,6 @@ export const battleScreen: ScreenDefinition = {
         { class: 'battle__cmd-menu', on: { click: (e) => e.target === e.currentTarget && close() } },
         h('div', { class: 'battle__cmd-list', attrs: { role: 'menu', 'aria-label': t('battle.cmd.menu') } }, ...items),
       );
-    };
-
-    /** 中段の高さに合わせて、大きなカードの幅を決め直す（変わったときだけ描き直す） */
-    const fitDetailCard = (): void => {
-      // 中段（.battle-detail）は残りの高さに縮む。その高さ（上下の余白を除く）にカードが収まる幅にする
-      const area = element.querySelector<HTMLElement>('.battle-detail');
-      const box = area?.querySelector<HTMLElement>('.battle-detail__card');
-      const shown = box?.querySelector<HTMLElement>('.skill-card, .support-card');
-      if (!area || !box || !shown || area.clientHeight === 0 || shown.offsetWidth === 0) return;
-      const ratio = shown.offsetHeight / shown.offsetWidth;
-      const label = box.querySelector<HTMLElement>('.battle-detail__recent-label')?.offsetHeight ?? 0;
-      const want = Math.round(Math.max(DETAIL_CARD_MIN_W, Math.min(DETAIL_CARD_MAX_W, (area.clientHeight - 12 - label - 4) / ratio)));
-      if (Math.abs(want - detailW) > 3) {
-        detailW = want;
-        render();
-      }
     };
 
     const render = (): void => {
@@ -1302,17 +1314,20 @@ export const battleScreen: ScreenDefinition = {
           'div',
           { class: `battle-turn battle-turn--${s.phase === 'ended' ? 'ended' : s.active}` },
           h('span', { class: 'battle-turn__text', text: turnText }),
-          h('div', { class: 'battle-turn__right' }, fieldChip(s), commandMenuButton(s)),
+          h('div', { class: 'battle-turn__right' }, fieldChip(s)),
         ),
-        // 相手：顔の絵とひと言・手札（裏向き）→ 相手のモンスター（右に情報）→ 自分のモンスター（左に情報）→ 中段 → 手札
-        h('div', { class: 'battle-opp' }, opponentTalk(s), opponentHand(s)),
-        monsterRow(s, 'opponent'),
-        monsterRow(s, 'player'),
+        // 場（残りの高さに広がる）：相手の顔と手札（裏向き）→ 相手のモンスター（右端に情報）→ 自分のモンスター（左端に情報とコマンド）
+        h(
+          'div',
+          { class: 'battle-board' },
+          h('div', { class: 'battle-opp' }, opponentTalk(s), opponentHand(s)),
+          monsterRow(s, 'opponent'),
+          monsterRow(s, 'player'),
+        ),
         detailPanel(s),
         hand,
       );
-      fitDetailCard();
-      const overlays = [menu, defenseOverlay(s), resultOverlay(s), phaseBanner(s), hintOverlay(s)].filter((o): o is HTMLElement => o !== null);
+      const overlays = [talkOverlay(s), menu, defenseOverlay(s), resultOverlay(s), phaseBanner(s), hintOverlay(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);
       const handEl = element.querySelector('.battle__hand');
       if (handEl) handEl.scrollLeft = handScroll;
@@ -1325,7 +1340,7 @@ export const battleScreen: ScreenDefinition = {
           if (before !== undefined && before > 0 && m.life === 0) {
             sound.play('knockout', 260);
             // 相手のひと言（【仮】台詞）：自分のモンスターが倒れた／こちらのモンスターを倒した
-            oppLine = t(side === 'opponent' ? 'battle.talk.ownDown' : 'battle.talk.knock');
+            say(side === 'opponent' ? 'battle.talk.ownDown' : 'battle.talk.knock');
           }
           else if (before !== undefined && m.life > before) sound.play('heal');
           prevLife.set(m.uid, m.life);
