@@ -21,7 +21,7 @@ import iconDeck from '@assets/images/ui/battle/icon_deck.webp';
 import iconHand from '@assets/images/ui/battle/icon_hand.webp';
 import iconMana from '@assets/images/ui/battle/icon_mana.webp';
 import { opponentFace } from '../components/opponentFace.ts';
-import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy } from '../../game/cards/cardTypes.ts';
+import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy, type PlayCard } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { nextBattleHint, type BattleHintId } from '../../game/story/battleTutorial.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
@@ -47,7 +47,25 @@ const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
   evade: 'evade',
   hitNormal: 'hitNormal',
   hitStrong: 'hitStrong',
+  recoil: 'recoil',
 };
+
+/** 使ったカードを大きく見せるときの音（カードの種類ごと） */
+function showcaseSound(card: PlayCard): SoundId {
+  if (card.kind === 'support') return 'cardSupport';
+  switch (card.effect.type) {
+    case 'defense':
+      return 'cardGuard';
+    case 'evade':
+      return 'cardEvade';
+    case 'weaken':
+      return 'cardSpecial';
+    case 'seal':
+      return 'cardSeal';
+    default:
+      return card.stat?.type === 'wisdom' ? 'cardWisdom' : 'cardAttack';
+  }
+}
 
 /** 相手の1手ごとの間（ミリ秒） */
 const AI_STEP_MS = 1100;
@@ -133,6 +151,10 @@ export const battleScreen: ScreenDefinition = {
     ctx.store.pendingBattle = null;
     const req: BattleRequest = request;
     bgm.play(req.bgm ?? 'battle');
+    // 対戦の始まり（先攻・後攻を決める画面が出たとき）
+    sound.play('battleStart', 150);
+    /** 勝ち・負けの音を鳴らしたか（結果の表示は描き直しで何度も作られるので1回だけ） */
+    let resultSounded = false;
     if (req.background) {
       // 対戦の背景の絵（ダンジョン）。上に暗い膜を重ねて、カードや文字を読みやすくする
       element.classList.add('has-bg');
@@ -229,6 +251,7 @@ export const battleScreen: ScreenDefinition = {
       );
       fxLayer.append(el);
       setTimeout(() => el.remove(), SHOWCASE_MS);
+      sound.play(showcaseSound(card));
     };
 
     /** いまの画面の拡大率（ステージは拡大縮小されているので、位置の計算に使う） */
@@ -920,6 +943,10 @@ export const battleScreen: ScreenDefinition = {
     const resultOverlay = (s: BattleState): HTMLElement | null => {
       if (s.phase !== 'ended') return null;
       const w = s.winner;
+      if (!resultSounded) {
+        resultSounded = true;
+        sound.play(w === 'player' ? 'battleWin' : 'battleLose', 500);
+      }
       const title = t(w === 'player' ? 'battle.result.win' : w === 'opponent' ? 'battle.result.lose' : 'battle.result.draw');
       const reason = s.endReason === 'deckOut' ? t(w === 'player' ? 'battle.result.deckOutOpponent' : 'battle.result.deckOutPlayer') : '';
       const go = commandButton(t('battle.result.next'), () => {
@@ -1185,7 +1212,13 @@ export const battleScreen: ScreenDefinition = {
       syncSwipeGhost();
       playEffects(s);
       for (const side of ['player', 'opponent'] as const) {
-        for (const m of s.sides[side].monsters) prevLife.set(m.uid, m.life);
+        for (const m of s.sides[side].monsters) {
+          // 倒れた・回復した瞬間の音（描き直しでは鳴らさない：前回のライフと比べる）
+          const before = prevLife.get(m.uid);
+          if (before !== undefined && before > 0 && m.life === 0) sound.play('knockout', 260);
+          else if (before !== undefined && m.life > before) sound.play('heal');
+          prevLife.set(m.uid, m.life);
+        }
       }
       element.dataset.phase = s.phase;
       element.dataset.active = s.active;

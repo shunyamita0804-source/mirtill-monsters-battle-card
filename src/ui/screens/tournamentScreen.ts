@@ -22,6 +22,7 @@ import { newId, once } from '../gameStore.ts';
 import type { ScreenDefinition } from './types.ts';
 import { opponentFace } from '../components/opponentFace.ts';
 import { rewardGlow } from '../components/rewardGlow.ts';
+import { sound } from '../sound.ts';
 import faceReceptionist from '@assets/images/characters/face_receptionist.webp';
 import arenaBg from '@assets/images/backgrounds/battle_arena.webp';
 
@@ -101,6 +102,8 @@ export const tournamentScreen: ScreenDefinition = {
         return;
       }
       store.update(() => r.save);
+      sound.play('reward');
+      if (r.summary.coins > 0) sound.play('coins', 250);
       const s = r.summary;
       const lines = [
         tr('tournament.received', { n: s.coins }),
