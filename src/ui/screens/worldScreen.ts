@@ -105,15 +105,18 @@ const WALK_PX = 231;
  * いまの歩く速さ・背たけ（街・部屋 81 論理px）では 1歩 約36 論理px＝約6.4歩/秒（約13コマ/秒）
  */
 const STEP_PER_HEIGHT = 0.45;
-/** 歩くときの上下の弾み（人物の背たけに対する割合）。2コマ目・4コマ目（足がそろう「立つ」コマ）で少し体が上がる */
-const WALK_BOB = 0.03;
+/**
+ * 歩くときの上下の弾み（人物の背たけに対する割合）。
+ * 2026-10-23 ユーザー「プカプカ浮いて見える。しっかり地面に足が着いているように」で 0 に（体を持ち上げると影から離れて浮いて見えた）
+ */
+const WALK_BOB = 0;
 /**
  * 走る（2026-10-23・ユーザー承認）：スティックを大きく倒すと走る。速さは歩きの倍率、1歩・弾みは背たけに対する割合。
- * 走る絵はまだ無いので、歩きの絵を大きな歩幅・大きな弾みで使う
+ * 走る絵はまだ無いので、歩きの絵を大きな歩幅で使う（弾みは歩きと同じく 0）
  */
 const RUN_RATE = 1.7;
 const RUN_STEP_PER_HEIGHT = 0.6;
-const RUN_BOB = 0.05;
+const RUN_BOB = 0;
 /** スティックをこれ以上倒すと走る／これより戻すと歩きに戻る（論理px。行ったり来たりしないよう差をつける） */
 const STICK_RUN = 36;
 const STICK_WALK_BACK = 28;
@@ -128,6 +131,11 @@ const DECEL_TO = 0.55;
 const CAMERA_FOLLOW = 9;
 /** スティックの向きを変えるまでの余裕（ラジアン）。8方向の境目（22.5度）を 8度こえるまで前の向きのまま */
 const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
+/**
+ * 進めない向き（壁など）へスティックを倒したとき、その場で向きを変えるまでの時間（ミリ秒）。
+ * 2026-10-23 ユーザー「指でなぞると人物がクルクル回ってチープ」：指のわずかな動きで、その場で向きが次々変わらないように
+ */
+const TURN_IN_PLACE_MS = 220;
 /** 宝箱の絵（ミスモンの正式素材）：閉じた絵と、開く動きの4コマ（4コマ目が開いたあとの絵） */
 const CHEST_ART: Readonly<Record<ChestObject['look'], { readonly closed: string; readonly opening: readonly string[] }>> = {
   wood: { closed: chestWood, opening: [chestWood1, chestWood2, chestWood3, chestWood4] },
@@ -284,6 +292,8 @@ class WorldView {
   #afterPath: MapObject | null = null;
   /** スティック・方向キーで歩く向き（8方向） */
   #held: Point | null = null;
+  /** #held（押している向き）が最後に変わった時刻 */
+  #heldAt = 0;
   #keys = new Set<Direction>();
   #busy = false;
   #raf = 0;
@@ -386,8 +396,9 @@ class WorldView {
     const cls = el === this.#player ? 'world__shadow world__shadow--player' : 'world__shadow';
     const shadow = h('div', { class: cls, attrs: { 'aria-hidden': 'true' } });
     // 2026-10-23：人物が地面に立って見えるよう、影を大きく濃く（背景の絵の影の強さに合わせる）
-    const w = this.#figureH * 0.62;
-    Object.assign(shadow.style, { width: `${w}px`, height: `${w * 0.34}px`, marginLeft: `${-w / 2}px`, marginTop: `${-w * 0.17}px` });
+    // 2026-10-23（2回目）：靴に隠れないよう少し広く・少し下へ（足が地面に着いて見えるように）
+    const w = this.#figureH * 0.72;
+    Object.assign(shadow.style, { width: `${w}px`, height: `${w * 0.3}px`, marginLeft: `${-w / 2}px`, marginTop: `${-w * 0.11}px` });
     this.#shadows.set(el, shadow);
     this.#mapLayer.append(shadow);
   }
@@ -788,20 +799,25 @@ class WorldView {
 
   /** (dx, dy) へ1歩。斜めで進めないときは、進める方の縦か横へすべる（スティック操作のとき）。進めたら true */
   #tryStep(dx: number, dy: number, slide: boolean): boolean {
-    this.#dir = facing(dx, dy, this.#dir);
-    this.#diag = diagonalOf(dx, dy);
     const from = this.#tile;
     const tries: [number, number][] = [[dx, dy]];
     if (slide && dx !== 0 && dy !== 0) tries.push([dx, 0], [0, dy]);
     for (const [sx, sy] of tries) {
       if (canStep(from, sx, sy, this.#blocked)) {
-        this.#dir = facing(sx, sy, this.#dir);
-        this.#diag = diagonalOf(sx, sy);
+        // 向きは押している向き（dx, dy）に合わせる。壁ぞいにすべって進むときも、すべる向きの絵に切り替えない
+        // （2026-10-23：斜めの絵と正面・横の絵が1歩ごとに入れ替わり、クルクル回って見えたため）
+        this.#dir = facing(dx, dy, this.#dir);
+        this.#diag = diagonalOf(dx, dy);
         this.#move = { from, to: { x: from.x + sx, y: from.y + sy }, len: sx !== 0 && sy !== 0 ? Math.SQRT2 : 1, t: 0 };
         return true;
       }
     }
-    // 進めない：その先が敵なら戦う
+    // 進めない：同じ向きをしばらく押し続けたときだけ、その場でその向きを向く（指のわずかな動きで回らないように）
+    if (!slide || performance.now() - this.#heldAt >= TURN_IN_PLACE_MS) {
+      this.#dir = facing(dx, dy, this.#dir);
+      this.#diag = diagonalOf(dx, dy);
+    }
+    // その先が敵なら戦う
     const enemy = objectsAt(this.#map, from.x + dx, from.y + dy, this.#isVisible).find((o): o is EnemyObject => o.type === 'enemy');
     this.#path = [];
     if (enemy) this.#encounter(enemy);
@@ -856,7 +872,7 @@ class WorldView {
       if (col % 2 === 0) sound.step(this.#ground(), this.#running);
     }
     const row = this.#diag ? DIAG_ROW[this.#diag] : DIR_ROW[this.#dir];
-    // 立ち止まっている間だけ、呼吸のような小さな動き（CSS の is-idle）。変わったときだけ書く
+    // 立ち止まっているかの印（CSS の is-idle。呼吸の動きは 2026-10-23 にやめた）。変わったときだけ書く
     if (walking === this.#player.classList.contains('is-idle')) this.#player.classList.toggle('is-idle', !walking);
     const look = `${row}:${col}`;
     if (look !== this.#playerLook) {
@@ -956,6 +972,7 @@ class WorldView {
     const sector = Math.round(angle / (Math.PI / 4));
     const a = (sector * Math.PI) / 4;
     this.#held = { x: Math.round(Math.cos(a)), y: Math.round(Math.sin(a)) };
+    this.#heldAt = performance.now();
   }
 
   #pointerUp(e: PointerEvent, tap: boolean): void {
@@ -1007,6 +1024,7 @@ class WorldView {
         y += DIR_DELTA[k].y;
       }
       this.#held = x === 0 && y === 0 ? null : { x: Math.sign(x), y: Math.sign(y) };
+      this.#heldAt = performance.now();
     } else if (down && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       this.#examine();
