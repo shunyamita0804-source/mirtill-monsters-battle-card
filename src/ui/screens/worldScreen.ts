@@ -44,6 +44,7 @@ import {
   IDLE_COL,
   isContactFrame,
   isWalking,
+  PLAYER_RUN_ART_ROWS,
   PLAYER_SHEET_COLS,
   PLAYER_SHEET_ROWS,
   PLAYER_V2_ROWS,
@@ -1049,13 +1050,14 @@ export class WorldView {
    * 歩くときの体の動き（WALK_SQUASH ほか）。足が着くコマ（偶数）で縮み、足がそろうコマ（奇数）で伸びる。
    * 進んだ距離から決めるので、足のコマ送りとずれない。止まると元に戻る
    */
-  #bodyPose(time: number, walking: boolean, drawn = false): { sx: number; sy: number; deg: number; shadow: number } | null {
+  #bodyPose(time: number, walking: boolean, drawn = false, leanDrawn = false): { sx: number; sy: number; deg: number; shadow: number } | null {
     if (REDUCED_MOTION) return null;
     const dt = Math.min(0.05, Math.max(0, (time - this.#leanTime) / 1000));
     this.#leanTime = time;
     const mv = this.#move;
     const dx = walking && mv ? Math.sign(mv.to.x - mv.from.x) : 0;
-    const target = dx * (this.#running ? RUN_LEAN_DEG : WALK_LEAN_DEG);
+    // 走りの絵（第3版）には前傾が描いてあるので、プログラムの傾きは付けない
+    const target = leanDrawn ? 0 : dx * (this.#running ? RUN_LEAN_DEG : WALK_LEAN_DEG);
     this.#lean += (target - this.#lean) * (1 - Math.exp(-LEAN_RATE * dt));
     if (Math.abs(this.#lean) < 0.01) this.#lean = 0;
     // 1コマ＝半歩。足が着いているコマ（偶数）の真ん中で c＝1（いちばん縮む）、足がそろうコマ（奇数）の真ん中で c＝−1
@@ -1082,7 +1084,7 @@ export class WorldView {
       this.#stepCol = col;
       if (isContactFrame(col)) sound.step(this.#ground(), this.#running);
     }
-    const row = sheetRow(this.#dir, this.#diag);
+    const row = sheetRow(this.#dir, this.#diag, walking && this.#running);
     // 立ち止まっているかの印（CSS の is-idle。呼吸の動きは 2026-10-23 にやめた）。変わったときだけ書く
     if (walking === this.#player.classList.contains('is-idle')) this.#player.classList.toggle('is-idle', !walking);
     const look = `${row}:${col}`;
@@ -1091,7 +1093,8 @@ export class WorldView {
       this.#playerLook = look;
     }
     const v2 = PLAYER_V2_ROWS[this.#gender].has(row);
-    this.#placeFigure(this.#player, p, walking && step % FRAMES_PER_STEP === 2 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, v2));
+    const runArt = PLAYER_RUN_ART_ROWS[this.#gender].has(row);
+    this.#placeFigure(this.#player, p, walking && step % FRAMES_PER_STEP === 2 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, v2, runArt));
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
     const z = this.#zoom;

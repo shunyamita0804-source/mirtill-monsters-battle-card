@@ -261,6 +261,15 @@ describe('シートに入っている絵', () => {
     expect(sheetStatus('male', 4).walk).toBe('legacy');
     expect(sheetStatus('female', 0).walk).toBe('legacy');
     expect(sheetStatus('male', 0).run).toBe('none');
+    expect(sheetStatus('male', 2).run).toBe('v3');
+    expect(sheetStatus('male', 4).run).toBe('v3');
+    expect(sheetStatus('female', 2).run).toBe('none');
+    // 走るときは走りの行（＋8）。斜めは横の走りの行
+    expect(sheetRow('left', null, true)).toBe(10);
+    expect(sheetRow('down', null, true)).toBe(8);
+    expect(sheetRow('left', 'downleft', true)).toBe(10);
+    expect(sheetRow('right', 'upright', true)).toBe(11);
+    expect(sheetRow('left', 'downleft', false)).toBe(4);
     expect(sheetStatus('male', 3).mirrored).toBe(true);
     expect(sheetStatus('male', 2).mirrored).toBe(false);
   });

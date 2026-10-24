@@ -57,6 +57,7 @@ export const WALK_LAB = {
   'walkLab.art': { ja: 'この向きの絵', en: 'Art in this row' },
   'walkLab.artWalkV2': { ja: '歩き：第2版の1周8コマ', en: 'Walk: v2, 8 frames per cycle' },
   'walkLab.artWalkLegacy': { ja: '歩き：前の3ポーズを2コマずつ（8コマの絵は未実装）', en: 'Walk: old 3 poses ×2 (8-frame art not done)' },
+  'walkLab.artRunV3': { ja: '走り：第3版の1周8コマ', en: 'Run: v3, 8 frames per cycle' },
   'walkLab.artRunNone': { ja: '走り：未実装（歩きの絵を速く・大きな歩幅で）', en: 'Run: not done (walk art played faster, longer stride)' },
   'walkLab.artIdle': { ja: '立ち：専用の1コマ', en: 'Stand: dedicated frame' },
   'walkLab.artMirrored': { ja: '右向きは左向きの左右反転（かばんが逆側）', en: 'Right-facing is a mirror of left (bag swaps side)' },

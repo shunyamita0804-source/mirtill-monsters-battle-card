@@ -25,7 +25,11 @@ export const RUN_RATE = 1.7;
  * 絵に合わせて 0.38 に（足が地面をすべらない。歩く速さ 185px/秒 で約 5歩/秒＝20コマ/秒）
  */
 export const STEP_PER_HEIGHT = 0.38;
-export const RUN_STEP_PER_HEIGHT = 0.6;
+/**
+ * 走りの1歩（コマの高さに対する割合）。2026-10-24 第3版の走りの絵（男性・左向き）：着地のときの前後の足の幅がコマの高さの約 0.56、
+ * そこに両足が浮いて進むぶんを足して 0.7 に（走る速さ 315px/秒 で約 4.6歩/秒・18コマ/秒）。走りの絵が無い向きも同じ値
+ */
+export const RUN_STEP_PER_HEIGHT = 0.7;
 /**
  * 歩き出し・止まり方（2026-10-23）：歩き出しは ACCEL_FROM の速さから ACCEL_S 秒でふつうの速さに。
  * 止まる最後のマスでは、マスの終わりで DECEL_TO の速さまで落とす
@@ -45,7 +49,10 @@ export const FRAME_H = 288;
 export const FOOT_X = 108;
 export const FOOT_Y = 270;
 export const PLAYER_SHEET_COLS = 9;
-export const PLAYER_SHEET_ROWS = 8;
+/** 行：歩き8行（正面・背中・左・右・左下・右下・左上・右上）＋走り4行（正面・背中・左・右。2026-10-24 第3版〜） */
+export const PLAYER_SHEET_ROWS = 12;
+/** 走りの行は歩きの行の下（行 8〜11）。走りの絵が無い向きは歩きの行の写しが入っている */
+export const RUN_ROW_BASE = 8;
 /** 歩き1周のコマ数（右足の1歩4コマ＋左足の1歩4コマ）と、1歩のコマ数、シートの立ち止まりの列 */
 export const WALK_COLS = 8;
 export const FRAMES_PER_STEP = 4;
@@ -65,7 +72,9 @@ export const ROW_NAMES: readonly (Direction | Diagonal)[] = ['down', 'up', 'left
  * 第2版の絵が届いたらここに行を足す（行の番号は DIR_ROW・DIAG_ROW）。
  * それ以外の行は、前の絵「右足を前・立つ・左足を前」を1コマずつ2回並べた8コマ（実質3ポーズ）
  */
-export const PLAYER_V2_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3]), female: new Set() };
+export const PLAYER_V2_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3, 8, 9, 10, 11]), female: new Set() };
+/** 走りの絵（第3版・1周8コマ）が入っている行。この行では、プログラムで付ける体の傾きもやめる（前傾が絵に描いてある） */
+export const PLAYER_RUN_ART_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([10, 11]), female: new Set() };
 
 /** 1歩の長さ（論理px）。figureH は人物のコマの高さ（論理px） */
 export function strideOf(figureH: number, running: boolean): number {
@@ -153,9 +162,14 @@ export function diagonalOf(dx: number, dy: number): Diagonal | null {
   return dx !== 0 && dy !== 0 ? `${dy > 0 ? 'down' : 'up'}${dx > 0 ? 'right' : 'left'}` : null;
 }
 
-/** 絵の向き → シートの行 */
-export function sheetRow(dir: Direction, diag: Diagonal | null): number {
-  return diag ? DIAG_ROW[diag] : DIR_ROW[dir];
+/**
+ * 絵の向き → シートの行。走っているときは走りの行（歩きの行＋8）。斜めに走るときは横（左・右）の走りの行
+ * （斜めの走りの絵は作らない。2026-10-24 第3版の決めごと：斜めは横の絵で代用）
+ */
+export function sheetRow(dir: Direction, diag: Diagonal | null, running = false): number {
+  if (!running) return diag ? DIAG_ROW[diag] : DIR_ROW[dir];
+  const side: Direction = diag ? (diag.endsWith('left') ? 'left' : 'right') : dir;
+  return RUN_ROW_BASE + DIR_ROW[side];
 }
 
 /** 1秒あたりのコマ数（この速さ・歩幅でコマが切り替わる速さ。確認画面の表示用） */
@@ -166,8 +180,8 @@ export function framesPerSecond(speedPx: number, stride: number, animScale = 1):
 export interface SheetStatus {
   /** 歩き：第2版の1周8コマ（v2）／前の3ポーズを2回ずつ並べた8コマ（legacy） */
   readonly walk: 'v2' | 'legacy';
-  /** 走り：専用の絵は無い（歩きの絵を速く・大きな歩幅で） */
-  readonly run: 'none';
+  /** 走り：第3版の1周8コマ（v3）／専用の絵は無い（歩きの絵を速く・大きな歩幅で）（none） */
+  readonly run: 'v3' | 'none';
   /** 立ち止まり：専用の列がある */
   readonly idle: true;
   /** 右向きは左向きの左右反転（かばんなど左右で違う持ち物が入れ替わる） */
@@ -176,10 +190,11 @@ export interface SheetStatus {
 
 /** その人物・その行のシートに、どの絵が入っているか（確認画面で「未実装」を出すため） */
 export function sheetStatus(gender: PlayerGender, row: number): SheetStatus {
+  const walkRow = row >= RUN_ROW_BASE ? row - RUN_ROW_BASE : row;
   return {
-    walk: PLAYER_V2_ROWS[gender].has(row) ? 'v2' : 'legacy',
-    run: 'none',
+    walk: PLAYER_V2_ROWS[gender].has(walkRow) ? 'v2' : 'legacy',
+    run: PLAYER_RUN_ART_ROWS[gender].has(RUN_ROW_BASE + (walkRow < 4 ? walkRow : walkRow === DIAG_ROW.downleft || walkRow === DIAG_ROW.upleft ? DIR_ROW.left : DIR_ROW.right)) ? 'v3' : 'none',
     idle: true,
-    mirrored: row === DIR_ROW.right || row === DIAG_ROW.downright || row === DIAG_ROW.upright,
+    mirrored: walkRow === DIR_ROW.right || walkRow === DIAG_ROW.downright || walkRow === DIAG_ROW.upright,
   };
 }

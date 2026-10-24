@@ -2,7 +2,7 @@ import type { MapDefinition } from '../../data/maps.ts';
 import type { ArtMap } from '../../data/worldArt.generated.ts';
 import type { Direction, Location } from '../../game/save/saveData.ts';
 import { MemoryStorage } from '../../game/save/saveRepository.ts';
-import { ROW_NAMES, sheetStatus, type Diagonal, type PlayerGender } from '../../game/world/walkAnim.ts';
+import { ROW_NAMES, RUN_ROW_BASE, sheetStatus, type Diagonal, type PlayerGender } from '../../game/world/walkAnim.ts';
 import { t } from '../../i18n/i18n.ts';
 import type { MessageKey } from '../../i18n/messages/index.ts';
 import { createScreenHeader } from '../components/screenHeader.ts';
@@ -125,7 +125,8 @@ export const walkLabScreen: ScreenDefinition = {
 
     /** 毎コマの数値（変わったときだけ文字を書く） */
     const onFrame = (f: WorldDevFrame): void => {
-      const dirName = t(`walkLab.dir.${ROW_NAMES[f.row] ?? 'down'}` as MessageKey);
+      // 行 8〜11 は走りの行（正面・背中・左・右）
+      const dirName = `${t(`walkLab.dir.${ROW_NAMES[f.row % RUN_ROW_BASE] ?? 'down'}` as MessageKey)}${f.row >= RUN_ROW_BASE ? `・${t('walkLab.stateRun')}` : ''}`;
       const lines = [
         f.walking ? t('walkLab.readFrame', { col: f.col + 1, phase: f.phase.toFixed(2) }) : t('walkLab.readIdle'),
         t('walkLab.readRow', { row: f.row + 1, dir: dirName }),
@@ -144,12 +145,12 @@ export const walkLabScreen: ScreenDefinition = {
         const s = sheetStatus(f.gender, f.row);
         const parts = [
           t(s.walk === 'v2' ? 'walkLab.artWalkV2' : 'walkLab.artWalkLegacy'),
-          t('walkLab.artRunNone'),
+          t(s.run === 'v3' ? 'walkLab.artRunV3' : 'walkLab.artRunNone'),
           t('walkLab.artIdle'),
           ...(s.mirrored ? [t('walkLab.artMirrored')] : []),
         ];
         art.textContent = `${t('walkLab.art')}\n${parts.join('\n')}`;
-        art.classList.toggle('is-missing', s.walk !== 'v2');
+        art.classList.toggle('is-missing', s.walk !== 'v2' || s.run !== 'v3');
       }
     };
 
