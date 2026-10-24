@@ -16,6 +16,7 @@ import {
   sheetRow,
   sheetStatus,
   squashOf,
+  STEP_PER_HEIGHT,
   strideOf,
   WALK_COLS,
   WALK_HOLD_MS,
@@ -108,13 +109,13 @@ describe('直進（フレーム時間が変わっても同じ速さ）', () => {
     expect(Math.abs(a.phase - c.phase)).toBeLessThan(0.2);
   });
 
-  it('1秒で約5歩（0.58×背たけ＝約56px の歩幅）。コマは1歩4コマ', () => {
+  it('1歩は STEP_PER_HEIGHT×コマの高さ（絵に合わせた歩幅）。コマは1歩4コマ', () => {
     const r = simulate({ seconds: 1, dt: 1 / 60 });
     const stride = strideOf(FIGURE_H, false);
-    expect(stride).toBeCloseTo(FIGURE_H * 0.58);
+    expect(stride).toBeCloseTo(FIGURE_H * STEP_PER_HEIGHT);
     expect(r.phase).toBeCloseTo((r.dist / stride) as number, 5);
-    expect(r.phase).toBeGreaterThan(3.5);
-    expect(r.phase).toBeLessThan(4.5);
+    expect(r.phase).toBeGreaterThan((WALK_PX * 0.9) / stride);
+    expect(r.phase).toBeLessThan(WALK_PX / stride);
     expect(framesPerSecond(WALK_PX, stride)).toBeCloseTo((WALK_PX / stride) * FRAMES_PER_STEP);
   });
 });
