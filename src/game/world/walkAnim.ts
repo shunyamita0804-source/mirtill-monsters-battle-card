@@ -74,9 +74,12 @@ export const ROW_NAMES: readonly Direction[] = ['down', 'up', 'left', 'right'];
  * 第2版の絵が届いたらここに行を足す（行の番号は DIR_ROW。走りは +RUN_ROW_BASE）。
  * それ以外の行は、前の絵「右足を前・立つ・左足を前」を1コマずつ2回並べた8コマ（実質3ポーズ）
  */
-export const PLAYER_V2_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3, 4, 5, 6, 7]), female: new Set() };
-/** 走りの絵（第3版・1周8コマ）が入っている行。この行では、プログラムで付ける体の傾きもやめる（前傾が絵に描いてある） */
-export const PLAYER_RUN_ART_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([4, 5, 6, 7]), female: new Set() };
+export const PLAYER_V2_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3, 4, 5, 6, 7]), female: new Set([0, 1, 2, 3, 4, 5, 6, 7]) };
+/**
+ * 走りの絵（第3版・1周8コマ）が入っている行。この行では、プログラムで付ける体の傾きもやめる（前傾が絵に描いてある）。
+ * 女性の正面・背中の走り（行 4・5）はまだ届いていない（歩きの絵の写し。2026-10-24）
+ */
+export const PLAYER_RUN_ART_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([4, 5, 6, 7]), female: new Set([6, 7]) };
 
 /** 1歩の長さ（論理px）。figureH は人物のコマの高さ（論理px） */
 export function strideOf(figureH: number, running: boolean): number {

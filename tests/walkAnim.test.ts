@@ -257,14 +257,16 @@ describe('確認画面の再生速度の倍率', () => {
 });
 
 describe('シートに入っている絵', () => {
-  it('男性は4方向とも歩き第2版・走り第3版。女性はすべて前の絵で走りの絵は無い', () => {
+  it('男性は4方向とも歩き第2版・走り第3版。女性は歩き4方向と左右の走りが第3版（正面・背中の走りは未着）', () => {
     expect(sheetStatus('male', 0).walk).toBe('v2');
     expect(sheetStatus('male', 3).walk).toBe('v2');
-    expect(sheetStatus('female', 0).walk).toBe('legacy');
+    expect(sheetStatus('female', 0).walk).toBe('v2');
     expect(sheetStatus('male', 0).run).toBe('v3');
     expect(sheetStatus('male', 2).run).toBe('v3');
     expect(sheetStatus('male', 6).run).toBe('v3');
-    expect(sheetStatus('female', 2).run).toBe('none');
+    expect(sheetStatus('female', 2).run).toBe('v3');
+    expect(sheetStatus('female', 0).run).toBe('none');
+    expect(sheetStatus('female', 1).run).toBe('none');
     // 走るときは走りの行（＋4）。斜めは横の行
     expect(sheetRow('left', null, true)).toBe(6);
     expect(sheetRow('down', null, true)).toBe(4);
