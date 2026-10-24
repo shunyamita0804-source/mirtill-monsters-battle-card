@@ -18,7 +18,7 @@ import {
   type Side,
 } from '../../game/battle/engine.ts';
 import { opponentFace, opponentFaceUrl } from '../components/opponentFace.ts';
-import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy, type PlayCard } from '../../game/cards/cardTypes.ts';
+import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy, type PlayCard, type StatType } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
 import { nextBattleHint, type BattleHintId } from '../../game/story/battleTutorial.ts';
 import { randomSeed, shuffle } from '../../game/rng.ts';
@@ -29,6 +29,8 @@ import { confirmModal, openModal } from '../components/modal.ts';
 import { commandButton, confirmCommand } from '../components/commandButton.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
 import { battleDigits } from '../components/battleDigits.ts';
+import iconStatForce from '@assets/images/ui/battle/icon_stat_force.webp';
+import iconStatWisdom from '@assets/images/ui/battle/icon_stat_wisdom.webp';
 import { createPlayCard, createSkillCard, skillCardHeight } from '../components/skillCard.ts';
 import { bgm } from '../bgm.ts';
 import { button, h } from '../dom.ts';
@@ -88,6 +90,8 @@ const TALK_MS = 2600;
 const SHOWCASE_MS = 1150;
 /** 命中したときの一瞬の間（ヒットストップ）と画面の揺れ */
 const HIT_PAUSE_MS = 320;
+/** 状態の印の能力の絵（技カードのバーの拳・本の丸。tools/design/stat_icon_crop.py） */
+const STAT_ICON: Readonly<Record<StatType, string>> = { force: iconStatForce, wisdom: iconStatWisdom };
 /** 技の対象に出す指のマークを、カードを大きく見せ終わってからも残す時間（ミリ秒） */
 const POINTER_EXTRA_MS = 500;
 /** ダメージでライフを1ずつ減らす間隔と、命中から数え始めるまで（ミリ秒） */
@@ -224,6 +228,8 @@ export const battleScreen: ScreenDefinition = {
     const prevLife = new Map<string, number>();
     /** 技・サポートの対象に選ばれたモンスター（指のマークを出す。until まで） */
     let pointed: { uid: string; until: number } | null = null;
+    /** 使ったカードを大きく見せ終わる時刻（それまで指のマークを出さない） */
+    let showcaseUntil = 0;
     /** ダメージでライフを1ずつ減らしている間の、表示中のライフ（数え終わったら消す） */
     const lifeShown = new Map<string, number>();
     /** 前回描画時のマナ（マナが増えた演出に使う） */
@@ -333,6 +339,8 @@ export const battleScreen: ScreenDefinition = {
       if (played) {
         lastPlayed = played;
         busyUntil = Math.max(busyUntil, Date.now() + revealDelay + SHOWCASE_MS - 150);
+        // 相手のカードが真ん中へ動いている間も、指のマークはまだ出さない
+        showcaseUntil = Date.now() + revealDelay + SHOWCASE_MS;
       }
       // 誰に向けた技か分かるよう、対象のモンスターに指のマークを出す（自分・相手どちらの技も。攻撃は守備が終わるまでも出る）
       if (action.type === 'useCard' && action.targetUid) {
@@ -366,7 +374,12 @@ export const battleScreen: ScreenDefinition = {
         h('p', { class: 'battle__showcase-text', text: t('battle.showcase', { side: t(`battle.side.${side}`), card: cardName(card) }) }),
       );
       fxLayer.append(el);
-      setTimeout(() => el.remove(), SHOWCASE_MS);
+      showcaseUntil = Date.now() + SHOWCASE_MS;
+      setTimeout(() => {
+        el.remove();
+        // 見せ終わったら、技の対象に指のマークを出すために描き直す
+        if (!destroyed && state) render();
+      }, SHOWCASE_MS);
       sound.play(showcaseSound(card));
     };
 
@@ -840,9 +853,8 @@ export const battleScreen: ScreenDefinition = {
             const before = prevLife.get(m.uid) ?? m.life;
             const diff = m.life - before;
             const isPendingTarget = s.pending?.targetUid === m.uid;
-            const isPointed = m.life > 0 && (isPendingTarget || (pointed?.uid === m.uid && Date.now() < pointed.until));
-            // 守備待ちの攻撃の対象には、いまのダメージ予定を出す（PS版の対象表示）
-            const incoming = isPendingTarget && s.phase === 'defense' && s.pending ? pendingDamage(s.pending) : null;
+            // 使ったカードを大きく見せている間は出さない（2026-10-24 ユーザー指示）。見せ終わってから
+            const isPointed = m.life > 0 && Date.now() >= showcaseUntil && (isPendingTarget || (pointed?.uid === m.uid && Date.now() < pointed.until));
             return h(
               'button',
               {
@@ -863,7 +875,6 @@ export const battleScreen: ScreenDefinition = {
               m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: t('battle.monster.acted') }) : null,
               // 吠える・ダストキック（技のダメージ−）・すなかけ（次の手番は攻撃できない）・ちょうはつ（ラズックだけ）がかかっている印
               m.life > 0 ? statusBadges(s, m) : null,
-              incoming !== null ? h('span', { class: 'battle__incoming', text: String(incoming) }) : null,
               isPointed ? h('span', { class: `battle__pointer battle__pointer--${side}`, attrs: { 'aria-hidden': 'true' }, text: '👇' }) : null,
               diff < 0 ? h('span', { class: 'battle__burst', attrs: { 'aria-hidden': 'true' } }) : null,
               // 回復だけ「+2」のように出す。ダメージは数字を出さず、ライフを1ずつ減らして音で数える（2026-10-24 ユーザー指示）
@@ -874,16 +885,26 @@ export const battleScreen: ScreenDefinition = {
         side === 'opponent' ? infoBox(s, side) : commandPanel(s, dealing()),
       );
 
-    /** モンスターにかかっている特殊の効果の印（無ければ null） */
+    /**
+     * モンスターにかかっている特殊の効果の印（無ければ null）。
+     * 技のダメージ−（吠える・ダストキック・熱風の威嚇）は、拳（ちから）・本（かしこさ）の印と赤い数字の「−1」で出す（2026-10-24 ユーザー指示「文字にしない」）
+     */
     const statusBadges = (s: BattleState, m: BattleMonster): HTMLElement | null => {
-      const items: string[] = [];
-      if (m.weaken) items.push(t('battle.status.weaken', { stat: statLabel(m.weaken.stat), n: m.weaken.amount }));
+      const items: HTMLElement[] = [];
+      const weakenBadge = (stat: StatType, n: number): HTMLElement =>
+        h(
+          'span',
+          { class: 'battle__status-stat', attrs: { role: 'img', 'aria-label': t('battle.status.weaken', { stat: statLabel(stat), n }) } },
+          h('img', { class: 'battle__status-icon', attrs: { src: STAT_ICON[stat], alt: '', draggable: 'false' } }),
+          battleDigits(-n, 'battle__status-num'),
+        );
+      if (m.weaken) items.push(weakenBadge(m.weaken.stat, m.weaken.amount));
       // ダストキック：かけた手番（相手の番）と、効く手番（次の手番）の間だけ出す
-      if (m.weakenTurn && m.weakenTurn.turn >= s.turn) items.push(t('battle.status.weaken', { stat: statLabel(m.weakenTurn.stat), n: m.weakenTurn.amount }));
-      if (m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn) items.push(t('battle.status.sealed'));
-      if (m.taunt && m.taunt.turn >= s.turn) items.push(t('battle.status.taunted', { only: cardName(m.taunt.monsterId) }));
+      if (m.weakenTurn && m.weakenTurn.turn >= s.turn) items.push(weakenBadge(m.weakenTurn.stat, m.weakenTurn.amount));
+      if (m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn) items.push(h('span', { class: 'battle__status-text', text: t('battle.status.sealed') }));
+      if (m.taunt && m.taunt.turn >= s.turn) items.push(h('span', { class: 'battle__status-text', text: t('battle.status.taunted', { only: cardName(m.taunt.monsterId) }) }));
       if (items.length === 0) return null;
-      return h('span', { class: 'battle__status' }, ...items.map((text) => h('span', { text })));
+      return h('span', { class: 'battle__status' }, ...items);
     };
 
     /**

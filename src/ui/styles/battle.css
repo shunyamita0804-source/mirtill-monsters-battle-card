@@ -668,26 +668,6 @@
   100% { opacity: 0; transform: scale(1.35); }
 }
 
-/* 守備待ちの攻撃の対象：いまのダメージ予定 */
-.battle__incoming {
-  position: absolute;
-  top: -8px;
-  right: -6px;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 6px;
-  border: 2px solid #fff;
-  border-radius: 14px;
-  background: #e8344e;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 24px;
-  text-align: center;
-  box-shadow: 0 0 10px rgb(232 52 78 / 0.8);
-  animation: target-pulse 0.9s ease-in-out infinite;
-}
-
 /* マナ：増えたとき情報箱が光り、+N が浮かぶ */
 .battle-info__mana {
   position: relative;
@@ -950,7 +930,7 @@
   pointer-events: none;
 }
 
-.battle__status > span {
+.battle__status-text {
   padding: 0 5px;
   border-radius: 6px;
   background: rgb(92 52 140 / 0.9);
@@ -958,6 +938,30 @@
   font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+/* 技のダメージ−：拳（ちから）・本（かしこさ）の丸い印＋赤い数字（2026-10-24。文字は使わない） */
+.battle__status-stat {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8));
+}
+
+.battle__status-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.battle__status-num {
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+.battle__status-num .battle-digits__glyph {
+  height: 100%;
+  width: auto;
 }
 
 /* ===== 2026-10-23 手応えと見せ場 ===== */
