@@ -231,14 +231,21 @@ const PLAYER_SHEET_ROWS = 8;
 const NPC_IDLE_COL = 1;
 
 /**
- * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×8行。行は 正面・背中・左・右・左下・右下・左上・右上）。
+ * 主人公の絵：歩き1周8コマ＋立ち止まり1コマを1枚にまとめたシート（9列×8行。行は 正面・背中・左・右・左下・右下・左上・右上）。
  * 歩く・止まるで別の画像に切り替えると、iPhone で読み込み直しの間だけ人物が消えるので、1枚の中で位置だけ動かす。
- * 2026-10-23 の大人の絵（男性・女性。tools/art/adult_walk_build.py が作る。右足を前・立つ・左足を前・立つ・立ち止まり）
+ * tools/art/adult_walk_build.py が作る。2026-10-24〜：第2版の絵（着く・沈む・足を運ぶ・伸び上がる×右足・左足）がある向きはその8コマ、
+ * 無い向きは前の4コマ（右足を前・立つ・左足を前・立つ）を1コマずつ2回並べている
  */
 const PLAYER_SHEET: Readonly<Record<'male' | 'female', string>> = { male: maleSheet, female: femaleSheet };
-const PLAYER_SHEET_COLS = 5;
-/** シートの立ち止まりの列 */
-const IDLE_COL = 4;
+const PLAYER_SHEET_COLS = 9;
+/** 歩き1周のコマ数と、シートの立ち止まりの列 */
+const WALK_COLS = 8;
+const IDLE_COL = 8;
+/**
+ * 第2版の絵（体の上下まで描いてある）が入っている行。この行では、プログラムで付ける体の縮み・影の動きをやめる（絵と二重になるため）。
+ * 第2版の絵が届いたらここに行を足す（行の番号は DIR_ROW・DIAG_ROW）
+ */
+const PLAYER_V2_ROWS: Readonly<Record<'male' | 'female', ReadonlySet<number>>> = { male: new Set([0]), female: new Set() };
 
 /** 人の歩行の絵（4列×4行。2026-10-23 の大人の絵。tools/art/adult_walk_build.py --npc が作る） */
 const NPC_SHEET: Readonly<Record<NpcId, string>> = {
@@ -938,7 +945,7 @@ class WorldView {
    * 歩くときの体の動き（WALK_SQUASH ほか）。足が着くコマ（偶数）で縮み、足がそろうコマ（奇数）で伸びる。
    * 進んだ距離から決めるので、足のコマ送りとずれない。止まると元に戻る
    */
-  #bodyPose(time: number, walking: boolean, stride: number): { sx: number; sy: number; deg: number; shadow: number } | null {
+  #bodyPose(time: number, walking: boolean, stride: number, drawn = false): { sx: number; sy: number; deg: number; shadow: number } | null {
     if (REDUCED_MOTION) return null;
     const dt = Math.min(0.05, Math.max(0, (time - this.#leanTime) / 1000));
     this.#leanTime = time;
@@ -948,7 +955,8 @@ class WorldView {
     this.#lean += (target - this.#lean) * (1 - Math.exp(-LEAN_RATE * dt));
     if (Math.abs(this.#lean) < 0.01) this.#lean = 0;
     // 1コマ＝半歩。足が着いているコマ（偶数）の真ん中で c＝1（いちばん縮む）、足がそろうコマ（奇数）の真ん中で c＝−1
-    const c = walking ? Math.cos(Math.PI * (this.#walkDist / (stride / 2) - 0.5)) : 0;
+    // 第2版の絵（drawn）は体の上下が絵に描いてあるので、縮み・影の動きは付けない
+    const c = walking && !drawn ? Math.cos(Math.PI * (this.#walkDist / (stride / 2) - 0.5)) : 0;
     const a = this.#running ? RUN_SQUASH : WALK_SQUASH;
     if (c === 0 && this.#lean === 0) return null;
     return { sx: 1 + (a / 2) * c, sy: 1 - a * c, deg: this.#lean, shadow: 1 + SHADOW_PULSE * c };
@@ -961,15 +969,15 @@ class WorldView {
     const w = parseFloat(this.#player.style.width);
     const hgt = parseFloat(this.#player.style.height);
     if (!walking) this.#walkDist = 0;
-    // 半歩（1コマ）ごとに次のコマ。背たけが小さいダンジョンでは歩幅も小さく、走るときは歩幅を大きく
+    // 1歩（stride）を4コマで送る（1周＝右足・左足の2歩＝8コマ）。背たけが小さいダンジョンでは歩幅も小さく、走るときは歩幅を大きく
     const stride = this.#figureH * (this.#running ? RUN_STEP_PER_HEIGHT : STEP_PER_HEIGHT);
-    const step = Math.floor(this.#walkDist / (stride / 2)) % 4;
+    const step = Math.floor(this.#walkDist / (stride / 4)) % WALK_COLS;
     const col = walking ? step : IDLE_COL;
-    // 足音：足が地面に着くコマ（右足前・左足前）に変わったときに1歩
+    // 足音：足が地面に着くコマ（右足が着く＝0・左足が着く＝4）に変わったときに1歩
     if (!walking) this.#stepCol = -1;
     else if (col !== this.#stepCol) {
       this.#stepCol = col;
-      if (col % 2 === 0) sound.step(this.#ground(), this.#running);
+      if (col % 4 === 0) sound.step(this.#ground(), this.#running);
     }
     const row = this.#diag ? DIAG_ROW[this.#diag] : DIR_ROW[this.#dir];
     // 立ち止まっているかの印（CSS の is-idle。呼吸の動きは 2026-10-23 にやめた）。変わったときだけ書く
@@ -979,7 +987,8 @@ class WorldView {
       this.#player.style.backgroundPosition = `${-col * w}px ${-row * hgt}px`;
       this.#playerLook = look;
     }
-    this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, stride));
+    const v2 = PLAYER_V2_ROWS[this.#store.save.player.gender === 'female' ? 'female' : 'male'].has(row);
+    this.#placeFigure(this.#player, p, walking && step % 4 === 2 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, stride, v2));
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
     const z = this.#zoom;

@@ -69,3 +69,8 @@ male_*.png / female_*.png  主人公のいまの絵（添付用）
   → 動きの見本（easy/guide_walk_r.png・guide_walk_l.png。tools/art/walk_guide_draw.py で作る）を添付して、同じ会話で直してもらう（easy/03・04）
 ・2026-10-24　2回目（動きの見本を添付）：右足の1歩は使える（腕の入れ替わり・体の上下・足の順番が良い）。原本 design-parts/characters-adult/motion-v2/player_male_front_walk_r.png
   左足の1歩は1・2は良いが、3・4の足が逆（右足で立って左足が浮いている）→ 3・4だけ直してもらう（easy/05）。1回目の絵は *_try1、2回目の左は *_try2 で保管
+・2026-10-24　3回目（左足の3・4の直し）：1・2・4は良い。3はまだ足が逆だったので、Claude が3のひざより下だけ左右反転して直した（上半身・腕は届いたまま）。
+  原本 design-parts/characters-adult/motion-v2/player_male_front_walk_l.png（届いた絵は *_try3 で保管）
+・組み込み：adult_walk_build.py が motion-v2/{ID}_{向き}_walk_{r,l}.png を見つけると、その向きを1周8コマにする（主人公のシートは 9列＝8コマ＋立ち止まり。
+  絵の無い向きは前の4コマを1コマずつ2回並べる）。ゲーム（worldScreen.ts）は1歩を4コマで送り、足音は 0・4 コマ目。
+  第2版の絵の行（PLAYER_V2_ROWS）ではプログラムの体の縮みを付けない。いまは男性の正面だけ
