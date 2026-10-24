@@ -17,10 +17,6 @@ import {
   type BattleState,
   type Side,
 } from '../../game/battle/engine.ts';
-import iconDeck from '@assets/images/ui/battle/icon_deck.webp';
-import iconDiscard from '@assets/images/ui/battle/icon_discard.webp';
-import iconHand from '@assets/images/ui/battle/icon_hand.webp';
-import iconMana from '@assets/images/ui/battle/icon_mana.webp';
 import { opponentFace, opponentFaceUrl } from '../components/opponentFace.ts';
 import { describePlayCard, effectLabel, guardReduction, statLabel, supportShortText, targetsEnemy, type PlayCard } from '../../game/cards/cardTypes.ts';
 import { buildAutoDeck } from '../../game/deck/deck.ts';
@@ -73,14 +69,14 @@ function showcaseSound(card: PlayCard): SoundId {
 const AI_STEP_MS = 1100;
 /**
  * 場のモンスターのカードの幅（2026-10-24 改訂R2：72→58。約20%小さくして、列の左右に情報欄を置く。
- * 72・58（20%）・54（25%）を3つの画面サイズで比べて決めた。記録は docs/battle-layout-r2.md）
+ * 72・58（20%）・54（25%）を比べて 58 にしたあと、ユーザー指示「左右の欄を細く、モンスターをもう少し広く」で 66。記録は docs/battle-layout-r2.md）
  */
-const MONSTER_CARD_W = 58;
+const MONSTER_CARD_W = 66;
 /**
  * 手札のカードの幅（論理px）。自分の手札（表）と相手の手札（裏）で同じ値を使い、外形をそろえる（2026-10-24 改訂R2）。
  * 高さは技カードの縦横比から skillCardHeight() で出す
  */
-const HAND_CARD_W = 62;
+const HAND_CARD_W = 66;
 /** 説明の欄の大きなカードの幅（論理px） */
 const DETAIL_CARD_W = 106;
 /** 相手の手札の裏向きのカードが、場の真ん中やマナの欄へ動く時間（ミリ秒。見た目だけ。ルールの処理は先に済んでいる） */
@@ -767,7 +763,7 @@ export const battleScreen: ScreenDefinition = {
         h(
           'span',
           { class: 'battle-zone__who' },
-          side === 'opponent' && req.opponent.id ? opponentFace(req.opponent.id, 22) : null,
+          side === 'opponent' && req.opponent.id ? opponentFace(req.opponent.id, 20) : null,
           h('span', { class: 'battle-zone__tag', text: t(`battle.side.${side}`) }),
         ),
         side === 'opponent' ? h('span', { class: 'battle-zone__name', text: st.name }) : null,
@@ -781,25 +777,26 @@ export const battleScreen: ScreenDefinition = {
       );
     };
 
-    /** 列の右：マナ・山札・手札・捨札（アイコンはデザイン第4弾）。手札の数は上下に並べた手札の枚数と同じ */
+    /**
+     * マナ・山札・手札・捨札（相手は列の右、自分は列の左）。手札の数は上下に並べた手札の枚数と同じ。
+     * 2026-10-24 ユーザー指示：欄を細くするためアイコンはやめ、文字と数だけ
+     */
     const infoBox = (s: BattleState, side: Side): HTMLElement => {
       const st = s.sides[side];
       const active = s.active === side && s.phase !== 'ended';
-      const count = (icon: string, text: string): HTMLElement =>
-        h('span', { class: 'battle-info__count' }, h('img', { class: 'battle-info__icon', attrs: { src: icon, alt: '', draggable: 'false' } }), h('span', { text }));
+      const count = (text: string): HTMLElement => h('span', { class: 'battle-info__count', text });
       return h(
         'div',
         { class: `battle-info battle-info--${side}${active ? ' is-active' : ''}` },
         h(
           'div',
           { class: 'battle-info__mana', attrs: { 'aria-label': t('battle.info.manaAria', { n: manaOf(st) }) } },
-          h('img', { class: 'battle-info__icon', attrs: { src: iconMana, alt: '', draggable: 'false' } }),
           h('span', { class: 'battle-info__mana-label', text: t('card.detail.mana') }),
           h('span', { class: 'battle-info__mana-value', text: String(manaOf(st)) }),
         ),
-        count(iconDeck, t('battle.info.deck', { n: st.deck.length })),
-        count(iconHand, t('battle.info.hand', { n: st.hand.length })),
-        count(iconDiscard, t('battle.info.discard', { n: st.discard.length })),
+        count(t('battle.info.deck', { n: st.deck.length })),
+        count(t('battle.info.hand', { n: st.hand.length })),
+        count(t('battle.info.discard', { n: st.discard.length })),
       );
     };
 
@@ -1360,7 +1357,8 @@ export const battleScreen: ScreenDefinition = {
         if (targeting || selected) buttons.push(commandButton(t('common.cancel'), deselect, 'cancel'));
         buttons.push(commandButton(t('battle.cmd.endAttack'), () => requestEndAttack(s), 'cancel'));
       } else if (mine && s.phase === 'mana') {
-        if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(t('battle.cmd.makeMana', { n: manaPicks.size }), convertPicked));
+        // 細い欄に入るよう、枚数の「（N枚）」は2行目に
+        if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(t('battle.cmd.makeMana', { n: manaPicks.size }).replace(/\s*([（(])/, '\n$1'), convertPicked));
         buttons.push(commandButton(t('battle.cmd.endTurn'), () => requestEndTurn(), 'cancel'));
       } else if (s.phase === 'defense' && s.pending?.attacker === 'opponent' && !auto) {
         buttons.push(statusTag(t(noDefensePossible(s) ? 'battle.dock.noDefense' : 'battle.dock.defense')));

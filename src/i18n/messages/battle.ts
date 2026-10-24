@@ -119,9 +119,9 @@ export const BATTLE = {
 
   // 情報箱・モンスター
   'battle.info.manaAria': { ja: 'マナ {n}', en: 'Mana {n}' },
-  'battle.info.deck': { ja: '山札 ×{n}', en: 'Deck ×{n}' },
-  'battle.info.hand': { ja: '手札 ×{n}', en: 'Hand ×{n}' },
-  'battle.info.discard': { ja: '捨札 ×{n}', en: 'Discard ×{n}' },
+  'battle.info.deck': { ja: '山札 {n}', en: 'Deck {n}' },
+  'battle.info.hand': { ja: '手札 {n}', en: 'Hand {n}' },
+  'battle.info.discard': { ja: '捨札 {n}', en: 'Disc. {n}' },
   // 相手・自分の列の左（2026-10-24 改訂R2）：いまの状態と、モンスターの数
   'battle.zone.state.attack': { ja: '攻撃中', en: 'Attacking' },
   'battle.zone.state.mana': { ja: 'マナ化中', en: 'Making Mana' },

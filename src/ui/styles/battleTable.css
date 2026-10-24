@@ -115,9 +115,9 @@
 .battle__hand {
   flex: none;
   height: auto;
-  min-height: calc(var(--hand-card-h) + 34px);
-  gap: 4px;
-  padding: 6px 8px 4px;
+  min-height: calc(var(--hand-card-h) + 30px);
+  gap: 3px;
+  padding: 6px 6px 4px;
   border-top: 1px solid rgb(201 162 74 / 0.28);
   border-bottom: 1px solid rgb(201 162 74 / 0.28);
   background: rgb(0 0 0 / 0.22);
@@ -129,7 +129,8 @@
 }
 
 .battle__hand-card {
-  width: calc(var(--hand-card-w) + 8px);
+  width: calc(var(--hand-card-w) + 4px);
+  padding: 0;
 }
 
 .battle__hand-name {
@@ -205,7 +206,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 3px;
-  padding: 6px 6px;
+  padding: 6px 5px;
   border: 1px solid rgb(201 162 74 / 0.45);
   border-radius: 8px;
   background: linear-gradient(180deg, rgb(34 38 45 / 0.88), rgb(18 20 24 / 0.88));
@@ -218,13 +219,19 @@
 }
 
 .battle-zone__who {
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 .battle-zone__tag {
-  padding: 0 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 5px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 800;
@@ -272,8 +279,16 @@
   min-width: 0;
   align-self: center;
   gap: 1px;
-  padding: 0 0 0 2px;
+  /* 欄を細くするため枠を少し細く（アイコンもやめた） */
+  border-width: 7px;
+  border-image-width: 7px;
+  padding: 1px 0 1px 2px;
   font-size: 11px;
+}
+
+.battle-side .battle-info__count {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .battle-side .battle-info.is-active {
@@ -427,8 +442,10 @@
 
 /* 文字の長いボタン（マナにする（N枚）など）は文字を小さく */
 .battle-cmds .command-btn.is-long .command-btn__label {
-  font-size: 10px;
-  padding: 0 2px;
+  font-size: 11px;
+  line-height: 1.1;
+  padding: 0 3px;
+  white-space: pre-line;
   letter-spacing: -0.03em;
 }
 
