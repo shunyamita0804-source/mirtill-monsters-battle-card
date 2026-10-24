@@ -172,31 +172,47 @@ def slot_windows(sheet: Image.Image, cols: int, rows: int) -> list[Image.Image]:
     return wins
 
 
-def cap_width(im: Image.Image) -> int:
-    """帽子（青）の横幅（人物の上から 22% の範囲にある青い画素の左右の端）。前傾しても変わりにくいので、大きさ合わせの目安にする"""
+def hat_color(im: Image.Image) -> np.ndarray:
+    """帽子の色（人物の上から 12% の範囲で、色の濃い画素の中央値。男性は青、女性は赤）"""
     arr = np.asarray(im)
     a = arr[..., 3] > 200
     ys = np.nonzero(a.any(axis=1))[0]
-    if len(ys) == 0:
-        return 0
     top, bot = int(ys[0]), int(ys[-1])
     rgb = arr[..., :3].astype(int)
-    blue = (rgb[..., 2] > 110) & (rgb[..., 0] < 90) & (rgb[..., 1] < 120) & a
-    blue[top + int((bot - top) * 0.22):] = False
-    xs = np.nonzero(blue.any(axis=0))[0]
+    band = a.copy()
+    band[top + int((bot - top) * 0.12):] = False
+    sat = (rgb.max(axis=-1) - rgb.min(axis=-1)) > 60
+    px = rgb[band & sat]
+    return np.median(px, axis=0) if len(px) else np.array([0, 0, 0])
+
+
+def hat_mask(im: Image.Image, color: np.ndarray) -> np.ndarray:
+    """帽子の色に近い画素（上から 25% の範囲）"""
+    arr = np.asarray(im)
+    a = arr[..., 3] > 200
+    ys = np.nonzero(a.any(axis=1))[0]
+    top, bot = int(ys[0]), int(ys[-1])
+    rgb = arr[..., :3].astype(int)
+    m = (np.abs(rgb - color).sum(axis=-1) < 110) & a
+    m[top + int((bot - top) * 0.25):] = False
+    return m
+
+
+def cap_width(im: Image.Image, color: np.ndarray) -> int:
+    """帽子の横幅（帽子の色の画素の左右の端）。前傾しても変わりにくいので、大きさ合わせの目安にする"""
+    xs = np.nonzero(hat_mask(im, color).any(axis=0))[0]
     return int(xs[-1] - xs[0] + 1) if len(xs) else 0
 
 
-def region_means(im: Image.Image) -> list[np.ndarray]:
-    """色合わせの目安になる3か所（帽子の青・顔の肌・ブーツの茶）の平均色。無い所は飛ばす"""
+def region_means(im: Image.Image, color: np.ndarray) -> list[np.ndarray]:
+    """色合わせの目安になる3か所（帽子・顔の肌・ブーツの茶）の平均色。無い所は飛ばす"""
     arr = np.asarray(im)
     a = arr[..., 3] > 200
     ys = np.nonzero(a.any(axis=1))[0]
     top, bot = int(ys[0]), int(ys[-1])
     h = bot - top
     rgb = arr[..., :3].astype(int)
-    cap = (rgb[..., 2] > 110) & (rgb[..., 0] < 90) & (rgb[..., 1] < 120) & a
-    cap[top + int(h * 0.22):] = False
+    cap = hat_mask(im, color)
     skin = (rgb[..., 0] > 200) & (rgb[..., 1] > 150) & (rgb[..., 1] < 215) & (rgb[..., 2] > 120) & (rgb[..., 2] < 195) & a
     skin[top + int(h * 0.45):] = False
     boot = (rgb[..., 0] > 90) & (rgb[..., 0] < 170) & (rgb[..., 1] > 50) & (rgb[..., 1] < 110) & (rgb[..., 2] < 70) & a
@@ -207,8 +223,9 @@ def region_means(im: Image.Image) -> list[np.ndarray]:
 def tone_match(wins: list[Image.Image], ref: Image.Image) -> list[Image.Image]:
     """別の日に描いた絵（走り）の色味を、歩きの「立つ」に合わせる（2026-10-24 ユーザー「走りは若干色味が変わる」）。
     帽子・肌・ブーツの平均色が歩きと同じになるように、色ごとに「傾きと切片」の直線で直す（傾きは 0.85〜1.15 に抑える）"""
-    ref_means = region_means(ref)
-    run_means = [np.median([m for m in [region_means(w)[i:i + 1] for w in wins] if m], axis=0)[0] for i in range(len(ref_means))] if ref_means else []
+    color = hat_color(ref)
+    ref_means = region_means(ref, color)
+    run_means = [np.median([m for m in [region_means(w, color)[i:i + 1] for w in wins] if m], axis=0)[0] for i in range(len(ref_means))] if ref_means else []
     if len(ref_means) < 2 or len(run_means) < 2:
         return wins
     src = np.array(run_means)
@@ -238,10 +255,14 @@ def run8_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
     stand = split_poses(walk_sheet)[0]
     wins = tone_match(slot_windows(Image.open(path).convert('RGBA'), 4, 2), stand)
     frames = place_poses(wins, walk_sheet)
-    ref_cap = cap_width(place(stand, body_center(alpha(stand)), FIGURE_H / figure_height(walk_sheet)))
-    run_cap = float(np.median([cap_width(f) for f in frames]))
-    ratio = min(1.0, max(0.8, ref_cap / run_cap)) if ref_cap and run_cap else 1.0
-    print(f'  帽子の幅: 歩き {ref_cap} / 走り {run_cap:.0f} → 走りを {ratio:.3f} 倍')
+    color = hat_color(stand)
+    ref_cap = cap_width(place(stand, body_center(alpha(stand)), FIGURE_H / figure_height(walk_sheet)), color)
+    run_cap = float(np.median([cap_width(f, color) for f in frames]))
+    # 2026-10-24 ユーザー「むしろ走っているサイズ感をメインにしたい」：走りは縮めず、背の高さをそろえただけの大きさで使う
+    # （走りの絵は頭・帽子が歩きより大きめに描かれているので、少し大きく見える。帽子の幅は参考に出すだけ）。
+    # 立ち・歩きが街に対して小さい分は、ゲーム側の表示倍率（worldScreen.ts の FIGURE_ZOOM）で全体を大きくする
+    ratio = 1.0
+    print(f'  帽子の幅: 歩き {ref_cap} / 走り {run_cap:.0f}（参考。走りは {ratio:.1f} 倍のまま）')
     return place_poses(wins, walk_sheet, ratio)
 
 
