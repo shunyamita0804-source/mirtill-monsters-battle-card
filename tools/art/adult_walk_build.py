@@ -25,6 +25,7 @@
   絵ごとに大きさが違うので、1枚ずつ背の高さ（頭のてっぺん〜足元）を FIGURE_H にそろえる。右下・右上は左下・左上の左右反転
 {ID}_walk_{front,back,left}_pass.png（2026-10-24〜。あれば）：足を運ぶ途中の絵（docs/design/walk-passing-20261024/。1枚に
   「右足で立ち左足を運ぶ・立つ（見本）・左足で立ち右足を運ぶ」）。歩きの「立つ」の2コマ（2列目・4列目）をこの2ポーズにする
+{ID}_{front,back,left}_walk_pass_{r,l}.png（2026-10-24〜。あれば上より優先）：1枚に1ポーズの同じ絵（docs/design/motion-20261024/ の形）
 --outline N：人物のまわりに N px の暗い輪郭を付ける（2026-10-23 追加）。背景の描き込みが強い街・部屋で人物が埋もれないように。
   同じ日に --tone（色を落ち着かせる）はやめた（背景を描き直して色の調整を外したので、人物だけがくすんで見えたため）
 """
@@ -125,6 +126,28 @@ def pass_poses(pass_sheet: Image.Image, walk_sheet: Image.Image, k: float) -> li
     return [place(w, cx - body_shift(ref, alpha(w)), kp) for w in (wins[0], wins[2])]
 
 
+def single_pose(im: Image.Image, walk_sheet: Image.Image) -> Image.Image:
+    """1枚に1ポーズの絵（motion-20261024 の形）を1コマに。背の高さ（頭のてっぺん〜いちばん下の足）を FIGURE_H にそろえ、
+    上半身が歩きの絵の「立つ」と重なる位置に置く"""
+    REF_H = 860
+    stand = split_poses(walk_sheet)[0]
+    sa = alpha(stand)
+    sy = np.nonzero(sa.any(axis=1))[0]
+    ns = REF_H / int(sy[-1] - sy[0])
+    ia = alpha(im)
+    iy = np.nonzero(ia.any(axis=1))[0]
+    hi = int(iy[-1] - iy[0])
+    ni = REF_H / hi
+    ms = np.array(Image.fromarray(sa).resize((round(stand.width * ns), round(stand.height * ns)), Image.NEAREST))
+    mi = np.array(Image.fromarray(ia).resize((round(im.width * ni), round(im.height * ni)), Image.NEAREST))
+    w = max(ms.shape[1], mi.shape[1])
+    h = max(ms.shape[0], mi.shape[0])
+    ms = np.pad(ms, ((0, h - ms.shape[0]), (0, w - ms.shape[1])))
+    mi = np.pad(mi, ((0, h - mi.shape[0]), (0, w - mi.shape[1])))
+    anchor = body_center(ms) - body_shift(ms, mi)
+    return place(im, anchor / ni, FIGURE_H / hi)
+
+
 def diag_poses(folder: str, cid: str, d: str) -> list[Image.Image]:
     """斜め向き（d＝downleft / upleft）の 立つ・右足を前・左足を前 の3コマ。
     1枚ずつ背の高さを FIGURE_H にそろえ、足を出した2つは上半身が「立つ」と重なる位置に"""
@@ -207,6 +230,13 @@ def main() -> None:
         pass_path = Path(f'{folder}/{cid}_walk_{d}_pass.png')
         if pass_path.exists():
             pass_r, pass_l = pass_poses(Image.open(pass_path).convert('RGBA'), sheet, k)
+        # 1枚に1ポーズの絵（docs/design/motion-20261024/ の形。あればこちらを使う）
+        single_r = Path(f'{folder}/{cid}_{d}_walk_pass_r.png')
+        single_l = Path(f'{folder}/{cid}_{d}_walk_pass_l.png')
+        if single_r.exists():
+            pass_r = single_pose(Image.open(single_r).convert('RGBA'), sheet)
+        if single_l.exists():
+            pass_l = single_pose(Image.open(single_l).convert('RGBA'), sheet)
         rows.append([right_fwd, pass_r, left_fwd, pass_l] + ([] if npc else [stand]))
     rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[2]])
     if '--diag' in args:

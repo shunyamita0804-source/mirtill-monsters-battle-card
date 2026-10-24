@@ -8,3 +8,9 @@
   python3 tools/art/adult_walk_build.py design-parts/characters-adult player_male assets/images/characters/player_male_sheet.webp --scale 1.25 --outline 2 --diag
 ・ほかの行（背中・左右・斜め）は変わらない
 ・この形（1枚に3ポーズ）でも、02_LIST.txt の形（1枚に1ポーズ）でも組み込める。左向き・背中もこの形で届けばそのまま入る
+
+■ 2026-10-24　男性・正面 W2（1枚に1ポーズ・1254×1254・一覧の 01）
+・判断：使う。3ポーズの絵の W2 とほぼ同じ大きさ・位置で、持ち上げた左足が少しはっきり見える（動きが分かりやすい）
+・原本：design-parts/characters-adult/player_male_front_walk_pass_r.png
+・組み込み：adult_walk_build.py が {ID}_{向き}_walk_pass_{r,l}.png（1枚に1ポーズ）を見つけると、3ポーズの絵より優先して使う
+  （背の高さを人物の高さにそろえ、上半身を歩きの絵の「立つ」に合わせる）。W4（一覧の 02）はまだ3ポーズの絵のもの
