@@ -2,6 +2,7 @@
 
 使い方：
   python3 -I tools/design/ui67_build.py <第6弾のフォルダ> <第7弾のフォルダ>
+  python3 -I tools/design/ui67_build.py --fixed7 <第7弾の描き直し6枚のフォルダ>（2026-10-24。その6枚だけ切り出し直す）
 
 書き出し先：assets/images/ui/battle/（光の帯・ターンの帯・数字・対戦の上のボタン）、assets/images/ui/hud/（話す印・きらめき）、
 assets/images/ui/button/（ボタン・タブ・戻る・増減・つまみ・説明の台）、assets/images/ui/worldmap/（地図の印・地名の札）
@@ -89,7 +90,25 @@ def digits(src: Path, out: Path) -> None:
     split_row(img, (split, int(rows[-1]) + 1), ['heal_plus'] + [f'heal_{n}' for n in range(10)], out, 96, trim_vertical=False)
 
 
+def seven_fixed(folder: Path) -> None:
+    """第7弾の描き直し6枚（2026-10-24 納品・両端の飾りなし）だけを切り出し直す。ファイル名・大きさは第7弾と同じ"""
+    btn = ROOT / 'button'
+    cut(folder / 'btn_primary.png', ['btn_primary', 'btn_primary_pressed', 'btn_primary_disabled'], btn, height=96)
+    cut(folder / 'btn_secondary.png', ['btn_secondary', 'btn_secondary_pressed', 'btn_secondary_disabled'], btn, height=96)
+    cut(folder / 'btn_danger.png', ['btn_danger', 'btn_danger_pressed'], btn, height=120)
+    cut(folder / 'tab_chips.png', ['tab_on', 'tab_off'], btn, height=88)
+    cut(folder / 'slider.png', ['slider_track', 'slider_fill', 'slider_knob'], btn, height={'slider_track': 48, 'slider_fill': 48, 'slider_knob': 88})
+    cut(folder / 'notice_panel.png', ['notice_panel'], btn, height=120)
+    # 音量の金色の部分（描き直しの絵では溝の中の金色の棒の位置が変わった。高さ 48 の絵で）
+    fill = Image.open(btn / 'slider_fill.webp').convert('RGBA')
+    save(fill.crop((12, 12, 378, 37)), btn / 'slider_gold.webp')
+
+
 def main() -> None:
+    if sys.argv[1] == '--fixed7':
+        # 使い方：python3 -I tools/design/ui67_build.py --fixed7 <描き直し6枚のフォルダ>
+        seven_fixed(Path(sys.argv[2]))
+        return
     six, seven = Path(sys.argv[1]), Path(sys.argv[2])
     battle, hud, btn, wmap = ROOT / 'battle', ROOT / 'hud', ROOT / 'button', ROOT / 'worldmap'
     # 第6弾

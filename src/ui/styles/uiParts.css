@@ -2,7 +2,8 @@
  * デザイン第6弾・第7弾の部品（2026-10-23 納品）。それまでプログラムで描いていた部品を絵にする。
  * 切り出しは tools/design/ui67_build.py。記録は docs/design/ui-quality7-20261023/10_受け取り結果_UTF8.txt
  *
- * ボタン・タブ・説明の台は border-image で「両端の飾りはそのまま、真ん中だけ伸ばす」。
+ * ボタン・タブ・説明の台は border-image で「両端（角の丸み）はそのまま、真ん中だけ伸ばす」。
+ * 2026-10-24：両端の飾りを無くした描き直し6枚に差し替え（ui67_build.py --fixed7）。端の幅を角の丸みに合わせて細くした
  * slice の数字は切り出した絵（高さ 96〜120px）の上での端の幅、/ のあとが画面での幅
  */
 
@@ -10,10 +11,10 @@
 .btn {
   padding: 0 4px;
   border-style: solid;
-  border-width: 7px 26px;
+  border-width: 7px 16px;
   border-color: transparent;
   border-radius: 0;
-  border-image: url('@assets/images/ui/button/btn_secondary.webp') 14 56 14 56 fill / 7px 26px / 0 stretch;
+  border-image: url('@assets/images/ui/button/btn_secondary.webp') 14 32 14 32 fill / 7px 16px / 0 stretch;
   background: none;
   color: #f1e8d2;
 }
@@ -29,8 +30,8 @@
 }
 
 .btn--primary {
-  border-width: 7px 32px;
-  border-image: url('@assets/images/ui/button/btn_primary.webp') 16 72 16 72 fill / 7px 32px / 0 stretch;
+  border-width: 7px 15px;
+  border-image: url('@assets/images/ui/button/btn_primary.webp') 16 34 16 34 fill / 7px 15px / 0 stretch;
   color: #241806;
   text-shadow: 0 1px 0 rgb(255 240 200 / 0.45);
 }
@@ -45,7 +46,7 @@
 }
 
 .btn--danger {
-  border-image: url('@assets/images/ui/button/btn_danger.webp') 18 70 18 70 fill / 7px 26px / 0 stretch;
+  border-image: url('@assets/images/ui/button/btn_danger.webp') 18 40 18 40 fill / 7px 16px / 0 stretch;
   color: #ffe6e0;
 }
 
@@ -53,15 +54,15 @@
   border-image-source: url('@assets/images/ui/button/btn_danger_pressed.webp');
 }
 
-/* 小さいボタン：両端の飾りを少し細く（文字の場所を広く） */
+/* 小さいボタン：端を少し細く（文字の場所を広く） */
 .btn--small {
-  border-width: 6px 20px;
-  border-image-width: 6px 20px;
+  border-width: 6px 13px;
+  border-image-width: 6px 13px;
 }
 
 .btn--primary.btn--small {
-  border-width: 6px 24px;
-  border-image-width: 6px 24px;
+  border-width: 6px 13px;
+  border-image-width: 6px 13px;
 }
 
 /* キーボードなどで選んでいるボタンの印：白い太枠ではなく、細い金の線 */
@@ -93,7 +94,7 @@
   border-width: 5px 15px;
   border-color: transparent;
   border-radius: 0;
-  border-image: url('@assets/images/ui/button/tab_off.webp') 10 36 10 36 fill / 5px 15px / 0 stretch;
+  border-image: url('@assets/images/ui/button/tab_off.webp') 10 32 10 32 fill / 5px 15px / 0 stretch;
   background: none;
   color: #e9dfc6;
 }
@@ -101,7 +102,7 @@
 .card-grid__tab.is-active,
 .deck__tab.is-active,
 .btn.options__choice.is-active {
-  border-image: url('@assets/images/ui/button/tab_on.webp') 12 36 20 36 fill / 5px 15px 8px / 0 stretch;
+  border-image: url('@assets/images/ui/button/tab_on.webp') 12 32 20 32 fill / 5px 15px 8px / 0 stretch;
   background: none;
   box-shadow: none;
   color: #241806;
@@ -225,7 +226,7 @@
   border-style: solid;
   border-width: 7px 21px;
   border-color: transparent;
-  border-image: url('@assets/images/ui/button/slider_track.webp') 12 36 12 36 fill / 7px 21px / 0 stretch;
+  border-image: url('@assets/images/ui/button/slider_track.webp') 12 24 12 24 fill / 7px 14px / 0 stretch;
   box-sizing: border-box;
 }
 
@@ -282,10 +283,10 @@
 /* ===== 第7弾 8：説明の文を置く台 ===== */
 .notice {
   border-style: solid;
-  border-width: 5px 7px 5px 19px;
+  border-width: 5px 14px;
   border-color: transparent;
   border-radius: 0;
-  border-image: url('@assets/images/ui/button/notice_panel.webp') 14 18 14 56 fill / 5px 7px 5px 19px / 0 stretch;
+  border-image: url('@assets/images/ui/button/notice_panel.webp') 14 38 14 38 fill / 5px 14px / 0 stretch;
   background: none;
   padding: 6px 8px 6px 4px;
   color: #d9cfb6;
