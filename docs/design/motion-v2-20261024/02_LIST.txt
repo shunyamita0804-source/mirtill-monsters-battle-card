@@ -1,0 +1,58 @@
+描く絵の一覧（第2版・2026-10-24）
+
+見方：□ 番号　保存名　｜　貼る②動き・③向き　｜　添付する絵（いつも frame_4poses_1536x1024.png も）
+・④人物は男性／女性を貼る
+・「左足の1歩」は、できあがった「右足の1歩」も添付する
+・走りは、できあがった同じ向きの歩きの2枚も添付するとぶれにくい
+
+━━━━━━━━━━━━━━━━━━━━ 主人公（男性）
+■ 歩き
+□ 01　player_male_front_walk_r.png　｜　② 歩き・右足の1歩・③ 正面　｜　male_walk_front.png・male_stand.png・male_ref_sheet.png・male_front_pass.png ← 最初の2枚
+□ 02　player_male_front_walk_l.png　｜　② 歩き・左足の1歩・③ 正面　｜　male_walk_front.png・male_stand.png・male_ref_sheet.png・male_front_pass.png・player_male_front_walk_r.png（できあがった右足の1歩） ← 最初の2枚
+□ 03　player_male_left_walk_r.png　｜　② 歩き・右足の1歩・③ 左向き　｜　male_walk_left.png・male_stand.png・male_ref_sheet.png
+□ 04　player_male_left_walk_l.png　｜　② 歩き・左足の1歩・③ 左向き　｜　male_walk_left.png・male_stand.png・male_ref_sheet.png・player_male_left_walk_r.png（できあがった右足の1歩）
+□ 05　player_male_back_walk_r.png　｜　② 歩き・右足の1歩・③ 背中　｜　male_walk_back.png・male_stand.png・male_ref_sheet.png
+□ 06　player_male_back_walk_l.png　｜　② 歩き・左足の1歩・③ 背中　｜　male_walk_back.png・male_stand.png・male_ref_sheet.png・player_male_back_walk_r.png（できあがった右足の1歩）
+□ 07　player_male_downleft_walk_r.png　｜　② 歩き・右足の1歩・③ 斜め前　｜　male_downleft_stand.png・male_downleft_rightfoot.png・male_downleft_leftfoot.png・male_ref_sheet.png
+□ 08　player_male_downleft_walk_l.png　｜　② 歩き・左足の1歩・③ 斜め前　｜　male_downleft_stand.png・male_downleft_rightfoot.png・male_downleft_leftfoot.png・male_ref_sheet.png・player_male_downleft_walk_r.png（できあがった右足の1歩）
+□ 09　player_male_upleft_walk_r.png　｜　② 歩き・右足の1歩・③ 斜め後ろ　｜　male_upleft_stand.png・male_upleft_rightfoot.png・male_upleft_leftfoot.png・male_ref_sheet.png
+□ 10　player_male_upleft_walk_l.png　｜　② 歩き・左足の1歩・③ 斜め後ろ　｜　male_upleft_stand.png・male_upleft_rightfoot.png・male_upleft_leftfoot.png・male_ref_sheet.png・player_male_upleft_walk_r.png（できあがった右足の1歩）
+
+■ 走り
+□ 11　player_male_front_run_r.png　｜　② 走り・右足の1歩・③ 正面　｜　male_walk_front.png・male_stand.png・male_ref_sheet.png・male_front_pass.png・player_male_front_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 12　player_male_front_run_l.png　｜　② 走り・左足の1歩・③ 正面　｜　male_walk_front.png・male_stand.png・male_ref_sheet.png・male_front_pass.png・player_male_front_run_r.png（できあがった右足の1歩）・player_male_front_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 13　player_male_left_run_r.png　｜　② 走り・右足の1歩・③ 左向き　｜　male_walk_left.png・male_stand.png・male_ref_sheet.png・player_male_left_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 14　player_male_left_run_l.png　｜　② 走り・左足の1歩・③ 左向き　｜　male_walk_left.png・male_stand.png・male_ref_sheet.png・player_male_left_run_r.png（できあがった右足の1歩）・player_male_left_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 15　player_male_back_run_r.png　｜　② 走り・右足の1歩・③ 背中　｜　male_walk_back.png・male_stand.png・male_ref_sheet.png・player_male_back_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 16　player_male_back_run_l.png　｜　② 走り・左足の1歩・③ 背中　｜　male_walk_back.png・male_stand.png・male_ref_sheet.png・player_male_back_run_r.png（できあがった右足の1歩）・player_male_back_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 17　player_male_downleft_run_r.png　｜　② 走り・右足の1歩・③ 斜め前　｜　male_downleft_stand.png・male_downleft_rightfoot.png・male_downleft_leftfoot.png・male_ref_sheet.png・player_male_downleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 18　player_male_downleft_run_l.png　｜　② 走り・左足の1歩・③ 斜め前　｜　male_downleft_stand.png・male_downleft_rightfoot.png・male_downleft_leftfoot.png・male_ref_sheet.png・player_male_downleft_run_r.png（できあがった右足の1歩）・player_male_downleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 19　player_male_upleft_run_r.png　｜　② 走り・右足の1歩・③ 斜め後ろ　｜　male_upleft_stand.png・male_upleft_rightfoot.png・male_upleft_leftfoot.png・male_ref_sheet.png・player_male_upleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 20　player_male_upleft_run_l.png　｜　② 走り・左足の1歩・③ 斜め後ろ　｜　male_upleft_stand.png・male_upleft_rightfoot.png・male_upleft_leftfoot.png・male_ref_sheet.png・player_male_upleft_run_r.png（できあがった右足の1歩）・player_male_upleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+
+━━━━━━━━━━━━━━━━━━━━ 主人公（女性）　※男性がそろってから
+■ 歩き
+□ 21　player_female_front_walk_r.png　｜　② 歩き・右足の1歩・③ 正面　｜　female_walk_front.png・female_stand.png・female_ref_sheet.png
+□ 22　player_female_front_walk_l.png　｜　② 歩き・左足の1歩・③ 正面　｜　female_walk_front.png・female_stand.png・female_ref_sheet.png・player_female_front_walk_r.png（できあがった右足の1歩）
+□ 23　player_female_left_walk_r.png　｜　② 歩き・右足の1歩・③ 左向き　｜　female_walk_left.png・female_stand.png・female_ref_sheet.png
+□ 24　player_female_left_walk_l.png　｜　② 歩き・左足の1歩・③ 左向き　｜　female_walk_left.png・female_stand.png・female_ref_sheet.png・player_female_left_walk_r.png（できあがった右足の1歩）
+□ 25　player_female_back_walk_r.png　｜　② 歩き・右足の1歩・③ 背中　｜　female_walk_back.png・female_stand.png・female_ref_sheet.png
+□ 26　player_female_back_walk_l.png　｜　② 歩き・左足の1歩・③ 背中　｜　female_walk_back.png・female_stand.png・female_ref_sheet.png・player_female_back_walk_r.png（できあがった右足の1歩）
+□ 27　player_female_downleft_walk_r.png　｜　② 歩き・右足の1歩・③ 斜め前　｜　female_downleft_stand.png・female_downleft_rightfoot.png・female_downleft_leftfoot.png・female_ref_sheet.png
+□ 28　player_female_downleft_walk_l.png　｜　② 歩き・左足の1歩・③ 斜め前　｜　female_downleft_stand.png・female_downleft_rightfoot.png・female_downleft_leftfoot.png・female_ref_sheet.png・player_female_downleft_walk_r.png（できあがった右足の1歩）
+□ 29　player_female_upleft_walk_r.png　｜　② 歩き・右足の1歩・③ 斜め後ろ　｜　female_upleft_stand.png・female_upleft_rightfoot.png・female_upleft_leftfoot.png・female_ref_sheet.png
+□ 30　player_female_upleft_walk_l.png　｜　② 歩き・左足の1歩・③ 斜め後ろ　｜　female_upleft_stand.png・female_upleft_rightfoot.png・female_upleft_leftfoot.png・female_ref_sheet.png・player_female_upleft_walk_r.png（できあがった右足の1歩）
+
+■ 走り
+□ 31　player_female_front_run_r.png　｜　② 走り・右足の1歩・③ 正面　｜　female_walk_front.png・female_stand.png・female_ref_sheet.png・player_female_front_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 32　player_female_front_run_l.png　｜　② 走り・左足の1歩・③ 正面　｜　female_walk_front.png・female_stand.png・female_ref_sheet.png・player_female_front_run_r.png（できあがった右足の1歩）・player_female_front_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 33　player_female_left_run_r.png　｜　② 走り・右足の1歩・③ 左向き　｜　female_walk_left.png・female_stand.png・female_ref_sheet.png・player_female_left_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 34　player_female_left_run_l.png　｜　② 走り・左足の1歩・③ 左向き　｜　female_walk_left.png・female_stand.png・female_ref_sheet.png・player_female_left_run_r.png（できあがった右足の1歩）・player_female_left_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 35　player_female_back_run_r.png　｜　② 走り・右足の1歩・③ 背中　｜　female_walk_back.png・female_stand.png・female_ref_sheet.png・player_female_back_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 36　player_female_back_run_l.png　｜　② 走り・左足の1歩・③ 背中　｜　female_walk_back.png・female_stand.png・female_ref_sheet.png・player_female_back_run_r.png（できあがった右足の1歩）・player_female_back_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 37　player_female_downleft_run_r.png　｜　② 走り・右足の1歩・③ 斜め前　｜　female_downleft_stand.png・female_downleft_rightfoot.png・female_downleft_leftfoot.png・female_ref_sheet.png・player_female_downleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 38　player_female_downleft_run_l.png　｜　② 走り・左足の1歩・③ 斜め前　｜　female_downleft_stand.png・female_downleft_rightfoot.png・female_downleft_leftfoot.png・female_ref_sheet.png・player_female_downleft_run_r.png（できあがった右足の1歩）・player_female_downleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 39　player_female_upleft_run_r.png　｜　② 走り・右足の1歩・③ 斜め後ろ　｜　female_upleft_stand.png・female_upleft_rightfoot.png・female_upleft_leftfoot.png・female_ref_sheet.png・player_female_upleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+□ 40　player_female_upleft_run_l.png　｜　② 走り・左足の1歩・③ 斜め後ろ　｜　female_upleft_stand.png・female_upleft_rightfoot.png・female_upleft_leftfoot.png・female_ref_sheet.png・player_female_upleft_run_r.png（できあがった右足の1歩）・player_female_upleft_walk_r.png / _walk_l.png（同じ向きの歩き）
+
+合計 40 枚（1人 20 枚）。1枚に4ポーズなので、1人あたり 1周8コマの歩き・走り × 8方向（右向きは反転）になる
