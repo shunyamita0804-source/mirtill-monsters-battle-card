@@ -52,6 +52,8 @@ export const titleScreen: ScreenDefinition = {
         continueBtn,
         button(t('title.newGame'), start, store.hasSave ? 'btn btn--large' : 'btn btn--primary btn--large'),
         button(t('title.settings'), () => ctx.navigate('options'), 'btn'),
+        // 開発用（?qa=1 のときだけ）：歩きの確認画面
+        store.qa ? button(t('walkLab.title'), () => ctx.navigate('walkLab'), 'btn btn--small') : null,
       ),
       h('p', { class: 'title__footer', text: t('title.footer', { version: APP_INFO.version }) }),
     );

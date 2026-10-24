@@ -161,6 +161,73 @@
   pointer-events: none;
 }
 
+/*
+ * 歩きの確認画面（walkLabScreen.ts・?qa=1）だけの重ね表示：1マスの格子・足元の地面線・基準点（足元）・コマの枠。
+ * 地図と同じ層に置くので、表示倍率と一緒に拡大される。本編では要素を作らない
+ */
+.world__dev-grid,
+.world__dev-ground,
+.world__dev-origin {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.is-dev-overlay .world__dev-grid,
+.is-dev-overlay .world__dev-ground,
+.is-dev-overlay .world__dev-origin {
+  display: block;
+}
+
+.world__dev-grid {
+  inset: 0;
+  z-index: 4;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.16) 1px, transparent 1px);
+}
+
+.world__dev-ground {
+  width: 100%;
+  height: 0;
+  z-index: 9100;
+  border-top: 1px solid rgb(255 96 96 / 0.95);
+}
+
+.world__dev-origin {
+  width: 0;
+  height: 0;
+  z-index: 9101;
+}
+
+.world__dev-origin::before,
+.world__dev-origin::after {
+  content: '';
+  position: absolute;
+  background: rgb(80 220 255 / 0.95);
+}
+
+.world__dev-origin::before {
+  left: -8px;
+  top: -0.5px;
+  width: 16px;
+  height: 1px;
+}
+
+.world__dev-origin::after {
+  left: -0.5px;
+  top: -8px;
+  width: 1px;
+  height: 16px;
+}
+
+.is-dev-overlay .world__player {
+  outline: 1px dashed rgb(80 220 255 / 0.9);
+  outline-offset: -1px;
+}
+
 /* 場所を移るときの暗転 */
 .world__fade {
   position: absolute;

@@ -18,6 +18,8 @@ export const SCREEN_IDS = [
   'battle',
   'settings',
   'options',
+  /** 歩きの確認画面（開発用。?qa=1 のときだけ入れる） */
+  'walkLab',
 ] as const;
 
 export type ScreenId = (typeof SCREEN_IDS)[number];

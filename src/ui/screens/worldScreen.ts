@@ -29,6 +29,32 @@ import {
   type Point,
 } from '../../game/world/world.ts';
 import {
+  advanceMove,
+  advancePhase,
+  diagonalOf,
+  DIR_ROW,
+  facing,
+  FOOT_X,
+  FOOT_Y,
+  FRAME_H,
+  FRAME_W,
+  frameOf,
+  FRAMES_PER_STEP,
+  framesPerSecond,
+  IDLE_COL,
+  isContactFrame,
+  isWalking,
+  PLAYER_SHEET_COLS,
+  PLAYER_SHEET_ROWS,
+  PLAYER_V2_ROWS,
+  sheetRow,
+  squashOf,
+  strideOf,
+  walkSpeed,
+  type Diagonal,
+  type PlayerGender,
+} from '../../game/world/walkAnim.ts';
+import {
   applySceneEffects,
   isNpcPresent,
   sceneAfterPractice,
@@ -103,26 +129,13 @@ const STICK_DEAD = 16;
 /** スティックの輪の半径（CSS の .world__stick 104px の半分）と、輪を出さない上の帯の高さ（論理px） */
 const STICK_RING_R = 52;
 const STICK_TOP = 64;
-/** 歩行速度（論理px/秒・仮。実機で調整）。2026-10-22 に街を詰めたとき 185 から 1.25 倍に（ユーザー指示） */
-const WALK_PX = 231;
 /**
- * 1歩で進む距離（人物の背たけに対する割合）。コマ送りを時間ではなく進んだ距離で決め、足が地面をすべって見えないようにする
- * （2026-10-23。それまでは 7コマ/秒で、1歩に背たけの約0.8倍進み、足がすべって見えた）。
- * いまの歩く速さ・背たけ（街・部屋 81 論理px）では 1歩 約36 論理px＝約6.4歩/秒（約13コマ/秒）。
- * 2026-10-24 ユーザー「動きがチープで本当に歩いているように見えない」：足がパタパタ速すぎたので 0.45→0.58（約5歩/秒）
- */
-const STEP_PER_HEIGHT = 0.58;
-/**
+ * 歩く速さ・歩幅・コマ送りの計算は src/game/world/walkAnim.ts（確認画面と共用。2026-10-24）。
  * 歩くときの上下の弾み（人物の背たけに対する割合）。
  * 2026-10-23 ユーザー「プカプカ浮いて見える。しっかり地面に足が着いているように」で 0 に（体を持ち上げると影から離れて浮いて見えた）
  */
 const WALK_BOB = 0;
-/**
- * 走る（2026-10-23・ユーザー承認）：スティックを大きく倒すと走る。速さは歩きの倍率、1歩・弾みは背たけに対する割合。
- * 走る絵はまだ無いので、歩きの絵を大きな歩幅で使う（弾みは歩きと同じく 0）
- */
-const RUN_RATE = 1.7;
-const RUN_STEP_PER_HEIGHT = 0.6;
+/** 走る（2026-10-23・ユーザー承認）：スティックを大きく倒すと走る。弾みは歩きと同じく 0 */
 const RUN_BOB = 0;
 /**
  * 歩くときの体の動き（2026-10-24 ユーザー「もう少しクオリティを上げたい」。足元を基準にするので、体を持ち上げて浮いて見えることはない）：
@@ -141,13 +154,6 @@ const REDUCED_MOTION = typeof matchMedia === 'function' && matchMedia('(prefers-
 /** スティックをこれ以上倒すと走る／これより戻すと歩きに戻る（論理px。行ったり来たりしないよう差をつける） */
 const STICK_RUN = 36;
 const STICK_WALK_BACK = 28;
-/**
- * 歩き出し・止まり方（2026-10-23）：歩き出しは ACCEL_FROM の速さから ACCEL_S 秒でふつうの速さに。
- * 止まる最後のマスでは、マスの終わりで DECEL_TO の速さまで落とす
- */
-const ACCEL_S = 0.15;
-const ACCEL_FROM = 0.45;
-const DECEL_TO = 0.55;
 /** カメラが人物を追う強さ（1秒あたり）。ぴったり付けず少し遅れて追い、止まるとなめらかに追いつく */
 const CAMERA_FOLLOW = 9;
 /**
@@ -213,20 +219,9 @@ const ROOM_GROUND: Readonly<Record<string, StepSurface>> = { hall: 'stone' };
 /** 施設の看板を上の帯の下に保つ位置（論理px） */
 const SIGN_MIN_BOTTOM = 98;
 /**
- * 人物の歩行素材：1コマ 216×288、足元 (108, 270)。行＝方向（front/back/left/right）、列＝4コマ（シート 864×1152）。
+ * 人物の歩行素材：1コマ 216×288、足元 (108, 270)（FRAME_W・FOOT_X などは walkAnim.ts）。人の絵は行＝方向（front/back/left/right）、列＝4コマ（シート 864×1152）。
  * 街・部屋では 108×144 単位（設計図どおり）、ダンジョン（仮マップ）では少し小さく描く
  */
-const FRAME_W = 216;
-const FRAME_H = 288;
-const FOOT_X = 108;
-const FOOT_Y = 270;
-const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, right: 3 };
-/** 主人公の斜め向き（絵の向きだけ。セーブや「しらべる」の向きは上下左右の Direction のまま） */
-type Diagonal = 'downleft' | 'downright' | 'upleft' | 'upright';
-/** 主人公のシートの斜め向きの行（上下左右の4行の下に足した4行） */
-const DIAG_ROW: Readonly<Record<Diagonal, number>> = { downleft: 4, downright: 5, upleft: 6, upright: 7 };
-/** 主人公のシートの行の数 */
-const PLAYER_SHEET_ROWS = 8;
 /** 待機の絵が歩行シートの何列目と同じか（歩き4コマは「右足を前・立つ・左足を前・立つ」なので2列目） */
 const NPC_IDLE_COL = 1;
 
@@ -236,16 +231,7 @@ const NPC_IDLE_COL = 1;
  * tools/art/adult_walk_build.py が作る。2026-10-24〜：第2版の絵（着く・沈む・足を運ぶ・伸び上がる×右足・左足）がある向きはその8コマ、
  * 無い向きは前の4コマ（右足を前・立つ・左足を前・立つ）を1コマずつ2回並べている
  */
-const PLAYER_SHEET: Readonly<Record<'male' | 'female', string>> = { male: maleSheet, female: femaleSheet };
-const PLAYER_SHEET_COLS = 9;
-/** 歩き1周のコマ数と、シートの立ち止まりの列 */
-const WALK_COLS = 8;
-const IDLE_COL = 8;
-/**
- * 第2版の絵（体の上下まで描いてある）が入っている行。この行では、プログラムで付ける体の縮み・影の動きをやめる（絵と二重になるため）。
- * 第2版の絵が届いたらここに行を足す（行の番号は DIR_ROW・DIAG_ROW）
- */
-const PLAYER_V2_ROWS: Readonly<Record<'male' | 'female', ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3]), female: new Set() };
+export const PLAYER_SHEET: Readonly<Record<PlayerGender, string>> = { male: maleSheet, female: femaleSheet };
 
 /** 人の歩行の絵（4列×4行。2026-10-23 の大人の絵。tools/art/adult_walk_build.py --npc が作る） */
 const NPC_SHEET: Readonly<Record<NpcId, string>> = {
@@ -290,22 +276,6 @@ const TILE_CLASS: Readonly<Record<string, string>> = {
 
 const coins = (n: number): string => t('common.coins', { n } satisfies Params);
 
-/**
- * 1歩の向き → 人物の向き（上下左右。主人公の斜めの絵は別に #diag で選ぶ）。
- * いまの向きの成分がある斜め（例：右を向いて右下へ）は向きを変えない。斜め45度あたりで正面と横の絵が細かく入れ替わらないように。
- * それ以外の斜めは左右の絵
- */
-const facing = (dx: number, dy: number, prev: Direction): Direction => {
-  if (dx === 0 && dy === 0) return prev;
-  const p = DIR_DELTA[prev];
-  if ((p.x !== 0 && p.x === dx) || (p.y !== 0 && p.y === dy)) return prev;
-  return dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
-};
-
-/** 1歩の向き → 斜めの絵の向き（斜めでなければ null） */
-const diagonalOf = (dx: number, dy: number): Diagonal | null =>
-  dx !== 0 && dy !== 0 ? `${dy > 0 ? 'down' : 'up'}${dx > 0 ? 'right' : 'left'}` : null;
-
 /** 2つの角度の差（-π〜π） */
 const angleDiff = (a: number, b: number): number => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 
@@ -328,9 +298,70 @@ interface Move {
   t: number;
 }
 
-class WorldView {
+/**
+ * 歩きの確認画面（walkLabScreen.ts）が本体と同じ WorldView を使うための調整項目（2026-10-24）。
+ * 本編では使わない（undefined）。値はセーブ・設定に保存しない
+ */
+export interface WorldDevState {
+  /** 移動速度の倍率（1＝本編どおり） */
+  speedScale: number;
+  /** 再生速度の倍率（進んだ距離あたりのコマ数。1＝本編どおり。移動速度と別に変えて足滑りの原因を切り分ける） */
+  animScale: number;
+  /** 時間の倍率（低速再生。1＝通常、0.25＝1/4 の速さ） */
+  timeScale: number;
+  paused: boolean;
+  /** 一時停止中の「1コマ送り」の残り回数 */
+  stepFrames: number;
+  /** カメラを動かさない（出発点を見たまま。人物の実際の移動量を確かめる） */
+  fixedCamera: boolean;
+  /** 表示倍率（null＝本編どおり VIEW_ZOOM） */
+  zoom: number | null;
+  /** その場で動かす（位置を変えずにコマだけ進める）。null＝ふつうに移動 */
+  treadmill: { dir: Direction; diag: Diagonal | null; mode: 'idle' | 'walk' | 'run' } | null;
+  /** 格子・地面線・基準点・コマの枠を出す */
+  overlays: boolean;
+}
+
+/** 確認画面に毎コマ知らせる数値 */
+export interface WorldDevFrame {
+  readonly row: number;
+  readonly col: number;
+  readonly phase: number;
+  readonly walking: boolean;
+  readonly running: boolean;
+  /** いまの速さ（論理px/秒）・1歩の長さ（論理px）・コマが切り替わる速さ（コマ/秒） */
+  readonly speedPx: number;
+  readonly stride: number;
+  readonly fps: number;
+  /** 人物のコマの高さ（論理px）・1マス（論理px）・表示倍率 */
+  readonly figureH: number;
+  readonly cell: number;
+  readonly zoom: number;
+  readonly tile: Point;
+  readonly pos: Point;
+  readonly foot: Point;
+  /** 画面に出ている人物の大きさ（論理px。表示倍率をかけたもの）：コマの枠と絵の高さ */
+  readonly shownCellW: number;
+  readonly shownCellH: number;
+  readonly gender: PlayerGender;
+}
+
+export interface WorldDevOptions {
+  readonly map: MapDefinition;
+  readonly start: Location;
+  readonly state: WorldDevState;
+  readonly onFrame?: (info: WorldDevFrame) => void;
+}
+
+export class WorldView {
   readonly #ctx: ScreenContext;
   readonly #root: HTMLElement;
+  /** 確認画面用の調整（本編では undefined） */
+  readonly #dev: WorldDevOptions | undefined;
+  /** 確認画面の格子・地面線・基準点 */
+  #devGrid: HTMLElement | null = null;
+  #devGround: HTMLElement | null = null;
+  #devOrigin: HTMLElement | null = null;
   #map!: MapDefinition;
   #pos: Point = { x: 0, y: 0 };
   #tile: Point = { x: 0, y: 0 };
@@ -349,8 +380,8 @@ class WorldView {
   #busy = false;
   #raf = 0;
   #last = 0;
-  /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
-  #walkDist = 0;
+  /** 歩きの位相（歩数。1歩＝4コマ。コマ送り用。walkAnim.ts）・最後に歩いていた時刻 */
+  #phase = 0;
   #lastMoving = 0;
   /** 体の傾き（度。いまの値）と、最後に体の動きを計算した時刻 */
   #lean = 0;
@@ -400,9 +431,10 @@ class WorldView {
   readonly #onKeyDown = (e: KeyboardEvent): void => this.#key(e, true);
   readonly #onKeyUp = (e: KeyboardEvent): void => this.#key(e, false);
 
-  constructor(ctx: ScreenContext, root: HTMLElement) {
+  constructor(ctx: ScreenContext, root: HTMLElement, dev?: WorldDevOptions) {
     this.#ctx = ctx;
     this.#root = root;
+    this.#dev = dev;
     window.addEventListener('keydown', this.#onKeyDown);
     window.addEventListener('keyup', this.#onKeyUp);
   }
@@ -419,9 +451,25 @@ class WorldView {
     window.removeEventListener('keyup', this.#onKeyUp);
   }
 
-  /** 地図と人物を見せる倍率（VIEW_ZOOM） */
+  /** 地図と人物を見せる倍率（VIEW_ZOOM。確認画面では指定の倍率） */
   get #zoom(): number {
-    return VIEW_ZOOM[this.#map.area];
+    return this.#dev?.state.zoom ?? VIEW_ZOOM[this.#map.area];
+  }
+
+  /** 主人公の絵（男性・女性） */
+  get #gender(): PlayerGender {
+    return this.#store.save.player.gender === 'female' ? 'female' : 'male';
+  }
+
+  /** いまの1歩の長さ（論理px） */
+  get #stride(): number {
+    return strideOf(this.#figureH, this.#running);
+  }
+
+  /** 確認画面の「その場で動かす」で歩いている最中か */
+  get #treadmillMoving(): boolean {
+    const tm = this.#dev?.state.treadmill;
+    return tm !== null && tm !== undefined && tm.mode !== 'idle';
   }
 
   /** 1マスの大きさ（論理px） */
@@ -476,10 +524,11 @@ class WorldView {
     el.style.transformOrigin = `${(FOOT_X / 2) * wk}px ${(FOOT_Y / 2) * k}px`;
   }
 
-  /** セーブの現在地のマップを表示する */
+  /** セーブの現在地のマップを表示する（確認画面では指定の地図・位置） */
   load(): void {
-    const loc = this.#store.save.location;
-    const map = getMap(loc.mapId);
+    const dev = this.#dev;
+    const loc = dev ? dev.start : this.#store.save.location;
+    const map = dev ? dev.map : getMap(loc.mapId);
     if (!map) return;
     this.#map = map;
     this.#tile = { x: loc.x, y: loc.y };
@@ -491,14 +540,18 @@ class WorldView {
     this.#afterPath = null;
     this.#busy = false;
     this.#scale = this.#artScale(map);
-    bgm.play(map.area === 'dungeon' ? 'dungeon' : 'town');
-    sound.ambient(map.area === 'dungeon' ? this.#dungeonSound().ambient : null);
+    this.#phase = 0;
+    if (!dev) {
+      bgm.play(map.area === 'dungeon' ? 'dungeon' : 'town');
+      sound.ambient(map.area === 'dungeon' ? this.#dungeonSound().ambient : null);
+    }
     this.#build(true);
     cancelAnimationFrame(this.#raf);
     this.#last = performance.now();
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
-    const flash = this.#store.flashMessage;
-    const scene = this.#sceneOnLoad();
+    // 確認画面では会話・お知らせを出さない（歩きだけを見る）
+    const flash = dev ? null : this.#store.flashMessage;
+    const scene = dev ? null : this.#sceneOnLoad();
     if (flash) {
       this.#store.flashMessage = null;
       this.#message(flash, scene ? () => this.#playScene(scene) : undefined);
@@ -651,10 +704,19 @@ class WorldView {
         this.#mapLayer.append(el);
       }
     }
+    // 確認画面：格子（1マスごと）と地面線・基準点（地図と同じ層に置き、同じ倍率で拡大される）
+    this.#devGrid = this.#devGround = this.#devOrigin = null;
+    if (this.#dev) {
+      this.#devGrid = h('div', { class: 'world__dev-grid', attrs: { 'aria-hidden': 'true' } });
+      this.#devGrid.style.backgroundSize = `${cell}px ${cell}px`;
+      this.#devGround = h('div', { class: 'world__dev-ground', attrs: { 'aria-hidden': 'true' } });
+      this.#devOrigin = h('div', { class: 'world__dev-origin', attrs: { 'aria-hidden': 'true' } });
+      this.#mapLayer.append(this.#devGrid, this.#devGround, this.#devOrigin);
+    }
     this.#player = h('div', { class: 'world__player', attrs: { 'aria-label': t('world.player') } });
     this.#sizeFigure(this.#player);
     // 絵は最初に1回だけ設定する（あとは位置だけ動かす）
-    this.#player.style.backgroundImage = `url("${PLAYER_SHEET[save.player.gender === 'female' ? 'female' : 'male']}")`;
+    this.#player.style.backgroundImage = `url("${PLAYER_SHEET[this.#gender]}")`;
     this.#player.style.backgroundSize = `${parseFloat(this.#player.style.width) * PLAYER_SHEET_COLS}px ${parseFloat(this.#player.style.height) * PLAYER_SHEET_ROWS}px`;
     this.#addShadow(this.#player);
     this.#playerLook = '';
@@ -801,12 +863,25 @@ class WorldView {
 
   #frame(time: number): void {
     if (this.#destroyed) return;
-    const dt = Math.min(0.05, (time - this.#last) / 1000);
+    let dt = Math.min(0.05, (time - this.#last) / 1000);
     this.#last = time;
-    if (!this.#busy) this.#step(dt);
-    if (this.#move) {
+    const dev = this.#dev?.state;
+    // 確認画面の1コマ送りで進めた時間（#oneFrameDt が #step まで済ませる）
+    let stepped = 0;
+    if (dev) {
+      // 確認画面：低速再生・一時停止・1コマ送り（止めている間は時間を進めない）
+      if (dev.paused) {
+        dt = 0;
+        if (dev.stepFrames > 0) {
+          dev.stepFrames -= 1;
+          stepped = this.#oneFrameDt();
+        }
+      } else dt *= dev.timeScale;
+    }
+    if (!this.#busy && dt > 0) this.#step(dt);
+    if (this.#move || this.#treadmillMoving) {
       this.#lastMoving = time;
-      this.#moveTime += dt;
+      this.#moveTime += dt + stepped;
     } else {
       this.#moveTime = 0;
       if (!this.#held) this.#running = false;
@@ -815,38 +890,67 @@ class WorldView {
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
   }
 
+  /** 確認画面の1コマ送り：コマが1つ進むまで少しずつ時間を進め、その合計の時間を返す */
+  #oneFrameDt(): number {
+    const dev = this.#dev?.state;
+    if (!dev) return 0;
+    const before = frameOf(this.#phase);
+    let total = 0;
+    for (let i = 0; i < 400 && frameOf(this.#phase) === before; i += 1) {
+      const slice = 1 / 240;
+      if (this.#busy) break;
+      this.#step(slice);
+      total += slice;
+      if (!this.#move && !this.#treadmillMoving) break;
+    }
+    return total;
+  }
+
   /**
    * dt 秒ぶん進める。マスに着いて歩き続けるときは、あまった時間でそのまま次のマスへ進む
    * （2026-10-23。それまではマスごとに1コマ止まり、カクカクして見えた）
    */
   #step(dt: number): void {
+    const tm = this.#dev?.state.treadmill;
+    if (tm) {
+      // 確認画面「その場で動かす」：向き・状態を指定どおりにし、位置は変えずにコマだけ進める
+      this.#dir = tm.dir;
+      this.#diag = tm.diag;
+      this.#running = tm.mode === 'run';
+      this.#move = null;
+      this.#path = [];
+      if (tm.mode !== 'idle') this.#phase = advancePhase(this.#phase, this.#speed() * dt, this.#stride, this.#animScale);
+      return;
+    }
     if (!this.#move) {
       this.#startNext();
       if (!this.#move) return;
     }
-    const speed = this.#speed() / this.#cell;
-    const t0 = this.#move.t;
-    this.#move.t += (dt * speed) / this.#move.len;
-    this.#walkDist += (Math.min(1, this.#move.t) - t0) * this.#move.len * this.#cell;
-    if (this.#move.t >= 1) {
-      const rest = ((this.#move.t - 1) * this.#move.len) / speed;
+    const r = advanceMove(this.#move.t, this.#move.len, dt, this.#speed(), this.#cell);
+    this.#move.t = r.t;
+    // コマ送りは進んだ距離で決める（歩幅は walkAnim.ts。走りに変わっても位相は続きから）
+    this.#phase = advancePhase(this.#phase, r.dist, this.#stride, this.#animScale);
+    if (r.t >= 1) {
       this.#tile = this.#move.to;
       this.#pos = { ...this.#tile };
       this.#move = null;
       this.#arrive();
-      if (rest > 0 && !this.#busy) this.#step(rest);
+      if (r.rest > 0 && !this.#busy) this.#step(r.rest);
       return;
     }
     const { from, to, t } = this.#move;
     this.#pos = { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
   }
 
-  /** いまの歩く速さ（論理px/秒）。走る・歩き出しの加速・止まる最後のマスの減速 */
+  /** 確認画面の再生速度の倍率（本編は 1） */
+  get #animScale(): number {
+    return this.#dev?.state.animScale ?? 1;
+  }
+
+  /** いまの歩く速さ（論理px/秒）。走る・歩き出しの加速・止まる最後のマスの減速（walkAnim.ts） */
   #speed(): number {
-    let v = WALK_PX * (this.#running ? RUN_RATE : 1);
-    v *= Math.min(1, ACCEL_FROM + ((1 - ACCEL_FROM) * this.#moveTime) / ACCEL_S);
-    if (this.#move && !this.#held && this.#path.length === 0) v *= 1 - (1 - DECEL_TO) * this.#move.t;
-    return v;
+    const decel = this.#move && !this.#held && this.#path.length === 0 ? this.#move.t : null;
+    return walkSpeed(this.#running, this.#moveTime, decel, this.#dev?.state.speedScale ?? 1);
   }
 
   /** 止まっているとき：道順・調べる予約・押している向きから、次の1歩を始める */
@@ -945,7 +1049,7 @@ class WorldView {
    * 歩くときの体の動き（WALK_SQUASH ほか）。足が着くコマ（偶数）で縮み、足がそろうコマ（奇数）で伸びる。
    * 進んだ距離から決めるので、足のコマ送りとずれない。止まると元に戻る
    */
-  #bodyPose(time: number, walking: boolean, stride: number, drawn = false): { sx: number; sy: number; deg: number; shadow: number } | null {
+  #bodyPose(time: number, walking: boolean, drawn = false): { sx: number; sy: number; deg: number; shadow: number } | null {
     if (REDUCED_MOTION) return null;
     const dt = Math.min(0.05, Math.max(0, (time - this.#leanTime) / 1000));
     this.#leanTime = time;
@@ -956,7 +1060,7 @@ class WorldView {
     if (Math.abs(this.#lean) < 0.01) this.#lean = 0;
     // 1コマ＝半歩。足が着いているコマ（偶数）の真ん中で c＝1（いちばん縮む）、足がそろうコマ（奇数）の真ん中で c＝−1
     // 第2版の絵（drawn）は体の上下が絵に描いてあるので、縮み・影の動きは付けない
-    const c = walking && !drawn ? Math.cos(Math.PI * (this.#walkDist / (stride / 2) - 0.5)) : 0;
+    const c = walking && !drawn ? squashOf(this.#phase) : 0;
     const a = this.#running ? RUN_SQUASH : WALK_SQUASH;
     if (c === 0 && this.#lean === 0) return null;
     return { sx: 1 + (a / 2) * c, sy: 1 - a * c, deg: this.#lean, shadow: 1 + SHADOW_PULSE * c };
@@ -965,21 +1069,20 @@ class WorldView {
   #render(time = performance.now()): void {
     const p = this.#pos;
     // 歩いている間（と、歩き続けている途中のマスの切り替わり）は歩行シート、止まったら待機の絵
-    const walking = this.#move !== null || time - this.#lastMoving < 90;
+    const walking = isWalking(time, this.#lastMoving, this.#move !== null || this.#treadmillMoving);
     const w = parseFloat(this.#player.style.width);
     const hgt = parseFloat(this.#player.style.height);
-    if (!walking) this.#walkDist = 0;
-    // 1歩（stride）を4コマで送る（1周＝右足・左足の2歩＝8コマ）。背たけが小さいダンジョンでは歩幅も小さく、走るときは歩幅を大きく
-    const stride = this.#figureH * (this.#running ? RUN_STEP_PER_HEIGHT : STEP_PER_HEIGHT);
-    const step = Math.floor(this.#walkDist / (stride / 4)) % WALK_COLS;
+    if (!walking) this.#phase = 0;
+    // 1歩を4コマで送る（1周＝右足・左足の2歩＝8コマ）。背たけが小さいダンジョンでは歩幅も小さく、走るときは歩幅を大きく（walkAnim.ts）
+    const step = frameOf(this.#phase);
     const col = walking ? step : IDLE_COL;
     // 足音：足が地面に着くコマ（右足が着く＝0・左足が着く＝4）に変わったときに1歩
     if (!walking) this.#stepCol = -1;
     else if (col !== this.#stepCol) {
       this.#stepCol = col;
-      if (col % 4 === 0) sound.step(this.#ground(), this.#running);
+      if (isContactFrame(col)) sound.step(this.#ground(), this.#running);
     }
-    const row = this.#diag ? DIAG_ROW[this.#diag] : DIR_ROW[this.#dir];
+    const row = sheetRow(this.#dir, this.#diag);
     // 立ち止まっているかの印（CSS の is-idle。呼吸の動きは 2026-10-23 にやめた）。変わったときだけ書く
     if (walking === this.#player.classList.contains('is-idle')) this.#player.classList.toggle('is-idle', !walking);
     const look = `${row}:${col}`;
@@ -987,8 +1090,8 @@ class WorldView {
       this.#player.style.backgroundPosition = `${-col * w}px ${-row * hgt}px`;
       this.#playerLook = look;
     }
-    const v2 = PLAYER_V2_ROWS[this.#store.save.player.gender === 'female' ? 'female' : 'male'].has(row);
-    this.#placeFigure(this.#player, p, walking && step % 4 === 2 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, stride, v2));
+    const v2 = PLAYER_V2_ROWS[this.#gender].has(row);
+    this.#placeFigure(this.#player, p, walking && step % FRAMES_PER_STEP === 2 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, v2));
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
     const z = this.#zoom;
@@ -997,6 +1100,8 @@ class WorldView {
     const mw = width * cell * z;
     const mh = height * cell * z;
     const f = this.#foot(p);
+    const dev = this.#dev;
+    if (dev) this.#renderDev(time, { row, col, walking, f, w, hgt, cell, z });
     // カメラは人物の体の真ん中＋進む向きの先読みを見る。遊びの中では動かさない
     const camDt = Math.min(0.05, Math.max(0, (time - this.#camTime) / 1000));
     this.#camTime = time;
@@ -1008,8 +1113,11 @@ class WorldView {
       x: this.#look.x + ((ahead.x / al) * vw * CAMERA_LOOK - this.#look.x) * la,
       y: this.#look.y + ((ahead.y / al) * vh * CAMERA_LOOK - this.#look.y) * la,
     };
-    const body = { x: f.x * z + this.#look.x, y: (f.y - this.#figureH / 2) * z + this.#look.y };
-    if (!this.#cam) this.#focus = body;
+    // 確認画面「カメラを止める」：出発点を見たまま（人物が動いた量がそのまま見える）
+    const anchor = dev?.state.fixedCamera ? this.#foot(dev.start) : f;
+    if (dev?.state.fixedCamera) this.#look = { x: 0, y: 0 };
+    const body = { x: anchor.x * z + this.#look.x, y: (anchor.y - this.#figureH / 2) * z + this.#look.y };
+    if (!this.#cam || dev?.state.fixedCamera) this.#focus = body;
     else {
       const dx = body.x - this.#focus.x;
       const dy = body.y - this.#focus.y;
@@ -1022,7 +1130,7 @@ class WorldView {
     const tx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(fo.x - vw / 2, 0), mw - vw);
     const ty = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fo.y - vh / 2, 0), mh - vh);
     // カメラは少し遅れて追う（場所に入ったときはぴったり）
-    if (!this.#cam) this.#cam = { x: tx, y: ty };
+    if (!this.#cam || dev?.state.fixedCamera) this.#cam = { x: tx, y: ty };
     else {
       const a = 1 - Math.exp(-CAMERA_FOLLOW * camDt);
       this.#cam = { x: this.#cam.x + (tx - this.#cam.x) * a, y: this.#cam.y + (ty - this.#cam.y) * a };
@@ -1044,6 +1152,57 @@ class WorldView {
     if (this.#root.dataset.px !== px) this.#root.dataset.px = px;
     if (this.#root.dataset.py !== py) this.#root.dataset.py = py;
     if (!this.#move) this.#updateNear();
+  }
+
+  /** 確認画面：格子・地面線・基準点・コマの枠を更新し、数値を知らせる */
+  #renderDev(time: number, v: { row: number; col: number; walking: boolean; f: Point; w: number; hgt: number; cell: number; z: number }): void {
+    const dev = this.#dev;
+    if (!dev) return;
+    const on = dev.state.overlays;
+    if (this.#root.classList.contains('is-dev-overlay') !== on) this.#root.classList.toggle('is-dev-overlay', on);
+    if (this.#devGround) this.#devGround.style.transform = `translate(0, ${v.f.y}px)`;
+    if (this.#devOrigin) this.#devOrigin.style.transform = `translate(${v.f.x}px, ${v.f.y}px)`;
+    const speedPx = v.walking ? this.#speed() : 0;
+    const stride = this.#stride;
+    dev.onFrame?.({
+      row: v.row,
+      col: v.col,
+      phase: this.#phase,
+      walking: v.walking,
+      running: this.#running,
+      speedPx,
+      stride,
+      fps: framesPerSecond(speedPx, stride, this.#animScale),
+      figureH: this.#figureH,
+      cell: v.cell,
+      zoom: v.z,
+      tile: this.#tile,
+      pos: this.#pos,
+      foot: v.f,
+      shownCellW: v.w * v.z,
+      shownCellH: v.hgt * v.z,
+      gender: this.#gender,
+    });
+    void time;
+  }
+
+  /** 確認画面：向きを指定する（本編では使わない） */
+  setFacing(dir: Direction, diag: Diagonal | null): void {
+    if (!this.#dev) return;
+    this.#dir = dir;
+    this.#diag = diag;
+  }
+
+  /** 確認画面：人物を出発点に戻す（カメラも） */
+  resetPosition(): void {
+    const dev = this.#dev;
+    if (!dev) return;
+    this.#tile = { x: dev.start.x, y: dev.start.y };
+    this.#pos = { ...this.#tile };
+    this.#move = null;
+    this.#path = [];
+    this.#phase = 0;
+    this.#cam = null;
   }
 
   /* ---------- 操作 ---------- */
