@@ -44,4 +44,7 @@
 　- walkAnim.ts：PLAYER_SHEET_ROWS 8・RUN_ROW_BASE 4・sheetRow は斜めなら横の行。確認画面の向きのボタンも4つ
 　- 斜めの原本（player_male_{downleft,upleft}_*.png・女性も）は design-parts に残してある（戻すなら --diag と定数を戻す）
 ・男性は4方向とも「歩き 第2版8コマ・走り 第3版8コマ」がそろった。残りは女性（歩き3方向・走り3方向）
-・公開：2026-10-24 ユーザー「終わったら公開して」
+・公開：2026-10-24 ユーザー「終わったら公開して」→ main の 53f27f4 を公開（deploy-pages 実行 #36 成功）
+・2026-10-24 左向きの走りの2枚目（B）が届き、ユーザー「容姿に忠実なほうを採用して」：
+　歩きの絵（採用済み）と比べて、顔の見える高さが 歩き 0.41・A 0.34・B 0.39（身長比）で B が近い（帽子・頭の割合は同じ）。
+　色の分布は A が少し近いが、顔がはっきり見える B を採用。A は player_male_left_run8_v3a.png で保管、B は player_male_left_run8_v3b.png（組み込み用 player_male_left_run8.png）
