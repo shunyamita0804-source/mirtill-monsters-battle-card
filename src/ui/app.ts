@@ -14,7 +14,7 @@ const NO_SAVE_SCREENS: readonly ScreenId[] = ['title', 'newGame', 'options'];
 
 /** アプリ全体の組み立て：ステージを用意し、ルーターの変化に合わせて画面を差し替える */
 export function startApp(root: HTMLElement, store: GameStore = GameStore.fromBrowser()): void {
-  const stage = mountStage(root);
+  const stage = mountStage(root, { qa: store.qa });
   // iPhone は最初のタップまで音を鳴らせないので、タップで効果音・BGM を使えるようにする
   sound.installUnlock();
   bgm.installUnlock();

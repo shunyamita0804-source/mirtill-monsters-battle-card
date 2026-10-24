@@ -1,4 +1,4 @@
-import { TILE_INFO, type MapDefinition, type MapObject } from '../../data/maps.ts';
+import { TILE_INFO, type MapDefinition, type MapObject, type NpcObject } from '../../data/maps.ts';
 import type { Direction } from '../save/saveData.ts';
 
 /** 歩行マップの当たり判定・経路探索（DOM 非依存） */
@@ -45,6 +45,42 @@ export function objectsAt(
 export function isBlocked(map: MapDefinition, x: number, y: number, isVisible: (obj: MapObject) => boolean): boolean {
   if (isSolidTile(tileAt(map, x, y))) return true;
   return objectsAt(map, x, y, isVisible).some((o) => o.type === 'enemy' || o.type === 'chest' || o.type === 'npc');
+}
+
+/**
+ * 人のまわりのマス（2026-10-24 改訂R2 フェーズ1）。正式な絵の街・部屋では人の絵がマスよりずっと大きく、
+ * となりのマスまで近づくと主人公と人の絵が大きく重なった（ユーザーの動画 V3）。人から radius マス以内（たて・よこ・ななめ）を通れないことにする
+ */
+export function isNearNpc(map: MapDefinition, x: number, y: number, isVisible: (obj: MapObject) => boolean, radius: number): boolean {
+  if (radius <= 0) return false;
+  return map.objects.some((o) => o.type === 'npc' && isVisible(o) && Math.max(Math.abs(o.x - x), Math.abs(o.y - y)) <= radius);
+}
+
+/** p から range マス以内（たて・よこ・ななめ）にいる、いちばん近い人。同じ近さなら向いている方の人 */
+export function nearestNpc(
+  map: MapDefinition,
+  p: Point,
+  isVisible: (obj: MapObject) => boolean,
+  range: number,
+  facing?: Direction,
+): NpcObject | null {
+  let best: NpcObject | null = null;
+  let bestScore = Infinity;
+  for (const o of map.objects) {
+    if (o.type !== 'npc' || !isVisible(o)) continue;
+    const dx = o.x - p.x;
+    const dy = o.y - p.y;
+    const dist = Math.max(Math.abs(dx), Math.abs(dy));
+    if (dist > range) continue;
+    // 向いている方の人を少し優先（同じ近さのとき）
+    const f = facing ? DIR_DELTA[facing] : { x: 0, y: 0 };
+    const score = dist * 10 + Math.hypot(dx, dy) - (dx * f.x + dy * f.y > 0 ? 0.5 : 0);
+    if (score < bestScore) {
+      bestScore = score;
+      best = o;
+    }
+  }
+  return best;
 }
 
 export function directionBetween(from: Point, to: Point): Direction {

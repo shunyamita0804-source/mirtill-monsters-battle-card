@@ -24,6 +24,8 @@ export const WORLD = {
     en: 'Slide to walk · tap to go there\nTap people or furniture to talk or check',
   },
   'world.examine': { ja: '調べる', en: 'Check' },
+  // 話せる人のそばでは、右下のボタンの文字を「話す」に（2026-10-24 改訂R2 フェーズ1）
+  'world.talk': { ja: '話す', en: 'Talk' },
 
   // マップ上の物
   'world.enemy': { ja: '敵', en: 'Enemy' },

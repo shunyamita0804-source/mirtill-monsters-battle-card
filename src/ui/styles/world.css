@@ -100,6 +100,8 @@
   position: absolute;
   top: 0;
   left: 0;
+  /* ダンジョンなどは地図ごと拡大する（worldScreen.ts の VIEW_ZOOM）。左上を基準に */
+  transform-origin: 0 0;
   will-change: transform;
   animation: fade-in 220ms ease-out;
 }
@@ -265,6 +267,7 @@
   color: #fff;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .world__label--building {
@@ -378,7 +381,8 @@
 .world__hint {
   position: absolute;
   left: 12px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  /* 画面（.stage）はもうセーフエリアの内側にあるので、ここでセーフエリアを足さない（2026-10-24。二重に空いて下が広く空いていた） */
+  bottom: 16px;
   max-width: 280px;
   padding: 6px 10px;
   border-radius: 10px;
@@ -395,7 +399,8 @@
 .world__action {
   position: absolute;
   right: 14px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  /* 画面（.stage）はもうセーフエリアの内側にあるので、ここでセーフエリアを足さない（2026-10-24。二重に空いて下が広く空いていた） */
+  bottom: 16px;
   z-index: 3;
   width: 72px;
   height: 72px;

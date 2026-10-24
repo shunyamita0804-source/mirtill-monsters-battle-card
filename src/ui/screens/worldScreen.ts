@@ -20,8 +20,11 @@ import {
   DIR_DELTA,
   findPath,
   findPathToObject,
+  findPathWhere,
   isBlocked,
+  isNearNpc,
   mapSize,
+  nearestNpc,
   objectsAt,
   type Point,
 } from '../../game/world/world.ts';
@@ -97,6 +100,9 @@ const REVEAL_TIMEOUT_MS = 3000;
 const STICK_START = 12;
 const STICK_RADIUS = 42;
 const STICK_DEAD = 16;
+/** スティックの輪の半径（CSS の .world__stick 104px の半分）と、輪を出さない上の帯の高さ（論理px） */
+const STICK_RING_R = 52;
+const STICK_TOP = 64;
 /** 歩行速度（論理px/秒・仮。実機で調整）。2026-10-22 に街を詰めたとき 185 から 1.25 倍に（ユーザー指示） */
 const WALK_PX = 231;
 /**
@@ -129,6 +135,21 @@ const ACCEL_FROM = 0.45;
 const DECEL_TO = 0.55;
 /** カメラが人物を追う強さ（1秒あたり）。ぴったり付けず少し遅れて追い、止まるとなめらかに追いつく */
 const CAMERA_FOLLOW = 9;
+/**
+ * カメラの遊び（2026-10-24 改訂R2 フェーズ1）：人物がこの幅（論理px）の中で動く間はカメラを動かさない。
+ * 1歩ごとの細かい動きで背景がずっと揺れて「背景が滑るだけ」に見えないように
+ */
+const CAMERA_DEAD_X = 14;
+const CAMERA_DEAD_Y = 18;
+/** カメラの先読み：進む向きの先を少し多く見せる（見える範囲の幅・高さに対する割合）と、その追いつく速さ（1秒あたり） */
+const CAMERA_LOOK = 0.08;
+const CAMERA_LOOK_RATE = 2.5;
+/**
+ * 見せる倍率（2026-10-24 改訂R2 フェーズ1。地図・人物を同じ倍率で拡大し、カメラが追う）。
+ * ダンジョン：全体が一度に見えて主人公が小さかった（ユーザーの動画 V1）ので 1.25・1.5・1.75 倍を比べて 1.5 倍（人物の大きさが街と同じ 81 論理px になる）。
+ * 街：1.00・1.15・1.30 倍を比べて 1.15 倍（家の入口・道が見えたまま、主人公が少し大きく見える。1.30 倍は先が見えにくい。記録は docs/battle-layout-r2.md）。部屋は画面の高さに合わせて別に決めている（#artScale）
+ */
+const VIEW_ZOOM: Readonly<Record<MapDefinition['area'], number>> = { town: 1.15, interior: 1, dungeon: 1.5 };
 /** スティックの向きを変えるまでの余裕（ラジアン）。8方向の境目（22.5度）を 8度こえるまで前の向きのまま */
 const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
 /**
@@ -136,6 +157,14 @@ const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
  * 2026-10-23 ユーザー「指でなぞると人物がクルクル回ってチープ」：指のわずかな動きで、その場で向きが次々変わらないように
  */
 const TURN_IN_PLACE_MS = 220;
+/**
+ * 人のまわり（2026-10-24 改訂R2 フェーズ1。ユーザーの動画 V3 で主人公と人の絵が大きく重なった）：
+ * 正式な絵の街・部屋では、人から NPC_SPACE マス以内は通れない。話せるのは NPC_TALK_RANGE マス以内。
+ * 主人公が NPC_GAZE_RANGE マス以内に来ると、その人は主人公の方を向く（控えめな反応。離れると元の向きに戻る）
+ */
+const NPC_SPACE = 1;
+const NPC_TALK_RANGE = 2;
+const NPC_GAZE_RANGE = 3;
 /** 宝箱の絵（ミスモンの正式素材）：閉じた絵と、開く動きの4コマ（4コマ目が開いたあとの絵） */
 const CHEST_ART: Readonly<Record<ChestObject['look'], { readonly closed: string; readonly opening: readonly string[] }>> = {
   wood: { closed: chestWood, opening: [chestWood1, chestWood2, chestWood3, chestWood4] },
@@ -309,6 +338,9 @@ class WorldView {
   /** カメラの位置（地図をずらす量。論理px）。null なら次の描画で人物にぴったり合わせる */
   #cam: Point | null = null;
   #camTime = 0;
+  /** カメラが見ている点（遊びの中心。拡大後の地図の座標）と、先読みの量 */
+  #focus: Point = { x: 0, y: 0 };
+  #look: Point = { x: 0, y: 0 };
   /** 1論理px あたりの画面の画素（地図の位置をそろえる単位）と、それを測ったときの画面の大きさ */
   #snap = 1;
   #snapKey = '';
@@ -360,6 +392,11 @@ class WorldView {
     sound.ambient(null);
     window.removeEventListener('keydown', this.#onKeyDown);
     window.removeEventListener('keyup', this.#onKeyUp);
+  }
+
+  /** 地図と人物を見せる倍率（VIEW_ZOOM） */
+  get #zoom(): number {
+    return VIEW_ZOOM[this.#map.area];
   }
 
   /** 1マスの大きさ（論理px） */
@@ -517,7 +554,20 @@ class WorldView {
     return true;
   };
 
-  #blocked = (x: number, y: number): boolean => isBlocked(this.#map, x, y, this.#isVisible);
+  #blocked = (x: number, y: number): boolean =>
+    isBlocked(this.#map, x, y, this.#isVisible) || (this.#map.art !== undefined && isNearNpc(this.#map, x, y, this.#isVisible, NPC_SPACE));
+
+  /** 話せる範囲にいる人（正式な絵の街・部屋。いちばん近い人・同じ近さなら向いている方） */
+  #nearNpc(from: Point = this.#tile): NpcObject | null {
+    return this.#map.art ? nearestNpc(this.#map, from, this.#isVisible, NPC_TALK_RANGE, this.#dir) : null;
+  }
+
+  /** 人の方を向いてから話しかける */
+  #talkTo(npc: NpcObject): void {
+    this.#dir = this.#dirTo(npc);
+    this.#diag = null;
+    this.#talk(npc);
+  }
 
   #build(fade = false): void {
     this.#touch = null;
@@ -714,6 +764,7 @@ class WorldView {
     const hgt = parseFloat(el.style.height);
     el.style.backgroundSize = `${w * 4}px ${hgt * 4}px`;
     el.style.backgroundPosition = `${-NPC_IDLE_COL * w}px ${-DIR_ROW[dir] * hgt}px`;
+    el.dataset.face = dir;
   }
 
   /* ---------- ループ ---------- */
@@ -778,6 +829,12 @@ class WorldView {
       return;
     }
     if (this.#afterPath) {
+      const target = this.#afterPath;
+      if (target.type === 'npc' && this.#map.art) {
+        this.#afterPath = null;
+        if (this.#nearNpc()?.id === target.id || Math.max(Math.abs(target.x - this.#tile.x), Math.abs(target.y - this.#tile.y)) <= NPC_TALK_RANGE) this.#talkTo(target);
+        return;
+      }
       const cell = adjacentCellOf(this.#afterPath, this.#tile);
       this.#afterPath = null;
       if (cell) {
@@ -882,18 +939,37 @@ class WorldView {
     this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0);
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
+    const z = this.#zoom;
     const vw = this.#viewport.clientWidth || 390;
     const vh = this.#viewport.clientHeight || 600;
-    const mw = width * cell;
-    const mh = height * cell;
+    const mw = width * cell * z;
+    const mh = height * cell * z;
     const f = this.#foot(p);
-    // カメラは人物の体の真ん中を追う
-    const fy = f.y - this.#figureH / 2;
-    const tx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(f.x - vw / 2, 0), mw - vw);
-    const ty = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fy - vh / 2, 0), mh - vh);
-    // カメラは少し遅れて追う（場所に入ったときはぴったり）
+    // カメラは人物の体の真ん中＋進む向きの先読みを見る。遊びの中では動かさない
     const camDt = Math.min(0.05, Math.max(0, (time - this.#camTime) / 1000));
     this.#camTime = time;
+    const mv = this.#move;
+    const ahead = mv ? { x: mv.to.x - mv.from.x, y: mv.to.y - mv.from.y } : { x: 0, y: 0 };
+    const al = Math.hypot(ahead.x, ahead.y) || 1;
+    const la = 1 - Math.exp(-CAMERA_LOOK_RATE * camDt);
+    this.#look = {
+      x: this.#look.x + ((ahead.x / al) * vw * CAMERA_LOOK - this.#look.x) * la,
+      y: this.#look.y + ((ahead.y / al) * vh * CAMERA_LOOK - this.#look.y) * la,
+    };
+    const body = { x: f.x * z + this.#look.x, y: (f.y - this.#figureH / 2) * z + this.#look.y };
+    if (!this.#cam) this.#focus = body;
+    else {
+      const dx = body.x - this.#focus.x;
+      const dy = body.y - this.#focus.y;
+      this.#focus = {
+        x: Math.abs(dx) > CAMERA_DEAD_X ? body.x - Math.sign(dx) * CAMERA_DEAD_X : this.#focus.x,
+        y: Math.abs(dy) > CAMERA_DEAD_Y ? body.y - Math.sign(dy) * CAMERA_DEAD_Y : this.#focus.y,
+      };
+    }
+    const fo = this.#focus;
+    const tx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(fo.x - vw / 2, 0), mw - vw);
+    const ty = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fo.y - vh / 2, 0), mh - vh);
+    // カメラは少し遅れて追う（場所に入ったときはぴったり）
     if (!this.#cam) this.#cam = { x: tx, y: ty };
     else {
       const a = 1 - Math.exp(-CAMERA_FOLLOW * camDt);
@@ -902,10 +978,10 @@ class WorldView {
     const { x: cx, y: cy } = this.#cam;
     // 画面の実際の点（デバイスの画素）にそろえる。論理px で丸めると、人物が地図に対して半px ずつ揺れて見える
     const snap = this.#pixelSnap();
-    this.#mapLayer.style.transform = `translate(${Math.round(cx * snap) / snap}px, ${Math.round(cy * snap) / snap}px)`;
+    this.#mapLayer.style.transform = `translate(${Math.round(cx * snap) / snap}px, ${Math.round(cy * snap) / snap}px)${z !== 1 ? ` scale(${z})` : ''}`;
     // 施設の看板が上の帯に隠れるときは、建物の上を少し下へずらす（玄関の上までは下げない）
     for (const sign of this.#signs) {
-      const shift = Math.max(0, Math.min(SIGN_MIN_BOTTOM - (sign.top + cy), sign.maxShift));
+      const shift = Math.max(0, Math.min((SIGN_MIN_BOTTOM - (sign.top * z + cy)) / z, sign.maxShift));
       if (shift !== sign.shift) {
         sign.shift = shift;
         sign.el.style.transform = `translate(-50%, calc(-100% + ${shift.toFixed(1)}px))`;
@@ -945,9 +1021,7 @@ class WorldView {
       touch.dragging = true;
       this.#path = [];
       this.#afterPath = null;
-      const v = this.#viewport.getBoundingClientRect();
-      this.#stick.style.left = `${(touch.x - v.left) / scale}px`;
-      this.#stick.style.top = `${(touch.y - v.top) / scale}px`;
+      this.#placeStick(touch.x, touch.y, scale);
       this.#stick.classList.add('is-on');
       if (!WorldView.#stickUsed) {
         WorldView.#stickUsed = true;
@@ -973,6 +1047,27 @@ class WorldView {
     const a = (sector * Math.PI) / 4;
     this.#held = { x: Math.round(Math.cos(a)), y: Math.round(Math.sin(a)) };
     this.#heldAt = performance.now();
+  }
+
+  /**
+   * スティックの輪を出す位置（指を置いた所）。2026-10-24 改訂R2 フェーズ1：輪が画面の端で欠けたり、
+   * 上の帯・右下の「調べる」に重なったりしないよう、輪だけ内側へずらす（歩く向きは指を置いた所から測るので変わらない）
+   */
+  #placeStick(clientX: number, clientY: number, scale: number): void {
+    const v = this.#viewport.getBoundingClientRect();
+    const vw = this.#viewport.clientWidth;
+    const vh = this.#viewport.clientHeight;
+    const r = STICK_RING_R + 4;
+    let x = Math.min(Math.max((clientX - v.left) / scale, r), vw - r);
+    let y = Math.min(Math.max((clientY - v.top) / scale, STICK_TOP + r), vh - r);
+    const btn = this.#examineBtn?.getBoundingClientRect();
+    if (btn) {
+      const bl = (btn.left - v.left) / scale;
+      const bt = (btn.top - v.top) / scale;
+      if (x + r > bl && y + r > bt) x = Math.max(r, bl - r);
+    }
+    this.#stick.style.left = `${x}px`;
+    this.#stick.style.top = `${y}px`;
   }
 
   #pointerUp(e: PointerEvent, tap: boolean): void {
@@ -1051,6 +1146,21 @@ class WorldView {
     // 話しかけ・調べる対象（出入口は歩いて踏むので対象外）
     const target = person ?? objectsAt(this.#map, x, y, this.#isVisible).find((o) => o.type !== 'warp');
     const from = this.#move ? this.#move.to : this.#tile;
+    if (person && this.#map.art) {
+      // 人：話せる範囲（NPC_TALK_RANGE マス以内）まで歩いてから話す。押したことが分かるよう小さな音（ボタンと同じ音）
+      sound.tap();
+      const inRange = (px: number, py: number): boolean => Math.max(Math.abs(px - person.x), Math.abs(py - person.y)) <= NPC_TALK_RANGE;
+      if (inRange(from.x, from.y) && !this.#move) {
+        this.#talkTo(person);
+        return;
+      }
+      const path = findPathWhere(this.#map, from, inRange, this.#blocked);
+      if (!path) return;
+      this.#held = null;
+      this.#path = path;
+      this.#afterPath = person;
+      return;
+    }
     if (target) {
       const here = adjacentCellOf(target, from);
       if (here && !this.#move) {
@@ -1089,9 +1199,32 @@ class WorldView {
     const key = `${this.#map.id}:${this.#tile.x},${this.#tile.y}`;
     if (key === this.#nearKey) return;
     this.#nearKey = key;
-    const near = this.#nearTarget();
+    this.#gaze();
+    const npc = this.#nearNpc();
+    const near = npc ? { x: npc.x, y: npc.y } : this.#nearTarget();
     this.#examineBtn?.classList.toggle('is-ready', near !== null);
+    // 話せる人がいるときは「話す」、それ以外は「調べる」（何ができるかをボタンの文字で見せる）
+    const label = t(npc ? 'world.talk' : 'world.examine');
+    const labelEl = this.#examineBtn?.querySelector('.world__action-label');
+    if (labelEl && labelEl.textContent !== label) {
+      labelEl.textContent = label;
+      this.#examineBtn?.setAttribute('aria-label', label);
+    }
     this.#showMarker(near);
+  }
+
+  /** 近くの人は主人公の方を向く。離れたら元の向き（正面）に戻る（話しかけたときの向きは #talk で決める） */
+  #gaze(): void {
+    for (const obj of this.#map.objects) {
+      if (obj.type !== 'npc') continue;
+      const el = this.#objectEls.get(obj.id);
+      if (!el) continue;
+      const dx = this.#tile.x - obj.x;
+      const dy = this.#tile.y - obj.y;
+      const near = Math.max(Math.abs(dx), Math.abs(dy)) <= NPC_GAZE_RANGE;
+      const dir: Direction = !near ? 'down' : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+      if (el.dataset.face !== dir) this.#faceNpc(el, dir);
+    }
   }
 
   /** となりの人には頭の上に「…」の吹き出し、調べられる物にはきらめき。敵には出さない */
@@ -1122,6 +1255,11 @@ class WorldView {
     if (this.#busy || this.#move) return;
     const d = DIR_DELTA[this.#dir];
     const front = { x: this.#tile.x + d.x, y: this.#tile.y + d.y };
+    const npc = this.#nearNpc();
+    if (npc) {
+      this.#talkTo(npc);
+      return;
+    }
     const near = this.#nearTarget();
     if (near) {
       this.#dir = this.#dirTo(near);
