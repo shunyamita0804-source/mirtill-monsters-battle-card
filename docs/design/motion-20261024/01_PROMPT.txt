@@ -1,0 +1,126 @@
+【プロンプト】主人公の「歩く・走る」の絵（1枚に1ポーズ・1024×1024）（2026-10-24）
+
+使い方：①「共通ルール」 ②「ポーズ」の文（W1〜W4・R1〜R4 のどれか1つ） ③「向き」の文（5つのどれか1つ） ④「人物」の文 を順に貼り、
+02_LIST.txt の「添付」の画像を付ける。日本語でうまくいかないときは English version。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ ① 共通ルール（毎回、最初に貼る）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dゲーム「セイクリッドモンスターズ バトルカード」（販売する商品）の、街を歩く主人公の動きの絵を1枚描いてください。
+添付の絵は、すでにゲームで使っている同じ人物の絵です。この人物の新しいポーズを1つ描きます。
+
+【いちばん大事なこと】
+・添付の絵と、まったく同じ人物・同じ絵。顔・髪型・帽子・服の模様・ベルト・飾り・かばん・ブーツ・手袋・色・線の太さ・塗り方を変えない
+・変えてよいのは、足と腕の位置、体の傾き、それに合わせた服のすそ・髪・かばんのわずかな揺れだけ
+・同じ頭身・同じ大きさ。頭の上と足元を添付の枠の線にそろえ、体の中心を点線に。地面に着いている足のかかとは足元の線の上
+・斜め上から少し見下ろす視点（添付の絵と同じ）。向きは下の【向き】のとおり
+
+【自然な動きにするために】
+・人が本当に歩く・走るときの体の動き。腕は足と反対に振る（右足が前なら左腕が前）
+・ひじ・ひざ・足首の曲がり方が自然になるように。かかとから着地し、つま先でける
+・足と腕の形は前後・左右がはっきり見分けられるように（あいまいな形にしない）
+
+【画風】添付の絵と同じ。筆で塗り重ねた手描きの質感。輪郭は濃い茶色系の線。ベクター風・フラット・3DCG風は禁止
+【描くもの】1024×1024 に人物1人だけ
+【禁止】文字・数字・ロゴ・透かし・サイン。地面・影・砂ぼこり・動きの線・背景・枠の線と文字・ほかの人物
+【形式】背景は透明（できなければマゼンタ一色 #FF00FF）。PNG
+▲ここまで
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ ② ポーズ（1つ選んで貼る）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼W1　歩き・右足を前に着く
+【ポーズ】歩き・右足を前に着く瞬間。右足は前に出してかかとが地面に着き、左足は後ろでつま先が地面に着いている（足を前後に開く。開きは自然な歩幅）。左腕を前、右腕を後ろに振る（ひじは軽く曲げ、手は腰の高さ前後。振りの角度は20〜25度くらいで、はっきり分かるように）。体はまっすぐ
+▲
+▼W2　歩き・右足で立ち、左足を運ぶ
+【ポーズ】歩き・右足で立ち、左足を前へ運んでいる途中。体重は右足で、右足はまっすぐ地面に着いている。左足はひざを軽く曲げて地面から少し持ち上げ、右足の横を通って前へ運んでいる（つま先が地面から少し離れる。すねの半分より高く上げない）。両腕は体の横に近く、振りは小さい（左腕が少し後ろ、右腕が少し前）。体はW1より少しだけ高い
+▲
+▼W3　歩き・左足を前に着く
+【ポーズ】W1 の左右を入れ替えたもの。左足を前に出してかかとが地面に着き、右足は後ろでつま先が地面に着く。右腕を前、左腕を後ろに振る（20〜25度くらい、はっきり分かるように）
+▲
+▼W4　歩き・左足で立ち、右足を運ぶ
+【ポーズ】W2 の左右を入れ替えたもの。体重は左足でまっすぐ立ち、右足はひざを軽く曲げて持ち上げ、左足の横を通って前へ運んでいる途中。両腕は体の横に近く、振りは小さい（右腕が少し後ろ、左腕が少し前）
+▲
+▼R1　走り・右足で着地
+【ポーズ】走り・右足で着地する瞬間。右足は体の少し前で地面に着き（ひざは少し曲げる）、左足は後ろへ大きくけり上げる（ひざを曲げ、かかとがおしりの方へ）。体を10度くらい前に傾ける。ひじは90度くらいに曲げ、左腕を前（手はあごの高さ）、右腕を後ろに大きく振る。髪・服のすそ・かばんが走る勢いで少し後ろへなびく
+▲
+▼R2　走り・浮く（左ひざが前へ）
+【ポーズ】走り・両足が地面から離れた瞬間（体はいちばん高い）。左ひざを前へ持ち上げ（太ももが斜め前）、右足は後ろで軽く曲げる。体を10度くらい前に傾ける。ひじは90度、右腕が前、左腕が後ろ（R1 から入れ替わる途中で、振りはR1よりやや小さい）。足元の線より少し上に浮かせる（足の高さの4分の1くらい）
+▲
+▼R3　走り・左足で着地
+【ポーズ】R1 の左右を入れ替えたもの。左足が体の少し前で着地し、右足は後ろへ大きくけり上げる。体を10度くらい前に傾け、右腕を前（手はあごの高さ）、左腕を後ろに大きく振る。髪・すそ・かばんが少し後ろへなびく
+▲
+▼R4　走り・浮く（右ひざが前へ）
+【ポーズ】R2 の左右を入れ替えたもの。両足が地面から離れ、右ひざを前へ持ち上げ、左足は後ろで軽く曲げる。左腕が前、右腕が後ろ。足元の線より少し上に浮かせる
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ ③ 向き（1つ選んで貼る）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼正面　【向き】正面（こちらへ向かって進む）。顔と体の前が見える。前へ出した足・持ち上げたひざは少し手前（こちら側）に見える
+▼背中　【向き】背中（奥へ向かって進む）。顔は見えない。持ち上げた足の靴の裏が少し見える
+▼左向き　【向き】左向きの横顔（画面の左へ進む）。体の左側が見える。前後の足・腕がはっきり重ならずに見える
+▼斜め前　【向き】斜め前（画面の左下へ進む）。添付の「正面」と「左向き」のちょうど中間（45度）。顔と体の前が見え、体の左側も少し見える。添付の斜め前の立ち姿と同じ角度
+▼斜め後ろ　【向き】斜め後ろ（画面の左上へ進む）。添付の「背中」と「左向き」のちょうど中間（45度）。背中と体の左側が見え、顔はほぼ見えない。添付の斜め後ろの立ち姿と同じ角度
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ ④ 人物（1つ選んで貼る）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼男性　【人物】22歳の男性。黒い短めの髪（少し無造作）。青い帽子（正面に小さな金の紋章）。青い袖なしの長いベストに金の縁取り、白いシャツは袖をまくる。茶色の革のたすき掛けのベルト、腰に茶色のかばん。濃い灰色のズボン、茶色のロングブーツ、指なしの革手袋
+▼女性　【人物】22歳の女性。明るい茶色の長い髪（ゆるいウェーブ）。赤い帽子（リボン付き）。白いブラウス（ふくらんだ短い袖）に、金の刺しゅうの赤いベスト、茶色の革ベルト。白いフリルの上に赤と金のスカート、黒いタイツ、茶色の編み上げのロングブーツ、腰に小さな革のかばん、指なしの革手袋
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ English version
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼① Common rules
+Draw ONE motion pose of the hero walking in town, for the commercial smartphone 2D game "Sacred Monsters Battle Card".
+The attached images are the same character already used in the game. Draw a new pose of this character.
+[Most important]
+- Exactly the same character and drawing as the attachments. Do NOT change the face, hair, cap, clothing patterns, belts, decorations, bag, boots, gloves, colors, line weight or painting style.
+- Only the legs, arms, body lean, and a slight sway of the hem, hair and bag may change.
+- Same proportions and size. Top of head and feet on the guide lines of the attached frame; body centered on the dotted line. The planted heel stays on the feet line.
+- Slightly top-down view, same as the attachments. Direction as written in [Direction].
+[Natural motion]
+- Real human walking/running mechanics. Arms swing opposite to the legs (right foot forward = left arm forward).
+- Natural bends at elbows, knees and ankles. Heel strike, toe push-off.
+- Front/back and left/right limbs must be clearly distinguishable (no ambiguous shapes).
+[Style] Same as the attachments: hand-painted, layered brush strokes, dark-brown outlines. NO flat vector art, NO 3D render look.
+[What to draw] One character only, on 1024x1024.
+[Forbidden] Text, numbers, logos, watermarks, signatures. Ground, shadows, dust, motion lines, background, guide lines or labels, other people.
+[Format] Transparent background (if impossible, solid magenta #FF00FF). PNG.
+▲
+▼② Poses
+W1 Walk, right foot contact: right heel touches the ground in front, left toes on the ground behind (natural stride). Left arm forward, right arm back (elbows slightly bent, a clear 20-25 degree swing). Body upright.
+W2 Walk, standing on the right leg, carrying the left leg: weight on the straight right leg; left knee slightly bent, left foot just off the ground passing beside the right leg (not higher than half the shin). Arms close to the body with a small swing (left arm slightly back, right arm slightly forward). Body a little higher than W1.
+W3 Walk, left foot contact: mirror of W1. Left heel in front, right toes behind. Right arm forward, left arm back (clear 20-25 degree swing).
+W4 Walk, standing on the left leg, carrying the right leg: mirror of W2.
+R1 Run, right foot landing: right foot lands slightly in front (knee slightly bent), left leg kicked up behind (knee bent, heel toward the hips). Lean forward about 10 degrees. Elbows bent about 90 degrees, left arm forward (hand at chin height), right arm back. Hair, hem and bag trail slightly backward.
+R2 Run, airborne (left knee forward): both feet off the ground (highest point). Left knee lifted forward, right leg slightly bent behind. Lean forward about 10 degrees, right arm forward, left arm back (slightly smaller swing than R1). Float slightly above the feet line (about a quarter of the foot height).
+R3 Run, left foot landing: mirror of R1.
+R4 Run, airborne (right knee forward): mirror of R2.
+▲
+▼③ Directions
+Front: walking/running toward the viewer; the forward foot and lifted knee come slightly toward the viewer.
+Back: walking/running away, face not visible; the sole of the lifted boot is slightly visible.
+Left: side view facing LEFT, moving to the left of the screen; front and back limbs clearly separated.
+Diagonal front: moving to the lower-left, exactly halfway (45 degrees) between the attached front and left views; the same angle as the attached diagonal-front standing pose.
+Diagonal back: moving to the upper-left, exactly halfway (45 degrees) between the attached back and left views, face almost hidden; the same angle as the attached diagonal-back standing pose.
+▲
+▼④ Characters
+Male: A 22-year-old man. Short, slightly messy black hair. Blue cap with a small gold emblem on the front. Long sleeveless blue vest with gold trim over a white shirt with rolled-up sleeves. Brown leather cross-body straps, brown satchel at the hip. Dark gray trousers, tall brown boots, fingerless leather gloves.
+Female: A 22-year-old woman. Long, softly wavy light-brown hair. Red cap with a ribbon. White blouse with short puffed sleeves, red vest with gold embroidery, brown leather belts. Red-and-gold skirt over white frills, black tights, tall brown lace-up boots, small leather pouch at the hip, fingerless leather gloves.
+▲
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ うまくいかないとき（続けて送る一言）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・人物が変わった（顔・服・色・持ち物）→「添付の絵とまったく同じ人物に。変えてよいのは足と腕の位置と体の傾きだけ」
+・腕が振れていない →「腕を足と反対にはっきり振って。右足が前なら左腕が前（20〜25度くらい）」
+・足の前後が分かりにくい →「前に出した足と後ろの足を、形ではっきり見分けられるように」
+・W2・W4 で両足が地面に着いている →「片足だけで立って、もう片方の足を地面から持ち上げて前へ運んで」
+・走りが歩きに見える →「体を前に傾け、ひじを90度に曲げて腕を大きく振り、後ろの足を大きくけり上げて」
+・向きがずれた →「添付の（斜め前／斜め後ろ）の立ち姿と同じ角度に」
+・大きさ・位置がずれた →「頭の上と足元を枠の線に、体の中心を点線にそろえて」
+・線・文字・影・地面が描かれた →「人物だけに。枠の線・文字・影・地面は描かない」
+・背景がついた →「背景を透明に（できなければマゼンタ一色 #FF00FF）」
