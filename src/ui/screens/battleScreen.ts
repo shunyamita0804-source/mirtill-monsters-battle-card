@@ -39,7 +39,7 @@ import type { ScreenDefinition } from './types.ts';
 /** ルール上のきっかけ → 効果音 */
 const FX_SOUND: Readonly<Record<BattleFxKind, SoundId>> = {
   manaSpend: 'manaSpend',
-  manaConvert: 'manaConvert',
+  manaConvert: 'manaVanish',
   manaGain: 'manaGain',
   evade: 'evade',
   hitNormal: 'hitNormal',
@@ -57,6 +57,7 @@ function showcaseSound(card: PlayCard): SoundId {
       return 'cardEvade';
     case 'weaken':
     case 'taunt':
+    case 'handToDeck':
       return 'cardSpecial';
     case 'seal':
       return 'cardSeal';
@@ -79,7 +80,7 @@ const MONSTER_CARD_W = 66;
 const HAND_CARD_W = 66;
 /** 説明の欄の大きなカードの幅（論理px）。2026-10-24 ユーザー指示「もっと広げて」で 106→124（説明の欄の高さいっぱい） */
 const DETAIL_CARD_W = 124;
-/** 相手の手札の裏向きのカードが、場の真ん中やマナの欄へ動く時間（ミリ秒。見た目だけ。ルールの処理は先に済んでいる） */
+/** 相手の手札の裏向きのカードが、場の真ん中へ動く時間（ミリ秒。見た目だけ。ルールの処理は先に済んでいる） */
 const OPP_CARD_FLY_MS = 300;
 /** 相手のひと言を大きく出しておく時間（ミリ秒）。押すと先に消える */
 const TALK_MS = 2600;
@@ -87,14 +88,23 @@ const TALK_MS = 2600;
 const SHOWCASE_MS = 1150;
 /** 命中したときの一瞬の間（ヒットストップ）と画面の揺れ */
 const HIT_PAUSE_MS = 320;
+/** 技の対象に出す指のマークを、カードを大きく見せ終わってからも残す時間（ミリ秒） */
+const POINTER_EXTRA_MS = 500;
+/** ダメージでライフを1ずつ減らす間隔と、命中から数え始めるまで（ミリ秒） */
+const LIFE_TICK_MS = 150;
+const LIFE_TICK_START_MS = 220;
 /** カードを1枚配る間隔（ミリ秒） */
 const DEAL_MS = 110;
 /** 先攻・後攻のカードをめくってからバトルを始めるまで（ミリ秒） */
 const ORDER_REVEAL_MS = 1300;
-/** マナにするカードが情報箱へ飛んでいく時間（ミリ秒） */
-const MANA_FLY_MS = 620;
-/** 何枚かまとめてマナにするとき、1枚ずつ少しずらして飛ばす（ミリ秒。1枚ごとに着いた所でマナ化の音が鳴るので、音が重なりすぎない間隔） */
-const MANA_FLY_STAGGER_MS = 120;
+/**
+ * マナにするカードが、手札の場所で光って消える時間（ミリ秒）。
+ * 2026-10-24 ユーザー指示「マナにしたときはカードが一個一個、消えるエフェクトを入れその時にSEを。マナのとこに行く時のSEは不要」：
+ * 情報箱へ飛ばすのをやめ、その場で消す。消える瞬間にマナが1増え、消える音（manaVanish）が1回鳴る
+ */
+const MANA_VANISH_MS = 420;
+/** 何枚かまとめてマナにするとき、1枚ずつ消す間隔（ミリ秒。一枚ずつ分かるように） */
+const MANA_VANISH_STAGGER_MS = 260;
 /** 場面の表示（あなたのターン・マナ化など）が出ている時間（ミリ秒） */
 const BANNER_MS = 1100;
 /** 手札を上へこれだけ持ち上げると「離すと使う／マナにする」になる（論理 px） */
@@ -212,6 +222,10 @@ export const battleScreen: ScreenDefinition = {
     let busyUntil = 0;
     /** 前回描画時のライフ（ダメージ・回復の演出に使う） */
     const prevLife = new Map<string, number>();
+    /** 技・サポートの対象に選ばれたモンスター（指のマークを出す。until まで） */
+    let pointed: { uid: string; until: number } | null = null;
+    /** ダメージでライフを1ずつ減らしている間の、表示中のライフ（数え終わったら消す） */
+    const lifeShown = new Map<string, number>();
     /** 前回描画時のマナ（マナが増えた演出に使う） */
     const prevMana = new Map<Side, number>();
     /** 鳴らし終えた効果音のきっかけ（engine の fx の seq） */
@@ -269,33 +283,40 @@ export const battleScreen: ScreenDefinition = {
     };
 
     /**
-     * 相手の手札の裏向きのカードを、場の真ん中（使う）かマナの欄（マナ化）へ動かす。見た目だけで、ルールの処理は先に済んでいる。
+     * 相手の手札の裏向きのカードを、場の真ん中へ動かす（使う・守備に出す）。見た目だけで、ルールの処理は先に済んでいる。
      * 真ん中に着いたら showcase で表を見せる（使ったカードは公開される場面なので、ここで初めて表にする）
      */
-    const flyOpponentCard = (from: DOMRect, goal: 'center' | 'mana'): void => {
+    const flyOpponentCard = (from: DOMRect): void => {
       const root = element.getBoundingClientRect();
       const scale = stageScale();
       const x = (from.left - root.left) / scale;
       const y = (from.top - root.top) / scale;
-      let gx = element.offsetWidth / 2;
-      let gy = element.offsetHeight / 2;
-      if (goal === 'mana') {
-        const box = element.querySelector('.battle-info--opponent .battle-info__mana');
-        if (box) {
-          const g = box.getBoundingClientRect();
-          gx = (g.left + g.width / 2 - root.left) / scale;
-          gy = (g.top + g.height / 2 - root.top) / scale;
-        }
-      }
+      const gx = element.offsetWidth / 2;
+      const gy = element.offsetHeight / 2;
       const w = from.width / scale;
       const hgt = from.height / scale;
-      const fly = h('span', { class: `battle-hand__back battle__opp-fly battle__opp-fly--${goal}` });
+      const fly = h('span', { class: 'battle-hand__back battle__opp-fly' });
       fly.style.left = `${x}px`;
       fly.style.top = `${y}px`;
       fly.style.setProperty('--dx', `${gx - (x + w / 2)}px`);
       fly.style.setProperty('--dy', `${gy - (y + hgt / 2)}px`);
       fxLayer.append(fly);
       setTimeout(() => fly.remove(), OPP_CARD_FLY_MS + 60);
+    };
+
+    /** 相手がマナにしたカード（裏向き）を、手札の場所で光らせて消す。見た目だけ */
+    const vanishOpponentCard = (from: DOMRect): void => {
+      const root = element.getBoundingClientRect();
+      const scale = stageScale();
+      const ghost = h('span', { class: 'battle-hand__back battle__mana-vanish battle__mana-vanish--opponent' });
+      ghost.style.left = `${(from.left - root.left) / scale}px`;
+      ghost.style.top = `${(from.top - root.top) / scale}px`;
+      ghost.style.width = `${from.width / scale}px`;
+      ghost.style.height = `${from.height / scale}px`;
+      // ルールの処理（音）は先に済んでいるので、はじける所から始める
+      ghost.style.setProperty('--delay', `${-Math.round(MANA_VANISH_MS * 0.35)}ms`);
+      fxLayer.append(ghost);
+      setTimeout(() => ghost.remove(), MANA_VANISH_MS);
     };
 
     const dispatch = (action: BattleAction): void => {
@@ -313,8 +334,18 @@ export const battleScreen: ScreenDefinition = {
         lastPlayed = played;
         busyUntil = Math.max(busyUntil, Date.now() + revealDelay + SHOWCASE_MS - 150);
       }
+      // 誰に向けた技か分かるよう、対象のモンスターに指のマークを出す（自分・相手どちらの技も。攻撃は守備が終わるまでも出る）
+      if (action.type === 'useCard' && action.targetUid) {
+        const until = Date.now() + revealDelay + SHOWCASE_MS + POINTER_EXTRA_MS;
+        pointed = { uid: action.targetUid, until };
+        setTimeout(() => !destroyed && render(), until - Date.now() + 20);
+      }
       render();
-      if (oppFrom) flyOpponentCard(oppFrom, action.type === 'convertToMana' ? 'mana' : 'center');
+      if (oppFrom) {
+        // 相手のマナ化も、手札の場所で光って消える（情報箱へは飛ばさない）
+        if (action.type === 'convertToMana') vanishOpponentCard(oppFrom);
+        else flyOpponentCard(oppFrom);
+      }
       if (played) {
         if (revealDelay > 0) setTimeout(() => !destroyed && showcase(played.cardId, played.side), revealDelay);
         else showcase(played.cardId, played.side);
@@ -346,48 +377,43 @@ export const battleScreen: ScreenDefinition = {
     };
 
     /**
-     * 選んだ手札をまとめてマナにする：カードが1枚ずつ情報箱へ飛んでいき、
-     * 1枚着くたびにマナが1増えてマナ化の音が1回鳴る（音・絵・マナの数をそろえる）
+     * 選んだ手札をまとめてマナにする：カードが1枚ずつ、手札の場所で光って消える。
+     * 1枚消えるたびにマナが1増えて、消える音が1回鳴る（音・絵・マナの数をそろえる）
      */
     const convertPicked = (): void => {
       if (!state || dealing() || manaPicks.size === 0) return;
       const picks = state.sides.player.hand.filter((c) => manaPicks.has(c.uid)).map((c) => c.uid);
-      const goal = element.querySelector('.battle-info--player .battle-info__mana');
       const root = element.getBoundingClientRect();
       const scale = stageScale();
-      if (goal) {
-        const g = goal.getBoundingClientRect();
-        for (const [i, uid] of picks.entries()) {
-          const from = element.querySelector(`.battle__hand-card[data-uid="${uid}"] .skill-card`);
-          if (!from) continue;
-          const r = from.getBoundingClientRect();
-          const fly = from.cloneNode(true) as HTMLElement;
-          fly.classList.add('battle__mana-fly');
-          fly.style.left = `${(r.left - root.left) / scale}px`;
-          fly.style.top = `${(r.top - root.top) / scale}px`;
-          fly.style.setProperty('--dx', `${(g.left + g.width / 2 - (r.left + r.width / 2)) / scale}px`);
-          fly.style.setProperty('--dy', `${(g.top + g.height / 2 - (r.top + r.height / 2)) / scale}px`);
-          fly.style.setProperty('--delay', `${i * MANA_FLY_STAGGER_MS}ms`);
-          fxLayer.append(fly);
-          setTimeout(() => fly.remove(), MANA_FLY_MS + i * MANA_FLY_STAGGER_MS + 50);
-          element.querySelector(`.battle__hand-card[data-uid="${uid}"]`)?.classList.add('is-leaving');
-        }
+      // 先に全部の位置を測って写しを置く（1枚ずつ手札から抜けると、残りのカードの位置がずれるため）
+      for (const [i, uid] of picks.entries()) {
+        const from = element.querySelector(`.battle__hand-card[data-uid="${uid}"] .skill-card`);
+        if (!from) continue;
+        const r = from.getBoundingClientRect();
+        const ghost = from.cloneNode(true) as HTMLElement;
+        ghost.classList.add('battle__mana-vanish');
+        ghost.style.left = `${(r.left - root.left) / scale}px`;
+        ghost.style.top = `${(r.top - root.top) / scale}px`;
+        ghost.style.setProperty('--delay', `${i * MANA_VANISH_STAGGER_MS}ms`);
+        fxLayer.append(ghost);
+        setTimeout(() => ghost.remove(), MANA_VANISH_MS + i * MANA_VANISH_STAGGER_MS + 50);
+        element.querySelector(`.battle__hand-card[data-uid="${uid}"]`)?.classList.add('is-leaving');
       }
       for (const uid of picks) manaFlying.add(uid);
-      const total = MANA_FLY_MS + (picks.length - 1) * MANA_FLY_STAGGER_MS;
+      const total = MANA_VANISH_MS + (picks.length - 1) * MANA_VANISH_STAGGER_MS;
       busyUntil = Math.max(busyUntil, Date.now() + total);
       for (const [i, uid] of picks.entries()) {
+        // 光ってはじける瞬間（消える動きの 35%）に、1枚ずつルールに渡す（できなかった分は何も起きず、音も鳴らない）
         setTimeout(() => {
           manaFlying.delete(uid);
           if (destroyed || !state) return;
-          // 1枚ずつルールに渡す（できなかった分は何も起きず、音も鳴らない）
           state = applyAction(state, { type: 'convertToMana', side: 'player', cardUid: uid });
           if (i === picks.length - 1) {
             manaPicks.clear();
             selectedUid = null;
           }
           render();
-        }, MANA_FLY_MS + i * MANA_FLY_STAGGER_MS);
+        }, i * MANA_VANISH_STAGGER_MS + Math.round(MANA_VANISH_MS * 0.35));
       }
     };
 
@@ -814,6 +840,7 @@ export const battleScreen: ScreenDefinition = {
             const before = prevLife.get(m.uid) ?? m.life;
             const diff = m.life - before;
             const isPendingTarget = s.pending?.targetUid === m.uid;
+            const isPointed = m.life > 0 && (isPendingTarget || (pointed?.uid === m.uid && Date.now() < pointed.until));
             // 守備待ちの攻撃の対象には、いまのダメージ予定を出す（PS版の対象表示）
             const incoming = isPendingTarget && s.phase === 'defense' && s.pending ? pendingDamage(s.pending) : null;
             return h(
@@ -830,15 +857,17 @@ export const battleScreen: ScreenDefinition = {
               h(
                 'span',
                 { class: `battle__monster-life${m.life <= 0 ? ' is-down' : m.life * 3 <= m.maxLife ? ' is-low' : ''}` },
-                h('span', { class: 'battle__monster-life-now', text: String(m.life) }),
+                h('span', { class: 'battle__monster-life-now', text: String(lifeShown.get(m.uid) ?? m.life) }),
                 h('span', { class: 'battle__monster-life-max', text: `/${m.maxLife}` }),
               ),
               m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: t('battle.monster.acted') }) : null,
               // 吠える・ダストキック（技のダメージ−）・すなかけ（次の手番は攻撃できない）・ちょうはつ（ラズックだけ）がかかっている印
               m.life > 0 ? statusBadges(s, m) : null,
               incoming !== null ? h('span', { class: 'battle__incoming', text: String(incoming) }) : null,
+              isPointed ? h('span', { class: `battle__pointer battle__pointer--${side}`, attrs: { 'aria-hidden': 'true' }, text: '👇' }) : null,
               diff < 0 ? h('span', { class: 'battle__burst', attrs: { 'aria-hidden': 'true' } }) : null,
-              diff !== 0 ? battleDigits(diff, 'battle__float') : null,
+              // 回復だけ「+2」のように出す。ダメージは数字を出さず、ライフを1ずつ減らして音で数える（2026-10-24 ユーザー指示）
+              diff > 0 ? battleDigits(diff, 'battle__float') : null,
             );
           }),
         ),
@@ -1302,7 +1331,7 @@ export const battleScreen: ScreenDefinition = {
         }
       }
       // 音はマナの数の差では選ばず、ルールで確定したきっかけで鳴らす（1件につき1回。描き直しでは鳴らさない）
-      // マナ化＝manaConvert（1枚1回）、山札からマナ＝manaGain、支払い＝manaSpend、回避・命中
+      // マナ化＝manaConvert（1枚1回。カードが光って消える音 manaVanish）、山札からマナ＝manaGain、支払い＝manaSpend、回避・命中
       if (s.fxSeq < lastFxSeq) lastFxSeq = 0;
       for (const fx of s.fx) {
         if (fx.seq <= lastFxSeq) continue;
@@ -1421,6 +1450,31 @@ export const battleScreen: ScreenDefinition = {
       );
     };
 
+    /**
+     * ダメージでライフが減ったとき：数字を1ずつ減らしながら、1減るごとに「カタッ」と1回鳴らす（何ダメージか分かるように。2026-10-24 ユーザー指示）。
+     * 描き直しても続くよう、表示中の値は lifeShown に持ち、数字の要素はその都度探す
+     */
+    const countLifeDown = (uid: string, from: number, to: number): number => {
+      lifeShown.set(uid, from);
+      for (let i = 1; i <= from - to; i++) {
+        const value = from - i;
+        const at = LIFE_TICK_START_MS + (i - 1) * LIFE_TICK_MS;
+        sound.play('lifeTick', at);
+        setTimeout(() => {
+          if (destroyed) return;
+          if (value <= to) lifeShown.delete(uid);
+          else lifeShown.set(uid, value);
+          const el = element.querySelector(`.battle__monster[data-uid="${uid}"] .battle__monster-life-now`);
+          if (!el) return;
+          el.textContent = String(value);
+          el.classList.remove('is-tick');
+          void (el as HTMLElement).offsetWidth;
+          el.classList.add('is-tick');
+        }, at);
+      }
+      return LIFE_TICK_START_MS + (from - to - 1) * LIFE_TICK_MS;
+    };
+
     const render = (): void => {
       element.dataset.stage = state ? 'play' : 'order';
       if (!state) {
@@ -1431,6 +1485,14 @@ export const battleScreen: ScreenDefinition = {
       // 手札から無くなったカード・マナ化以外の場面では、マナにする候補を消す
       if (s.phase !== 'mana' || s.active !== 'player') manaPicks.clear();
       for (const uid of [...manaPicks]) if (!s.sides.player.hand.some((c) => c.uid === uid)) manaPicks.delete(uid);
+      // ダメージを受けたモンスター：ライフを1ずつ減らして数える（数え終わる時刻。倒れた音はそのあと）
+      const countEnds = new Map<string, number>();
+      for (const side of ['player', 'opponent'] as const) {
+        for (const m of s.sides[side].monsters) {
+          const before = prevLife.get(m.uid);
+          if (before !== undefined && m.life < before) countEnds.set(m.uid, countLifeDown(m.uid, lifeShown.get(m.uid) ?? before, m.life));
+        }
+      }
       const handScroll = element.querySelector('.battle__hand')?.scrollLeft ?? 0;
       const hand = handRow(s);
       const blocked = dealing();
@@ -1455,7 +1517,7 @@ export const battleScreen: ScreenDefinition = {
           // 倒れた・回復した瞬間の音（描き直しでは鳴らさない：前回のライフと比べる）
           const before = prevLife.get(m.uid);
           if (before !== undefined && before > 0 && m.life === 0) {
-            sound.play('knockout', 260);
+            sound.play('knockout', (countEnds.get(m.uid) ?? 0) + 200);
             // 相手のひと言（【仮】台詞）：自分のモンスターが倒れた／こちらのモンスターを倒した
             say(side === 'opponent' ? 'battle.talk.ownDown' : 'battle.talk.knock');
           }

@@ -26,7 +26,8 @@
 }
 
 .skill-card__art {
-  object-fit: cover;
+  /* 絵の全体が入るように（2026-10-24：ガウルの原本は縦横比がわずかに違うものがあり、cover だと端が切れるため。827×937 の絵は同じ見た目） */
+  object-fit: contain;
 }
 
 .skill-card__art--placeholder {

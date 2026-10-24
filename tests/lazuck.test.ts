@@ -1,9 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { getSkill, MONSTERS, SKILLS } from '../src/data/cards.ts';
+import { getSkill, MONSTERS, SKILLS, skillsOf } from '../src/data/cards.ts';
 import { PACKS } from '../src/data/economy.ts';
-import { LAZUCK_MONSTER, LAZUCK_SKILLS, lazuckSkillId } from '../src/data/lazuck.ts';
+import { LAZUCK_CROSS_GUARD_ID, LAZUCK_ITAZURA_ID, LAZUCK_MONSTER, LAZUCK_SKILLS, lazuckSkillId } from '../src/data/lazuck.ts';
+import type { SkillCard } from '../src/game/cards/cardTypes.ts';
 import officialJson from '../src/data/official/lazuck_cards_OFFICIAL.json';
+import latestJson from '../src/data/official/lazuck_cards_LATEST_20261024.json';
+import mappingJson from '../src/data/official/lazuck_order_mapping_20261024.json';
 import { soramoSkillId } from '../src/data/soramo.ts';
 import { chooseAction } from '../src/game/battle/ai.ts';
 import {
@@ -35,27 +38,59 @@ describe('ラズック16技：正式データ（正本 JSON を無改変で導�
     expect(officialJson.skill_cards.filter((c) => c.availability === 'collect').map((c) => c.number)).toEqual([9, 10, 12, 13, 15, 16]);
   });
 
-  it('技名・マナ・ダメージ・種別・効果テキスト・区分・ID が JSON とすべて一致する', () => {
+  it('2026-10-24 改訂：技名・マナ・ダメージ・種別・効果テキスト・区分・表示の番号が LATEST の JSON とすべて一致する。ID・絵・デザイン ID は元のまま', () => {
     expect(LAZUCK_SKILLS).toHaveLength(16);
-    for (const o of officialJson.skill_cards) {
-      const s = getSkill(laz(o.number));
-      expect(s.id).toBe(o.game_id);
-      expect(s.designId).toBe(o.design_id);
-      expect(s.name).toBe(o.name_ja);
-      expect(s.cost).toBe(o.mana);
-      expect(s.stat?.value ?? null).toBe(o.damage);
-      expect(s.category).toBe(o.category);
-      expect(s.effectTextJa).toBe(o.effect_text_ja);
-      expect(s.availability).toBe(o.availability);
+    expect(LAZUCK_SKILLS.map((s) => s.displayNo)).toEqual(Array.from({ length: 16 }, (_, i) => i + 1));
+    for (const l of latestJson.skill_cards) {
+      const s = LAZUCK_SKILLS[l.ordinal - 1] as SkillCard;
+      const itazura = l.game_id.startsWith('NEW_');
+      expect(s.id).toBe(itazura ? LAZUCK_ITAZURA_ID : l.game_id);
+      expect(s.name).toBe(l.name_ja);
+      expect(s.cost).toBe(l.mana);
+      expect(s.stat?.value ?? null).toBe(l.damage);
+      expect(s.category).toBe(l.category);
+      expect(s.effectTextJa).toBe(l.effect_text_ja);
+      expect(s.availability).toBe(l.availability);
       expect(s.monsterId).toBe('mon-lazuck');
       expect(s.isPlaceholder).toBe(false);
       expect(s.rarity).toBeNull();
-      expect(s.art?.file).toBe(o.game_asset_webp);
+      expect(s.retired).toBeUndefined();
+      // 恒久 ID・絵・デザイン ID は、元の JSON の同じ ID のカードのまま（並べ替えで取り違えない）
+      const original = officialJson.skill_cards.find((o) => o.game_id === l.game_id);
+      if (itazura) {
+        expect(original).toBeUndefined();
+        expect(s.designId).toBeUndefined();
+        expect(s.art?.file).toBe('laz_sk_itazura.webp');
+      } else {
+        expect(s.designId).toBe(original?.design_id);
+        expect(s.art?.file).toBe(original?.game_asset_webp);
+        expect(s.name).toBe(original?.name_ja);
+      }
     }
+    // 表示 07〜13 の対応（旧09→07、旧10→08、旧07→09、旧08→10、新11、旧11→12、旧12→13）
+    expect(LAZUCK_SKILLS.slice(6, 13).map((s) => s.id)).toEqual([laz(9), laz(10), laz(7), laz(8), LAZUCK_ITAZURA_ID, laz(11), laz(12)]);
+    expect(mappingJson.map((m) => (m.persistent_id.startsWith('NEW_') ? LAZUCK_ITAZURA_ID : m.persistent_id))).toEqual(LAZUCK_SKILLS.map((s) => s.id));
+    // 区分は初期10・収集6のまま（いたずらはクロスガードの収集枠）
+    expect(LAZUCK_SKILLS.filter((s) => s.availability === 'initial')).toHaveLength(10);
+  });
+
+  it('旧13 クロスガードは退役：一覧には残る（ID・絵・効果は元のまま）が、新しいデッキ・相手の編成・全カード配布には入らない', () => {
+    const cross = getSkill(LAZUCK_CROSS_GUARD_ID);
+    expect(cross.retired).toBe(true);
+    expect(cross.name).toBe('クロスガード');
+    expect(cross.art?.file).toBe('laz_sk_13.webp');
+    expect(cross.effect).toEqual({ type: 'defense', reduce: 2, against: 'all' });
+    expect(LAZUCK_SKILLS.map((s) => s.id)).not.toContain(LAZUCK_CROSS_GUARD_ID);
+    expect(skillsOf('mon-lazuck').map((s) => s.id)).not.toContain(LAZUCK_CROSS_GUARD_ID);
+    expect(skillsOf('mon-lazuck', true).map((s) => s.id)).toContain(LAZUCK_CROSS_GUARD_ID);
+    expect(createMixedTestDeck().skills).not.toContain(LAZUCK_CROSS_GUARD_ID);
+    expect(createMixedTestDeck().skills).toContain(LAZUCK_ITAZURA_ID);
+    expect(LAZUCK_ITAZURA_ID).not.toMatch(/^skl-lazuck-\d+$/);
   });
 
   it('ゲームでの動きは JSON の effect_logic_spec と同じ意味', () => {
-    for (const o of officialJson.skill_cards) {
+    // 回避14〜16は 2026-10-24 の改訂でマナ・条件が変わった（下の回避のテスト）。旧13 クロスガードは退役したカード
+    for (const o of officialJson.skill_cards.filter((c) => c.number < 14)) {
       const spec = o.effect_logic_spec as Record<string, unknown>;
       const e = getSkill(laz(o.number)).effect as Record<string, unknown>;
       expect(e.type).toBe(spec.type);
@@ -179,17 +214,26 @@ describe('ラズックの技の効果', () => {
     expect(cardUsability(s, 'opponent', 'o0').usable).toBe(false);
   });
 
-  it('フェイントステップ（ちから技を回避）・シャドウスリップ（かしこさ技を回避）・ミラージュダッシュ（両方）', () => {
+  it('2026-10-24 改訂：フェイントステップ（マナ2・ちから技）・シャドウスリップ（マナ2・必要マナ2以上のちから/かしこさ）・ミラージュダッシュ（マナ2・条件なし）', () => {
+    expect([14, 15, 16].map((n) => getSkill(laz(n)).cost)).toEqual([2, 2, 2]);
+    expect(getSkill(laz(14)).effect).toEqual({ type: 'evade', against: 'force' });
+    expect(getSkill(laz(15)).effect).toEqual({ type: 'evade', against: 'all', minCost: 2 });
+    expect(getSkill(laz(16)).effect).toEqual({ type: 'evade', against: 'all' });
     expect(lifeOf(attackAndGuard(laz(3), 'o-m2', [laz(14)]), 'o-m2')).toBe(6);
-    expect(lifeOf(attackAndGuard(laz(10), 'o-m2', [laz(15)]), 'o-m2')).toBe(6);
+    expect(lifeOf(attackAndGuard(laz(10), 'o-m2', [laz(15)]), 'o-m2')).toBe(6); // シャドウバースト（マナ4・かしこさ）
+    expect(lifeOf(attackAndGuard(laz(3), 'o-m2', [laz(15)]), 'o-m2')).toBe(6); // とびかかり（マナ2・ちから）＝境目の2は回避できる
     expect(lifeOf(attackAndGuard(laz(3), 'o-m2', [laz(16)]), 'o-m2')).toBe(6);
     expect(lifeOf(attackAndGuard(laz(10), 'o-m2', [laz(16)]), 'o-m2')).toBe(6);
+    // フェイントステップはかしこさ技には使えない
     let s = scene({ player: [laz(10)], opponent: [laz(14)] });
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 'p0', targetUid: 'o-m2' });
     expect(cardUsability(s, 'opponent', 'o0').usable).toBe(false);
-    s = scene({ player: [laz(3)], opponent: [laz(15)] });
+    // シャドウスリップは必要マナ1の攻撃（かみつき）には使えず、理由が出る
+    s = scene({ player: [laz(2)], opponent: [laz(15)] });
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 'p0', targetUid: 'o-m2' });
-    expect(cardUsability(s, 'opponent', 'o0').usable).toBe(false);
+    expect(cardUsability(s, 'opponent', 'o0')).toEqual({ usable: false, reason: '必要マナ2以上の攻撃にしか使えません' });
+    // ミラージュダッシュは必要マナ0の攻撃（ひっかき）も回避できる
+    expect(lifeOf(attackAndGuard(laz(1), 'o-m2', [laz(16)]), 'o-m2')).toBe(6);
   });
 
   it('ダストキック：選んだ相手の次の手番だけ、ちから技のダメージ−1（かしこさ技・ほかのモンスターは変わらない）。マナ0 で使える', () => {
@@ -273,8 +317,9 @@ describe('ラズックの技の効果', () => {
 describe('ラズックの技カードの面と日英', () => {
   it('日本語：効果テキストはそのまま。回避に余計な但し書きを足さない', () => {
     setLanguage('ja');
-    expect(skillCardFace(getSkill(laz(14))).description).toBe('ちから技を回避する');
-    expect(skillCardFace(getSkill(laz(16))).description).toBe('ちから技とかしこさ技を回避する');
+    expect(skillCardFace(getSkill(laz(14))).description).toBe('ちから技を回避');
+    expect(skillCardFace(getSkill(laz(15))).description).toBe('必要マナ2以上のちから技・かしこさ技を回避');
+    expect(skillCardFace(getSkill(laz(16))).description).toBe('ちから技・かしこさ技を回避');
     expect(skillCardFace(getSkill(laz(7))).value).toBeNull();
     expect(skillCardFace(getSkill(laz(8))).mana).toBe(0);
   });

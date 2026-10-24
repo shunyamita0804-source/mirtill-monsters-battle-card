@@ -16,7 +16,9 @@ export const collectionScreen: ScreenDefinition = {
   create(ctx) {
     const save = ctx.store.save;
     const element = h('main', { class: 'screen collection' });
-    const cards: CardDefinition[] = [...MONSTERS.filter((m) => m.id !== HIDDEN_MONSTER_ID || save.hiddenRestored), ...SKILLS, ...SUPPORTS];
+    // 退役した技（旧ラズックのクロスガード）は、持っているときだけ並べる
+    const skills = SKILLS.filter((s) => !s.retired || (save.collection[s.id] ?? 0) > 0);
+    const cards: CardDefinition[] = [...MONSTERS.filter((m) => m.id !== HIDDEN_MONSTER_ID || save.hiddenRestored), ...skills, ...SUPPORTS];
     const ownedKinds = cards.filter((c) => (save.collection[c.id] ?? 0) > 0).length;
     element.append(
       createScreenHeader({ title: t('collection.title'), back: { label: t('common.back'), onTap: () => ctx.back('world') } }),

@@ -174,8 +174,19 @@
 }
 
 .battle__monster-life-now {
+  display: inline-block;
   font-size: 15px;
   font-weight: 900;
+}
+
+/* ダメージでライフが1減るごとに、数字が赤く跳ねる（2026-10-24。音「カタッ」と同時） */
+.battle__monster-life-now.is-tick {
+  animation: life-tick 150ms ease-out;
+}
+
+@keyframes life-tick {
+  0% { transform: scale(1.5); color: #ff6b7d; }
+  100% { transform: scale(1); }
 }
 
 .battle__monster-life-max {
@@ -508,18 +519,9 @@
   animation: opp-fly-center 300ms cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
 }
 
-.battle__opp-fly--mana {
-  animation-name: opp-fly-mana;
-}
-
 @keyframes opp-fly-center {
   from { transform: none; opacity: 1; }
   to { transform: translate(var(--dx), var(--dy)) scale(1.5); opacity: 0.6; }
-}
-
-@keyframes opp-fly-mana {
-  from { transform: none; opacity: 1; }
-  to { transform: translate(var(--dx), var(--dy)) scale(0.35); opacity: 0.2; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -588,4 +590,30 @@
   font-weight: 700;
   line-height: 1.45;
   color: #fbf3da;
+}
+
+/* ---------- 技の対象を示す指のマーク（2026-10-24 ユーザー指示「誰にアクションが行われるかを明確に」） ---------- */
+.battle__pointer {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  /* 使ったカードを大きく見せている間（.battle__fx-layer＝30）も見えるように、その上に出す */
+  z-index: 35;
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.7));
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: pointer-bob 520ms ease-in-out infinite alternate;
+}
+
+@keyframes pointer-bob {
+  from { transform: translate(-50%, -4px); }
+  to { transform: translate(-50%, 4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle__pointer {
+    animation: none;
+  }
 }

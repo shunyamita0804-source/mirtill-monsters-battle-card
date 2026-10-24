@@ -32,6 +32,7 @@ export const CARDS = {
   'card.effect.weaken': { ja: '特殊', en: 'Special' },
   'card.effect.seal': { ja: '特殊', en: 'Special' },
   'card.effect.taunt': { ja: '特殊', en: 'Special' },
+  'card.effect.handToDeck': { ja: '特殊', en: 'Special' },
   'card.supportKind.field': { ja: '全体', en: 'Field' },
 
   // 技の効果説明（ゲーム側で描く文字）
@@ -101,6 +102,9 @@ export const CARDS = {
   'card.availability.initial': { ja: '初期', en: 'Starting' },
   'card.availability.collect': { ja: '収集', en: 'Collectible' },
   'card.detail.designId': { ja: 'デザインID', en: 'Design ID' },
+  'card.detail.number': { ja: '番号', en: 'No.' },
+  'card.detail.retired': { ja: '配布', en: 'Availability' },
+  'card.detail.retiredNote': { ja: '配布終了（持っているカードはそのまま使えます）', en: 'No longer distributed (cards you own still work)' },
   'card.detail.rank': { ja: 'ランク', en: 'Rank' },
   'card.detail.pendingNote': {
     ja: '正式カードです。まだ決まっていない項目：{items}（仮の値を表示しています）。',

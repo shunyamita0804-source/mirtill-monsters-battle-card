@@ -1,0 +1,114 @@
+[
+  {
+    "new_order": 1,
+    "name_ja": "ひっかき",
+    "prior_order": 1,
+    "persistent_id": "skl-lazuck-01",
+    "source_illustration": "01_ひっかき.png"
+  },
+  {
+    "new_order": 2,
+    "name_ja": "かみつき",
+    "prior_order": 2,
+    "persistent_id": "skl-lazuck-02",
+    "source_illustration": "02_かみつき.png"
+  },
+  {
+    "new_order": 3,
+    "name_ja": "とびかかり",
+    "prior_order": 3,
+    "persistent_id": "skl-lazuck-03",
+    "source_illustration": "03_とびかかり.png"
+  },
+  {
+    "new_order": 4,
+    "name_ja": "みだれづめ",
+    "prior_order": 4,
+    "persistent_id": "skl-lazuck-04",
+    "source_illustration": "04_みだれづめ.png"
+  },
+  {
+    "new_order": 5,
+    "name_ja": "しっぽアタック",
+    "prior_order": 5,
+    "persistent_id": "skl-lazuck-05",
+    "source_illustration": "05_しっぽアタック.png"
+  },
+  {
+    "new_order": 6,
+    "name_ja": "しっぷうタックル",
+    "prior_order": 6,
+    "persistent_id": "skl-lazuck-06",
+    "source_illustration": "06_しっぷうタックル.png"
+  },
+  {
+    "new_order": 7,
+    "name_ja": "トリックショット",
+    "prior_order": 9,
+    "persistent_id": "skl-lazuck-09",
+    "source_illustration": "09_トリックショット.png"
+  },
+  {
+    "new_order": 8,
+    "name_ja": "シャドウバースト",
+    "prior_order": 10,
+    "persistent_id": "skl-lazuck-10",
+    "source_illustration": "10_シャドウバースト.png"
+  },
+  {
+    "new_order": 9,
+    "name_ja": "ちょうはつ",
+    "prior_order": 7,
+    "persistent_id": "skl-lazuck-07",
+    "source_illustration": "07_ちょうはつ.png"
+  },
+  {
+    "new_order": 10,
+    "name_ja": "ダストキック",
+    "prior_order": 8,
+    "persistent_id": "skl-lazuck-08",
+    "source_illustration": "08_ダストキック.png"
+  },
+  {
+    "new_order": 11,
+    "name_ja": "いたずら",
+    "prior_order": null,
+    "persistent_id": "NEW_UNIQUE_ID_AFTER_REPO_INSPECTION",
+    "source_illustration": "Razuk_Itazura_Approved_USER_IMAGE.jpeg"
+  },
+  {
+    "new_order": 12,
+    "name_ja": "しっぽいなし",
+    "prior_order": 11,
+    "persistent_id": "skl-lazuck-11",
+    "source_illustration": "11_しっぽいなし.png"
+  },
+  {
+    "new_order": 13,
+    "name_ja": "シャドウガード",
+    "prior_order": 12,
+    "persistent_id": "skl-lazuck-12",
+    "source_illustration": "12_シャドウガード.png"
+  },
+  {
+    "new_order": 14,
+    "name_ja": "フェイントステップ",
+    "prior_order": 14,
+    "persistent_id": "skl-lazuck-14",
+    "source_illustration": "14_フェイントステップ.png"
+  },
+  {
+    "new_order": 15,
+    "name_ja": "シャドウスリップ",
+    "prior_order": 15,
+    "persistent_id": "skl-lazuck-15",
+    "source_illustration": "15_シャドウスリップ.png"
+  },
+  {
+    "new_order": 16,
+    "name_ja": "ミラージュダッシュ",
+    "prior_order": 16,
+    "persistent_id": "skl-lazuck-16",
+    "source_illustration": "16_ミラージュダッシュ.png"
+  }
+]

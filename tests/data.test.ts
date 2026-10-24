@@ -23,9 +23,10 @@ describe('カードデータ（仮）', () => {
     for (const s of SKILLS) expect(cardCatalog.get(s.monsterId)?.kind).toBe('monster');
   });
 
-  it('仮データであることが明示されている（正式カードはソラモ・ラズックだけ）', () => {
+  it('仮データであることが明示されている（正式カードはソラモ・ラズック・ガウルだけ）', () => {
     for (const c of [...MONSTERS, ...SKILLS, ...SUPPORTS]) {
-      const official = ['mon-soramo', 'mon-lazuck'].includes(c.id) || c.id.startsWith('skl-soramo-') || c.id.startsWith('skl-lazuck-');
+      const official =
+        ['mon-soramo', 'mon-lazuck', 'mon-gauul'].includes(c.id) || ['skl-soramo-', 'skl-lazuck-', 'skl-gauul-'].some((p) => c.id.startsWith(p));
       expect(c.isPlaceholder).toBe(!official);
     }
   });

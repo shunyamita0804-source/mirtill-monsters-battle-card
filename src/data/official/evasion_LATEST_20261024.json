@@ -1,0 +1,105 @@
+{
+  "document_type": "APPROVED_EVASION_DELTAS_2026-10-24",
+  "status": "user_approved_NOT_IMPLEMENTED_BY_THIS_PACK",
+  "notes": [
+    "target required mana is printed cost on incoming ATTACK skill, not current unspent mana",
+    "attack with undodgeable=true cannot be evaded even when evade condition matches",
+    "this pack does not rewrite or regenerate approved older artworks",
+    "rarity and card acquisition are unchanged"
+  ],
+  "updates": [
+    {
+      "monster": "soramo",
+      "skill_number": 14,
+      "name_ja": "ひらりジャンプ",
+      "mana": 3,
+      "effect_text_ja": "ちから技・かしこさ技を回避",
+      "against": [
+        "force",
+        "wisdom"
+      ],
+      "min_incoming_attack_required_mana": null
+    },
+    {
+      "monster": "soramo",
+      "skill_number": 16,
+      "name_ja": "星影ステップ",
+      "mana": 2,
+      "effect_text_ja": "必要マナ2以上のちから技・かしこさ技を回避",
+      "against": [
+        "force",
+        "wisdom"
+      ],
+      "min_incoming_attack_required_mana": 2
+    },
+    {
+      "monster": "lazuck",
+      "skill_number": 14,
+      "name_ja": "フェイントステップ",
+      "mana": 2,
+      "effect_text_ja": "ちから技を回避",
+      "against": [
+        "force"
+      ],
+      "min_incoming_attack_required_mana": null
+    },
+    {
+      "monster": "lazuck",
+      "skill_number": 15,
+      "name_ja": "シャドウスリップ",
+      "mana": 2,
+      "effect_text_ja": "必要マナ2以上のちから技・かしこさ技を回避",
+      "against": [
+        "force",
+        "wisdom"
+      ],
+      "min_incoming_attack_required_mana": 2
+    },
+    {
+      "monster": "lazuck",
+      "skill_number": 16,
+      "name_ja": "ミラージュダッシュ",
+      "mana": 2,
+      "effect_text_ja": "ちから技・かしこさ技を回避",
+      "against": [
+        "force",
+        "wisdom"
+      ],
+      "min_incoming_attack_required_mana": null
+    },
+    {
+      "monster": "gauul",
+      "skill_number": 14,
+      "name_ja": "火花すり抜け",
+      "mana": 2,
+      "effect_text_ja": "必要マナ2以上のかしこさ技を回避",
+      "against": [
+        "wisdom"
+      ],
+      "min_incoming_attack_required_mana": 2
+    },
+    {
+      "monster": "gauul",
+      "skill_number": 15,
+      "name_ja": "はばたき",
+      "mana": 2,
+      "effect_text_ja": "必要マナ2以上のちから技を回避",
+      "against": [
+        "force"
+      ],
+      "min_incoming_attack_required_mana": 2
+    },
+    {
+      "monster": "gauul",
+      "skill_number": 16,
+      "name_ja": "灼熱の飛翔",
+      "mana": 2,
+      "effect_text_ja": "ちから技・かしこさ技を回避",
+      "against": [
+        "force",
+        "wisdom"
+      ],
+      "min_incoming_attack_required_mana": null
+    }
+  ]
+}

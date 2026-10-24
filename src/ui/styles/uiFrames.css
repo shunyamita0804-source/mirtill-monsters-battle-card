@@ -60,7 +60,7 @@
   padding: 2px 4px;
 }
 
-/* ===== カードの裏面（先攻・後攻の伏せカード、パックを開けるとき、マナ化で飛ぶカード） ===== */
+/* ===== カードの裏面（先攻・後攻の伏せカード、パックを開けるとき） ===== */
 .battle-order__back {
   border: 0;
   background: url('@assets/images/ui/card_back.webp') center / 100% 100% no-repeat;
@@ -69,12 +69,6 @@
 .pack-open__back {
   border: 0;
   background: url('@assets/images/ui/card_back.webp') center / 100% 100% no-repeat;
-}
-
-.battle__mana-fly::after {
-  border: 0;
-  background: url('@assets/images/ui/card_back.webp') center / 100% 100% no-repeat;
-  box-shadow: none;
 }
 
 /* ===== 店員・受付の顔（ショップ・大会受付） ===== */

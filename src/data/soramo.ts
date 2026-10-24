@@ -1,6 +1,7 @@
 import type { MonsterCard, SkillCard, SkillEffect } from '../game/cards/cardTypes.ts';
-import { officialSkill, twoDigits, type OfficialSkill } from './officialSkills.ts';
+import { evadeFromCriteria, officialSkill, twoDigits, type OfficialSkill } from './officialSkills.ts';
 import officialSkills from './official/soramo_cards_OFFICIAL.json';
+import evasionLatest from './official/evasion_LATEST_20261024.json';
 import themeColors from './official/monster_theme_colors.json';
 
 /**
@@ -60,9 +61,36 @@ const SPECIAL_EFFECTS: Readonly<Record<string, SkillEffect>> = {
   'SOR-SK-11': { type: 'defense', reduce: 3, against: 'force' },
   'SOR-SK-12': { type: 'defense', reduce: 3, against: 'wisdom' },
   'SOR-SK-13': { type: 'defense', reduce: 3, against: 'all' },
-  'SOR-SK-14': { type: 'evade', against: 'all' },
   'SOR-SK-15': { type: 'defense', reduce: 3, against: 'all' },
-  'SOR-SK-16': { type: 'evade', against: 'all' },
+  // 14 ひらりジャンプ・16 星影ステップは、2026-10-24 の回避の改訂（evasion_LATEST_20261024.json）から作る（下の EVASION）
+};
+
+/** 承認された回避の改訂（2026-10-24。正本 evasion_LATEST_20261024.json を無改変で置いた）。そのモンスターの分 */
+export interface EvasionUpdate {
+  readonly monster: string;
+  readonly skill_number: number;
+  readonly name_ja: string;
+  readonly mana: number;
+  readonly effect_text_ja: string;
+  readonly against: readonly string[];
+  readonly min_incoming_attack_required_mana: number | null;
+}
+export const evasionUpdatesOf = (monster: string): readonly EvasionUpdate[] =>
+  (evasionLatest.updates as readonly EvasionUpdate[]).filter((u) => u.monster === monster);
+
+/**
+ * ソラモの回避の改訂：14 ひらりジャンプ＝マナ3・ちから/かしこさ技を回避（条件なし）、16 星影ステップ＝マナ2・必要マナ2以上のちから/かしこさ技を回避。
+ * 元の JSON（soramo_cards_OFFICIAL.json）は変えず、マナ・効果テキスト・動きをここで上書きする。絵は変えない
+ */
+function withEvasion(o: OfficialSkill): OfficialSkill {
+  const u = evasionUpdatesOf('soramo').find((x) => x.skill_number === o.number);
+  if (!u) return o;
+  if (u.name_ja !== o.name_ja) throw new Error(`ソラモの回避の改訂の技名が合いません: ${o.design_id}`);
+  return { ...o, mana: u.mana, effect_text_ja: u.effect_text_ja };
+}
+const evasionEffect = (no: number): SkillEffect | undefined => {
+  const u = evasionUpdatesOf('soramo').find((x) => x.skill_number === no);
+  return u ? evadeFromCriteria(u.against, u.min_incoming_attack_required_mana) : undefined;
 };
 
 /**
@@ -71,15 +99,20 @@ const SPECIAL_EFFECTS: Readonly<Record<string, SkillEffect>> = {
  */
 export const SORAMO_TEAM: readonly string[] = [SORAMO_MONSTER_ID, SORAMO_MONSTER_ID, SORAMO_MONSTER_ID];
 
-export const SORAMO_SKILLS: readonly SkillCard[] = (officialSkills.skill_cards as readonly OfficialSkill[]).map((o) =>
-  officialSkill(o, {
-    label: 'ソラモ',
-    monsterId: SORAMO_MONSTER_ID,
-    skillId: soramoSkillId,
-    artFile: (no) => `sor_sk_${twoDigits(no)}.webp`,
-    specialEffects: SPECIAL_EFFECTS,
-  }),
-);
+export const SORAMO_SKILLS: readonly SkillCard[] = (officialSkills.skill_cards as readonly OfficialSkill[]).map((o) => {
+  const effect = evasionEffect(o.number);
+  return officialSkill(
+    withEvasion(o),
+    {
+      label: 'ソラモ',
+      monsterId: SORAMO_MONSTER_ID,
+      skillId: soramoSkillId,
+      artFile: (no) => `sor_sk_${twoDigits(no)}.webp`,
+      specialEffects: SPECIAL_EFFECTS,
+    },
+    effect ? { effect } : {},
+  );
+});
 
 /** 正式データのまだ決まっていない裁定（JSON の rules_not_finalized をそのまま） */
 export const SORAMO_RULES_NOT_FINALIZED: readonly string[] = officialSkills.rules_not_finalized;

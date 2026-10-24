@@ -30,17 +30,43 @@ const CATEGORIES: readonly SkillCategory[] = ['force', 'wisdom', 'special', 'def
 
 export const twoDigits = (no: number): string => String(no).padStart(2, '0');
 
-export function officialSkill(o: OfficialSkill, src: OfficialSkillSource): SkillCard {
+/** 1枚ずつの上書き（2026-10-24〜。並び順の変更・新しい技・回避の条件の改訂に使う） */
+export interface OfficialSkillOverride {
+  /** ゲーム内 ID（なければ src.skillId(o.number)） */
+  readonly id?: string;
+  /** 技の絵のファイル名（なければ src.artFile(o.number)） */
+  readonly artFile?: string;
+  /** デザイン ID（null＝なし。なければ o.design_id） */
+  readonly designId?: string | null;
+  /** 表示の番号 */
+  readonly displayNo?: number;
+  /** 新しいデッキ・配布の一覧から外したカード */
+  readonly retired?: boolean;
+  /** ゲームでの動き（なければ src.specialEffects[o.design_id] か攻撃） */
+  readonly effect?: SkillEffect;
+}
+
+/** 回避の条件（承認 JSON の against・min_incoming_attack_required_mana）を回避の動きにする */
+export function evadeFromCriteria(against: readonly string[], minCost: number | null): SkillEffect {
+  const force = against.includes('force');
+  const wisdom = against.includes('wisdom');
+  if (!force && !wisdom) throw new Error(`回避の対象が不明です: ${against.join(',')}`);
+  const target = force && wisdom ? 'all' : force ? 'force' : 'wisdom';
+  return minCost !== null && minCost > 0 ? { type: 'evade', against: target, minCost } : { type: 'evade', against: target };
+}
+
+export function officialSkill(o: OfficialSkill, src: OfficialSkillSource, over: OfficialSkillOverride = {}): SkillCard {
   const category = CATEGORIES.find((c) => c === o.category);
   if (!category) throw new Error(`${src.label}の技の種別が不明です: ${o.design_id} ${o.category}`);
   const attack = category === 'force' || category === 'wisdom';
   if (attack !== (o.damage !== null)) throw new Error(`${src.label}の技のダメージと種別が合いません: ${o.design_id}`);
-  const effect = src.specialEffects[o.design_id] ?? (attack ? { type: 'attack' } : undefined);
+  const effect = over.effect ?? src.specialEffects[o.design_id] ?? (attack ? { type: 'attack' } : undefined);
   if (!effect) throw new Error(`${src.label}の技の動きが未定義です: ${o.design_id}`);
+  const designId = over.designId === undefined ? o.design_id : over.designId;
   return {
     kind: 'skill',
-    id: src.skillId(o.number),
-    designId: o.design_id,
+    id: over.id ?? src.skillId(o.number),
+    ...(designId !== null ? { designId } : {}),
     name: o.name_ja,
     monsterId: src.monsterId,
     rarity: null,
@@ -49,9 +75,11 @@ export function officialSkill(o: OfficialSkill, src: OfficialSkillSource): Skill
     category,
     effectTextJa: o.effect_text_ja,
     availability: o.availability === 'initial' ? 'initial' : 'collect',
+    ...(over.displayNo !== undefined ? { displayNo: over.displayNo } : {}),
+    ...(over.retired ? { retired: true } : {}),
     effect,
     isPlaceholder: false,
-    art: { category: 'skillCards', file: src.artFile(o.number), layout: 'frame' },
+    art: { category: 'skillCards', file: over.artFile ?? src.artFile(o.number), layout: 'frame' },
     pendingSpec: ['rarity'],
   };
 }

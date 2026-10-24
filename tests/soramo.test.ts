@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { getSkill, MONSTERS, SKILLS } from '../src/data/cards.ts';
 import { PACKS } from '../src/data/economy.ts';
 import { ENCOUNTERS } from '../src/data/dungeons.ts';
+import evasionJson from '../src/data/official/evasion_LATEST_20261024.json';
 import officialJson from '../src/data/official/soramo_cards_OFFICIAL.json';
 import { REGISTERED_ONLY_MONSTERS } from '../src/data/registeredMonsters.ts';
 import { SORAMO_MONSTER, SORAMO_SKILLS, soramoSkillId } from '../src/data/soramo.ts';
@@ -36,14 +37,18 @@ describe('ソラモ16技：正式データ（正本 JSON を無改変で導入�
 
   it('技名・マナ・ダメージ・種別・効果テキスト・区分が JSON とすべて一致する', () => {
     expect(SORAMO_SKILLS).toHaveLength(16);
+    // 14 ひらりジャンプ・16 星影ステップは 2026-10-24 の回避の改訂（evasion_LATEST_20261024.json）のマナ・文
+    const evasion = evasionJson.updates.filter((u) => u.monster === 'soramo');
+    expect(evasion.map((u) => u.skill_number)).toEqual([14, 16]);
     for (const o of officialJson.skill_cards) {
       const s = getSkill(ids(o.number));
+      const u = evasion.find((x) => x.skill_number === o.number);
       expect(s.designId).toBe(o.design_id);
       expect(s.name).toBe(o.name_ja);
-      expect(s.cost).toBe(o.mana);
+      expect(s.cost).toBe(u ? u.mana : o.mana);
       expect(s.stat?.value ?? null).toBe(o.damage);
       expect(s.category).toBe(o.category);
-      expect(s.effectTextJa).toBe(o.effect_text_ja);
+      expect(s.effectTextJa).toBe(u ? u.effect_text_ja : o.effect_text_ja);
       expect(s.availability).toBe(o.availability);
       expect(s.monsterId).toBe('mon-soramo');
       expect(s.isPlaceholder).toBe(false);
@@ -118,13 +123,9 @@ describe('ソラモのモンスターカード', () => {
     for (const a of [SORAMO_MONSTER.art, SORAMO_MONSTER.battleArt]) expect(existsSync(`assets/images/cards/monsters/${a?.file}`)).toBe(true);
   });
 
-  it('用途の決まっていないモンスター（ガウル）は登録だけで、カードの一覧には入れない（ラズックは技が届いたので正式に）', () => {
-    expect(REGISTERED_ONLY_MONSTERS.map((m) => m.nameJa)).toEqual(['ガウル']);
-    for (const m of REGISTERED_ONLY_MONSTERS) {
-      expect(existsSync(`assets/images/cards/monsters/${m.officialArt}`)).toBe(true);
-      expect(existsSync(`assets/images/cards/monsters/${m.battleArt}`)).toBe(true);
-      expect(MONSTERS.some((x) => x.name === m.nameJa)).toBe(false);
-    }
+  it('登録だけのモンスターはいない（ラズック 2026-10-23・ガウル 2026-10-24 は技が届いたので正式に）', () => {
+    expect(REGISTERED_ONLY_MONSTERS).toEqual([]);
+    expect(MONSTERS.filter((x) => ['ラズック', 'ガウル'].includes(x.name)).map((x) => x.id)).toEqual(['mon-lazuck', 'mon-gauul']);
   });
 });
 

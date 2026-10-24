@@ -3,6 +3,7 @@ import { BATTLE_RULES } from '../../data/rules.ts';
 import { cardName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
 import {
+  evadeMinCost,
   guardAgainst,
   guardReduction,
   skillValue,
@@ -14,7 +15,7 @@ import {
   type SupportCard,
 } from '../cards/cardTypes.ts';
 import type { Deck } from '../deck/deck.ts';
-import { nextRandom, shuffle } from '../rng.ts';
+import { nextInt, nextRandom, shuffle } from '../rng.ts';
 
 /**
  * カードバトルのルール（DOM 非依存の純粋関数）。
@@ -312,9 +313,14 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
     if (!target || target.cardId !== skill.monsterId) return NO(t('battle.ng.notTarget'));
     const against = guardAgainst(skill);
     if (against !== 'all' && against !== pending.stat) return NO(t('battle.ng.wrongStat', { stat: statLabel(pending.stat) }));
-    const attack = getSkill(pending.cardId).effect;
+    const attackCard = getSkill(pending.cardId);
+    const attack = attackCard.effect;
     if (attack.type === 'attack' && type === 'defense' && attack.unblockable) return NO(t('battle.ng.unblockable'));
+    // 「回避されない」攻撃は、回避の条件が合っていても回避できない（防御はできる）
     if (attack.type === 'attack' && type === 'evade' && attack.undodgeable) return NO(t('battle.ng.undodgeable'));
+    // 「必要マナ2以上の〜を回避」：受ける攻撃カードに印字された必要マナで判定（いまのマナの残りではない）
+    const minCost = evadeMinCost(skill);
+    if (minCost > 0 && attackCard.cost < minCost) return NO(t('battle.ng.evadeMinCost', { n: minCost }));
     if (manaOf(state.sides[side]) < skill.cost) return NO(t('battle.ng.noMana'));
     return YES;
   }
@@ -668,10 +674,26 @@ function useCard(
       next = updateMonster(next, target.uid, { taunt: { monsterId: user.cardId, turn: state.turn + 1 } });
       return addLog(next, t('battle.log.taunt', { name: nameOf(target.cardId), only: nameOf(user.cardId) }));
     }
+    case 'handToDeck':
+      return handToDeck(next, otherSide(side));
     case 'defense':
     case 'evade':
       return state;
   }
+}
+
+/**
+ * いたずら（正式：ラズック 2026-10-24）：side の手札からランダムに1枚を、その山札へ戻してシャッフルする。補充はしない。
+ * 【要仕様確定】手札が0枚のときは使えるが何も起きない（使えない条件は決まっていないので足していない）
+ */
+function handToDeck(state: BattleState, side: Side): BattleState {
+  const s = state.sides[side];
+  if (s.hand.length === 0) return addLog(state, t('battle.log.handToDeckNone', { player: s.name }));
+  const pick = nextInt(state.seed, s.hand.length);
+  const card = s.hand[pick.value] as HandCard;
+  const mixed = shuffle([...s.deck, card.cardId], pick.seed);
+  const next = updateSide({ ...state, seed: mixed.seed }, side, { hand: s.hand.filter((c) => c.uid !== card.uid), deck: mixed.items });
+  return addLog(next, t('battle.log.handToDeck', { player: s.name }));
 }
 
 function healMonster(state: BattleState, target: BattleMonster, value: number): BattleState {
