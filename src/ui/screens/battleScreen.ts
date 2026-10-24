@@ -743,8 +743,9 @@ export const battleScreen: ScreenDefinition = {
     };
 
     /* ---------- 表示 ---------- */
-    // 2026-10-24 改訂R2「対戦テーブル」：上から 相手の手札（裏）→ 相手の列 → 真ん中の帯 → 自分の列 → 自分の手札（表）→ 説明 → 操作。
-    // 相手・自分の列はどちらも 左＝誰・いまの状態、真ん中＝モンスター3体、右＝マナ・山札・手札・捨札（同じ並び・同じ意味）
+    // 2026-10-24 改訂R2「対戦テーブル」：上から 相手の手札（裏）→ 相手の列 → 真ん中の帯 → 自分の列 → 自分の手札（表）→ 説明。
+    // 相手の列：左＝誰・いまの状態、真ん中＝モンスター3体、右＝マナ・山札・手札・捨札。
+    // 自分の列：左＝マナ・山札・手札・捨札、真ん中＝モンスター3体、右＝操作のボタン（2026-10-24 ユーザー指示：いちばん下は下すぎて操作しにくい）
 
     /** いまの状態（攻撃中・マナ化中・守備中・待機中） */
     const sideState = (s: BattleState, side: Side): string => {
@@ -806,7 +807,8 @@ export const battleScreen: ScreenDefinition = {
       h(
         'div',
         { class: `battle-side battle-side--${side}` },
-        sideZone(s, side),
+        // 相手：左＝誰・状態、右＝マナなど／自分：左＝マナなど、右＝操作のボタン（2026-10-24 ユーザー指示）
+        side === 'opponent' ? sideZone(s, side) : infoBox(s, side),
         h(
           'div',
           { class: 'battle-side__monsters' },
@@ -843,7 +845,7 @@ export const battleScreen: ScreenDefinition = {
             );
           }),
         ),
-        infoBox(s, side),
+        side === 'opponent' ? infoBox(s, side) : commandPanel(s, dealing()),
       );
 
     /** モンスターにかかっている特殊の効果の印（無ければ null） */
@@ -1330,16 +1332,19 @@ export const battleScreen: ScreenDefinition = {
     };
 
     /**
-     * 画面のいちばん下の操作の列（2026-10-24 改訂R2。親指の届く所）。左に「コマンド」、右端に場面の主なボタン。
-     * - 攻撃：右端に「攻撃終了」をいつも出す。カードを選ぶと、その左に「やめる」「使う（使えるときだけ）」。対象を選ぶ間は「やめる」
-     * - マナ化：右端に「ターン終了」、選んだカードがあればその左に「マナにする（N枚）」
-     * - 相手の番・守備・オート中：右端にいまの状態の札（押せない）
+     * 操作のボタン（自分のモンスターの右。2026-10-24 ユーザー指示「下すぎて操作感に問題」で、いちばん下の列から移した）。
+     * 縦に最大3つ。いちばん下はいつも場面の主なボタン（攻撃終了・ターン終了）で、位置が変わらない。
+     * - 攻撃：「攻撃終了」。カードを選ぶと上に「使う（使えるときだけ）」「やめる」。対象を選ぶ間は「やめる」
+     * - マナ化：「ターン終了」、選んだカードがあればその上に「マナにする（N枚）」
+     * - 空きがあれば、いちばん上に「コマンド」（攻撃終了・ターン終了・ルール・降参の一覧）
+     * - 相手の番・守備・オート中：いまの状態の札と「コマンド」
      * 配っている間・手札をなぞっている間は、並びを変えずに押せないだけにする（ボタンの位置が跳ねないように）
      */
-    const commandDock = (s: BattleState, blocked: boolean): HTMLElement | null => {
+    const commandPanel = (s: BattleState, blocked: boolean): HTMLElement => {
+      const panel = h('div', { class: 'battle-cmds battle__commands', attrs: { role: 'group', 'aria-label': t('battle.cmd.aria') } });
       if (s.phase === 'ended') {
         lastCommandKey = '';
-        return null;
+        return panel;
       }
       const buttons: HTMLElement[] = [];
       const mine = s.active === 'player' && !auto;
@@ -1349,29 +1354,27 @@ export const battleScreen: ScreenDefinition = {
         targeting = null;
         render();
       };
-      const statusTag = (text: string): HTMLElement => h('span', { class: 'battle-dock__status', text });
+      const statusTag = (text: string): HTMLElement => h('span', { class: 'battle-cmds__status', text });
       if (mine && s.phase === 'main') {
-        if (targeting || selected) buttons.push(commandButton(t('common.cancel'), deselect, 'cancel'));
         if (!targeting && selected && cardUsability(s, 'player', selected.uid).usable) buttons.push(commandButton(t('battle.cmd.use'), () => useCard(selected.uid)));
-        const end = commandButton(t('battle.cmd.endAttack'), () => requestEndAttack(s), 'cancel');
-        end.classList.add('battle-dock__main');
-        buttons.push(end);
+        if (targeting || selected) buttons.push(commandButton(t('common.cancel'), deselect, 'cancel'));
+        buttons.push(commandButton(t('battle.cmd.endAttack'), () => requestEndAttack(s), 'cancel'));
       } else if (mine && s.phase === 'mana') {
         if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(t('battle.cmd.makeMana', { n: manaPicks.size }), convertPicked));
-        const end = commandButton(t('battle.cmd.endTurn'), () => requestEndTurn(), 'cancel');
-        end.classList.add('battle-dock__main');
-        buttons.push(end);
+        buttons.push(commandButton(t('battle.cmd.endTurn'), () => requestEndTurn(), 'cancel'));
       } else if (s.phase === 'defense' && s.pending?.attacker === 'opponent' && !auto) {
         buttons.push(statusTag(t(noDefensePossible(s) ? 'battle.dock.noDefense' : 'battle.dock.defense')));
       } else {
         buttons.push(statusTag(t(auto ? 'battle.dock.auto' : 'battle.dock.waiting')));
       }
+      // 3つに収まるときだけ「コマンド」を上に（カードを選んでいる間は省く。ルール・降参は上の帯にもある）
+      if (buttons.length < 3) buttons.unshift(commandMenuButton());
       if (blocked || swipe) for (const b of buttons) if (b instanceof HTMLButtonElement) b.disabled = true;
       const key = buttons.map((b) => b.getAttribute('aria-label') ?? b.textContent).join('|');
-      const actions = h('div', { class: 'battle-dock__actions' }, ...buttons);
-      if (key !== lastCommandKey) actions.classList.add('is-enter');
+      if (key !== lastCommandKey) panel.classList.add('is-enter');
       lastCommandKey = key;
-      return h('div', { class: 'battle-dock battle__commands', attrs: { role: 'group', 'aria-label': t('battle.cmd.aria') } }, commandMenuButton(), actions);
+      panel.append(...buttons);
+      return panel;
     };
 
     const requestEndTurn = (): void => {
@@ -1381,7 +1384,7 @@ export const battleScreen: ScreenDefinition = {
       } else end();
     };
 
-    /** 「コマンド」ボタン（いちばん下の列の左）。押すとコマンドの一覧（攻撃終了・ターン終了・ルール・降参）を開く */
+    /** 「コマンド」ボタン（自分のモンスターの右の操作のボタンのいちばん上）。押すとコマンドの一覧（攻撃終了・ターン終了・ルール・降参）を開く */
     const commandMenuButton = (): HTMLElement => {
       const b = commandButton(t('battle.cmd.menu'), () => {
         commandMenuOpen = !commandMenuOpen;
@@ -1393,7 +1396,7 @@ export const battleScreen: ScreenDefinition = {
       return b;
     };
 
-    /** コマンドの一覧（「コマンド」ボタンの上に開く）。外側を押すと閉じる */
+    /** コマンドの一覧（「コマンド」ボタンの左に開く）。外側を押すと閉じる */
     const commandMenu = (s: BattleState, blocked: boolean): HTMLElement | null => {
       if (!commandMenuOpen || s.phase === 'ended') return null;
       const close = (): void => {
@@ -1440,9 +1443,8 @@ export const battleScreen: ScreenDefinition = {
         qaBar() ?? '',
         // 対戦テーブル：相手の手札（裏）→ 相手の列 → 真ん中の帯 → 自分の列 → 自分の手札（表）
         h('div', { class: 'battle-board' }, opponentHand(s), monsterRow(s, 'opponent'), midBand(s), monsterRow(s, 'player'), hand),
-        // 説明の欄（残りの高さに広がる）といちばん下の操作
+        // 説明の欄（残りの高さに広がる）
         detailPanel(s),
-        commandDock(s, blocked) ?? '',
       );
       const overlays = [talkOverlay(s), menu, defenseOverlay(s), resultOverlay(s), phaseBanner(s), hintOverlay(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);

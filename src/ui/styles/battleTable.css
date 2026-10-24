@@ -1,6 +1,7 @@
 /* ===== 2026-10-24 改訂R2：対戦テーブル =====
- * 上から：上の帯（降参・対戦の名前と手番・ルール）／相手の手札（裏）／相手の列／真ん中の帯／自分の列／自分の手札（表）／説明の欄／操作の列。
- * 相手・自分の列はどちらも 左＝誰・いまの状態、真ん中＝モンスター3体、右＝マナ・山札・手札・捨札。
+ * 上から：上の帯（降参・対戦の名前と手番・ルール）／相手の手札（裏）／相手の列／真ん中の帯／自分の列／自分の手札（表）／説明の欄。
+ * 相手の列：左＝誰・いまの状態、真ん中＝モンスター3体、右＝マナ・山札・手札・捨札。
+ * 自分の列：左＝マナ・山札・手札・捨札、真ん中＝モンスター3体、右＝操作のボタン（2026-10-24 ユーザー指示でいちばん下から移した）。
  * 手札のカードの大きさは、自分（表）と相手（裏）で同じ --hand-card-w / --hand-card-h（battleScreen.ts の HAND_CARD_W から）。
  * uiFrames.css・uiParts.css より後に読み込む（main.ts）ので、ここに書いた値が優先される。
  */
@@ -403,66 +404,48 @@
   height: 180px;
 }
 
-/* ---------- いちばん下の操作の列：左に「コマンド」、右端に場面の主なボタン ---------- */
-.battle-dock {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 56px;
-  margin: 0;
-  padding: 4px 8px 6px;
-  border-top: 1px solid rgb(201 162 74 / 0.35);
-  background: rgb(0 0 0 / 0.35);
-}
-
-.battle-dock .command-btn {
-  flex: none;
-  width: 78px;
-  height: 44px;
-}
-
-.battle-dock .command-btn__label {
-  font-size: 13px;
-  padding: 0 6px;
-}
-
-/* 文字の長いボタン（マナにする（N枚）など）は広く */
-.battle-dock .command-btn.is-long {
-  width: 120px;
-}
-
-.battle-dock .command-btn.battle__cmd-open {
-  width: 80px;
-}
-
-.battle-dock__actions {
-  flex: 1;
+/* ---------- 操作のボタン（自分のモンスターの右。2026-10-24 ユーザー指示でいちばん下から移した）----------
+ * 縦に最大3つ。いちばん下はいつも場面の主なボタン（攻撃終了・ターン終了）。押せる高さは 40 */
+.battle-cmds {
   min-width: 0;
   display: flex;
+  flex-direction: column;
   justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
+  align-self: stretch;
+  gap: 3px;
 }
 
-/* 場面の主なボタン（攻撃終了・ターン終了）：少し大きく、右端に */
-.battle-dock .command-btn.battle-dock__main {
-  width: 108px;
+.battle-cmds .command-btn {
+  width: 100%;
+  height: 40px;
 }
 
-.battle-dock .battle-dock__main .command-btn__label {
-  font-size: 14px;
+.battle-cmds .command-btn__label {
+  font-size: 12px;
+  padding: 0 4px;
 }
 
-.battle-dock__actions.is-enter {
+/* 文字の長いボタン（マナにする（N枚）など）は文字を小さく */
+.battle-cmds .command-btn.is-long .command-btn__label {
+  font-size: 10px;
+  padding: 0 2px;
+  letter-spacing: -0.03em;
+}
+
+.battle-cmds.is-enter {
   animation: cmd-pop 180ms ease-out both;
 }
 
 /* 自分の番でないときの札（押せない） */
-.battle-dock__status {
-  padding: 0 12px;
-  font-size: 13px;
+.battle-cmds__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
   color: var(--color-sub);
 }
 
@@ -471,7 +454,7 @@
   to { opacity: 1; transform: none; }
 }
 
-/* コマンドの一覧（「コマンド」の上に開く） */
+/* コマンドの一覧（「コマンド」の左に開く。自分の列の高さ） */
 .battle__cmd-menu {
   position: absolute;
   inset: 0;
@@ -481,8 +464,8 @@
 
 .battle__cmd-list {
   position: absolute;
-  left: 6px;
-  bottom: 60px;
+  right: 100px;
+  top: 250px;
   display: flex;
   flex-direction: column;
   gap: 6px;
