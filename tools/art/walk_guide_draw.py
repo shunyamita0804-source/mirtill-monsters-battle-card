@@ -16,9 +16,10 @@ L=150; UA,FA=105,95
 def foot(angs):
     a1=math.radians(angs[0]); a2=math.radians(angs[0]+angs[1])
     return L*math.cos(a1)+L*math.cos(a2)
-def guide(step_r, path, title):
+def guide(step_r, path, title, facing_left=False, legend=None):
     W,H=1536,1024; sw=W//4
-    im=Image.new('RGB',(W,H),(255,255,255)); d=ImageDraw.Draw(im)
+    im=Image.new('RGB',(W,H),(255,255,255))
+    fig=Image.new('RGBA',(W,H),(255,255,255,0)); d=ImageDraw.Draw(fig)
     step_col, other_col = (RED,BLUE) if step_r else (BLUE,RED)
     ground=800
     hips=[]
@@ -27,8 +28,6 @@ def guide(step_r, path, title):
         hips.append(ground-drop-ph['toe']*L)
     for i,ph in enumerate(PH):
         x0=i*sw; cx=x0+sw//2-10
-        d.rectangle((x0+6,6,x0+sw-6,H-110),outline=(200,200,200),width=2)
-        d.text((x0+18,18),ph['name'],font=F,fill=GRAY)
         hip=(cx, hips[i]); sh=(cx+8, hip[1]-190)
         def limb(start,angs,col,ln,w=12,arm=False,toe=False):
             a1=math.radians(angs[0]); k=(start[0]+ln[0]*math.sin(a1), start[1]+ln[0]*math.cos(a1))
@@ -37,19 +36,38 @@ def guide(step_r, path, title):
             if arm: d.ellipse((e[0]-10,e[1]-10,e[0]+10,e[1]+10),fill=col)
             elif toe: d.line([e,(e[0]+26,e[1]+15)],fill=col,width=w)
             else: d.line([(e[0]-8,e[1]),(e[0]+30,e[1])],fill=col,width=w)
-        limb(sh, ph['arm_s'], step_col, (UA,FA), 10, True)
-        limb(hip, ph['other'], other_col, (L,L))
+        step_near = (not facing_left) if step_r else facing_left
+        far = [lambda: limb(sh, ph['arm_s'], step_col, (UA,FA), 10, True), lambda: limb(hip, ph['other'], other_col, (L,L))]
+        near = [lambda: limb(hip, ph['step'], step_col, (L,L), toe=ph['toe']>0), lambda: limb(sh, ph['arm_o'], other_col, (UA,FA), 10, True)]
+        if not step_near:
+            far = [lambda: limb(sh, ph['arm_o'], other_col, (UA,FA), 10, True), lambda: limb(hip, ph['step'], step_col, (L,L), toe=ph['toe']>0)]
+            near = [lambda: limb(hip, ph['other'], other_col, (L,L)), lambda: limb(sh, ph['arm_s'], step_col, (UA,FA), 10, True)]
+        for f in far: f()
         d.line([hip,sh],fill=GRAY,width=16)
         d.ellipse((sh[0]-36,sh[1]-110,sh[0]+36,sh[1]-38),outline=GRAY,width=7)
-        limb(hip, ph['step'], step_col, (L,L), toe=ph['toe']>0)
-        limb(sh, ph['arm_o'], other_col, (UA,FA), 10, True)
+        for f in near: f()
         d.line([(x0+20,ground+16),(x0+sw-20,ground+16)],fill=(170,170,170),width=3)
         stand_top=ground-2*L-190-110
         d.line([(x0+20,stand_top),(x0+sw-20,stand_top)],fill=(230,190,190),width=2)
+    # 人の形だけ1コマずつ左右反転（左へ歩く図）。文字は反転しない
+    for i in range(4):
+        x0=i*sw
+        panel=fig.crop((x0,0,x0+sw,H))
+        if facing_left: panel=panel.transpose(Image.FLIP_LEFT_RIGHT)
+        im.paste(panel,(x0,0),panel)
+    d=ImageDraw.Draw(im)
+    for i,ph in enumerate(PH):
+        x0=i*sw
+        d.rectangle((x0+6,6,x0+sw-6,H-110),outline=(200,200,200),width=2)
+        d.text((x0+18,18),ph['name'],font=F,fill=GRAY)
         for j,line in enumerate(ph['note'].split('\n')): d.text((x0+18,ground+34+j*32),line,font=FS,fill=GRAY)
     d.text((18,H-90),title,font=FS,fill=GRAY)
-    d.text((18,H-52),'赤＝人物の右足・右腕　青＝人物の左足・左腕。横から見た図（右へ歩く）。うすい赤の線＝立っているときの頭の高さ',font=FS,fill=GRAY)
+    d.text((18,H-52),legend or '赤＝人物の右足・右腕　青＝人物の左足・左腕。横から見た図（右へ歩く）。うすい赤の線＝立っているときの頭の高さ',font=FS,fill=GRAY)
     im.save(path, optimize=True)
-guide(True, f'{OUT}/guide_walk_r.png', '動きの見本：歩き・右足を前に出す1歩（腕は足と反対：右足が前のとき左腕が前）')
-guide(False, f'{OUT}/guide_walk_l.png', '動きの見本：歩き・左足を前に出す1歩（腕は足と反対：左足が前のとき右腕が前）')
+if __name__ == '__main__':
+    guide(True, f'{OUT}/guide_walk_r.png', '動きの見本：歩き・右足を前に出す1歩（腕は足と反対：右足が前のとき左腕が前）')
+    guide(False, f'{OUT}/guide_walk_l.png', '動きの見本：歩き・左足を前に出す1歩（腕は足と反対：左足が前のとき右腕が前）')
+    LEG = '赤＝人物の右足・右腕（左向きでは奥）　青＝人物の左足・左腕（左向きでは手前）。左へ歩く横向き。うすい赤の線＝立っているときの頭の高さ'
+    guide(True, f'{OUT}/guide_walk_left_r.png', '動きの見本：左向き・右足（奥の足）を前に出す1歩（腕は足と反対）', True, LEG)
+    guide(False, f'{OUT}/guide_walk_left_l.png', '動きの見本：左向き・左足（手前の足）を前に出す1歩（腕は足と反対）', True, LEG)
 print('ok')
