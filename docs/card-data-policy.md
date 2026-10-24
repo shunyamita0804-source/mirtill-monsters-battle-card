@@ -71,9 +71,9 @@
   `lazuck_order_mapping_20261024.json`（新旧の番号の対応）・`evasion_LATEST_20261024.json`（回避8件の条件）。元の `soramo_cards_OFFICIAL.json`・`lazuck_cards_OFFICIAL.json` も変えていない
 - **ラズックの並び替えは表示の番号（`displayNo`）だけ。** ゲーム内 ID・絵のファイル名・デザイン ID は元のまま（例：トリックショットは `skl-lazuck-09`・`laz_sk_09.webp` のまま表示 07）。
   カード詳細に「番号」を出す
-- **旧13 クロスガード（`skl-lazuck-13`）は退役（`retired`）。** 新しいデッキ・相手の編成・QA の全カード配布・図鑑（持っていなければ）には出さない。
-  持っている人のセーブ・デッキからは消さず、バトルでも元の効果のまま使える（セーブの変換はしていない＝`SAVE_VERSION` は変えていない）。
-  **移行の方針（いたずらに替えるか・そのまま残すか）はユーザー確認待ち**
+- **旧13 クロスガード（`skl-lazuck-13`）はゲームから削除**（2026-10-24 ユーザー決定）。カードの一覧から外し、セーブは version 8 で所持・デッキから外す
+  （`migrateRemoveCrossGuardV8`。デッキの抜けた分は持っているカードで埋め、足りなければ足りないまま＝デッキ編集で直す。代わりのカードは配らない）。
+  古いバックアップに入っていても止めずに読み込む（`REMOVED_CARD_IDS`）。元の JSON と絵 `laz_sk_13.webp` は記録として残す
 - ガウルの技の絵：原本 PNG 16枚を `design-parts/cards-original/gauul/` に無改変で保管（SHA-256 の照合表も）。ゲーム用は `tools/art/card_art_webp.py` で縦横比を変えずに幅 827 に縮めた WebP（`gau_sk_NN.webp`）。
   ラズックのいたずらは原本 JPEG（`design-parts/cards-original/lazuck/`。PNG ではない）から `laz_sk_itazura.webp`
 - 技の絵は `object-fit: contain` で全体を入れる（ガウルの原本は縦横比がわずかに違うものがあるため）

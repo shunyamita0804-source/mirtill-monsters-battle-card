@@ -98,7 +98,16 @@ export type SkillEffect =
    * 特殊：選んだ相手モンスターの stat の技のダメージを amount 減らす。
    * duration なし（正式：ソラモの吠える）＝次にその種類の技を使うまで。'nextTurn'（正式：ラズックのダストキック）＝相手の次の手番の間だけ
    */
-  | { readonly type: 'weaken'; readonly stat: StatType; readonly amount: number; readonly duration?: 'nextTurn' }
+  | {
+      readonly type: 'weaken';
+      readonly stat: StatType;
+      readonly amount: number;
+      /**
+       * なし（正式：ソラモの吠える）＝次にその種類の技を使うまで。'nextTurn'（正式：ラズックのダストキック）＝相手の次の手番の間だけ（使っても消えない）。
+       * 'nextUseByNextTurn'（正式：ガウルの熱風の威嚇 2026-10-24）＝次にその種類の技を使ったら消え、使わなくても相手の次の手番が終われば消える
+       */
+      readonly duration?: 'nextTurn' | 'nextUseByNextTurn';
+    }
   /** 特殊（正式：すなかけ）：選んだ相手モンスターは次回攻撃できない */
   | { readonly type: 'seal' }
   /** 特殊（正式：ラズックのちょうはつ）：選んだ相手モンスターは次の手番、使ったモンスターと同じ種類（ラズック）にしか攻撃できない */
@@ -135,11 +144,6 @@ export interface SkillCard extends CardBase {
    * 例：ラズックのトリックショットは ID skl-lazuck-09 のまま表示は 7
    */
   readonly displayNo?: number;
-  /**
-   * 新しいデッキ・配布の一覧から外したカード（2026-10-24：ラズックのクロスガード）。
-   * 持っている人のセーブ・デッキからは消さない（移行の方針はユーザー確認待ち）
-   */
-  readonly retired?: boolean;
   readonly effect: SkillEffect;
 }
 

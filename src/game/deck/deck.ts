@@ -216,8 +216,16 @@ export function buildAutoDeck(monsters: readonly string[]): Deck {
  * 適合技を先に入れ、足りない分を持っているサポートで埋める。それでも足りなければ60枚に満たないデッキを返す（画面側で不足を表示）。
  */
 export function buildDeckFromCollection(monsters: readonly string[], collection: CardCounts): Deck {
-  const skills: string[] = [];
-  const used: Record<string, number> = {};
+  return topUpDeck({ monsters, skills: [] }, collection);
+}
+
+/**
+ * デッキの技・サポートが足りないとき、持っているカードで足す（入っているカードはそのまま。2026-10-24：クロスガードの削除で抜けた分を埋める）。
+ * 持っているカードが足りなければ、足りないまま返す
+ */
+export function topUpDeck(deck: Deck, collection: CardCounts): Deck {
+  const skills = [...deck.skills];
+  const used: Record<string, number> = countCards(skills);
   // 安い技・攻撃を優先しすぎないよう、番号順に1枚ずつ巡回して入れる（適合技 → サポートの順）
   const fill = (candidates: readonly { readonly id: string }[]): void => {
     let added = true;
@@ -234,7 +242,7 @@ export function buildDeckFromCollection(monsters: readonly string[], collection:
       }
     }
   };
-  fill(monsters.flatMap((m) => skillsOf(m)));
+  fill([...new Set(deck.monsters)].flatMap((m) => skillsOf(m)));
   fill(SUPPORTS);
-  return { monsters, skills };
+  return { monsters: deck.monsters, skills };
 }

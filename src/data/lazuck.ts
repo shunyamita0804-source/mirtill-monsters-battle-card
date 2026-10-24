@@ -25,8 +25,8 @@ import { evadeFromCriteria, officialSkill, twoDigits, type OfficialSkill, type O
  *   ゲーム内 ID・絵のファイル名・デザイン ID は元のまま（例：トリックショットは skl-lazuck-09・laz_sk_09.webp のまま表示は 7）
  * - 新しい技「いたずら」（表示 11・特殊・マナ2）：ゲーム内 ID は skl-lazuck-itazura（番号の ID と取り違えないよう名前の ID）。
  *   絵はユーザーの完成画像（JPEG。原本 design-parts/cards-original/lazuck/）から作った laz_sk_itazura.webp
- * - 旧13「クロスガード」（skl-lazuck-13）：新しいデッキ・配布から外した（retired）。持っている人のセーブ・デッキからは消さず、
- *   バトルでも元の効果のまま使える。どう移行するか（いたずらに替えるか等）はユーザー確認待ち
+ * - 旧13「クロスガード」（skl-lazuck-13）：ゲームから削除（2026-10-24 ユーザー決定）。持っていたセーブは version 8 で所持・デッキから外す
+ *   （src/game/save/saveData.ts の migrateRemoveCrossGuardV8）。元の JSON・絵（laz_sk_13.webp）は記録として残す
  * - 回避14〜16：マナと条件を承認値に（フェイントステップ＝マナ2・ちから、シャドウスリップ＝マナ2・必要マナ2以上のちから/かしこさ、ミラージュダッシュ＝条件なし）
  * - 初期・収集の区分は LATEST のまま（初期10・収集6。いたずらはクロスガードの収集枠を引き継ぐ）
  */
@@ -63,13 +63,11 @@ const SPECIAL_EFFECTS: Readonly<Record<string, SkillEffect>> = {
   'LAZ-SK-08': { type: 'weaken', stat: 'force', amount: 1, duration: 'nextTurn' },
   'LAZ-SK-11': { type: 'defense', reduce: 3, against: 'force' },
   'LAZ-SK-12': { type: 'defense', reduce: 4, against: 'wisdom' },
-  // 旧13 クロスガード（退役。持っている人のために元の効果のまま残す）
-  'LAZ-SK-13': { type: 'defense', reduce: 2, against: 'all' },
 };
 
 /** 新しい技「いたずら」のゲーム内 ID（2026-10-24。番号の ID ではない） */
 export const LAZUCK_ITAZURA_ID = 'skl-lazuck-itazura';
-/** 退役した旧13「クロスガード」 */
+/** ゲームから削除した旧13「クロスガード」の ID（セーブの変換・バックアップの読み込みで使う） */
 export const LAZUCK_CROSS_GUARD_ID = lazuckSkillId(13);
 
 const SOURCE: OfficialSkillSource = {
@@ -118,8 +116,3 @@ function latestSkill(l: LatestSkill): SkillCard {
 
 /** ラズックの技16種（新しい表示の番号の順。2026-10-24 改訂） */
 export const LAZUCK_SKILLS: readonly SkillCard[] = (latestSkills.skill_cards as readonly LatestSkill[]).map(latestSkill);
-
-/** 退役したラズックの技（旧13 クロスガード）。カードの一覧には残す（持っている人のため）が、新しいデッキ・配布には使わない */
-export const LAZUCK_RETIRED_SKILLS: readonly SkillCard[] = ORIGINAL.filter((o) => o.game_id === LAZUCK_CROSS_GUARD_ID).map((o) =>
-  officialSkill(o, SOURCE, { retired: true }),
-);

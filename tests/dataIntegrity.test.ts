@@ -20,12 +20,12 @@ describe('カードデータの点検（正式データを入れる前の土台�
     expect(checkCardData(cardCatalog.all(), options)).toEqual([]);
   });
 
-  it('正式カードはソラモ・ラズック・ガウル（モンスターと技16種ずつ＋退役したクロスガード）だけで、ほかはすべて仮', () => {
+  it('正式カードはソラモ・ラズック・ガウル（モンスターと技16種ずつ）だけで、ほかはすべて仮', () => {
     const official = [...MONSTERS, ...SKILLS, ...SUPPORTS].filter((c) => !c.isPlaceholder).map((c) => c.id);
     const skillIds = (key: string, nos: readonly number[]): string[] => nos.map((n) => `skl-${key}-${String(n).padStart(2, '0')}`);
     const all = Array.from({ length: 16 }, (_, i) => i + 1);
-    // ラズックは表示の番号の順（07・08＝旧09・10、09・10＝旧07・08、11＝いたずら、12・13＝旧11・12）。退役したクロスガード（13）は一覧の後ろ
-    const lazuck = [...skillIds('lazuck', [1, 2, 3, 4, 5, 6, 9, 10, 7, 8]), 'skl-lazuck-itazura', ...skillIds('lazuck', [11, 12, 14, 15, 16, 13])];
+    // ラズックは表示の番号の順（07・08＝旧09・10、09・10＝旧07・08、11＝いたずら、12・13＝旧11・12）。旧13 クロスガードは削除
+    const lazuck = [...skillIds('lazuck', [1, 2, 3, 4, 5, 6, 9, 10, 7, 8]), 'skl-lazuck-itazura', ...skillIds('lazuck', [11, 12, 14, 15, 16])];
     expect(official).toEqual(['mon-soramo', 'mon-lazuck', 'mon-gauul', ...skillIds('soramo', all), ...lazuck, ...skillIds('gauul', all)]);
   });
 

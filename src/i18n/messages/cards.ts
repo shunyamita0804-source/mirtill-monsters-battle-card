@@ -103,8 +103,6 @@ export const CARDS = {
   'card.availability.collect': { ja: '収集', en: 'Collectible' },
   'card.detail.designId': { ja: 'デザインID', en: 'Design ID' },
   'card.detail.number': { ja: '番号', en: 'No.' },
-  'card.detail.retired': { ja: '配布', en: 'Availability' },
-  'card.detail.retiredNote': { ja: '配布終了（持っているカードはそのまま使えます）', en: 'No longer distributed (cards you own still work)' },
   'card.detail.rank': { ja: 'ランク', en: 'Rank' },
   'card.detail.pendingNote': {
     ja: '正式カードです。まだ決まっていない項目：{items}（仮の値を表示しています）。',

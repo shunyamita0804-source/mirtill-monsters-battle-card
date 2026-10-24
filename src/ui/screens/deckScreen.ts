@@ -47,8 +47,8 @@ export const deckScreen: ScreenDefinition = {
       const canAddCopy =
         DECK_RULES.allowDuplicateMonsters && inDraft > 0 && inDraft < (collection()[id] ?? 0) && draft.monsters.length < DECK_RULES.monsterCount;
       if (inDraft > 0 && !canAddCopy) {
-        const removed = draft.skills.filter((s) => cardCatalog.get(s)?.kind === 'skill' && skillsOf(id, true).some((k) => k.id === s)).length;
-        setDraft({ monsters: draft.monsters.filter((m) => m !== id), skills: draft.skills.filter((s) => !skillsOf(id, true).some((k) => k.id === s)) });
+        const removed = draft.skills.filter((s) => cardCatalog.get(s)?.kind === 'skill' && skillsOf(id).some((k) => k.id === s)).length;
+        setDraft({ monsters: draft.monsters.filter((m) => m !== id), skills: draft.skills.filter((s) => !skillsOf(id).some((k) => k.id === s)) });
         if (removed > 0) messageModal(element, t('deck.removedSkills', { name: cardName(getMonster(id)), n: removed }));
         return;
       }
@@ -165,10 +165,8 @@ export const deckScreen: ScreenDefinition = {
 
       // サポートはモンスターに関係なく入れられる。持っているものだけ並べる
       const supports: PlayCard[] = SUPPORTS.filter((c) => (coll[c.id] ?? 0) > 0 || (counts[c.id] ?? 0) > 0);
-      // 退役した技（旧ラズックのクロスガード）は、持っているかデッキに入っているときだけ並べる
-      const skillList = (mid: string): PlayCard[] => skillsOf(mid, true).filter((s) => !s.retired || (coll[s.id] ?? 0) > 0 || (counts[s.id] ?? 0) > 0);
       const listed: PlayCard[] =
-        tab === SUPPORT_TAB ? supports : [...(tab ? [tab] : [...new Set(draft.monsters)]).flatMap(skillList), ...(tab ? [] : supports)];
+        tab === SUPPORT_TAB ? supports : [...(tab ? [tab] : [...new Set(draft.monsters)]).flatMap((mid) => skillsOf(mid)), ...(tab ? [] : supports)];
       const meta = (card: PlayCard): string =>
         card.kind === 'skill'
           ? card.stat

@@ -31,7 +31,6 @@ export function openCardDetail(parent: HTMLElement, card: CardDefinition, option
     rows.push([t('card.detail.life'), card.pendingSpec?.includes('life') ? t('card.provisionalValue', { n: card.life }) : String(card.life)]);
   }
   if (card.kind === 'skill' && card.displayNo !== undefined) rows.push([t('card.detail.number'), String(card.displayNo).padStart(2, '0')]);
-  if (card.kind === 'skill' && card.retired) rows.push([t('card.detail.retired'), t('card.detail.retiredNote')]);
   if (card.designId) rows.push([t('card.detail.designId'), card.designId]);
   rows.push([t('card.detail.rarity'), rarityLabel(card.rarity)]);
   const packs = PACKS.filter((p) => p.cardIds.includes(card.id)).map(packName);

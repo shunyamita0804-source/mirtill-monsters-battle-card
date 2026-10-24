@@ -898,7 +898,8 @@ export const battleScreen: ScreenDefinition = {
           h('img', { class: 'battle__status-icon', attrs: { src: STAT_ICON[stat], alt: '', draggable: 'false' } }),
           battleDigits(-n, 'battle__status-num'),
         );
-      if (m.weaken) items.push(weakenBadge(m.weaken.stat, m.weaken.amount));
+      // 熱風の威嚇は期限（untilTurn）が過ぎたら出さない
+      if (m.weaken && (m.weaken.untilTurn === undefined || m.weaken.untilTurn >= s.turn)) items.push(weakenBadge(m.weaken.stat, m.weaken.amount));
       // ダストキック：かけた手番（相手の番）と、効く手番（次の手番）の間だけ出す
       if (m.weakenTurn && m.weakenTurn.turn >= s.turn) items.push(weakenBadge(m.weakenTurn.stat, m.weakenTurn.amount));
       if (m.sealedTurn !== undefined && m.sealedTurn !== null && m.sealedTurn >= s.turn) items.push(h('span', { class: 'battle__status-text', text: t('battle.status.sealed') }));

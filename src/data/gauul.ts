@@ -40,14 +40,14 @@ export const GAUUL_MONSTER: MonsterCard = {
 
 /**
  * 効果テキストのある技の、ゲームでの動き（効果テキストの文は書き換えず、動きだけをここで表す）。
- * 【要仕様確定】
- * - GAU-SK-09 熱風の威嚇「次回のかしこさ技ダメージ−1」：ソラモの吠えると同じく、その相手が次にかしこさの技を使うときに1減らして消える
- *   （「次のターン」とは読み替えない）。重ねがけはしない（2回目も −1 のまま）。どこまで続くかは未定
+ * - GAU-SK-09 熱風の威嚇「次回のかしこさ技ダメージ−1」：その相手が次にかしこさの技を使うときに1減らして消える。
+ *   使わなくても、相手の次のターンが終われば消える（2026-10-24 ユーザー決定「次のターンまで」）。
+ *   【要仕様確定】重ねがけはしない（2回目も −1 のまま、期限だけ新しく）
  */
 const SPECIAL_EFFECTS: Readonly<Record<string, SkillEffect>> = {
   'GAU-SK-03': { type: 'attack', undodgeable: true },
   'GAU-SK-08': { type: 'attack', undodgeable: true },
-  'GAU-SK-09': { type: 'weaken', stat: 'wisdom', amount: 1 },
+  'GAU-SK-09': { type: 'weaken', stat: 'wisdom', amount: 1, duration: 'nextUseByNextTurn' },
   'GAU-SK-11': { type: 'defense', reduce: 3, against: 'force' },
   'GAU-SK-12': { type: 'defense', reduce: 3, against: 'wisdom' },
   'GAU-SK-13': { type: 'defense', reduce: 3, against: 'all' },

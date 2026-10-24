@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { getSkill, MONSTERS, SKILLS, skillsOf } from '../src/data/cards.ts';
+import { cardCatalog, getSkill, MONSTERS, SKILLS, skillsOf } from '../src/data/cards.ts';
 import { PACKS } from '../src/data/economy.ts';
 import { LAZUCK_CROSS_GUARD_ID, LAZUCK_ITAZURA_ID, LAZUCK_MONSTER, LAZUCK_SKILLS, lazuckSkillId } from '../src/data/lazuck.ts';
 import type { SkillCard } from '../src/game/cards/cardTypes.ts';
@@ -54,7 +54,6 @@ describe('ラズック16技：正式データ（正本 JSON を無改変で導�
       expect(s.monsterId).toBe('mon-lazuck');
       expect(s.isPlaceholder).toBe(false);
       expect(s.rarity).toBeNull();
-      expect(s.retired).toBeUndefined();
       // 恒久 ID・絵・デザイン ID は、元の JSON の同じ ID のカードのまま（並べ替えで取り違えない）
       const original = officialJson.skill_cards.find((o) => o.game_id === l.game_id);
       if (itazura) {
@@ -74,23 +73,18 @@ describe('ラズック16技：正式データ（正本 JSON を無改変で導�
     expect(LAZUCK_SKILLS.filter((s) => s.availability === 'initial')).toHaveLength(10);
   });
 
-  it('旧13 クロスガードは退役：一覧には残る（ID・絵・効果は元のまま）が、新しいデッキ・相手の編成・全カード配布には入らない', () => {
-    const cross = getSkill(LAZUCK_CROSS_GUARD_ID);
-    expect(cross.retired).toBe(true);
-    expect(cross.name).toBe('クロスガード');
-    expect(cross.art?.file).toBe('laz_sk_13.webp');
-    expect(cross.effect).toEqual({ type: 'defense', reduce: 2, against: 'all' });
+  it('旧13 クロスガードはゲームから削除（2026-10-24 ユーザー決定）。新しいデッキはいたずら入り', () => {
+    expect(cardCatalog.get(LAZUCK_CROSS_GUARD_ID)).toBeUndefined();
     expect(LAZUCK_SKILLS.map((s) => s.id)).not.toContain(LAZUCK_CROSS_GUARD_ID);
-    expect(skillsOf('mon-lazuck').map((s) => s.id)).not.toContain(LAZUCK_CROSS_GUARD_ID);
-    expect(skillsOf('mon-lazuck', true).map((s) => s.id)).toContain(LAZUCK_CROSS_GUARD_ID);
+    expect(skillsOf('mon-lazuck')).toHaveLength(16);
     expect(createMixedTestDeck().skills).not.toContain(LAZUCK_CROSS_GUARD_ID);
     expect(createMixedTestDeck().skills).toContain(LAZUCK_ITAZURA_ID);
     expect(LAZUCK_ITAZURA_ID).not.toMatch(/^skl-lazuck-\d+$/);
   });
 
   it('ゲームでの動きは JSON の effect_logic_spec と同じ意味', () => {
-    // 回避14〜16は 2026-10-24 の改訂でマナ・条件が変わった（下の回避のテスト）。旧13 クロスガードは退役したカード
-    for (const o of officialJson.skill_cards.filter((c) => c.number < 14)) {
+    // 回避14〜16は 2026-10-24 の改訂でマナ・条件が変わった（下の回避のテスト）。旧13 クロスガードはゲームから削除
+    for (const o of officialJson.skill_cards.filter((c) => c.number < 13)) {
       const spec = o.effect_logic_spec as Record<string, unknown>;
       const e = getSkill(laz(o.number)).effect as Record<string, unknown>;
       expect(e.type).toBe(spec.type);
@@ -188,7 +182,7 @@ function attackAndGuard(attack: string, target: string, guards: string[]): Battl
 
 describe('ラズックの技の効果', () => {
   it('みだれづめ（回避されない）：回避は使えないが、防御は使える', () => {
-    let s = scene({ player: [laz(4)], opponent: [laz(14), laz(16), laz(13)] });
+    let s = scene({ player: [laz(4)], opponent: [laz(14), laz(16), laz(11)] });
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 'p0', targetUid: 'o-m2' });
     expect(s.pending?.power).toBe(2);
     expect(cardUsability(s, 'opponent', 'o0')).toMatchObject({ usable: false });
@@ -196,15 +190,13 @@ describe('ラズックの技の効果', () => {
     expect(cardUsability(s, 'opponent', 'o2').usable).toBe(true);
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: 'o2' });
     s = applyAction(s, { type: 'defend', side: 'opponent', cardUid: null });
-    expect(lifeOf(s, 'o-m2')).toBe(6);
+    expect(lifeOf(s, 'o-m2')).toBe(6); // みだれづめ 2 − しっぽいなし 3 → 0
   });
 
-  it('しっぽいなし（ちから−3）・シャドウガード（かしこさ−4）・クロスガード（両方−2）。0 未満にならない', () => {
+  it('しっぽいなし（ちから−3）・シャドウガード（かしこさ−4）。0 未満にならない', () => {
     // とびかかり：ちから3、シャドウバースト：かしこさ5
     expect(lifeOf(attackAndGuard(laz(3), 'o-m2', [laz(11)]), 'o-m2')).toBe(6);
     expect(lifeOf(attackAndGuard(laz(10), 'o-m2', [laz(12)]), 'o-m2')).toBe(5);
-    expect(lifeOf(attackAndGuard(laz(3), 'o-m2', [laz(13)]), 'o-m2')).toBe(5);
-    expect(lifeOf(attackAndGuard(laz(10), 'o-m2', [laz(13)]), 'o-m2')).toBe(3);
     // 効かない種類の攻撃には使えない
     let s = scene({ player: [laz(10)], opponent: [laz(11)] });
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 'p0', targetUid: 'o-m2' });

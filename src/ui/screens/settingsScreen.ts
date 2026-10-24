@@ -75,7 +75,7 @@ export const settingsScreen: ScreenDefinition = {
                   render();
                 }, 'btn btn--small'),
                 button(t('bed.qaAllCards'), () => {
-                  store.update((x) => addCards(x, [...MONSTERS.filter((m) => !m.hidden), ...SKILLS.filter((s) => !s.retired), ...SUPPORTS].map((c) => ({ cardId: c.id, count: 4 }))));
+                  store.update((x) => addCards(x, [...MONSTERS.filter((m) => !m.hidden), ...SKILLS, ...SUPPORTS].map((c) => ({ cardId: c.id, count: 4 }))));
                   render();
                 }, 'btn btn--small'),
                 button(t('bed.qaAllPacks'), () => {

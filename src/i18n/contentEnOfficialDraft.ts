@@ -54,8 +54,6 @@ export const OFFICIAL_DRAFT_EN: Readonly<Record<string, string>> = {
   'card:skl-lazuck-11:effect': 'POW skill damage taken -3.',
   'card:skl-lazuck-12:name': 'Shadow Guard',
   'card:skl-lazuck-12:effect': 'INT skill damage taken -4.',
-  'card:skl-lazuck-13:name': 'Cross Guard',
-  'card:skl-lazuck-13:effect': 'POW and INT skill damage taken -2.',
   'card:skl-lazuck-14:name': 'Feint Step',
   'card:skl-lazuck-14:effect': 'Dodge a POW skill.',
   'card:skl-lazuck-15:name': 'Shadow Slip',

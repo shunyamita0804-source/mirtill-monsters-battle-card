@@ -53,7 +53,6 @@ export const BATTLE = {
     en: "{name}'s {stat} skills deal {n} less damage next turn.",
   },
   'battle.log.handToDeck': { ja: '{player}の手札を1枚、山札に戻してシャッフルした。', en: "Returned 1 card from {player}'s hand to the deck and shuffled it." },
-  'battle.log.handToDeckNone': { ja: '{player}の手札がないので、何も起きなかった。', en: "{player} has no cards in hand. Nothing happened." },
   'battle.log.taunt': { ja: '{name}は次のターン、{only}にしか攻撃できない。', en: '{name} can only attack {only} next turn.' },
 
   // 使えない理由（engine.ts の cardUsability）
@@ -72,6 +71,7 @@ export const BATTLE = {
   'battle.ng.wrongStat': { ja: '{stat}攻撃には使えません', en: "Can't be used against {stat} attacks" },
   'battle.ng.unblockable': { ja: 'この攻撃は防御できません', en: "This attack can't be guarded" },
   'battle.ng.undodgeable': { ja: 'この攻撃は回避できません', en: "This attack can't be dodged" },
+  'battle.ng.noOpponentHand': { ja: '相手は手札がありません', en: 'The opponent has no cards in hand' },
   'battle.ng.evadeMinCost': { ja: '必要マナ{n}以上の攻撃にしか使えません', en: 'Only works against attacks costing {n}+ mana' },
   'battle.ng.defenseOnAttack': {
     ja: '防御・回避カードは相手の攻撃を受けたときに使います',

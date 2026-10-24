@@ -12,6 +12,7 @@ import { chooseAction } from '../src/game/battle/ai.ts';
 import { applyAction, attackPower, cardUsability, createBattle, type BattleMonster, type BattleState, type Side } from '../src/game/battle/engine.ts';
 import { skillCardFace } from '../src/game/cards/cardFace.ts';
 import { validateDeck } from '../src/game/deck/deck.ts';
+import { BACKUP_FORMAT, parseBackup } from '../src/game/save/backup.ts';
 import { createNewSave, normalizeSave } from '../src/game/save/saveData.ts';
 import { cardName } from '../src/i18n/content.ts';
 import { setLanguage } from '../src/i18n/i18n.ts';
@@ -154,23 +155,34 @@ describe('ガウルの技の効果', () => {
     expect(lifeAfter(gau(8), 'o-m1', [gau(12)])).toBe(5); // 4 − 3 → 1
   });
 
-  it('09 熱風の威嚇：選んだ相手の「次回の」かしこさ技だけ −1（ちから技は変わらない）。使ったら消える。次のターンを過ぎても残る', () => {
+  it('09 熱風の威嚇：選んだ相手の次回のかしこさ技だけ −1（ちから技は変わらない）。使ったら消える。使わなくても次のターンが終われば消える', () => {
     let s = scene({ player: [gau(9)] });
     s = applyAction(s, { type: 'useCard', side: 'player', cardUid: 'p0', targetUid: 'o-m1' });
-    expect(monster(s, 'o-m1').weaken).toEqual({ stat: 'wisdom', amount: 1 });
+    expect(monster(s, 'o-m1').weaken).toEqual({ stat: 'wisdom', amount: 1, untilTurn: s.turn + 1 });
     expect(attackPower(s, getSkill(gau(7)), monster(s, 'o-m1'))).toBe(2); // 炎の羽ばたき かしこさ3 → 2
     expect(attackPower(s, getSkill(gau(2)), monster(s, 'o-m1'))).toBe(2); // かぎづめ ちから2 のまま
     expect(attackPower(s, getSkill(gau(7)), monster(s, 'o-m2'))).toBe(3); // ほかのモンスターは変わらない
-    // 何ターンたっても、かしこさ技を使うまで残る
-    const later: BattleState = {
+    const opponentTurnAt = (turn: number): BattleState => ({
       ...s,
-      turn: s.turn + 3,
+      turn,
       active: 'opponent',
-      sides: { ...s.sides, opponent: { ...s.sides.opponent, hand: [{ uid: 'x0', cardId: gau(7) }], monsters: s.sides.opponent.monsters.map((m) => ({ ...m, acted: m.uid !== 'o-m1' })) } },
-    };
-    const used = applyAction(later, { type: 'useCard', side: 'opponent', cardUid: 'x0', targetUid: 'p-m1' });
+      sides: {
+        ...s.sides,
+        opponent: {
+          ...s.sides.opponent,
+          hand: [{ uid: 'x0', cardId: gau(7) }, { uid: 'x1', cardId: gau(7) }],
+          monsters: s.sides.opponent.monsters.map((m) => ({ ...m, acted: m.uid !== 'o-m1' })),
+        },
+      },
+    });
+    // 相手の次のターン：1回目のかしこさ技は −1、使ったら消える
+    const used = applyAction(opponentTurnAt(s.turn + 1), { type: 'useCard', side: 'opponent', cardUid: 'x0', targetUid: 'p-m1' });
     expect(used.pending?.power).toBe(2);
     expect(monster(used, 'o-m1').weaken ?? null).toBeNull();
+    // 次のターンにかしこさ技を使わなかったら、そのあとのターンでは効かない
+    const later = opponentTurnAt(s.turn + 3);
+    expect(attackPower(later, getSkill(gau(7)), monster(later, 'o-m1'))).toBe(3);
+    expect(applyAction(later, { type: 'useCard', side: 'opponent', cardUid: 'x0', targetUid: 'p-m1' }).pending?.power).toBe(3);
   });
 
   it('11 翼ガード（ちから−3）・12 火炎の羽衣（かしこさ−3）・13 炎の壁（両方−3）。0 未満にならない。種類が違えば使えない', () => {
@@ -289,13 +301,10 @@ describe('ラズックのいたずら（2026-10-24）', () => {
     expect(after.sides.opponent.deck).toContain(gau(5));
   });
 
-  it('相手の手札が0枚：使えて（マナは払う）、何も起きない【要仕様確定】', () => {
+  it('相手の手札が0枚：「相手は手札がありません」と出て使えない（2026-10-24 ユーザー決定）', () => {
     const before = scene({ player: [LAZUCK_ITAZURA_ID], opponent: [] });
-    expect(cardUsability(before, 'player', 'p0').usable).toBe(true);
-    const after = useItazura([]);
-    expect(after.sides.opponent.deck).toEqual(before.sides.opponent.deck);
-    expect(after.sides.player.hand).toEqual([]);
-    expect(after.log.at(-1)?.text).toContain('何も起きなかった');
+    expect(cardUsability(before, 'player', 'p0')).toEqual({ usable: false, reason: '相手は手札がありません' });
+    expect(applyAction(before, { type: 'useCard', side: 'player', cardUid: 'p0' })).toBe(before);
   });
 
   it('戻したカードは、相手の次のドローで引かれることがある（山札のどこかに入る）', () => {
@@ -312,25 +321,47 @@ describe('ラズックのいたずら（2026-10-24）', () => {
   });
 });
 
-describe('退役したクロスガードと旧セーブ', () => {
-  it('クロスガードを持つ旧セーブは、そのまま読み込める（所持・デッキから消さない）。デッキも有効', () => {
+describe('クロスガードの削除と旧セーブ（version 8）', () => {
+  /** version 7 のセーブ（新しいデッキのいたずらをクロスガードに替え、クロスガードを2枚持っている） */
+  const oldSave = () => {
     const save = createNewSave();
     const deckSkills = [...save.deck.skills];
     deckSkills[deckSkills.indexOf(LAZUCK_ITAZURA_ID)] = LAZUCK_CROSS_GUARD_ID;
-    const old = { ...save, deck: { ...save.deck, skills: deckSkills }, collection: { ...save.collection, [LAZUCK_CROSS_GUARD_ID]: 2 } };
-    const loaded = normalizeSave(JSON.parse(JSON.stringify(old)));
+    const collection: Record<string, number> = { ...save.collection, [LAZUCK_CROSS_GUARD_ID]: 2 };
+    delete collection[LAZUCK_ITAZURA_ID];
+    return { ...save, version: 7, deck: { ...save.deck, skills: deckSkills }, collection };
+  };
+
+  it('所持・デッキからクロスガードが消え、デッキの抜けた分は持っているカードで埋まる（代わりのカードは配らない）', () => {
+    // デッキに入れていない予備のカード（星影ステップをもう2枚）を持っている
+    const save = oldSave();
+    const loaded = normalizeSave(JSON.parse(JSON.stringify({ ...save, collection: { ...save.collection, [sor(16)]: 3 } })));
     if (!loaded) throw new Error('読み込めない');
-    expect(loaded.collection[LAZUCK_CROSS_GUARD_ID]).toBe(2);
-    expect(loaded.deck.skills).toContain(LAZUCK_CROSS_GUARD_ID);
-    expect(validateDeck(loaded.deck, { ...loaded.collection, [LAZUCK_CROSS_GUARD_ID]: 2 })).toEqual([]);
+    expect(loaded.version).toBe(8);
+    expect(loaded.collection[LAZUCK_CROSS_GUARD_ID]).toBeUndefined();
+    expect(loaded.collection[LAZUCK_ITAZURA_ID]).toBeUndefined();
+    expect(loaded.deck.skills).not.toContain(LAZUCK_CROSS_GUARD_ID);
+    expect(loaded.deck.skills).toHaveLength(60);
+    expect(validateDeck(loaded.deck, loaded.collection)).toEqual([]);
   });
 
-  it('バトルでも元の効果（ちから・かしこさ−2）のまま使える', () => {
-    expect(lifeAfter(gau(5), 'o-m2', [LAZUCK_CROSS_GUARD_ID])).toBe(4); // 4 − 2
+  it('埋める予備のカードがなければ、デッキは1枚足りないまま（デッキ編集で直す。カードは配らない）', () => {
+    const loaded = normalizeSave(JSON.parse(JSON.stringify(oldSave())));
+    if (!loaded) throw new Error('読み込めない');
+    expect(loaded.deck.skills).toHaveLength(59);
+    expect(loaded.deck.skills).not.toContain(LAZUCK_CROSS_GUARD_ID);
+    expect(validateDeck(loaded.deck, loaded.collection).length).toBeGreaterThan(0);
   });
 
-  it('全カードの一覧には残るが、適合技の一覧（新しいデッキ用）には出ない', () => {
-    expect(SKILLS.some((s) => s.id === LAZUCK_CROSS_GUARD_ID)).toBe(true);
+  it('クロスガードの入ったバックアップも読み込める（読み込むときに外す）', () => {
+    const text = JSON.stringify({ format: BACKUP_FORMAT, formatVersion: 1, exportedAt: null, save: oldSave() });
+    const result = parseBackup(text);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.save.deck.skills).not.toContain(LAZUCK_CROSS_GUARD_ID);
+  });
+
+  it('クロスガードはカードの一覧にない', () => {
+    expect(SKILLS.some((s) => s.id === LAZUCK_CROSS_GUARD_ID)).toBe(false);
     expect(skillsOf('mon-lazuck')).toHaveLength(16);
   });
 });

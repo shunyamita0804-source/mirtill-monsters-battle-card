@@ -40,8 +40,6 @@ export interface OfficialSkillOverride {
   readonly designId?: string | null;
   /** 表示の番号 */
   readonly displayNo?: number;
-  /** 新しいデッキ・配布の一覧から外したカード */
-  readonly retired?: boolean;
   /** ゲームでの動き（なければ src.specialEffects[o.design_id] か攻撃） */
   readonly effect?: SkillEffect;
 }
@@ -76,7 +74,6 @@ export function officialSkill(o: OfficialSkill, src: OfficialSkillSource, over: 
     effectTextJa: o.effect_text_ja,
     availability: o.availability === 'initial' ? 'initial' : 'collect',
     ...(over.displayNo !== undefined ? { displayNo: over.displayNo } : {}),
-    ...(over.retired ? { retired: true } : {}),
     effect,
     isPlaceholder: false,
     art: { category: 'skillCards', file: over.artFile ?? src.artFile(o.number), layout: 'frame' },
