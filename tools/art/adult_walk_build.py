@@ -23,10 +23,13 @@
 --diag：斜め向きの4行を足す（主人公だけ。2026-10-23 追加）。行は 正面・背中・左・右・左下・右下・左上・右上 の8行になる。
   届く絵は1枚に1ポーズ：{ID}_{downleft,upleft}_{stand,rightfoot,leftfoot}.png（1024×1024 か 1254×1254）。
   絵ごとに大きさが違うので、1枚ずつ背の高さ（頭のてっぺん〜足元）を FIGURE_H にそろえる。右下・右上は左下・左上の左右反転
+{ID}_walk_{front,back,left}_pass.png（2026-10-24〜。あれば）：足を運ぶ途中の絵（docs/design/walk-passing-20261024/。1枚に
+  「右足で立ち左足を運ぶ・立つ（見本）・左足で立ち右足を運ぶ」）。歩きの「立つ」の2コマ（2列目・4列目）をこの2ポーズにする
 --outline N：人物のまわりに N px の暗い輪郭を付ける（2026-10-23 追加）。背景の描き込みが強い街・部屋で人物が埋もれないように。
   同じ日に --tone（色を落ち着かせる）はやめた（背景を描き直して色の調整を外したので、人物だけがくすんで見えたため）
 """
 import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -110,6 +113,18 @@ def poses(sheet: Image.Image, k: float) -> list[Image.Image]:
     return [place(wins[0], cx, k)] + [place(w, cx - body_shift(ref, alpha(w)), k) for w in wins[1:]]
 
 
+def pass_poses(pass_sheet: Image.Image, walk_sheet: Image.Image, k: float) -> list[Image.Image]:
+    """足を運ぶ途中の絵（1枚に「右足で立ち左足を運ぶ・立つ（見本）・左足で立ち右足を運ぶ」）の2コマ。
+    見本の「立つ」の背の高さを歩きの絵の「立つ」にそろえ、上半身が見本の「立つ」と重なる位置に置く
+    （歩きの絵とは別の日に描いた絵なので、大きさ・位置が少し違うことがある）"""
+    wins = split_poses(pass_sheet)
+    ref = alpha(wins[1])
+    ys = np.nonzero(ref.any(axis=1))[0]
+    kp = k * figure_height(walk_sheet) / int(ys[-1] - ys[0])
+    cx = body_center(ref)
+    return [place(w, cx - body_shift(ref, alpha(w)), kp) for w in (wins[0], wins[2])]
+
+
 def diag_poses(folder: str, cid: str, d: str) -> list[Image.Image]:
     """斜め向き（d＝downleft / upleft）の 立つ・右足を前・左足を前 の3コマ。
     1枚ずつ背の高さを FIGURE_H にそろえ、足を出した2つは上半身が「立つ」と重なる位置に"""
@@ -187,7 +202,12 @@ def main() -> None:
     for d in ('front', 'back', 'left'):
         sheet = Image.open(f'{folder}/{cid}_walk_{d}.png').convert('RGBA')
         stand, right_fwd, left_fwd = poses(sheet, k)
-        rows.append([right_fwd, stand, left_fwd, stand] + ([] if npc else [stand]))
+        # 足を運ぶ途中の絵（2026-10-24〜。あるときだけ）：「立つ」の2コマを「右足で立ち左足を運ぶ」「左足で立ち右足を運ぶ」に
+        pass_r = pass_l = stand
+        pass_path = Path(f'{folder}/{cid}_walk_{d}_pass.png')
+        if pass_path.exists():
+            pass_r, pass_l = pass_poses(Image.open(pass_path).convert('RGBA'), sheet, k)
+        rows.append([right_fwd, pass_r, left_fwd, pass_l] + ([] if npc else [stand]))
     rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[2]])
     if '--diag' in args:
         for d in ('downleft', 'upleft'):

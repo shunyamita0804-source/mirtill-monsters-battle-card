@@ -1,0 +1,10 @@
+受け取り結果（主人公の「歩く・走る」の絵）
+
+■ 2026-10-24　男性・正面の「足を運ぶ途中」2ポーズ（W2・W4）
+・届いた形：1枚に3ポーズ（右足で立ち左足を運ぶ・立つ・左足で立ち右足を運ぶ。前の依頼 walk-passing-20261024 の形）1536×1024・背景透明
+・判断：使う。顔・服・持ち物・色が今の歩きの絵と同じ。大きさ・足元も合わせられた
+・原本：design-parts/characters-adult/player_male_walk_front_pass.png
+・組み込み：tools/art/adult_walk_build.py が {ID}_walk_{front,back,left}_pass.png を見つけると、歩きの2列目・4列目（いままで「立つ」）をこの2ポーズにする。
+  python3 tools/art/adult_walk_build.py design-parts/characters-adult player_male assets/images/characters/player_male_sheet.webp --scale 1.25 --outline 2 --diag
+・ほかの行（背中・左右・斜め）は変わらない
+・この形（1枚に3ポーズ）でも、02_LIST.txt の形（1枚に1ポーズ）でも組み込める。左向き・背中もこの形で届けばそのまま入る
