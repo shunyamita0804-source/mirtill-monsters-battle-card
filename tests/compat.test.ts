@@ -145,14 +145,14 @@ describe('アプリ名・PWA・配信先（正式名称）', () => {
 
   it('manifest は正式名称・短縮名・正式アイコン', () => {
     expect(manifest.name).toBe(APP_INFO.gameName);
-    expect(manifest.short_name).toBe('セイクリッドBC');
+    expect(manifest.short_name).toBe('ミストラルBC');
     expect(manifest.start_url).toBe('./');
     expect(manifest.icons.map((i: { src: string }) => i.src)).toEqual(['icons/icon-192.png', 'icons/icon-512.png']);
   });
 
   it('index.html の題名・ホーム画面名・アイコン', () => {
     expect(html).toContain(`<title>${APP_INFO.gameName}</title>`);
-    expect(html).toContain('content="セイクリッドBC"');
+    expect(html).toContain('content="ミストラルBC"');
     expect(html).toContain('href="/icons/apple-touch-icon.png"');
     expect(html).toContain('href="/icons/favicon-32.png"');
   });

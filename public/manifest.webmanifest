@@ -1,7 +1,7 @@
 {
-  "name": "セイクリッドモンスターズ バトルカード",
-  "short_name": "セイクリッドBC",
-  "description": "セイクリッドモンスターズ バトルカード（開発版） / Sacred Monsters Battle Card",
+  "name": "ミストラルモンスターズ バトルカード",
+  "short_name": "ミストラルBC",
+  "description": "ミストラルモンスターズ バトルカード（開発版） / Mistral Monsters Battle Card",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",

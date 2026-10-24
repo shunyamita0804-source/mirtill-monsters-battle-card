@@ -54,7 +54,7 @@ docs/     開発ドキュメント
 
 ## 独立性について
 
-本プロジェクトは「ミスティックモンスターズ」（`shunyamita0804-source/mystic-monsters`）とは独立しています。
+本プロジェクトは本編「ミストラルモンスターズ」（旧ミスティックモンスターズ。リポジトリ `shunyamita0804-source/mystic-monsters`）とは独立しています。
 ソースの流用は行いません。素材は 2026-10-22 のユーザー許可により読み取りで利用しています（`docs/audio-credits.md`）。
 
 ## クラウドセッション（Claude Code）

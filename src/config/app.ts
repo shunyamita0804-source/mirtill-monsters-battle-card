@@ -1,11 +1,14 @@
-/** シリーズ・ゲームの正式名称などアプリ全体の基本情報（2026-10-22 正式名称：セイクリッドモンスターズ。旧称ミルティル・ミストリア） */
+/**
+ * シリーズ・ゲームの正式名称などアプリ全体の基本情報。
+ * 2026-10-24 正式名称：ミストラルモンスターズ（ユーザー決定。本編もミストラルモンスターズに）。旧称ミルティル・ミストリア・セイクリッドモンスターズ
+ */
 export const APP_INFO = {
-  seriesName: 'セイクリッドモンスターズ',
-  seriesNameEn: 'Sacred Monsters',
-  gameName: 'セイクリッドモンスターズ バトルカード',
-  gameNameEn: 'Sacred Monsters Battle Card',
-  /** ホーム画面アイコン下などの短い名前（ユーザー指定。勝手に変えない） */
-  shortName: 'セイクリッドBC',
+  seriesName: 'ミストラルモンスターズ',
+  seriesNameEn: 'Mistral Monsters',
+  gameName: 'ミストラルモンスターズ バトルカード',
+  gameNameEn: 'Mistral Monsters Battle Card',
+  /** ホーム画面アイコン下などの短い名前（2026-10-24 正式名称の変更に合わせて「セイクリッドBC」から。勝手に変えない） */
+  shortName: 'ミストラルBC',
   version: '0.4.0',
   /** 現在の開発段階（夜間一括指示 2026-10-22：最小縦断体験） */
   phase: 3,

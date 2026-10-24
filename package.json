@@ -2,7 +2,7 @@
   "name": "sacred-monsters-battle-card",
   "version": "0.4.0",
   "private": true,
-  "description": "セイクリッドモンスターズ バトルカード — スマートフォン向け2Dカードゲーム（セイクリッドモンスターズシリーズ）",
+  "description": "ミストラルモンスターズ バトルカード — スマートフォン向け2Dカードゲーム（ミストラルモンスターズシリーズ）",
   "type": "module",
   "engines": {
     "node": ">=24"

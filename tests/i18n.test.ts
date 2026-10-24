@@ -93,7 +93,7 @@ describe('t() と言語の切り替え', () => {
 
   it('ゲーム名は言語で変わる（正式名称）', () => {
     expect(localizedGameName('ja')).toBe(APP_INFO.gameName);
-    expect(localizedGameName('en')).toBe('Sacred Monsters Battle Card');
+    expect(localizedGameName('en')).toBe('Mistral Monsters Battle Card');
   });
 });
 

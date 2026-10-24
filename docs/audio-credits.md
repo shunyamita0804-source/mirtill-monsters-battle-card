@@ -3,15 +3,17 @@
 ゲームで鳴らす音は `src/ui/sound.ts` の `SE_REGISTRY` で管理する。素材を差し替えるときは、ファイルを `assets/audio/se/` に置き、
 `SE_REGISTRY` とこの表を更新する。
 
-2026-10-22：ユーザー（ミスティックモンスターズとバトルカードの両方の所有者）の許可により、ミスティックモンスターズ
+（2026-10-24：本編の名前はミスティックモンスターズ → ミストラルモンスターズに変更。リポジトリ名 `mystic-monsters`・素材のフォルダ名はそのまま）
+
+2026-10-22：ユーザー（ミストラルモンスターズとバトルカードの両方の所有者）の許可により、ミストラルモンスターズ
 （`shunyamita0804-source/mystic-monsters`）の素材を利用。本編リポジトリは読み取りのみで、変更していない。
 後から別の素材・UI を用意する可能性がある（ユーザー）。
 
-| 場面（SE_REGISTRY） | ファイル | 元の素材（ミスティックモンスターズ） | 作者・ライセンス | 加工 |
+| 場面（SE_REGISTRY） | ファイル | 元の素材（ミストラルモンスターズ） | 作者・ライセンス | 加工 |
 | --- | --- | --- | --- | --- |
 | `cardDraw`：カードを引く・手札に配る（1枚ごと） | `card_draw.ogg` / `card_draw.m4a` | `assets/audio/se/interface_sfx_pack_1/cursor_style_2.ogg`（本編の UI_SELECT） | Interface SFX Pack 1 / ObsydianX（CC0・クレジット不要） | 末尾の無音を切り落とし、iPhone 用に M4A（AAC）も作成。音色は変えていない |
 | `manaGain`：山札からマナが増えた（手札5枚のときのドロー・カードの効果）。2026-10-22 からマナ化では鳴らさない | `mana_gain.ogg` / `mana_gain.m4a` | `assets/audio/se/ivokard/bell.ogg`（本編の GOLD_GET） | Mix of SFX by Ivokard（CC0・クレジット不要） | 先頭1.0秒に切り、最後0.3秒をフェードアウト。M4A も作成 |
-| `turnOrderSelect`：先攻・後攻のカードを選んだ瞬間 | `turn_order_select.ogg` / `turn_order_select.m4a` | `assets/audio/se/mystic_monsters_official/15_branch_select.ogg`（本編の BRANCH_SELECT） | ミスティックモンスターズ正式素材（ユーザー提供・ゲーム所有） | 同上 |
+| `turnOrderSelect`：先攻・後攻のカードを選んだ瞬間 | `turn_order_select.ogg` / `turn_order_select.m4a` | `assets/audio/se/mystic_monsters_official/15_branch_select.ogg`（本編の BRANCH_SELECT） | ミストラルモンスターズ正式素材（ユーザー提供・ゲーム所有） | 同上 |
 
 - 2026-10-22：以前の `damageHit`（本編の BATTLE_HIT）は、正式採用の命中音（下の表）と二重に鳴らないよう使うのをやめ、ファイルも削除した
 
@@ -82,10 +84,10 @@
 
 ## 本編の画像素材（会話の UI）
 
-2026-10-22：ユーザー指示「セリフの UI はミスモンのものを使う。NPC の名前の UI も同様」により、ミスティックモンスターズの会話 UI の画像を利用。
+2026-10-22：ユーザー指示「セリフの UI はミスモンのものを使う。NPC の名前の UI も同様」により、ミストラルモンスターズの会話 UI の画像を利用。
 本編リポジトリは読み取りのみで、変更していない。画像だけを使い、本編のソースコードは流用していない（表示の CSS はこのリポジトリで書いたもの）。
 
-| 使う場所 | ファイル | 元の素材（ミスティックモンスターズ） | 加工 |
+| 使う場所 | ファイル | 元の素材（ミストラルモンスターズ） | 加工 |
 | --- | --- | --- | --- |
 | 会話のセリフ枠（四隅の飾りは縮尺のまま、中央だけ伸ばす） | `assets/images/ui/talk/dialogue_window_blank.png` | `assets/ui/recovery_1006/talk/dialogue_window_blank.png`（780×242） | なし（そのままコピー） |
 | 話している人の名前の札 | `assets/images/ui/talk/name_label_blank.png` | `assets/ui/recovery_1006/talk/name_label_blank.png`（360×79） | なし |

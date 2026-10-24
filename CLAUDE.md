@@ -1,8 +1,9 @@
-# CLAUDE.md — セイクリッドモンスターズ バトルカード
+# CLAUDE.md — ミストラルモンスターズ バトルカード
 
 スマホ縦持ち 2D カードゲーム（モンスターファームバトルカード風。街・ダンジョンは GB版風、バトルは PS版風）。
-正式名称：セイクリッドモンスターズ バトルカード（Sacred Monsters Battle Card、短縮表示「セイクリッドBC」）。旧名「ミルティル」「ミストリア」。
-リポジトリ名は `sacred-monsters-battle-card`（旧 `mirtill-monsters-battle-card`。GitHub 上の改名状況は `docs/handoff.md`）。セーブのキー `mistria-battle-card/…` は互換のため変えない。
+正式名称：ミストラルモンスターズ バトルカード（Mistral Monsters Battle Card、短縮表示「ミストラルBC」。2026-10-24 ユーザー決定）。旧名「ミルティル」「ミストリア」「セイクリッドモンスターズ」。
+本編（`shunyamita0804-source/mystic-monsters`）の名前もミストラルモンスターズ（旧ミスティックモンスターズ）。
+リポジトリ名・公開URLは `sacred-monsters-battle-card` のまま（旧 `mirtill-monsters-battle-card`。名前の変更は `docs/rename-migration.md`）。セーブのキー `mistria-battle-card/…` は互換のため変えない。
 
 ## 資料の読み方（時間短縮のため必ず守る）
 

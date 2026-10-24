@@ -43,9 +43,9 @@ import monsterUrl from '@assets/images/cards/monsters/monster_001.png';
 | `images/characters/neighbor_guide_talk_{normal,smile,explain,surprised,worried,happy}.webp` | 案内役の会話の絵（胸から上・表情6種。困り顔 troubled は worried） | ユーザー提供・**正式**。原本 1122×1402 PNG を半分（561×701）に縮小して WebP にしただけ（描き換えなし） |
 | `images/maps/town/town_r{0-2}c{0-2}.webp` | 街の完成図（3×3 に分割） | ユーザー承認済みの部品（建物11・噴水・地面3・小物4）を `tools/design/seimon_world_build.py` が設計図どおりに並べたもの。4800 を 3600 に縮小。部品の絵は描き換えていない（縮小・切り抜き・ふちの整理・影） |
 | `images/maps/rooms/*.webp` | 7種類の部屋の箱と家具（1つずつ切り出し） | 同上（部屋の箱7・家具7） |
-| `images/ui/talk/dialogue_window_blank.png`・`name_label_blank.png`・`button_blank.png` | 会話のセリフ枠・名前の札・選択肢のボタン（無地。文字はゲーム側で重ねる） | ミスティックモンスターズの会話 UI を許可により利用（ユーザー指示 2026-10-22。`docs/audio-credits.md`）。加工なし |
+| `images/ui/talk/dialogue_window_blank.png`・`name_label_blank.png`・`button_blank.png` | 会話のセリフ枠・名前の札・選択肢のボタン（無地。文字はゲーム側で重ねる） | ミストラルモンスターズの会話 UI を許可により利用（ユーザー指示 2026-10-22。`docs/audio-credits.md`）。加工なし |
 
-| `audio/se/card_draw.*`・`turn_order_select.*`・`mana_gain.*` | 効果音（カードを引く・先攻後攻を選ぶ・マナが増える）。OGG と M4A | ミスティックモンスターズの素材を許可により利用（`docs/audio-credits.md`） |
+| `audio/se/card_draw.*`・`turn_order_select.*`・`mana_gain.*` | 効果音（カードを引く・先攻後攻を選ぶ・マナが増える）。OGG と M4A | ミストラルモンスターズの素材を許可により利用（`docs/audio-credits.md`） |
 | `audio/se/mana_convert.ogg`・`mana_convert.m4a`（原本 `mana_convert_original_44100.wav`） | マナ化の効果音（09）。ChatGPT 作の独自の電子音（2026-10-22 ユーザー送付・指示） | 受け取ったまま（`docs/audio-credits.md`）。原本 WAV はビルドに含めない |
 | `audio/se/evade_success.mp3`・`hit_normal.mp3`・`hit_strong.mp3`・`mana_spend.mp3` | 正式採用の効果音（回避成功・通常命中・強攻撃命中・マナ消費） | ユーザー承認の MP3 をそのまま（`docs/audio-credits.md`） |
 
