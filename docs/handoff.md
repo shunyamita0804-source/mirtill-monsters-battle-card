@@ -10,7 +10,7 @@
 | アプリのアイコン | 2026-10-23 に新しい正式アイコンへ差し替え（原本 `assets/images/icons/sacred-monsters-bc-official-icon-v2.png`。作り方は `assets/README.md`）。タイトル画面のアイコンも同じ |
 | 公開URL | https://shunyamita0804-source.github.io/sacred-monsters-battle-card/ （`main` の `199853b` を公開。2026-10-24・ユーザーの「公開して」による。男性主人公の正面の歩き1周8コマが公開版に入っていることを確認）。旧URL（…/mirtill-monsters-battle-card/）は 404 |
 | リポジトリ | https://github.com/shunyamita0804-source/sacred-monsters-battle-card （Public。2026-10-22 ユーザーが改名。旧名 mirtill-monsters-battle-card） |
-| 最新版 | `main`（公開した `199853b`＋このメモ）。テスト 351件。作業ブランチ `claude/new-session-flx5dv` は main の先：**男性主人公の背中の歩きも1周8コマ**（2枚目は画像AIの絵が1枚目とほぼ同じだったため、1枚目のズボンとブーツだけを左右反転してコートの後ろに描いた。`tools/art/back_walk_swap_legs.py`）。未公開。**左向き（＝右向き）は未完了**：1周8ポーズを1枚に描いてもらう依頼一式を用意（`docs/design/motion-v2-20261024/redo8/`。背中も描き直しをおすすめ）。届いたら `PLAYER_V2_ROWS` に 2・3 行を足す |
+| 最新版 | `main`（公開した `199853b`＋このメモ）。テスト 351件。作業ブランチ `claude/new-session-flx5dv` は main の先（未公開）：**男性主人公の背中・左向き・右向きの歩きも1周8コマ**。背中＝1枚目の絵のズボンとブーツだけを左右反転した2枚目（`tools/art/back_walk_swap_legs.py`）。左向き＝1枚に8ポーズの絵（`docs/design/motion-v2-20261024/redo8/`）をそのまま使用（右向きはその反転）。ただし左向きは上下の段とも「手前の足が前」の1歩で、足の手前・奥は入れ替わっていない（小さく見るぶんには目立たない）。背中の8ポーズの絵（`motion-v2/player_male_back_walk8_try1.png`）は足の順番がそろっていないので使っていない。残り：斜め・走り・女性 |
 | 公開する版 | `main`。作業はブランチで行い、確認後に `main` へマージしてから公開する |
 | 本編 | `mystic-monsters`（育成ゲーム本編）は**変更禁止**。素材の利用だけ許可済み（読み取りのみ） |
 | バトルのルール | **PS版『モンスターファーム バトルカード』準拠。変えるのは3点だけ**：山札60枚・ガッツを「マナ」と表記・全体カードとブリーダー（プレイヤー）カードを「サポート」に集約（ユーザー決定。`docs/battle-rules.md`） |

@@ -245,7 +245,7 @@ const IDLE_COL = 8;
  * 第2版の絵（体の上下まで描いてある）が入っている行。この行では、プログラムで付ける体の縮み・影の動きをやめる（絵と二重になるため）。
  * 第2版の絵が届いたらここに行を足す（行の番号は DIR_ROW・DIAG_ROW）
  */
-const PLAYER_V2_ROWS: Readonly<Record<'male' | 'female', ReadonlySet<number>>> = { male: new Set([0, 1]), female: new Set() };
+const PLAYER_V2_ROWS: Readonly<Record<'male' | 'female', ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3]), female: new Set() };
 
 /** 人の歩行の絵（4列×4行。2026-10-23 の大人の絵。tools/art/adult_walk_build.py --npc が作る） */
 const NPC_SHEET: Readonly<Record<NpcId, string>> = {
