@@ -108,9 +108,10 @@ const WALK_PX = 231;
 /**
  * 1歩で進む距離（人物の背たけに対する割合）。コマ送りを時間ではなく進んだ距離で決め、足が地面をすべって見えないようにする
  * （2026-10-23。それまでは 7コマ/秒で、1歩に背たけの約0.8倍進み、足がすべって見えた）。
- * いまの歩く速さ・背たけ（街・部屋 81 論理px）では 1歩 約36 論理px＝約6.4歩/秒（約13コマ/秒）
+ * いまの歩く速さ・背たけ（街・部屋 81 論理px）では 1歩 約36 論理px＝約6.4歩/秒（約13コマ/秒）。
+ * 2026-10-24 ユーザー「動きがチープで本当に歩いているように見えない」：足がパタパタ速すぎたので 0.45→0.58（約5歩/秒）
  */
-const STEP_PER_HEIGHT = 0.45;
+const STEP_PER_HEIGHT = 0.58;
 /**
  * 歩くときの上下の弾み（人物の背たけに対する割合）。
  * 2026-10-23 ユーザー「プカプカ浮いて見える。しっかり地面に足が着いているように」で 0 に（体を持ち上げると影から離れて浮いて見えた）
@@ -123,6 +124,20 @@ const WALK_BOB = 0;
 const RUN_RATE = 1.7;
 const RUN_STEP_PER_HEIGHT = 0.6;
 const RUN_BOB = 0;
+/**
+ * 歩くときの体の動き（2026-10-24 ユーザー「もう少しクオリティを上げたい」。足元を基準にするので、体を持ち上げて浮いて見えることはない）：
+ * - 足が地面に着くコマで体をわずかに縮め、足がそろうコマでわずかに伸ばす（たての倍率の幅。横はその半分だけ逆に）
+ * - 進む向きへ体を少し前に傾ける（度。横へ進むとき）。歩き出し・止まりはなめらかに
+ * - 足元の影は、体が伸びる（足がそろう）ときに少し小さく
+ */
+const WALK_SQUASH = 0.018;
+const RUN_SQUASH = 0.026;
+const WALK_LEAN_DEG = 2.2;
+const RUN_LEAN_DEG = 4;
+const LEAN_RATE = 10;
+const SHADOW_PULSE = 0.05;
+/** 端末の「視差効果を減らす」がオンなら、体の動きを付けない */
+const REDUCED_MOTION = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** スティックをこれ以上倒すと走る／これより戻すと歩きに戻る（論理px。行ったり来たりしないよう差をつける） */
 const STICK_RUN = 36;
 const STICK_WALK_BACK = 28;
@@ -330,6 +345,9 @@ class WorldView {
   /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
   #walkDist = 0;
   #lastMoving = 0;
+  /** 体の傾き（度。いまの値）と、最後に体の動きを計算した時刻 */
+  #lean = 0;
+  #leanTime = 0;
   /** 足音を鳴らした歩きのコマ（-1＝止まっている） */
   #stepCol = -1;
   /** 走っているか（止まるまで続く）・歩き出してからの時間（秒。加速用） */
@@ -416,16 +434,18 @@ class WorldView {
   }
 
   /** 人物の絵の位置と大きさ（足元を合わせる）。lift は歩くときの弾み（影は地面に残す） */
-  #placeFigure(el: HTMLElement, p: Point, lift = 0): void {
+  #placeFigure(el: HTMLElement, p: Point, lift = 0, pose: { sx: number; sy: number; deg: number; shadow: number } | null = null): void {
     const k = this.#figureH / (FRAME_H / 2);
     const f = this.#foot(p);
     const wk = el === this.#player ? k * PLAYER_WIDEN : k;
-    el.style.transform = `translate(${f.x - (FOOT_X / 2) * wk}px, ${f.y - (FOOT_Y / 2) * k - lift}px)`;
+    // 体の動き（足元を中心に縮める・傾ける）は transform-origin を足元にして重ねる（#sizeFigure）
+    const body = pose ? ` rotate(${pose.deg.toFixed(2)}deg) scale(${pose.sx.toFixed(4)}, ${pose.sy.toFixed(4)})` : '';
+    el.style.transform = `translate(${f.x - (FOOT_X / 2) * wk}px, ${f.y - (FOOT_Y / 2) * k - lift}px)${body}`;
     // 変わったときだけ書く（毎コマ書くと、iPhone で重なり順の計算し直しが重くなる）
     const z = String(10 + Math.round(f.y));
     if (el.style.zIndex !== z) el.style.zIndex = z;
     const shadow = this.#shadows.get(el);
-    if (shadow) shadow.style.transform = `translate(${f.x}px, ${f.y}px)`;
+    if (shadow) shadow.style.transform = `translate(${f.x}px, ${f.y}px)${pose && pose.shadow !== 1 ? ` scale(${pose.shadow.toFixed(3)})` : ''}`;
   }
 
   /** 人物の足元の影（地面に置く。家具・人物より奥） */
@@ -442,8 +462,11 @@ class WorldView {
 
   #sizeFigure(el: HTMLElement): void {
     const k = this.#figureH / (FRAME_H / 2);
-    el.style.width = `${(FRAME_W / 2) * k * (el === this.#player ? PLAYER_WIDEN : 1)}px`;
+    const wk = el === this.#player ? k * PLAYER_WIDEN : k;
+    el.style.width = `${(FRAME_W / 2) * wk}px`;
     el.style.height = `${(FRAME_H / 2) * k}px`;
+    // 体の動きの中心は足元（縮めても傾けても足は地面から離れない）
+    el.style.transformOrigin = `${(FOOT_X / 2) * wk}px ${(FOOT_Y / 2) * k}px`;
   }
 
   /** セーブの現在地のマップを表示する */
@@ -911,6 +934,26 @@ class WorldView {
     }
   }
 
+  /**
+   * 歩くときの体の動き（WALK_SQUASH ほか）。足が着くコマ（偶数）で縮み、足がそろうコマ（奇数）で伸びる。
+   * 進んだ距離から決めるので、足のコマ送りとずれない。止まると元に戻る
+   */
+  #bodyPose(time: number, walking: boolean, stride: number): { sx: number; sy: number; deg: number; shadow: number } | null {
+    if (REDUCED_MOTION) return null;
+    const dt = Math.min(0.05, Math.max(0, (time - this.#leanTime) / 1000));
+    this.#leanTime = time;
+    const mv = this.#move;
+    const dx = walking && mv ? Math.sign(mv.to.x - mv.from.x) : 0;
+    const target = dx * (this.#running ? RUN_LEAN_DEG : WALK_LEAN_DEG);
+    this.#lean += (target - this.#lean) * (1 - Math.exp(-LEAN_RATE * dt));
+    if (Math.abs(this.#lean) < 0.01) this.#lean = 0;
+    // 1コマ＝半歩。足が着いているコマ（偶数）の真ん中で c＝1（いちばん縮む）、足がそろうコマ（奇数）の真ん中で c＝−1
+    const c = walking ? Math.cos(Math.PI * (this.#walkDist / (stride / 2) - 0.5)) : 0;
+    const a = this.#running ? RUN_SQUASH : WALK_SQUASH;
+    if (c === 0 && this.#lean === 0) return null;
+    return { sx: 1 + (a / 2) * c, sy: 1 - a * c, deg: this.#lean, shadow: 1 + SHADOW_PULSE * c };
+  }
+
   #render(time = performance.now()): void {
     const p = this.#pos;
     // 歩いている間（と、歩き続けている途中のマスの切り替わり）は歩行シート、止まったら待機の絵
@@ -936,7 +979,7 @@ class WorldView {
       this.#player.style.backgroundPosition = `${-col * w}px ${-row * hgt}px`;
       this.#playerLook = look;
     }
-    this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0);
+    this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, stride));
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
     const z = this.#zoom;

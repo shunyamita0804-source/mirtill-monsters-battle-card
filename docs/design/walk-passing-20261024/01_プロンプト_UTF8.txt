@@ -1,0 +1,85 @@
+【プロンプト】歩きの「足を運ぶ途中」のポーズ　横長 1536×1024　×3枚（正面・背中・左向き）（2026-10-24）
+
+使い方：
+・ChatGPT などの画像を作るAIに、▼〜▲ の間をそのまま貼り付ける。【向き】と【人物】だけ差し替える
+・日本語でうまくいかないときは English version を使う
+・添付：前に作ったその向きの歩きの絵（いちばん大事）、正面の立ち姿、T3 の枠
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 日本語
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼ここからコピー
+スマホ向け2Dカードゲーム「セイクリッドモンスターズ バトルカード」の、街を歩く人物の絵の続きを描いてください。
+添付の「歩きの絵（3ポーズ：右足を前・立つ・左足を前）」は、すでにゲームで使っている絵です。
+足を前後に開いたポーズのあいだに入る「片足で立って、もう片方の足を前へ運んでいる途中」のポーズを描いて、本当に歩いているように見せます。
+
+【描くもの】横長 1536×1024。添付の枠のとおり、横に3つ並べる。
+・1 右足で立ち、左足を運ぶ：体重は右足。右足はまっすぐ地面に着いている。左足はひざを軽く曲げて地面から持ち上げ、右足の横を通って前へ運んでいる途中（左のつま先が地面から少し離れ、足先は右足の少し後ろ〜横）。両腕は体の横で、振りは小さく（左腕が少し後ろ、右腕が少し前）
+・2 立つ（見本）：添付の歩きの絵の「立つ」とまったく同じ絵。大きさをそろえるための見本
+・3 左足で立ち、右足を運ぶ：1 の左右を入れ替えたポーズ。体重は左足、右足を持ち上げて前へ運んでいる途中。右腕が少し後ろ、左腕が少し前
+・持ち上げる足は高く上げすぎない（すねの半分くらいまで）。歩く人の自然な動き
+・地面に着いている足のかかとは、添付の絵の足元の線の上
+
+【いちばん大事なこと】
+・添付の歩きの絵と、まったく同じ人物・同じ絵。顔・髪型・帽子・服の模様・飾り・持ち物・色・線の太さ・塗り方を変えない
+・同じ頭身・同じ大きさ。頭の上と足元を枠の線にそろえる。体の中心は点線。添付の歩きの絵と重ねたときに、体がずれないように
+・変えてよいのは、足と腕の位置と、それに合わせた服のすそのわずかな揺れだけ
+
+【画風】添付の絵と同じ。筆で塗り重ねた手描きの質感。輪郭は濃い茶色系の線。ベクター風・フラット・3DCG風は禁止
+【禁止】文字・数字・ロゴ・透かし・サイン。地面・影・背景・枠の線と文字・ほかの人物。3人が重ならない
+【形式】背景は透明（できなければマゼンタ一色 #FF00FF）。PNG
+
+【向き】正面（こちらへ歩いてくる）
+【人物】22歳の男性。黒い短めの髪（少し無造作）。青い帽子（正面に小さな金の紋章）。青い袖なしの長いベストに金の縁取り、白いシャツは袖をまくる。茶色の革のたすき掛けのベルト、腰に茶色のかばん。濃い灰色のズボン、茶色のロングブーツ、指なしの革手袋
+▲ここまで
+
+【向き】の差し替え（保存名）：
+・正面（こちらへ歩いてくる。持ち上げた足はひざが少し手前に出る）　　→ ○○_walk_front_pass.png
+・背中（奥へ歩いていく。顔は見えない。持ち上げた足の靴の裏が少し見える）→ ○○_walk_back_pass.png
+・左向き（画面の左へ歩いていく。体の左側が見える横向き。持ち上げた足が、立っている足の横を前へ通るところ）→ ○○_walk_left_pass.png
+
+【人物】の差し替え：
+・主人公（男性）player_male：上の文のまま
+・主人公（女性）player_female：22歳の女性。明るい茶色の長い髪（ゆるいウェーブ）。赤い帽子（リボン付き）。白いブラウス（ふくらんだ短い袖）に、金の刺しゅうの赤いベスト、茶色の革ベルト。白いフリルの上に赤と金のスカート、黒いタイツ、茶色の編み上げのロングブーツ、腰に小さな革のかばん、指なしの革手袋
+・ほかの人：docs/design/characters-adult-20261022/02_人物一覧_UTF8.txt の段落
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ English version
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▼
+Continue the walking sprite of a character for the commercial smartphone 2D card game "Sacred Monsters Battle Card".
+The attached "walk sheet (3 poses: right foot forward / standing / left foot forward)" is already used in the game.
+Draw the "passing" poses that go between the stride poses: standing on one leg while the other leg is lifted and carried forward. This makes the walk look like real walking.
+
+[What to draw] Landscape 1536x1024. Three figures side by side, as in the attached guide frame.
+- 1 Standing on the right leg, carrying the left leg: weight on the right leg, which is straight and planted. The left knee is slightly bent, the left foot lifted off the ground and passing beside the right leg on its way forward (left toes just off the ground, the foot slightly behind or beside the right foot). Arms close to the body with a small swing (left arm slightly back, right arm slightly forward).
+- 2 Standing (reference): exactly the same image as "standing" in the attached walk sheet. Used only to match the size.
+- 3 Standing on the left leg, carrying the right leg: the mirror of pose 1. Weight on the left leg, the right foot lifted and passing forward. Right arm slightly back, left arm slightly forward.
+- Do not lift the foot too high (about half the shin). A natural walking motion.
+- The planted foot's heel stays on the feet line of the attached sheet.
+
+[Most important]
+- Exactly the same character and the same drawing as the attached walk sheet. Do NOT change the face, hair, cap, clothing patterns, decorations, items, colors, line weight or painting style.
+- Same proportions and size. Top of head and feet on the guide lines; body centered on the dotted line. When overlaid on the attached walk sheet, the body must not shift.
+- Only the legs, arms and a slight sway of the hem may change.
+
+[Style] Same as the attached images: hand-painted, layered brush strokes, dark-brown outlines. NO flat vector art, NO 3D render look.
+[Forbidden] Any text, numbers, logos, watermarks, signatures. Ground, shadows, background, guide lines or labels, other people. The three figures must not overlap.
+[Format] Transparent background (if impossible, solid magenta #FF00FF). PNG.
+
+[Direction] Front view, walking toward the viewer
+[Character] A 22-year-old man. Short, slightly messy black hair. Blue cap with a small gold emblem on the front. Long sleeveless blue vest with gold trim over a white shirt with rolled-up sleeves. Brown leather cross-body straps, brown satchel at the hip. Dark gray trousers, tall brown boots, fingerless leather gloves.
+▲
+[Direction] options: "Front view, walking toward the viewer (the lifted knee comes slightly toward the viewer)" / "Back view, walking away, face not visible (the sole of the lifted boot is slightly visible)" / "Side view facing LEFT, walking to the left of the screen (the lifted leg passes beside the standing leg)"
+[Character] female hero: A 22-year-old woman. Long, softly wavy light-brown hair. Red cap with a ribbon. White blouse with short puffed sleeves, red vest with gold embroidery, brown leather belts. Red-and-gold skirt over white frills, black tights, tall brown lace-up boots, small leather pouch at the hip, fingerless leather gloves.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ うまくいかないとき（続けて送る一言）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・人物が変わった（顔・服・色）→「添付の歩きの絵とまったく同じ人物に。変えてよいのは足と腕の位置だけ」
+・両足が地面に着いている →「1 は右足だけで立って、左足を地面から持ち上げて。3 はその左右を逆に」
+・足を高く上げすぎ・走っているように見える →「足はすねの半分くらいまで。ゆっくり歩いているときの足の運び」
+・足を前後に大きく開いてしまった →「足は開かない。持ち上げた足は、立っている足の横を通っているところ」
+・大きさがばらばら →「3人とも頭の上と足元を枠の線にそろえて、真ん中の立つと同じ大きさに」
+・線や文字が描かれた →「枠の線と文字は消して、人物だけに」
+・背景がついた →「背景を透明に（できなければマゼンタ一色 #FF00FF）」
