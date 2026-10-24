@@ -119,7 +119,7 @@ export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   turnOrderSelect: { ogg: turnOrderOgg, m4a: turnOrderM4a, gain: 1.0 },
   // 山札からマナが増えた（手札5枚のときのドロー・カードの効果）：ミスティックモンスターズの GOLD_GET と同じ音（Mix of SFX by Ivokard「bell」・CC0）
   manaGain: { ogg: manaGainOgg, m4a: manaGainM4a, gain: 1.8 },
-  // 手札のカードをマナにした（マナ化・1枚につき1回。カードが光って消える瞬間）：効果音ラボ「パッ」（2026-10-24 ユーザー指示。
+  // 手札のカードをマナにした（マナ化・1枚につき1回。カードが光って消える瞬間）：効果音ラボ「シャキーン1」（2026-10-24 ユーザーが候補から選んだ。
   // それまでの「カードがマナの欄に行くときの音」mana_convert はやめた）
   manaVanish: { mp3: manaVanishMp3, gain: 1.0 },
   // ダメージでライフが1減るごとに1回（何ダメージか音で分かるように）：効果音ラボ「カタカタ震える」の1粒（2026-10-24 ユーザー指示）
