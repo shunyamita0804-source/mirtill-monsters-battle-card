@@ -172,10 +172,77 @@ def slot_windows(sheet: Image.Image, cols: int, rows: int) -> list[Image.Image]:
     return wins
 
 
+def cap_width(im: Image.Image) -> int:
+    """帽子（青）の横幅（人物の上から 22% の範囲にある青い画素の左右の端）。前傾しても変わりにくいので、大きさ合わせの目安にする"""
+    arr = np.asarray(im)
+    a = arr[..., 3] > 200
+    ys = np.nonzero(a.any(axis=1))[0]
+    if len(ys) == 0:
+        return 0
+    top, bot = int(ys[0]), int(ys[-1])
+    rgb = arr[..., :3].astype(int)
+    blue = (rgb[..., 2] > 110) & (rgb[..., 0] < 90) & (rgb[..., 1] < 120) & a
+    blue[top + int((bot - top) * 0.22):] = False
+    xs = np.nonzero(blue.any(axis=0))[0]
+    return int(xs[-1] - xs[0] + 1) if len(xs) else 0
+
+
+def region_means(im: Image.Image) -> list[np.ndarray]:
+    """色合わせの目安になる3か所（帽子の青・顔の肌・ブーツの茶）の平均色。無い所は飛ばす"""
+    arr = np.asarray(im)
+    a = arr[..., 3] > 200
+    ys = np.nonzero(a.any(axis=1))[0]
+    top, bot = int(ys[0]), int(ys[-1])
+    h = bot - top
+    rgb = arr[..., :3].astype(int)
+    cap = (rgb[..., 2] > 110) & (rgb[..., 0] < 90) & (rgb[..., 1] < 120) & a
+    cap[top + int(h * 0.22):] = False
+    skin = (rgb[..., 0] > 200) & (rgb[..., 1] > 150) & (rgb[..., 1] < 215) & (rgb[..., 2] > 120) & (rgb[..., 2] < 195) & a
+    skin[top + int(h * 0.45):] = False
+    boot = (rgb[..., 0] > 90) & (rgb[..., 0] < 170) & (rgb[..., 1] > 50) & (rgb[..., 1] < 110) & (rgb[..., 2] < 70) & a
+    boot[: top + int(h * 0.7)] = False
+    return [rgb[m].mean(axis=0) for m in (cap, skin, boot) if m.sum() > 50]
+
+
+def tone_match(wins: list[Image.Image], ref: Image.Image) -> list[Image.Image]:
+    """別の日に描いた絵（走り）の色味を、歩きの「立つ」に合わせる（2026-10-24 ユーザー「走りは若干色味が変わる」）。
+    帽子・肌・ブーツの平均色が歩きと同じになるように、色ごとに「傾きと切片」の直線で直す（傾きは 0.85〜1.15 に抑える）"""
+    ref_means = region_means(ref)
+    run_means = [np.median([m for m in [region_means(w)[i:i + 1] for w in wins] if m], axis=0)[0] for i in range(len(ref_means))] if ref_means else []
+    if len(ref_means) < 2 or len(run_means) < 2:
+        return wins
+    src = np.array(run_means)
+    dst = np.array(ref_means)
+    out = []
+    coef = []
+    for ch in range(3):
+        x, y = src[:, ch], dst[:, ch]
+        slope = float(np.polyfit(x, y, 1)[0]) if len(x) >= 2 else 1.0
+        slope = min(1.15, max(0.85, slope))
+        inter = float((y - slope * x).mean())
+        coef.append((slope, inter))
+    for w in wins:
+        arr = np.asarray(w).astype(float)
+        for ch, (slope, inter) in enumerate(coef):
+            arr[..., ch] = np.clip(arr[..., ch] * slope + inter, 0, 255)
+        out.append(Image.fromarray(arr.astype(np.uint8), 'RGBA'))
+    print(f'  色合わせ: {[(round(a, 3), round(b, 1)) for a, b in coef]}')
+    return out
+
+
 def run8_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
     """走りの絵（1枚に8ポーズ：2段×4列。docs/design/walk-run-v3-20261024/）の8コマ。
-    8人の背の高さの真ん中の値を FIGURE_H にそろえ（前傾・体の上下は絵のとおり残す）、足元を FOOT_Y、上半身を歩きの「立つ」に合わせる"""
-    return place_poses(slot_windows(Image.open(path).convert('RGBA'), 4, 2), walk_sheet)
+    8人の背の高さの真ん中の値を FIGURE_H にそろえたうえで、帽子の幅が歩きの「立つ」と同じになるように縮める
+    （前傾した走りは背が低く測れるので、背の高さだけで合わせると人物が大きくなる。2026-10-24 ユーザー「走りは少し大きくなる」）。
+    色味も歩きに合わせる。足元を FOOT_Y、上半身を歩きの「立つ」に合わせる"""
+    stand = split_poses(walk_sheet)[0]
+    wins = tone_match(slot_windows(Image.open(path).convert('RGBA'), 4, 2), stand)
+    frames = place_poses(wins, walk_sheet)
+    ref_cap = cap_width(place(stand, body_center(alpha(stand)), FIGURE_H / figure_height(walk_sheet)))
+    run_cap = float(np.median([cap_width(f) for f in frames]))
+    ratio = min(1.0, max(0.8, ref_cap / run_cap)) if ref_cap and run_cap else 1.0
+    print(f'  帽子の幅: 歩き {ref_cap} / 走り {run_cap:.0f} → 走りを {ratio:.3f} 倍')
+    return place_poses(wins, walk_sheet, ratio)
 
 
 def v2_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
@@ -198,13 +265,13 @@ def v2_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
     return place_poses(wins, walk_sheet)
 
 
-def place_poses(wins: list[Image.Image], walk_sheet: Image.Image) -> list[Image.Image]:
-    """同じ絵から切ったポーズをコマに置く（倍率は全部同じ：背の高さの真ん中の値を FIGURE_H に）"""
+def place_poses(wins: list[Image.Image], walk_sheet: Image.Image, extra: float = 1.0) -> list[Image.Image]:
+    """同じ絵から切ったポーズをコマに置く（倍率は全部同じ：背の高さの真ん中の値を FIGURE_H に。extra はさらにかける倍率）"""
     heights = []
     for w in wins:
         ys = np.nonzero(alpha(w).any(axis=1))[0]
         heights.append(int(ys[-1] - ys[0]))
-    k = FIGURE_H / float(np.median(heights))
+    k = FIGURE_H / float(np.median(heights)) * extra
     # 上半身の位置は、歩きの絵の「立つ」を同じ大きさにした形と比べる
     stand = split_poses(walk_sheet)[0]
     sa = alpha(stand)
