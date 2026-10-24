@@ -136,7 +136,7 @@ UI はセーブを直接書き換えず、`GameStore.update(純粋関数)` で�
 - 「あとで」・スキップでも一本道にしない。案内役は街にいて、話しかければ誘い直す。練習テーブルはいつでも練習試合ができる
 - 進み具合はセーブの `story.intro`（`notSeen`〜`completed`。意味は `storyScenes.ts` の先頭）。旧セーブは `deferred`（導入を突然始めない）
 - 場面（台詞の順番・選択肢・終わりにすること）は `src/data/storyScenes.ts`、台詞の文は `src/i18n/messages/story.ts`（台本 V1・**仮**、日英）
-- 会話の UI はミスティックモンスターズの画像（セリフ枠・名前の札・選択肢。`assets/images/ui/talk/`）。会話の絵は制作中のため「仮」の札。
+- 会話の UI はミストラルモンスターズの画像（セリフ枠・名前の札・選択肢。`assets/images/ui/talk/`）。会話の絵は制作中のため「仮」の札。
   届いたら `dialogue.ts` の `PORTRAITS` に表情ごとに足す。街の案内役も仮の印（歩行16コマが届いたら差し替え）
 - 練習試合：相手は `ENCOUNTERS['enc-practice']`（スターターと同じ3体・ライフ0.6倍・仮）。報酬・戦績なし。勝ち負けで進行は止まらない。
   最初の練習だけ、バトルの場面に合わせたヒントを1回ずつ出す（`src/game/story/battleTutorial.ts`。ルールは変えない）

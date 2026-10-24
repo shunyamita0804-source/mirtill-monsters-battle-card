@@ -45,7 +45,7 @@ describe('セーブのバックアップ（書き出し）', () => {
   });
 
   it('ファイル名に日時が入る', () => {
-    expect(backupFileName(new Date(2026, 9, 22, 9, 5))).toBe('sacred-monsters-bc-backup-20261022-0905.json');
+    expect(backupFileName(new Date(2026, 9, 22, 9, 5))).toBe('mistral-monsters-bc-backup-20261022-0905.json');
   });
 
   it('書き出し → 読み込みで同じ状態に戻る', () => {

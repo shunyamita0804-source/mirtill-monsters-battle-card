@@ -8,7 +8,7 @@ import bossBattleMp3 from '@assets/audio/bgm/bgm_boss_battle.mp3';
 import { sound } from './sound.ts';
 
 /**
- * BGM。曲はミスティックモンスターズで使っている曲（ユーザー指示 2026-10-22。規約はユーザー確認済み。出どころは docs/audio-credits.md）。
+ * BGM。曲はミストラルモンスターズで使っている曲（ユーザー指示 2026-10-22。規約はユーザー確認済み。出どころは docs/audio-credits.md）。
  *
  * - ファイルは「ループする範囲だけを切り出し、終わりを頭へつないだ」MP3（tools/audio/make_bgm_loops.py）。audio の loop で繰り返す
  * - 音量は Web Audio のゲイン（iPhone は audio の volume を変えられないため）。効果音と同じ AudioContext を使う

@@ -247,7 +247,46 @@ def tone_match(wins: list[Image.Image], ref: Image.Image) -> list[Image.Image]:
     return out
 
 
-def run8_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
+def head_scale(stand: Image.Image, frames: list[Image.Image]) -> float:
+    """立ち姿の頭（帽子〜おでこ：上から 22%）を型にして、各コマの中で最も合う拡大率を探し、その真ん中の値を返す（2026-10-24）。
+    別の日に描いた絵（歩き・走り）は頭の大きさが少しずつ違うので、行ごとにこの値で割って立ち姿の大きさにそろえる。
+    横向きの走りは頭が前に傾くので、少し回した型も試す。OpenCV（pip install opencv-python-headless）が要る"""
+    import cv2
+
+    def on_gray(im: Image.Image) -> np.ndarray:
+        f = np.asarray(im).astype(float)
+        a = f[..., 3:4] / 255.0
+        return (f[..., :3] * a + 128 * (1 - a)).astype(np.uint8)
+
+    st = np.asarray(stand)
+    a = st[..., 3] > 40
+    ys = np.nonzero(a.any(axis=1))[0]
+    top, h = int(ys[0]), int(ys[-1] - ys[0])
+    head = Image.fromarray(st[top:top + int(h * 0.22)])
+    hx = np.nonzero(alpha(head).any(axis=0))[0]
+    tmpl = on_gray(head.crop((int(hx[0]), 0, int(hx[-1]) + 1, head.height)))
+    found = []
+    for f in frames:
+        img = on_gray(f)
+        best = (-1.0, 1.0)
+        for rot in (0, 8, 15):
+            if rot:
+                m = cv2.getRotationMatrix2D((tmpl.shape[1] / 2, tmpl.shape[0] / 2), rot, 1.0)
+                t0 = cv2.warpAffine(tmpl, m, (tmpl.shape[1], tmpl.shape[0]), borderValue=(128, 128, 128))
+            else:
+                t0 = tmpl
+            for sc in np.arange(0.75, 1.5, 0.02):
+                t = cv2.resize(t0, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA)
+                if t.shape[0] >= img.shape[0] or t.shape[1] >= img.shape[1]:
+                    continue
+                score = float(cv2.matchTemplate(img, t, cv2.TM_CCOEFF_NORMED).max())
+                if score > best[0]:
+                    best = (score, float(sc))
+        found.append(best[1])
+    return float(np.median(found))
+
+
+def run8_poses(path: Path, walk_sheet: Image.Image, extra: float = 1.0) -> list[Image.Image]:
     """走りの絵（1枚に8ポーズ：2段×4列。docs/design/walk-run-v3-20261024/）の8コマ。
     8人の背の高さの真ん中の値を FIGURE_H にそろえたうえで、帽子の幅が歩きの「立つ」と同じになるように縮める
     （前傾した走りは背が低く測れるので、背の高さだけで合わせると人物が大きくなる。2026-10-24 ユーザー「走りは少し大きくなる」）。
@@ -258,15 +297,12 @@ def run8_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
     color = hat_color(stand)
     ref_cap = cap_width(place(stand, body_center(alpha(stand)), FIGURE_H / figure_height(walk_sheet)), color)
     run_cap = float(np.median([cap_width(f, color) for f in frames]))
-    # 2026-10-24 ユーザー「むしろ走っているサイズ感をメインにしたい」：走りは縮めず、背の高さをそろえただけの大きさで使う
-    # （走りの絵は頭・帽子が歩きより大きめに描かれているので、少し大きく見える。帽子の幅は参考に出すだけ）。
-    # 立ち・歩きが街に対して小さい分は、ゲーム側の表示倍率（worldScreen.ts の FIGURE_ZOOM）で全体を大きくする
-    ratio = 1.0
-    print(f'  帽子の幅: 歩き {ref_cap} / 走り {run_cap:.0f}（参考。走りは {ratio:.1f} 倍のまま）')
-    return place_poses(wins, walk_sheet, ratio)
+    # 大きさは --match-heads（頭の大きさを立ち姿にそろえる）で決める。帽子の幅は参考に出すだけ
+    print(f'  帽子の幅: 歩き {ref_cap} / 走り {run_cap:.0f}（参考）')
+    return place_poses(wins, walk_sheet, extra)
 
 
-def v2_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
+def v2_poses(path: Path, walk_sheet: Image.Image, extra: float = 1.0) -> list[Image.Image]:
     """第2版の絵（1枚に4ポーズ：着く・沈む・足を運ぶ・伸び上がる。docs/design/motion-v2-20261024/）の4コマ。
     1枚の中は同じ倍率（4人の背の高さの真ん中の値を FIGURE_H に）にして、絵の中の体の上下を残す。
     足元（いちばん下の足）を FOOT_Y に、上半身を歩きの絵の「立つ」に合わせる"""
@@ -283,7 +319,7 @@ def v2_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
             arr[..., 3] = np.where(lab == int(np.argmax(sizes)) + 1, arr[..., 3], 0)
             win = Image.fromarray(arr)
         wins.append(win)
-    return place_poses(wins, walk_sheet)
+    return place_poses(wins, walk_sheet, extra)
 
 
 def place_poses(wins: list[Image.Image], walk_sheet: Image.Image, extra: float = 1.0) -> list[Image.Image]:
@@ -377,11 +413,20 @@ def main() -> None:
     idle_out = args[args.index('--idle') + 1] if '--idle' in args else None
     scale_arg = args[args.index('--scale') + 1] if '--scale' in args else None
     outline_arg = args[args.index('--outline') + 1] if '--outline' in args else None
+    # --wide W：コマの幅（倍率をかける前の単位。既定 216）。主人公は走りの絵が横に広いので 248 にする（2026-10-24。
+    # 216 では横向きの走りの髪・腕・ブーツがコマの端で切れ、縦の線に見えた）。足元はコマの横の真ん中
+    wide_arg = args[args.index('--wide') + 1] if '--wide' in args else None
+    global FW, FH, FOOT_X, FOOT_Y, FIGURE_H
+    if wide_arg:
+        FW, FOOT_X = int(wide_arg), int(wide_arg) // 2
     if scale_arg:
-        global FW, FH, FOOT_X, FOOT_Y, FIGURE_H
         sc = float(scale_arg)
         FW, FH, FOOT_X, FOOT_Y, FIGURE_H = (round(v * sc) for v in (FW, FH, FOOT_X, FOOT_Y, FIGURE_H))
-    folder, cid, out_path = [a for a in args if not a.startswith('--') and a not in (idle_out, scale_arg, outline_arg)][:3]
+    folder, cid, out_path = [a for a in args if not a.startswith('--') and a not in (idle_out, scale_arg, outline_arg, wide_arg)][:3]
+    # --match-heads：歩き・走りの各行の頭の大きさを、その向きの立ち姿にそろえる（2026-10-24 ユーザー「走ると大きく見える。
+    # 立ち・歩きも走りの大きさに」。絵の中の頭の大きさをそろえたうえで、ゲームの表示倍率 FIGURE_ZOOM で全体を走りの大きさにする）
+    match_heads = '--match-heads' in args
+    head_fix: dict[str, float] = {}
     rows = []
     k = FIGURE_H / figure_height(Image.open(f'{folder}/{cid}_walk_front.png').convert('RGBA'))
     for d in ('front', 'back', 'left'):
@@ -403,7 +448,12 @@ def main() -> None:
         v2_l = Path(f'{folder}/motion-v2/{cid}_{d}_walk_l.png')
         if not npc and v2_r.exists() and v2_l.exists():
             # 第2版：1周8コマ（右足の1歩4コマ＋左足の1歩4コマ）
-            rows.append(v2_poses(v2_r, sheet) + v2_poses(v2_l, sheet) + [stand])
+            frames = v2_poses(v2_r, sheet) + v2_poses(v2_l, sheet)
+            if match_heads:
+                s = head_scale(stand, frames)
+                head_fix[f'{d}_walk'] = s
+                frames = v2_poses(v2_r, sheet, 1 / s) + v2_poses(v2_l, sheet, 1 / s)
+            rows.append(frames + [stand])
         elif npc:
             rows.append([right_fwd, pass_r, left_fwd, pass_l])
         else:
@@ -425,10 +475,23 @@ def main() -> None:
         for i, d in enumerate(('front', 'back', 'left')):
             run8 = Path(f'{folder}/motion-v2/{cid}_{d}_run8.png')
             if run8.exists():
-                rows.append(run8_poses(run8, Image.open(f'{folder}/{cid}_walk_{d}.png').convert('RGBA')) + [rows[i][8]])
+                walk_src = Image.open(f'{folder}/{cid}_walk_{d}.png').convert('RGBA')
+                frames = run8_poses(run8, walk_src)
+                if match_heads:
+                    s = head_scale(rows[i][8], frames)
+                    head_fix[f'{d}_run'] = s
+                    frames = run8_poses(run8, walk_src, 1 / s)
+                rows.append(frames + [rows[i][8]])
             else:
                 rows.append(list(rows[i]))
         rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[-1]])
+    if head_fix:
+        print('  頭の大きさ（立ち姿に対する倍率。この値で割ってそろえた）:', {k: round(v, 3) for k, v in head_fix.items()})
+    # コマの端に絵がかかっていないか（かかっていると、そこで切れて縦・横の線に見える）
+    for r, frames in enumerate(rows):
+        cut = [c for c, f in enumerate(frames) if alpha(f)[:, [0, -1]].any() or alpha(f)[0].any()]
+        if cut:
+            print(f'  注意：{r} 行目のコマ {cut} が端で切れている（--wide を広げる）')
     cols = len(rows[0])
     out = Image.new('RGBA', (FW * cols, FH * len(rows)), (0, 0, 0, 0))
     for r, frames in enumerate(rows):

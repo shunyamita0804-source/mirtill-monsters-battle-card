@@ -48,6 +48,12 @@ export const FRAME_W = 216;
 export const FRAME_H = 288;
 export const FOOT_X = 108;
 export const FOOT_Y = 270;
+/**
+ * 主人公のコマの幅と足元の x（2026-10-24 に 216→248。横向きの走りの髪・腕・ブーツがコマの端で切れて縦の線に見えたため。
+ * ゲームのシートは 1.25 倍の 310×360・足元 (155, 338)。人（NPC）のシートは 216 のまま）
+ */
+export const PLAYER_FRAME_W = 248;
+export const PLAYER_FOOT_X = 124;
 export const PLAYER_SHEET_COLS = 9;
 /**
  * 行：歩き4行（正面・背中・左・右）＋走り4行（同じ順）＝8行。

@@ -115,9 +115,9 @@ type SoundEntry = (
 export const SE_REGISTRY: Readonly<Record<SoundId, SoundEntry>> = {
   // カードを引く・手札に配る（1枚ごと）：効果音ラボ「カードを配る」から1枚ぶんを切り出した音（2026-10-24 ユーザー指示「カードとかトランプのSEに」）
   cardDraw: { mp3: cardDealMp3, gain: 1.4 },
-  // 先攻・後攻のカードを選んだ瞬間：ミスティックモンスターズ正式素材「分かれ道の選択」（15_branch_select）
+  // 先攻・後攻のカードを選んだ瞬間：ミストラルモンスターズ正式素材「分かれ道の選択」（15_branch_select）
   turnOrderSelect: { ogg: turnOrderOgg, m4a: turnOrderM4a, gain: 1.0 },
-  // 山札からマナが増えた（手札5枚のときのドロー・カードの効果）：ミスティックモンスターズの GOLD_GET と同じ音（Mix of SFX by Ivokard「bell」・CC0）
+  // 山札からマナが増えた（手札5枚のときのドロー・カードの効果）：ミストラルモンスターズの GOLD_GET と同じ音（Mix of SFX by Ivokard「bell」・CC0）
   manaGain: { ogg: manaGainOgg, m4a: manaGainM4a, gain: 1.8 },
   // 手札のカードをマナにした（マナ化・1枚につき1回。カードが光って消える瞬間）：効果音ラボ「シャキーン1」（2026-10-24 ユーザーが候補から選んだ。
   // それまでの「カードがマナの欄に行くときの音」mana_convert はやめた）

@@ -33,7 +33,7 @@ export function createBackup(save: SaveData, settings: GameSettings | undefined,
   return {
     format: BACKUP_FORMAT,
     formatVersion: BACKUP_FORMAT_VERSION,
-    game: 'Sacred Monsters Battle Card',
+    game: 'Mistral Monsters Battle Card',
     exportedAt: now.toISOString(),
     saveVersion: save.version,
     save,
@@ -45,10 +45,10 @@ export function serializeBackup(file: BackupFile): string {
   return JSON.stringify(file, null, 2);
 }
 
-/** 保存するファイル名（例：sacred-monsters-bc-backup-20261022-0930.json） */
+/** 保存するファイル名（例：mistral-monsters-bc-backup-20261022-0930.json。2026-10-24 の名称変更で sacred- から。中身の形は同じ） */
 export function backupFileName(now: Date = new Date()): string {
   const p = (n: number): string => String(n).padStart(2, '0');
-  return `sacred-monsters-bc-backup-${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}-${p(now.getHours())}${p(now.getMinutes())}.json`;
+  return `mistral-monsters-bc-backup-${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}-${p(now.getHours())}${p(now.getMinutes())}.json`;
 }
 
 /** 復元の確認画面に出す内容 */

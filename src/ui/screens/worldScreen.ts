@@ -38,6 +38,8 @@ import {
   FOOT_Y,
   FRAME_H,
   FRAME_W,
+  PLAYER_FOOT_X,
+  PLAYER_FRAME_W,
   frameOf,
   FRAMES_PER_STEP,
   framesPerSecond,
@@ -115,9 +117,11 @@ const ART_SCALE = 0.5625;
 const ROOM_ZOOM_MAX = 1.35;
 /**
  * 街・部屋の人物の大きさ（設計図の 144 単位に対する倍率）。2026-10-23 に街に対して小さすぎたので 1.2 倍に（ユーザー承認）。
- * 2026-10-24 ユーザー「立ちと歩きは街に対して小さく見える。走っているサイズ感をメインに」で 1.35 倍に（主人公も人も同じ倍率）
+ * 2026-10-24 ユーザー「立ちと歩きは街に対して小さく見える。走っているサイズ感をメインに」で 1.35 倍に（主人公も人も同じ倍率）。
+ * 2026-10-24（2回目）ユーザー「まだ走ると大きく見える。立ち・歩きも走りの大きさに」：シートの各行の頭の大きさを立ち姿にそろえ
+ * （tools/art/adult_walk_build.py --match-heads。走りの絵は頭が 1.1〜1.27 倍で描かれていた）、全体を走りの大きさ（1.35×約1.15）に
  */
-const FIGURE_ZOOM = 1.35;
+const FIGURE_ZOOM = 1.55;
 /** 主人公だけ横幅を広げる倍率（2026-10-23 ユーザー指示「横幅をもう少し大きく」。比べる画像で 1.1 倍を選んだ） */
 const PLAYER_WIDEN = 1.1;
 /** 部屋の絵が画面の高さのどれくらいを占めるか */
@@ -481,9 +485,9 @@ export class WorldView {
     return this.#map.art ? this.#map.art.cell * this.#scale : TILE;
   }
 
-  /** 人物の絵の高さ（論理px）。街・部屋は設計図の 144 単位の FIGURE_ZOOM 倍、仮マップ（ダンジョン）は小さめ（2026-10-24 に街と同じ割合で 54→61） */
+  /** 人物の絵の高さ（論理px）。街・部屋は設計図の 144 単位の FIGURE_ZOOM 倍、仮マップ（ダンジョン）は小さめ（2026-10-24 に街と同じ割合で 54→61→70） */
   get #figureH(): number {
-    return this.#map.art ? 144 * this.#scale * FIGURE_ZOOM : 61;
+    return this.#map.art ? 144 * this.#scale * FIGURE_ZOOM : 70;
   }
 
   /** マス (x, y) に立つ人の足元（論理px） */
@@ -497,9 +501,10 @@ export class WorldView {
     const k = this.#figureH / (FRAME_H / 2);
     const f = this.#foot(p);
     const wk = el === this.#player ? k * PLAYER_WIDEN : k;
+    const footX = el === this.#player ? PLAYER_FOOT_X : FOOT_X;
     // 体の動き（足元を中心に縮める・傾ける）は transform-origin を足元にして重ねる（#sizeFigure）
     const body = pose ? ` rotate(${pose.deg.toFixed(2)}deg) scale(${pose.sx.toFixed(4)}, ${pose.sy.toFixed(4)})` : '';
-    el.style.transform = `translate(${f.x - (FOOT_X / 2) * wk}px, ${f.y - (FOOT_Y / 2) * k - lift}px)${body}`;
+    el.style.transform = `translate(${f.x - (footX / 2) * wk}px, ${f.y - (FOOT_Y / 2) * k - lift}px)${body}`;
     // 変わったときだけ書く（毎コマ書くと、iPhone で重なり順の計算し直しが重くなる）
     const z = String(10 + Math.round(f.y));
     if (el.style.zIndex !== z) el.style.zIndex = z;
@@ -522,10 +527,12 @@ export class WorldView {
   #sizeFigure(el: HTMLElement): void {
     const k = this.#figureH / (FRAME_H / 2);
     const wk = el === this.#player ? k * PLAYER_WIDEN : k;
-    el.style.width = `${(FRAME_W / 2) * wk}px`;
+    // 主人公のコマは横に広い（PLAYER_FRAME_W。走りの絵が切れないように）
+    const isPlayer = el === this.#player;
+    el.style.width = `${((isPlayer ? PLAYER_FRAME_W : FRAME_W) / 2) * wk}px`;
     el.style.height = `${(FRAME_H / 2) * k}px`;
     // 体の動きの中心は足元（縮めても傾けても足は地面から離れない）
-    el.style.transformOrigin = `${(FOOT_X / 2) * wk}px ${(FOOT_Y / 2) * k}px`;
+    el.style.transformOrigin = `${((isPlayer ? PLAYER_FOOT_X : FOOT_X) / 2) * wk}px ${(FOOT_Y / 2) * k}px`;
   }
 
   /** セーブの現在地のマップを表示する（確認画面では指定の地図・位置） */

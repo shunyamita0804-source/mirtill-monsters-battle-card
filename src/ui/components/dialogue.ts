@@ -22,7 +22,7 @@ import type { MessageKey } from '../../i18n/messages/index.ts';
 import { button, h } from '../dom.ts';
 
 /**
- * 会話（文字送り・選択肢・スキップ）。見た目はミスティックモンスターズの会話 UI の画像
+ * 会話（文字送り・選択肢・スキップ）。見た目はミストラルモンスターズの会話 UI の画像
  * （セリフ枠・名前の札・選択肢のボタン。assets/images/ui/talk/）を使う。
  *
  * - 画面のどこをタップしても次へ（文字を出している途中なら、まず全部出す）
