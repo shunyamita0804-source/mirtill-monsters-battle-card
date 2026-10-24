@@ -135,7 +135,9 @@ describe('斜め', () => {
     expect(diagonalOf(-1, -1)).toBe('upleft');
     expect(diagonalOf(1, 0)).toBeNull();
     expect(sheetRow('left', null)).toBe(2);
-    expect(sheetRow('left', 'downleft')).toBe(4);
+    // 斜めは横の絵（2026-10-24 ユーザー「四方向に」）
+    expect(sheetRow('left', 'downleft')).toBe(2);
+    expect(sheetRow('down', 'downright')).toBe(3);
   });
 });
 
@@ -255,21 +257,20 @@ describe('確認画面の再生速度の倍率', () => {
 });
 
 describe('シートに入っている絵', () => {
-  it('男性は上下左右が第2版、斜めは前の絵。女性はすべて前の絵。走りの絵はまだ無い', () => {
+  it('男性は4方向とも歩き第2版・走り第3版。女性はすべて前の絵で走りの絵は無い', () => {
     expect(sheetStatus('male', 0).walk).toBe('v2');
     expect(sheetStatus('male', 3).walk).toBe('v2');
-    expect(sheetStatus('male', 4).walk).toBe('legacy');
     expect(sheetStatus('female', 0).walk).toBe('legacy');
-    expect(sheetStatus('male', 0).run).toBe('none');
+    expect(sheetStatus('male', 0).run).toBe('v3');
     expect(sheetStatus('male', 2).run).toBe('v3');
-    expect(sheetStatus('male', 4).run).toBe('v3');
+    expect(sheetStatus('male', 6).run).toBe('v3');
     expect(sheetStatus('female', 2).run).toBe('none');
-    // 走るときは走りの行（＋8）。斜めは横の走りの行
-    expect(sheetRow('left', null, true)).toBe(10);
-    expect(sheetRow('down', null, true)).toBe(8);
-    expect(sheetRow('left', 'downleft', true)).toBe(10);
-    expect(sheetRow('right', 'upright', true)).toBe(11);
-    expect(sheetRow('left', 'downleft', false)).toBe(4);
+    // 走るときは走りの行（＋4）。斜めは横の行
+    expect(sheetRow('left', null, true)).toBe(6);
+    expect(sheetRow('down', null, true)).toBe(4);
+    expect(sheetRow('left', 'downleft', true)).toBe(6);
+    expect(sheetRow('right', 'upright', true)).toBe(7);
+    expect(sheetRow('left', 'downleft', false)).toBe(2);
     expect(sheetStatus('male', 3).mirrored).toBe(true);
     expect(sheetStatus('male', 2).mirrored).toBe(false);
   });

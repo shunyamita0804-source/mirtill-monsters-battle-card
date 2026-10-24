@@ -10,7 +10,7 @@
   - 主人公：9列（歩き1周8コマ＋立ち止まり。2026-10-24〜）。第2版の絵（motion-v2/{ID}_{向き}_walk_{r,l}.png）がある向きは
     その8コマ（着く・沈む・足を運ぶ・伸び上がる ×右足・左足）、無い向きは今までの4コマを1コマずつ2回並べる。
     行は 正面・背中・左・右・左下・右下・左上・右上（--diag）＋ 走りの4行（正面・背中・左・右。motion-v2/{ID}_{向き}_run8.png が
-    あればその8コマ、無ければ歩きの行の写し）＝12行（2026-10-24 第3版〜）
+    あればその8コマ、無ければ歩きの行の写し）。2026-10-24 ユーザー「四方向に」で --diag を付けず、正面・背中・左・右＋走り4行＝8行
   - NPC   ：4列（右足を前・立つ・左足を前・立つ）＝ 864×1152（2列目が待機の絵）
   - 主人公の選択画面の立ち絵：正面の「立つ」1コマ（216×288）
   右向きは左向きの左右反転。絵は描き直さない（縮小と位置合わせだけ）
@@ -330,16 +330,17 @@ def main() -> None:
             rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in row])
     # 走りの行（2026-10-24 第3版）：歩きの8行の下に 正面・背中・左・右 の4行（行 8〜11）。走りの絵（motion-v2/{ID}_{向き}_run8.png：
     # 1枚に8ポーズ・2段×4列）がある向きはその8コマ＋立ち止まり、無い向きは歩きの行をそのまま写す（ゲームは走るとき常に +8 の行を使う）。
-    # 人のシート（--npc）には付けない。主人公は --diag が前提（斜めの4行のあとに続ける）
+    # 人のシート（--npc）には付けない。歩きの行（4行。--diag なら8行）のすぐあとに続ける。
+    # 2026-10-24 ユーザー「斜め歩行は無しにして四方向に」：主人公は --diag を付けずに作る（4行＋走り4行＝8行。斜めに進むときは横の絵）
     if not npc:
-        assert len(rows) == 8, '主人公のシートは --diag を付ける（走りの行は 8 行目から）'
+        assert len(rows) in (4, 8), '走りの行は歩きの行のすぐあと'
         for i, d in enumerate(('front', 'back', 'left')):
             run8 = Path(f'{folder}/motion-v2/{cid}_{d}_run8.png')
             if run8.exists():
                 rows.append(run8_poses(run8, Image.open(f'{folder}/{cid}_walk_{d}.png').convert('RGBA')) + [rows[i][8]])
             else:
                 rows.append(list(rows[i]))
-        rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[10]])
+        rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[-1]])
     cols = len(rows[0])
     out = Image.new('RGBA', (FW * cols, FH * len(rows)), (0, 0, 0, 0))
     for r, frames in enumerate(rows):

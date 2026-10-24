@@ -49,10 +49,14 @@ export const FRAME_H = 288;
 export const FOOT_X = 108;
 export const FOOT_Y = 270;
 export const PLAYER_SHEET_COLS = 9;
-/** 行：歩き8行（正面・背中・左・右・左下・右下・左上・右上）＋走り4行（正面・背中・左・右。2026-10-24 第3版〜） */
-export const PLAYER_SHEET_ROWS = 12;
-/** 走りの行は歩きの行の下（行 8〜11）。走りの絵が無い向きは歩きの行の写しが入っている */
-export const RUN_ROW_BASE = 8;
+/**
+ * 行：歩き4行（正面・背中・左・右）＋走り4行（同じ順）＝8行。
+ * 2026-10-24 ユーザー「複雑すぎるので斜め歩行は無しにして四方向に」：斜めの絵の行（左下・右下・左上・右上）をやめた。
+ * 斜めに進むときは横（左・右）の絵（進み方は8方向のまま）
+ */
+export const PLAYER_SHEET_ROWS = 8;
+/** 走りの行は歩きの行の下（行 4〜7）。走りの絵が無い向きは歩きの行の写しが入っている */
+export const RUN_ROW_BASE = 4;
 /** 歩き1周のコマ数（右足の1歩4コマ＋左足の1歩4コマ）と、1歩のコマ数、シートの立ち止まりの列 */
 export const WALK_COLS = 8;
 export const FRAMES_PER_STEP = 4;
@@ -62,19 +66,17 @@ export type PlayerGender = 'male' | 'female';
 /** 主人公の斜め向き（絵の向きだけ。セーブや「しらべる」の向きは上下左右の Direction のまま） */
 export type Diagonal = 'downleft' | 'downright' | 'upleft' | 'upright';
 export const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, right: 3 };
-/** 主人公のシートの斜め向きの行（上下左右の4行の下に足した4行） */
-export const DIAG_ROW: Readonly<Record<Diagonal, number>> = { downleft: 4, downright: 5, upleft: 6, upright: 7 };
-/** シートの行 → 絵の向きの名前（確認画面の表示用） */
-export const ROW_NAMES: readonly (Direction | Diagonal)[] = ['down', 'up', 'left', 'right', 'downleft', 'downright', 'upleft', 'upright'];
+/** 絵の向きの名前（行 0〜3。確認画面の表示用。走りの行は +RUN_ROW_BASE） */
+export const ROW_NAMES: readonly Direction[] = ['down', 'up', 'left', 'right'];
 
 /**
  * 第2版の絵（1周8コマ。体の上下まで描いてある）が入っている行。この行では、プログラムで付ける体の縮み・影の動きをやめる（絵と二重になるため）。
- * 第2版の絵が届いたらここに行を足す（行の番号は DIR_ROW・DIAG_ROW）。
+ * 第2版の絵が届いたらここに行を足す（行の番号は DIR_ROW。走りは +RUN_ROW_BASE）。
  * それ以外の行は、前の絵「右足を前・立つ・左足を前」を1コマずつ2回並べた8コマ（実質3ポーズ）
  */
-export const PLAYER_V2_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3, 8, 9, 10, 11]), female: new Set() };
+export const PLAYER_V2_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([0, 1, 2, 3, 4, 5, 6, 7]), female: new Set() };
 /** 走りの絵（第3版・1周8コマ）が入っている行。この行では、プログラムで付ける体の傾きもやめる（前傾が絵に描いてある） */
-export const PLAYER_RUN_ART_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([10, 11]), female: new Set() };
+export const PLAYER_RUN_ART_ROWS: Readonly<Record<PlayerGender, ReadonlySet<number>>> = { male: new Set([4, 5, 6, 7]), female: new Set() };
 
 /** 1歩の長さ（論理px）。figureH は人物のコマの高さ（論理px） */
 export function strideOf(figureH: number, running: boolean): number {
@@ -163,13 +165,12 @@ export function diagonalOf(dx: number, dy: number): Diagonal | null {
 }
 
 /**
- * 絵の向き → シートの行。走っているときは走りの行（歩きの行＋8）。斜めに走るときは横（左・右）の走りの行
- * （斜めの走りの絵は作らない。2026-10-24 第3版の決めごと：斜めは横の絵で代用）
+ * 絵の向き → シートの行。斜めに進むときは横（左・右）の絵（2026-10-24 ユーザー「四方向に」）。
+ * 走っているときは走りの行（歩きの行＋RUN_ROW_BASE）
  */
 export function sheetRow(dir: Direction, diag: Diagonal | null, running = false): number {
-  if (!running) return diag ? DIAG_ROW[diag] : DIR_ROW[dir];
   const side: Direction = diag ? (diag.endsWith('left') ? 'left' : 'right') : dir;
-  return RUN_ROW_BASE + DIR_ROW[side];
+  return (running ? RUN_ROW_BASE : 0) + DIR_ROW[side];
 }
 
 /** 1秒あたりのコマ数（この速さ・歩幅でコマが切り替わる速さ。確認画面の表示用） */
@@ -190,11 +191,11 @@ export interface SheetStatus {
 
 /** その人物・その行のシートに、どの絵が入っているか（確認画面で「未実装」を出すため） */
 export function sheetStatus(gender: PlayerGender, row: number): SheetStatus {
-  const walkRow = row >= RUN_ROW_BASE ? row - RUN_ROW_BASE : row;
+  const walkRow = row % RUN_ROW_BASE;
   return {
     walk: PLAYER_V2_ROWS[gender].has(walkRow) ? 'v2' : 'legacy',
-    run: PLAYER_RUN_ART_ROWS[gender].has(RUN_ROW_BASE + (walkRow < 4 ? walkRow : walkRow === DIAG_ROW.downleft || walkRow === DIAG_ROW.upleft ? DIR_ROW.left : DIR_ROW.right)) ? 'v3' : 'none',
+    run: PLAYER_RUN_ART_ROWS[gender].has(RUN_ROW_BASE + walkRow) ? 'v3' : 'none',
     idle: true,
-    mirrored: walkRow === DIR_ROW.right || walkRow === DIAG_ROW.downright || walkRow === DIAG_ROW.upright,
+    mirrored: walkRow === DIR_ROW.right,
   };
 }

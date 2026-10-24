@@ -82,9 +82,9 @@ function fieldMap(place: Place): MapDefinition {
   return { ...base, area: 'town', art };
 }
 
-const DIRS: readonly (Direction | Diagonal)[] = ROW_NAMES;
+/** 絵の向きは4方向（2026-10-24 ユーザー「四方向に」。斜めに進むときは横の絵） */
+const DIRS: readonly Direction[] = ROW_NAMES;
 const isDiagonal = (d: Direction | Diagonal): d is Diagonal => d.length > 5;
-/** 斜めの絵の向き → セーブ上の向き（上下左右）。worldScreen.ts の facing と同じく、斜めは左右の絵の向き */
 const baseDir = (d: Direction | Diagonal): Direction => (isDiagonal(d) ? (d.endsWith('left') ? 'left' : 'right') : d);
 
 export const walkLabScreen: ScreenDefinition = {
@@ -125,7 +125,7 @@ export const walkLabScreen: ScreenDefinition = {
 
     /** 毎コマの数値（変わったときだけ文字を書く） */
     const onFrame = (f: WorldDevFrame): void => {
-      // 行 8〜11 は走りの行（正面・背中・左・右）
+      // 行 4〜7 は走りの行（正面・背中・左・右）
       const dirName = `${t(`walkLab.dir.${ROW_NAMES[f.row % RUN_ROW_BASE] ?? 'down'}` as MessageKey)}${f.row >= RUN_ROW_BASE ? `・${t('walkLab.stateRun')}` : ''}`;
       const lines = [
         f.walking ? t('walkLab.readFrame', { col: f.col + 1, phase: f.phase.toFixed(2) }) : t('walkLab.readIdle'),
