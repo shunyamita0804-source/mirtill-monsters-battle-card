@@ -8,6 +8,7 @@ import {
   cardUsability,
   createBattle,
   manaOf,
+  otherSide,
   pendingDamage,
   supportUsesLeft,
   targetsFor,
@@ -83,9 +84,11 @@ const HAND_CARD_W = 66;
 /** 説明の欄の大きなカードの幅（論理px）。2026-10-24 ユーザー指示「もっと広げて」で 106→124（説明の欄の高さいっぱい） */
 const DETAIL_CARD_W = 124;
 /** 相手の手札の裏向きのカードが、場の真ん中へ動く時間（ミリ秒。見た目だけ。ルールの処理は先に済んでいる） */
-const OPP_CARD_FLY_MS = 300;
+const OPP_CARD_FLY_MS = 520;
 /** 相手のひと言を大きく出しておく時間（ミリ秒）。押すと先に消える */
-const TALK_MS = 2600;
+const TALK_MS = 2200;
+/** ひと言を1文字ずつ出す間隔（ミリ秒。PS版の会話のように） */
+const TALK_CHAR_MS = 45;
 /** 使ったカードを大きく見せる時間（2026-10-23。PS版のように「何を使ったか」を見せる） */
 const SHOWCASE_MS = 1150;
 /** 命中したときの一瞬の間（ヒットストップ）と画面の揺れ */
@@ -204,17 +207,22 @@ export const battleScreen: ScreenDefinition = {
     let oppLine: string | null = null;
     /** ひと言を出しておく時刻（これを過ぎたら消す）と、新しいひと言かを見分ける番号 */
     let talkUntil = 0;
+    /** ひと言を出し始めた時刻（1文字ずつ出す） */
+    let talkStart = 0;
     let talkSeq = 0;
     let talkShownSeq = -1;
     const detailW = DETAIL_CARD_W;
     /** 相手のひと言（【仮】台詞）を、顔の絵と一緒に大きく出す（カードの上に重ねる） */
     const say = (key: Parameters<typeof t>[0]): void => {
       oppLine = t(key);
-      talkUntil = Date.now() + TALK_MS;
+      talkStart = Date.now();
+      // 1文字ずつ出し終わってから TALK_MS 読めるように
+      talkUntil = talkStart + [...oppLine].length * TALK_CHAR_MS + TALK_MS;
       talkSeq++;
+      const wait = talkUntil - Date.now();
       setTimeout(() => {
         if (!destroyed && Date.now() >= talkUntil) render();
-      }, TALK_MS + 30);
+      }, wait + 30);
     };
     /** 最後に使われたカード（何も選んでいないとき、中段の拡大の所に出す） */
     let lastPlayed: { cardId: string; side: Side } | null = null;
@@ -242,11 +250,30 @@ export const battleScreen: ScreenDefinition = {
     const manaFlying = new Set<string>();
     /** 描き直しても外さない演出の層（飛んでいくカード。外すとアニメーションが最初からになる） */
     const fxLayer = h('div', { class: 'battle__fx-layer', attrs: { 'aria-hidden': 'true' } });
-    /** 画面を描き直す（演出の層だけは外さずに残す） */
+    /**
+     * カメラ（2026-10-24 ユーザー指示：PS版のように、手札を見せる側へカメラが動く）。
+     * 対戦テーブルを少し拡大し、相手が動くときは上（相手の手札・場）へ、自分が動くときは下（自分の手札・場）へ寄せる。
+     * 動きをなめらかにするため、カメラの枠（camera）とレンズ（lens）は描き直しても作り直さない（中の対戦テーブルだけ入れ替える）
+     */
+    const lens = h('div', { class: 'battle-camera__lens' });
+    const camera = h('div', { class: 'battle-camera', dataset: { focus: 'none' } }, lens);
+    /** 画面を描き直す（演出の層とカメラは外さずに残す。外すとアニメーションが最初からになる） */
     const replaceView = (...nodes: (Node | string)[]): void => {
-      for (const child of [...element.childNodes]) if (child !== fxLayer) child.remove();
-      element.prepend(...nodes);
+      const keep = nodes.includes(camera);
+      for (const child of [...element.childNodes]) if (child !== fxLayer && (child !== camera || !keep)) child.remove();
+      if (keep) {
+        const i = nodes.indexOf(camera);
+        if (!camera.isConnected) element.prepend(camera);
+        camera.before(...nodes.slice(0, i));
+        camera.after(...nodes.slice(i + 1));
+      } else element.prepend(...nodes);
       if (!fxLayer.isConnected) element.append(fxLayer);
+    };
+    /** カメラを寄せる側：相手が動く・守る＝上、自分が動く・守る＝下、終わったら寄せない */
+    const cameraFocus = (s: BattleState): 'top' | 'bottom' | 'none' => {
+      if (s.phase === 'ended') return 'none';
+      const side = s.phase === 'defense' && s.pending ? otherSide(s.pending.attacker) : s.active;
+      return side === 'opponent' ? 'top' : 'bottom';
     };
     /** 最後に出した場面の表示（同じ表示を繰り返さない） */
     let bannerKey = '';
@@ -947,18 +974,48 @@ export const battleScreen: ScreenDefinition = {
         'div',
         {
           class: `battle__talk${talkShownSeq !== talkSeq ? ' is-enter' : ''}`,
-          attrs: { role: 'status' },
+          attrs: { role: 'status', 'aria-label': oppLine },
           on: {
             click: () => {
-              talkUntil = 0;
+              // PS版のように：出している途中なら全部出す、出し終わっていたら閉じる
+              const chars = [...(oppLine ?? '')].length;
+              if (Date.now() < talkStart + chars * TALK_CHAR_MS) {
+                talkStart = Date.now() - chars * TALK_CHAR_MS;
+                talkUntil = Date.now() + TALK_MS;
+                setTimeout(() => !destroyed && Date.now() >= talkUntil && render(), TALK_MS + 30);
+              } else talkUntil = 0;
               render();
             },
           },
         },
         url ? h('img', { class: 'battle__talk-face', attrs: { src: url, alt: '', draggable: 'false' } }) : null,
-        h('div', { class: 'battle__talk-box' }, h('p', { class: 'battle__talk-name', text: s.sides.opponent.name }), h('p', { class: 'battle__talk-line', text: oppLine })),
+        h('div', { class: 'battle__talk-box' }, h('p', { class: 'battle__talk-name', text: s.sides.opponent.name }), typewriter(oppLine, talkStart)),
       );
       talkShownSeq = talkSeq;
+      return el;
+    };
+
+    /**
+     * セリフを1文字ずつ出す（PS版の会話の出し方）。描き直しても続きから出すよう、出し始めた時刻から文字数を決める。
+     * 出し終わったら、次へ進める印（▼）を点滅させる
+     */
+    const typewriter = (line: string, start: number): HTMLElement => {
+      const chars = [...line];
+      const text = h('span', { class: 'battle__talk-text' });
+      const more = h('span', { class: 'battle__talk-more', attrs: { 'aria-hidden': 'true' }, text: '▼' });
+      const el = h('p', { class: 'battle__talk-line', attrs: { 'aria-hidden': 'true' } }, text, more);
+      const step = (): boolean => {
+        const n = Math.min(chars.length, Math.floor((Date.now() - start) / TALK_CHAR_MS) + 1);
+        text.textContent = chars.slice(0, n).join('');
+        const done = n >= chars.length;
+        more.classList.toggle('is-shown', done);
+        return done;
+      };
+      if (!step()) {
+        const id = setInterval(() => {
+          if (!el.isConnected || step()) clearInterval(id);
+        }, TALK_CHAR_MS);
+      }
       return el;
     };
 
@@ -1504,6 +1561,7 @@ export const battleScreen: ScreenDefinition = {
         return;
       }
       const s = state;
+      camera.dataset.focus = cameraFocus(s);
       // 手札から無くなったカード・マナ化以外の場面では、マナにする候補を消す
       if (s.phase !== 'mana' || s.active !== 'player') manaPicks.clear();
       for (const uid of [...manaPicks]) if (!s.sides.player.hand.some((c) => c.uid === uid)) manaPicks.delete(uid);
@@ -1519,12 +1577,13 @@ export const battleScreen: ScreenDefinition = {
       const hand = handRow(s);
       const blocked = dealing();
       const menu = commandMenu(s, blocked);
+      lens.replaceChildren(h('div', { class: 'battle-board' }, opponentHand(s), monsterRow(s, 'opponent'), midBand(s), monsterRow(s, 'player'), hand));
 
       replaceView(
         header(s),
         qaBar() ?? '',
         // 対戦テーブル：相手の手札（裏）→ 相手の列 → 真ん中の帯 → 自分の列 → 自分の手札（表）
-        h('div', { class: 'battle-board' }, opponentHand(s), monsterRow(s, 'opponent'), midBand(s), monsterRow(s, 'player'), hand),
+        camera,
         // 説明の欄（残りの高さに広がる）
         detailPanel(s),
       );

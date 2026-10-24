@@ -739,6 +739,26 @@
   animation-delay: var(--delay, 0ms);
 }
 
+/* PS版のガッツにするときのような、青白い星の光（光の筋が広がって回る） */
+.battle__mana-vanish::before {
+  content: '';
+  position: absolute;
+  inset: -45%;
+  z-index: 2;
+  background: repeating-conic-gradient(from 0deg, rgb(170 215 255 / 0.95) 0deg 5deg, transparent 5deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 0 12%, rgb(0 0 0 / 0.6) 30%, transparent 62%);
+  mask: radial-gradient(circle, #000 0 12%, rgb(0 0 0 / 0.6) 30%, transparent 62%);
+  opacity: 0;
+  animation: mana-vanish-star 420ms ease-out both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes mana-vanish-star {
+  0%, 22% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  40% { opacity: 1; transform: scale(0.9) rotate(20deg); }
+  100% { opacity: 0; transform: scale(1.4) rotate(45deg); }
+}
+
 .battle__mana-vanish::after {
   content: '';
   position: absolute;
@@ -765,6 +785,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .battle__mana-vanish,
+  .battle__mana-vanish::before,
   .battle__mana-vanish::after {
     animation-duration: 1ms;
   }
