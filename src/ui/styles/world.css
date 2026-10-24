@@ -100,6 +100,8 @@
   position: absolute;
   top: 0;
   left: 0;
+  /* ダンジョンなどは地図ごと拡大する（worldScreen.ts の VIEW_ZOOM）。左上を基準に */
+  transform-origin: 0 0;
   will-change: transform;
   animation: fade-in 220ms ease-out;
 }
@@ -157,6 +159,73 @@
     radial-gradient(closest-side, rgb(8 5 2 / 0.9), rgb(8 5 2 / 0.6) 50%, rgb(8 5 2 / 0) 78%) center / 66% 76% no-repeat,
     radial-gradient(closest-side, rgb(10 6 2 / 0.55), rgb(10 6 2 / 0.28) 55%, rgb(10 6 2 / 0));
   pointer-events: none;
+}
+
+/*
+ * 歩きの確認画面（walkLabScreen.ts・?qa=1）だけの重ね表示：1マスの格子・足元の地面線・基準点（足元）・コマの枠。
+ * 地図と同じ層に置くので、表示倍率と一緒に拡大される。本編では要素を作らない
+ */
+.world__dev-grid,
+.world__dev-ground,
+.world__dev-origin {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.is-dev-overlay .world__dev-grid,
+.is-dev-overlay .world__dev-ground,
+.is-dev-overlay .world__dev-origin {
+  display: block;
+}
+
+.world__dev-grid {
+  inset: 0;
+  z-index: 4;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.16) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.16) 1px, transparent 1px);
+}
+
+.world__dev-ground {
+  width: 100%;
+  height: 0;
+  z-index: 9100;
+  border-top: 1px solid rgb(255 96 96 / 0.95);
+}
+
+.world__dev-origin {
+  width: 0;
+  height: 0;
+  z-index: 9101;
+}
+
+.world__dev-origin::before,
+.world__dev-origin::after {
+  content: '';
+  position: absolute;
+  background: rgb(80 220 255 / 0.95);
+}
+
+.world__dev-origin::before {
+  left: -8px;
+  top: -0.5px;
+  width: 16px;
+  height: 1px;
+}
+
+.world__dev-origin::after {
+  left: -0.5px;
+  top: -8px;
+  width: 1px;
+  height: 16px;
+}
+
+.is-dev-overlay .world__player {
+  outline: 1px dashed rgb(80 220 255 / 0.9);
+  outline-offset: -1px;
 }
 
 /* 場所を移るときの暗転 */
@@ -265,6 +334,7 @@
   color: #fff;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .world__label--building {
@@ -378,7 +448,8 @@
 .world__hint {
   position: absolute;
   left: 12px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  /* 画面（.stage）はもうセーフエリアの内側にあるので、ここでセーフエリアを足さない（2026-10-24。二重に空いて下が広く空いていた） */
+  bottom: 16px;
   max-width: 280px;
   padding: 6px 10px;
   border-radius: 10px;
@@ -395,7 +466,8 @@
 .world__action {
   position: absolute;
   right: 14px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  /* 画面（.stage）はもうセーフエリアの内側にあるので、ここでセーフエリアを足さない（2026-10-24。二重に空いて下が広く空いていた） */
+  bottom: 16px;
   z-index: 3;
   width: 72px;
   height: 72px;

@@ -7,7 +7,10 @@
   （男性主人公〔2026-10-23 の別便〕は背の高さ約944・足元 y≈972。人ごとに正面の「立つ」の背の高さで縮める倍率を決める）
 
 作るもの（1コマ 216×288、足元 (108, 270)、人物の高さ約250。行は 正面・背中・左・右）:
-  - 主人公：5列（右足を前・立つ・左足を前・立つ・立ち止まり）＝ 1080×1152
+  - 主人公：9列（歩き1周8コマ＋立ち止まり。2026-10-24〜）。第2版の絵（motion-v2/{ID}_{向き}_walk_{r,l}.png）がある向きは
+    その8コマ（着く・沈む・足を運ぶ・伸び上がる ×右足・左足）、無い向きは今までの4コマを1コマずつ2回並べる。
+    行は 正面・背中・左・右・左下・右下・左上・右上（--diag）＋ 走りの4行（正面・背中・左・右。motion-v2/{ID}_{向き}_run8.png が
+    あればその8コマ、無ければ歩きの行の写し）。2026-10-24 ユーザー「四方向に」で --diag を付けず、正面・背中・左・右＋走り4行＝8行
   - NPC   ：4列（右足を前・立つ・左足を前・立つ）＝ 864×1152（2列目が待機の絵）
   - 主人公の選択画面の立ち絵：正面の「立つ」1コマ（216×288）
   右向きは左向きの左右反転。絵は描き直さない（縮小と位置合わせだけ）
@@ -23,10 +26,14 @@
 --diag：斜め向きの4行を足す（主人公だけ。2026-10-23 追加）。行は 正面・背中・左・右・左下・右下・左上・右上 の8行になる。
   届く絵は1枚に1ポーズ：{ID}_{downleft,upleft}_{stand,rightfoot,leftfoot}.png（1024×1024 か 1254×1254）。
   絵ごとに大きさが違うので、1枚ずつ背の高さ（頭のてっぺん〜足元）を FIGURE_H にそろえる。右下・右上は左下・左上の左右反転
+{ID}_walk_{front,back,left}_pass.png（2026-10-24〜。あれば）：足を運ぶ途中の絵（docs/design/walk-passing-20261024/。1枚に
+  「右足で立ち左足を運ぶ・立つ（見本）・左足で立ち右足を運ぶ」）。歩きの「立つ」の2コマ（2列目・4列目）をこの2ポーズにする
+{ID}_{front,back,left}_walk_pass_{r,l}.png（2026-10-24〜。あれば上より優先）：1枚に1ポーズの同じ絵（docs/design/motion-20261024/ の形）
 --outline N：人物のまわりに N px の暗い輪郭を付ける（2026-10-23 追加）。背景の描き込みが強い街・部屋で人物が埋もれないように。
   同じ日に --tone（色を落ち着かせる）はやめた（背景を描き直して色の調整を外したので、人物だけがくすんで見えたため）
 """
 import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -110,6 +117,111 @@ def poses(sheet: Image.Image, k: float) -> list[Image.Image]:
     return [place(wins[0], cx, k)] + [place(w, cx - body_shift(ref, alpha(w)), k) for w in wins[1:]]
 
 
+def pass_poses(pass_sheet: Image.Image, walk_sheet: Image.Image, k: float) -> list[Image.Image]:
+    """足を運ぶ途中の絵（1枚に「右足で立ち左足を運ぶ・立つ（見本）・左足で立ち右足を運ぶ」）の2コマ。
+    見本の「立つ」の背の高さを歩きの絵の「立つ」にそろえ、上半身が見本の「立つ」と重なる位置に置く
+    （歩きの絵とは別の日に描いた絵なので、大きさ・位置が少し違うことがある）"""
+    wins = split_poses(pass_sheet)
+    ref = alpha(wins[1])
+    ys = np.nonzero(ref.any(axis=1))[0]
+    kp = k * figure_height(walk_sheet) / int(ys[-1] - ys[0])
+    cx = body_center(ref)
+    return [place(w, cx - body_shift(ref, alpha(w)), kp) for w in (wins[0], wins[2])]
+
+
+def single_pose(im: Image.Image, walk_sheet: Image.Image) -> Image.Image:
+    """1枚に1ポーズの絵（motion-20261024 の形）を1コマに。背の高さ（頭のてっぺん〜いちばん下の足）を FIGURE_H にそろえ、
+    上半身が歩きの絵の「立つ」と重なる位置に置く"""
+    REF_H = 860
+    stand = split_poses(walk_sheet)[0]
+    sa = alpha(stand)
+    sy = np.nonzero(sa.any(axis=1))[0]
+    ns = REF_H / int(sy[-1] - sy[0])
+    ia = alpha(im)
+    iy = np.nonzero(ia.any(axis=1))[0]
+    hi = int(iy[-1] - iy[0])
+    ni = REF_H / hi
+    ms = np.array(Image.fromarray(sa).resize((round(stand.width * ns), round(stand.height * ns)), Image.NEAREST))
+    mi = np.array(Image.fromarray(ia).resize((round(im.width * ni), round(im.height * ni)), Image.NEAREST))
+    w = max(ms.shape[1], mi.shape[1])
+    h = max(ms.shape[0], mi.shape[0])
+    ms = np.pad(ms, ((0, h - ms.shape[0]), (0, w - ms.shape[1])))
+    mi = np.pad(mi, ((0, h - mi.shape[0]), (0, w - mi.shape[1])))
+    anchor = body_center(ms) - body_shift(ms, mi)
+    return place(im, anchor / ni, FIGURE_H / hi)
+
+
+V2_SLOT = 384  # 第2版の絵：1枚に4ポーズ（1536 幅を4つに）
+
+
+def slot_windows(sheet: Image.Image, cols: int, rows: int) -> list[Image.Image]:
+    """1枚に cols×rows のポーズが並んだ絵を、1ポーズずつ（WIN_W 幅の窓に）分ける。となりのポーズからはみ出したかけらは消す"""
+    sw, sh = sheet.width // cols, sheet.height // rows
+    wins = []
+    for r in range(rows):
+        for c in range(cols):
+            win = Image.new('RGBA', (WIN_W, sh), (0, 0, 0, 0))
+            win.alpha_composite(sheet.crop((c * sw, r * sh, (c + 1) * sw, (r + 1) * sh)), ((WIN_W - sw) // 2, 0))
+            arr = np.array(win)
+            lab, n = ndimage.label(ndimage.binary_dilation(arr[..., 3] > 40, iterations=3))
+            if n > 1:
+                sizes = ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))
+                arr[..., 3] = np.where(lab == int(np.argmax(sizes)) + 1, arr[..., 3], 0)
+                win = Image.fromarray(arr)
+            wins.append(win)
+    return wins
+
+
+def run8_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
+    """走りの絵（1枚に8ポーズ：2段×4列。docs/design/walk-run-v3-20261024/）の8コマ。
+    8人の背の高さの真ん中の値を FIGURE_H にそろえ（前傾・体の上下は絵のとおり残す）、足元を FOOT_Y、上半身を歩きの「立つ」に合わせる"""
+    return place_poses(slot_windows(Image.open(path).convert('RGBA'), 4, 2), walk_sheet)
+
+
+def v2_poses(path: Path, walk_sheet: Image.Image) -> list[Image.Image]:
+    """第2版の絵（1枚に4ポーズ：着く・沈む・足を運ぶ・伸び上がる。docs/design/motion-v2-20261024/）の4コマ。
+    1枚の中は同じ倍率（4人の背の高さの真ん中の値を FIGURE_H に）にして、絵の中の体の上下を残す。
+    足元（いちばん下の足）を FOOT_Y に、上半身を歩きの絵の「立つ」に合わせる"""
+    sheet = Image.open(path).convert('RGBA')
+    wins = []
+    for p in range(4):
+        win = Image.new('RGBA', (WIN_W, sheet.height), (0, 0, 0, 0))
+        win.alpha_composite(sheet.crop((p * V2_SLOT, 0, (p + 1) * V2_SLOT, sheet.height)), ((WIN_W - V2_SLOT) // 2, 0))
+        # となりのポーズからはみ出したかけら（小さなかたまり）を消す
+        arr = np.array(win)
+        lab, n = ndimage.label(ndimage.binary_dilation(arr[..., 3] > 40, iterations=3))
+        if n > 1:
+            sizes = ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))
+            arr[..., 3] = np.where(lab == int(np.argmax(sizes)) + 1, arr[..., 3], 0)
+            win = Image.fromarray(arr)
+        wins.append(win)
+    return place_poses(wins, walk_sheet)
+
+
+def place_poses(wins: list[Image.Image], walk_sheet: Image.Image) -> list[Image.Image]:
+    """同じ絵から切ったポーズをコマに置く（倍率は全部同じ：背の高さの真ん中の値を FIGURE_H に）"""
+    heights = []
+    for w in wins:
+        ys = np.nonzero(alpha(w).any(axis=1))[0]
+        heights.append(int(ys[-1] - ys[0]))
+    k = FIGURE_H / float(np.median(heights))
+    # 上半身の位置は、歩きの絵の「立つ」を同じ大きさにした形と比べる
+    stand = split_poses(walk_sheet)[0]
+    sa = alpha(stand)
+    sy = np.nonzero(sa.any(axis=1))[0]
+    ks = FIGURE_H / int(sy[-1] - sy[0])
+    ref = np.array(Image.fromarray(sa).resize((round(stand.width * ks), round(stand.height * ks)), Image.NEAREST))
+    out = []
+    for w in wins:
+        m = np.array(Image.fromarray(alpha(w)).resize((round(w.width * k), round(w.height * k)), Image.NEAREST))
+        hh, ww = max(ref.shape[0], m.shape[0]), max(ref.shape[1], m.shape[1])
+        r2 = np.pad(ref, ((0, hh - ref.shape[0]), (0, ww - ref.shape[1])))
+        m2 = np.pad(m, ((0, hh - m.shape[0]), (0, ww - m.shape[1])))
+        # w を右へ dx ずらすと上半身が ref と重なる → ref の上半身の真ん中に来る w の点は（中心 − dx）
+        out.append(place(w, (body_center(r2) - body_shift(r2, m2)) / k, k))
+    return out
+
+
 def diag_poses(folder: str, cid: str, d: str) -> list[Image.Image]:
     """斜め向き（d＝downleft / upleft）の 立つ・右足を前・左足を前 の3コマ。
     1枚ずつ背の高さを FIGURE_H にそろえ、足を出した2つは上半身が「立つ」と重なる位置に"""
@@ -187,14 +299,48 @@ def main() -> None:
     for d in ('front', 'back', 'left'):
         sheet = Image.open(f'{folder}/{cid}_walk_{d}.png').convert('RGBA')
         stand, right_fwd, left_fwd = poses(sheet, k)
-        rows.append([right_fwd, stand, left_fwd, stand] + ([] if npc else [stand]))
+        # 足を運ぶ途中の絵（2026-10-24〜。あるときだけ）：「立つ」の2コマを「右足で立ち左足を運ぶ」「左足で立ち右足を運ぶ」に
+        pass_r = pass_l = stand
+        pass_path = Path(f'{folder}/{cid}_walk_{d}_pass.png')
+        if pass_path.exists():
+            pass_r, pass_l = pass_poses(Image.open(pass_path).convert('RGBA'), sheet, k)
+        # 1枚に1ポーズの絵（docs/design/motion-20261024/ の形。あればこちらを使う）
+        single_r = Path(f'{folder}/{cid}_{d}_walk_pass_r.png')
+        single_l = Path(f'{folder}/{cid}_{d}_walk_pass_l.png')
+        if single_r.exists():
+            pass_r = single_pose(Image.open(single_r).convert('RGBA'), sheet)
+        if single_l.exists():
+            pass_l = single_pose(Image.open(single_l).convert('RGBA'), sheet)
+        v2_r = Path(f'{folder}/motion-v2/{cid}_{d}_walk_r.png')
+        v2_l = Path(f'{folder}/motion-v2/{cid}_{d}_walk_l.png')
+        if not npc and v2_r.exists() and v2_l.exists():
+            # 第2版：1周8コマ（右足の1歩4コマ＋左足の1歩4コマ）
+            rows.append(v2_poses(v2_r, sheet) + v2_poses(v2_l, sheet) + [stand])
+        elif npc:
+            rows.append([right_fwd, pass_r, left_fwd, pass_l])
+        else:
+            # 4コマの絵は1コマずつ2回並べて8コマにそろえる（主人公のシートは 8列＋立ち止まり）
+            rows.append([right_fwd, right_fwd, pass_r, pass_r, left_fwd, left_fwd, pass_l, pass_l, stand])
     rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[2]])
     if '--diag' in args:
         for d in ('downleft', 'upleft'):
             stand, right_fwd, left_fwd = diag_poses(folder, cid, d)
-            row = [right_fwd, stand, left_fwd, stand] + ([] if npc else [stand])
+            row = [right_fwd, stand, left_fwd, stand] if npc else [right_fwd, right_fwd, stand, stand, left_fwd, left_fwd, stand, stand, stand]
             rows.append(row)
             rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in row])
+    # 走りの行（2026-10-24 第3版）：歩きの8行の下に 正面・背中・左・右 の4行（行 8〜11）。走りの絵（motion-v2/{ID}_{向き}_run8.png：
+    # 1枚に8ポーズ・2段×4列）がある向きはその8コマ＋立ち止まり、無い向きは歩きの行をそのまま写す（ゲームは走るとき常に +8 の行を使う）。
+    # 人のシート（--npc）には付けない。歩きの行（4行。--diag なら8行）のすぐあとに続ける。
+    # 2026-10-24 ユーザー「斜め歩行は無しにして四方向に」：主人公は --diag を付けずに作る（4行＋走り4行＝8行。斜めに進むときは横の絵）
+    if not npc:
+        assert len(rows) in (4, 8), '走りの行は歩きの行のすぐあと'
+        for i, d in enumerate(('front', 'back', 'left')):
+            run8 = Path(f'{folder}/motion-v2/{cid}_{d}_run8.png')
+            if run8.exists():
+                rows.append(run8_poses(run8, Image.open(f'{folder}/{cid}_walk_{d}.png').convert('RGBA')) + [rows[i][8]])
+            else:
+                rows.append(list(rows[i]))
+        rows.append([f.transpose(Image.FLIP_LEFT_RIGHT) for f in rows[-1]])
     cols = len(rows[0])
     out = Image.new('RGBA', (FW * cols, FH * len(rows)), (0, 0, 0, 0))
     for r, frames in enumerate(rows):

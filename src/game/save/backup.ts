@@ -1,6 +1,6 @@
 import { cardCatalog } from '../../data/cards.ts';
 import { normalizeSettings, type GameSettings } from '../settings/settings.ts';
-import { normalizeSave, SAVE_VERSION, type SaveData } from './saveData.ts';
+import { normalizeSave, REMOVED_CARD_IDS, SAVE_VERSION, type SaveData } from './saveData.ts';
 
 /**
  * セーブのバックアップ（JSON ファイルへの書き出し・読み込み）。DOM に依存しない部分。
@@ -129,7 +129,8 @@ export function parseBackup(text: string): BackupCheck {
 
   // 知らないカード（このバージョンにないカード）があれば、黙って消さずに止める
   const ids = new Set<string>([...Object.keys(save.collection as Raw), ...(deckIds as string[])]);
-  const unknown = [...ids].filter((id) => cardCatalog.get(id) === undefined).sort();
+  // ゲームから削除したカード（REMOVED_CARD_IDS）は、読み込み時の変換で外すので止めない
+  const unknown = [...ids].filter((id) => cardCatalog.get(id) === undefined && !REMOVED_CARD_IDS.includes(id)).sort();
   if (unknown.length > 0) return fail('unknownCards', unknown);
 
   const normalized = normalizeSave(save);

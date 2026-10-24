@@ -9,12 +9,17 @@ import { bgm } from './bgm.ts';
 import { sound } from './sound.ts';
 import { mountStage } from './stage.ts';
 
-/** セーブがなくても開ける画面 */
-const NO_SAVE_SCREENS: readonly ScreenId[] = ['title', 'newGame', 'options'];
+/** セーブがなくても開ける画面（歩きの確認画面は自分用の仮セーブで動く） */
+const NO_SAVE_SCREENS: readonly ScreenId[] = ['title', 'newGame', 'options', 'walkLab'];
+
+/** 最初に開く画面。QA（?qa=1）のときだけ、?lab=walk で歩きの確認画面を直接開ける */
+export function initialScreen(qa: boolean, search: string): ScreenId {
+  return qa && new URLSearchParams(search).get('lab') === 'walk' ? 'walkLab' : INITIAL_SCREEN;
+}
 
 /** アプリ全体の組み立て：ステージを用意し、ルーターの変化に合わせて画面を差し替える */
 export function startApp(root: HTMLElement, store: GameStore = GameStore.fromBrowser()): void {
-  const stage = mountStage(root);
+  const stage = mountStage(root, { qa: store.qa });
   // iPhone は最初のタップまで音を鳴らせないので、タップで効果音・BGM を使えるようにする
   sound.installUnlock();
   bgm.installUnlock();
@@ -27,7 +32,7 @@ export function startApp(root: HTMLElement, store: GameStore = GameStore.fromBro
     },
     { passive: true },
   );
-  const router = new Router<ScreenId>(INITIAL_SCREEN);
+  const router = new Router<ScreenId>(initialScreen(store.qa, typeof window === 'undefined' ? '' : window.location.search));
   let current: ScreenInstance | null = null;
 
   const context: ScreenContext = {

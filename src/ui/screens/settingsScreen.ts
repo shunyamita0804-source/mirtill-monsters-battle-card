@@ -82,6 +82,7 @@ export const settingsScreen: ScreenDefinition = {
                   store.update((x) => unlockPacks(x, PACKS.map((p) => p.id)));
                   render();
                 }, 'btn btn--small'),
+                button(t('walkLab.title'), () => ctx.navigate('walkLab'), 'btn btn--small'),
               )
             : null,
         ),

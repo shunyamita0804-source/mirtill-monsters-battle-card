@@ -1,6 +1,6 @@
 import { cardCatalog, monsterId, skillId, skillsOf, supportId, SUPPORTS } from '../../data/cards.ts';
-import { LAZUCK_SKILLS } from '../../data/lazuck.ts';
-import { SORAMO_SKILLS, SORAMO_TEAM } from '../../data/soramo.ts';
+import { LAZUCK_SKILLS, lazuckSkillId } from '../../data/lazuck.ts';
+import { SORAMO_SKILLS, SORAMO_TEAM, soramoSkillId } from '../../data/soramo.ts';
 import { TEST_TEAM } from '../../data/testTeams.ts';
 import { DECK_RULES } from '../../data/rules.ts';
 import { cardName } from '../../i18n/content.ts';
@@ -146,13 +146,16 @@ export function createSoramoTestDeck(): Deck {
 /**
  * 【テスト用】ソラモとラズックのデッキ（2026-10-23 ユーザー指示「仮置きで、ソラモしかいない所にラズックも出して」）。
  * ソラモ・ラズック・ソラモ（TEST_TEAM）＋両方の技16種を1枚ずつ（32枚）＋両方の技01〜08をもう1枚ずつ（16枚）＋仮サポート1〜6を2枚ずつ（12枚）＝60枚。
+ * 2026-10-24：ラズックの16種はクロスガードの代わりにいたずら（クロスガードは退役）
  * 正式なスターターデッキの内訳は未承認（これは技を試すための仮の組み合わせ）
  */
 const TEST_EXTRA_COPY_UPTO = 8;
 export function createMixedTestDeck(): Deck {
   const both = [SORAMO_SKILLS, LAZUCK_SKILLS];
   const skills: string[] = both.flatMap((list) => list.map((s) => s.id));
-  for (const list of both) skills.push(...list.slice(0, TEST_EXTRA_COPY_UPTO).map((s) => s.id));
+  // もう1枚ずつ入れるのは、元の番号 01〜08 の技（2026-10-24 にラズックの表示の順が変わっても、ID で同じカードを選ぶ）
+  const extra = new Set(Array.from({ length: TEST_EXTRA_COPY_UPTO }, (_, i) => [soramoSkillId(i + 1), lazuckSkillId(i + 1)]).flat());
+  for (const list of both) skills.push(...list.filter((s) => extra.has(s.id)).map((s) => s.id));
   for (const card of SUPPORTS) {
     for (let i = 0; i < TEST_SORAMO_SUPPORT_COPIES && skills.length < DECK_RULES.skillCount; i++) skills.push(card.id);
   }
@@ -213,8 +216,16 @@ export function buildAutoDeck(monsters: readonly string[]): Deck {
  * 適合技を先に入れ、足りない分を持っているサポートで埋める。それでも足りなければ60枚に満たないデッキを返す（画面側で不足を表示）。
  */
 export function buildDeckFromCollection(monsters: readonly string[], collection: CardCounts): Deck {
-  const skills: string[] = [];
-  const used: Record<string, number> = {};
+  return topUpDeck({ monsters, skills: [] }, collection);
+}
+
+/**
+ * デッキの技・サポートが足りないとき、持っているカードで足す（入っているカードはそのまま。2026-10-24：クロスガードの削除で抜けた分を埋める）。
+ * 持っているカードが足りなければ、足りないまま返す
+ */
+export function topUpDeck(deck: Deck, collection: CardCounts): Deck {
+  const skills = [...deck.skills];
+  const used: Record<string, number> = countCards(skills);
   // 安い技・攻撃を優先しすぎないよう、番号順に1枚ずつ巡回して入れる（適合技 → サポートの順）
   const fill = (candidates: readonly { readonly id: string }[]): void => {
     let added = true;
@@ -231,7 +242,7 @@ export function buildDeckFromCollection(monsters: readonly string[], collection:
       }
     }
   };
-  fill(monsters.flatMap((m) => skillsOf(m)));
+  fill([...new Set(deck.monsters)].flatMap((m) => skillsOf(m)));
   fill(SUPPORTS);
-  return { monsters, skills };
+  return { monsters: deck.monsters, skills };
 }

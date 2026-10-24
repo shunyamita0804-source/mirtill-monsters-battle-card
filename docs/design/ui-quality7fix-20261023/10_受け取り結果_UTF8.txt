@@ -1,0 +1,13 @@
+第7弾の描き直し6枚（両端の飾りなし）の受け取り結果（2026-10-24）
+
+■ 届いたもの（ユーザーの ZIP「Seimon_UI_Quality7_Fixed_20261024」）
+btn_primary・btn_secondary・btn_danger・tab_chips・slider・notice_panel の6枚（制作：内蔵画像生成）。ファイル名は前回と同じ
+
+■ 判断
+6枚とも使う。左右の端の唐草・菱形・とがった飾りが無くなり、角を丸くした金の縁取りだけになっている。色・質感は前回と同じ
+
+■ 組み込み（作業ブランチ）
+・切り出し：python3 -I tools/design/ui67_build.py --fixed7 <6枚のフォルダ>（assets/images/ui/button/ の同じ名前を上書き）
+・音量の金色の棒（slider_gold.webp）は、溝の中の棒の位置が変わったので切り出す位置を直した
+・src/ui/styles/uiParts.css：飾りの分だけ広く取っていた端の幅を、角の丸みに合わせて細くした（ボタンの文字の場所が広くなる）
+・比べた画像：20_組み込み前後_title_settings.webp（タイトル・設定・確認の窓。左＝前、右＝後）

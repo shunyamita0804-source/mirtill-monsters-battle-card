@@ -1,0 +1,116 @@
+/* ===== 歩きの確認画面（開発用。?qa=1 のときだけ入れる。src/ui/screens/walkLabScreen.ts） ===== */
+.walk-lab {
+  background: #121317;
+}
+
+/* 本体と同じ歩行画面を上半分に入れる（上の帯・操作の説明は確認画面では隠す。絵・動きは変えない） */
+.walk-lab__stage {
+  flex: none;
+  position: relative;
+  height: 400px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.walk-lab__stage .world {
+  position: absolute;
+  inset: 0;
+  animation: none;
+}
+
+.walk-lab__stage .world__hud,
+.walk-lab__stage .world__hint,
+.walk-lab__stage .world__action {
+  display: none;
+}
+
+/* 画面の文字の数値（毎コマ更新。等幅で桁がそろう） */
+.walk-lab__read {
+  flex: none;
+  margin: 0;
+  padding: 6px 10px;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-line;
+  color: #dfe6ef;
+  background: #0b0c0f;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.walk-lab__panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* 下の余白は ?qa=1 の画面の大きさの表示（左下の緑の文字）に隠れないぶん */
+  padding: 6px 10px 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.walk-lab__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.walk-lab__label {
+  flex: none;
+  width: 44px;
+  font-size: 11px;
+  color: var(--color-sub);
+}
+
+.walk-lab__row .btn--small {
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.walk-lab__row .btn.is-active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.walk-lab__slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.walk-lab__slider label {
+  flex: none;
+  width: 190px;
+  color: var(--color-text);
+}
+
+.walk-lab__range {
+  flex: 1;
+  min-height: 40px;
+  accent-color: var(--color-accent);
+}
+
+.walk-lab__art {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--color-panel);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.walk-lab__art.is-missing {
+  border: 1px dashed #b8862f;
+}
+
+.walk-lab__note {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--color-sub);
+  white-space: pre-line;
+}

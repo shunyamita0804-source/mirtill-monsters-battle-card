@@ -89,17 +89,31 @@ export type SkillEffect =
    * 仮カードは持たず、stat の値と種類を使う
    */
   | { readonly type: 'defense'; readonly reduce?: number; readonly against?: StatType | 'all' }
-  /** 回避：ダメージを0に。正式カードは against（'all'＝攻撃すべて）。仮カードは stat の種類 */
-  | { readonly type: 'evade'; readonly against?: StatType | 'all' }
+  /**
+   * 回避：ダメージを0に。正式カードは against（'all'＝攻撃すべて）。仮カードは stat の種類。
+   * minCost（2026-10-24）：受ける攻撃カードに印字された必要マナがこの値以上のときだけ回避できる（なければ条件なし）
+   */
+  | { readonly type: 'evade'; readonly against?: StatType | 'all'; readonly minCost?: number }
   /**
    * 特殊：選んだ相手モンスターの stat の技のダメージを amount 減らす。
    * duration なし（正式：ソラモの吠える）＝次にその種類の技を使うまで。'nextTurn'（正式：ラズックのダストキック）＝相手の次の手番の間だけ
    */
-  | { readonly type: 'weaken'; readonly stat: StatType; readonly amount: number; readonly duration?: 'nextTurn' }
+  | {
+      readonly type: 'weaken';
+      readonly stat: StatType;
+      readonly amount: number;
+      /**
+       * なし（正式：ソラモの吠える）＝次にその種類の技を使うまで。'nextTurn'（正式：ラズックのダストキック）＝相手の次の手番の間だけ（使っても消えない）。
+       * 'nextUseByNextTurn'（正式：ガウルの熱風の威嚇 2026-10-24）＝次にその種類の技を使ったら消え、使わなくても相手の次の手番が終われば消える
+       */
+      readonly duration?: 'nextTurn' | 'nextUseByNextTurn';
+    }
   /** 特殊（正式：すなかけ）：選んだ相手モンスターは次回攻撃できない */
   | { readonly type: 'seal' }
   /** 特殊（正式：ラズックのちょうはつ）：選んだ相手モンスターは次の手番、使ったモンスターと同じ種類（ラズック）にしか攻撃できない */
   | { readonly type: 'taunt' }
+  /** 特殊（正式：ラズックのいたずら 2026-10-24）：相手の手札からランダムに1枚を相手の山札へ戻してシャッフルする。相手は補充しない */
+  | { readonly type: 'handToDeck' }
   | { readonly type: 'heal' }
   | { readonly type: 'mana' }
   | { readonly type: 'draw' };
@@ -125,6 +139,11 @@ export interface SkillCard extends CardBase {
   readonly effectTextJa?: string | null;
   /** 正式カードの区分：initial＝初期、collect＝収集（配布の枚数・入手場所は未定） */
   readonly availability?: 'initial' | 'collect';
+  /**
+   * 表示の番号（正式カード。2026-10-24〜）。並び順を変えても、ゲーム内 ID・絵のファイル名は変えずにこの番号だけ変える。
+   * 例：ラズックのトリックショットは ID skl-lazuck-09 のまま表示は 7
+   */
+  readonly displayNo?: number;
   readonly effect: SkillEffect;
 }
 
@@ -148,6 +167,11 @@ export function guardAgainst(skill: SkillCard): StatType | 'all' {
   const e = skill.effect;
   const against = e.type === 'defense' || e.type === 'evade' ? e.against : undefined;
   return against ?? skill.stat?.type ?? 'all';
+}
+
+/** 回避できる攻撃の必要マナの下限（「必要マナ2以上の〜を回避」）。条件がなければ 0 */
+export function evadeMinCost(skill: SkillCard): number {
+  return skill.effect.type === 'evade' ? (skill.effect.minCost ?? 0) : 0;
 }
 
 /** 相手モンスター1体を選んで使う技か（攻撃・特殊） */
@@ -254,7 +278,7 @@ export function describeSkill(card: SkillCard): string {
     return official ? `${base}${getLanguage() === 'en' ? ' ' : ''}${official}`.trim() : base;
   }
   if (official) return official;
-  if (card.effect.type === 'weaken' || card.effect.type === 'seal' || card.effect.type === 'taunt') return '';
+  if (card.effect.type === 'weaken' || card.effect.type === 'seal' || card.effect.type === 'taunt' || card.effect.type === 'handToDeck') return '';
   return t(`card.skill.${card.effect.type}`, { stat, v });
 }
 
@@ -265,7 +289,7 @@ export function skillShortText(skill: SkillCard): string {
   const v = skillValue(skill);
   const e = skill.effect;
   if (e.type === 'attack') return t(e.unblockable && e.undodgeable ? 'card.short.attackSure' : 'card.short.attack', { v });
-  if (e.type === 'weaken' || e.type === 'seal' || e.type === 'taunt') return '';
+  if (e.type === 'weaken' || e.type === 'seal' || e.type === 'taunt' || e.type === 'handToDeck') return '';
   return t(`card.short.${e.type}`, { v });
 }
 

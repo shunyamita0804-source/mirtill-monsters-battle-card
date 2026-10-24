@@ -20,11 +20,41 @@ import {
   DIR_DELTA,
   findPath,
   findPathToObject,
+  findPathWhere,
   isBlocked,
+  isNearNpc,
   mapSize,
+  nearestNpc,
   objectsAt,
   type Point,
 } from '../../game/world/world.ts';
+import {
+  advanceMove,
+  advancePhase,
+  diagonalOf,
+  DIR_ROW,
+  facing,
+  FOOT_X,
+  FOOT_Y,
+  FRAME_H,
+  FRAME_W,
+  frameOf,
+  FRAMES_PER_STEP,
+  framesPerSecond,
+  IDLE_COL,
+  isContactFrame,
+  isWalking,
+  PLAYER_RUN_ART_ROWS,
+  PLAYER_SHEET_COLS,
+  PLAYER_SHEET_ROWS,
+  PLAYER_V2_ROWS,
+  sheetRow,
+  squashOf,
+  strideOf,
+  walkSpeed,
+  type Diagonal,
+  type PlayerGender,
+} from '../../game/world/walkAnim.ts';
 import {
   applySceneEffects,
   isNpcPresent,
@@ -97,38 +127,51 @@ const REVEAL_TIMEOUT_MS = 3000;
 const STICK_START = 12;
 const STICK_RADIUS = 42;
 const STICK_DEAD = 16;
-/** 歩行速度（論理px/秒・仮。実機で調整）。2026-10-22 に街を詰めたとき 185 から 1.25 倍に（ユーザー指示） */
-const WALK_PX = 231;
+/** スティックの輪の半径（CSS の .world__stick 104px の半分）と、輪を出さない上の帯の高さ（論理px） */
+const STICK_RING_R = 52;
+const STICK_TOP = 64;
 /**
- * 1歩で進む距離（人物の背たけに対する割合）。コマ送りを時間ではなく進んだ距離で決め、足が地面をすべって見えないようにする
- * （2026-10-23。それまでは 7コマ/秒で、1歩に背たけの約0.8倍進み、足がすべって見えた）。
- * いまの歩く速さ・背たけ（街・部屋 81 論理px）では 1歩 約36 論理px＝約6.4歩/秒（約13コマ/秒）
- */
-const STEP_PER_HEIGHT = 0.45;
-/**
+ * 歩く速さ・歩幅・コマ送りの計算は src/game/world/walkAnim.ts（確認画面と共用。2026-10-24）。
  * 歩くときの上下の弾み（人物の背たけに対する割合）。
  * 2026-10-23 ユーザー「プカプカ浮いて見える。しっかり地面に足が着いているように」で 0 に（体を持ち上げると影から離れて浮いて見えた）
  */
 const WALK_BOB = 0;
-/**
- * 走る（2026-10-23・ユーザー承認）：スティックを大きく倒すと走る。速さは歩きの倍率、1歩・弾みは背たけに対する割合。
- * 走る絵はまだ無いので、歩きの絵を大きな歩幅で使う（弾みは歩きと同じく 0）
- */
-const RUN_RATE = 1.7;
-const RUN_STEP_PER_HEIGHT = 0.6;
+/** 走る（2026-10-23・ユーザー承認）：スティックを大きく倒すと走る。弾みは歩きと同じく 0 */
 const RUN_BOB = 0;
+/**
+ * 歩くときの体の動き（2026-10-24 ユーザー「もう少しクオリティを上げたい」。足元を基準にするので、体を持ち上げて浮いて見えることはない）：
+ * - 足が地面に着くコマで体をわずかに縮め、足がそろうコマでわずかに伸ばす（たての倍率の幅。横はその半分だけ逆に）
+ * - 進む向きへ体を少し前に傾ける（度。横へ進むとき）。歩き出し・止まりはなめらかに
+ * - 足元の影は、体が伸びる（足がそろう）ときに少し小さく
+ */
+const WALK_SQUASH = 0.018;
+const RUN_SQUASH = 0.026;
+const WALK_LEAN_DEG = 2.2;
+const RUN_LEAN_DEG = 4;
+const LEAN_RATE = 10;
+const SHADOW_PULSE = 0.05;
+/** 端末の「視差効果を減らす」がオンなら、体の動きを付けない */
+const REDUCED_MOTION = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** スティックをこれ以上倒すと走る／これより戻すと歩きに戻る（論理px。行ったり来たりしないよう差をつける） */
 const STICK_RUN = 36;
 const STICK_WALK_BACK = 28;
-/**
- * 歩き出し・止まり方（2026-10-23）：歩き出しは ACCEL_FROM の速さから ACCEL_S 秒でふつうの速さに。
- * 止まる最後のマスでは、マスの終わりで DECEL_TO の速さまで落とす
- */
-const ACCEL_S = 0.15;
-const ACCEL_FROM = 0.45;
-const DECEL_TO = 0.55;
 /** カメラが人物を追う強さ（1秒あたり）。ぴったり付けず少し遅れて追い、止まるとなめらかに追いつく */
 const CAMERA_FOLLOW = 9;
+/**
+ * カメラの遊び（2026-10-24 改訂R2 フェーズ1）：人物がこの幅（論理px）の中で動く間はカメラを動かさない。
+ * 1歩ごとの細かい動きで背景がずっと揺れて「背景が滑るだけ」に見えないように
+ */
+const CAMERA_DEAD_X = 14;
+const CAMERA_DEAD_Y = 18;
+/** カメラの先読み：進む向きの先を少し多く見せる（見える範囲の幅・高さに対する割合）と、その追いつく速さ（1秒あたり） */
+const CAMERA_LOOK = 0.08;
+const CAMERA_LOOK_RATE = 2.5;
+/**
+ * 見せる倍率（2026-10-24 改訂R2 フェーズ1。地図・人物を同じ倍率で拡大し、カメラが追う）。
+ * ダンジョン：全体が一度に見えて主人公が小さかった（ユーザーの動画 V1）ので 1.25・1.5・1.75 倍を比べて 1.5 倍（人物の大きさが街と同じ 81 論理px になる）。
+ * 街：1.00・1.15・1.30 倍を比べて 1.15 倍（家の入口・道が見えたまま、主人公が少し大きく見える。1.30 倍は先が見えにくい。記録は docs/battle-layout-r2.md）。部屋は画面の高さに合わせて別に決めている（#artScale）
+ */
+const VIEW_ZOOM: Readonly<Record<MapDefinition['area'], number>> = { town: 1.15, interior: 1, dungeon: 1.5 };
 /** スティックの向きを変えるまでの余裕（ラジアン）。8方向の境目（22.5度）を 8度こえるまで前の向きのまま */
 const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
 /**
@@ -136,6 +179,14 @@ const STICK_HOLD = Math.PI / 8 + (8 * Math.PI) / 180;
  * 2026-10-23 ユーザー「指でなぞると人物がクルクル回ってチープ」：指のわずかな動きで、その場で向きが次々変わらないように
  */
 const TURN_IN_PLACE_MS = 220;
+/**
+ * 人のまわり（2026-10-24 改訂R2 フェーズ1。ユーザーの動画 V3 で主人公と人の絵が大きく重なった）：
+ * 正式な絵の街・部屋では、人から NPC_SPACE マス以内は通れない。話せるのは NPC_TALK_RANGE マス以内。
+ * 主人公が NPC_GAZE_RANGE マス以内に来ると、その人は主人公の方を向く（控えめな反応。離れると元の向きに戻る）
+ */
+const NPC_SPACE = 1;
+const NPC_TALK_RANGE = 2;
+const NPC_GAZE_RANGE = 3;
 /** 宝箱の絵（ミスモンの正式素材）：閉じた絵と、開く動きの4コマ（4コマ目が開いたあとの絵） */
 const CHEST_ART: Readonly<Record<ChestObject['look'], { readonly closed: string; readonly opening: readonly string[] }>> = {
   wood: { closed: chestWood, opening: [chestWood1, chestWood2, chestWood3, chestWood4] },
@@ -169,32 +220,19 @@ const ROOM_GROUND: Readonly<Record<string, StepSurface>> = { hall: 'stone' };
 /** 施設の看板を上の帯の下に保つ位置（論理px） */
 const SIGN_MIN_BOTTOM = 98;
 /**
- * 人物の歩行素材：1コマ 216×288、足元 (108, 270)。行＝方向（front/back/left/right）、列＝4コマ（シート 864×1152）。
+ * 人物の歩行素材：1コマ 216×288、足元 (108, 270)（FRAME_W・FOOT_X などは walkAnim.ts）。人の絵は行＝方向（front/back/left/right）、列＝4コマ（シート 864×1152）。
  * 街・部屋では 108×144 単位（設計図どおり）、ダンジョン（仮マップ）では少し小さく描く
  */
-const FRAME_W = 216;
-const FRAME_H = 288;
-const FOOT_X = 108;
-const FOOT_Y = 270;
-const DIR_ROW: Readonly<Record<Direction, number>> = { down: 0, up: 1, left: 2, right: 3 };
-/** 主人公の斜め向き（絵の向きだけ。セーブや「しらべる」の向きは上下左右の Direction のまま） */
-type Diagonal = 'downleft' | 'downright' | 'upleft' | 'upright';
-/** 主人公のシートの斜め向きの行（上下左右の4行の下に足した4行） */
-const DIAG_ROW: Readonly<Record<Diagonal, number>> = { downleft: 4, downright: 5, upleft: 6, upright: 7 };
-/** 主人公のシートの行の数 */
-const PLAYER_SHEET_ROWS = 8;
 /** 待機の絵が歩行シートの何列目と同じか（歩き4コマは「右足を前・立つ・左足を前・立つ」なので2列目） */
 const NPC_IDLE_COL = 1;
 
 /**
- * 主人公の絵：歩き4コマ＋立ち止まり1コマを1枚にまとめたシート（5列×8行。行は 正面・背中・左・右・左下・右下・左上・右上）。
+ * 主人公の絵：歩き1周8コマ＋立ち止まり1コマを1枚にまとめたシート（9列×8行。行は 正面・背中・左・右・左下・右下・左上・右上）。
  * 歩く・止まるで別の画像に切り替えると、iPhone で読み込み直しの間だけ人物が消えるので、1枚の中で位置だけ動かす。
- * 2026-10-23 の大人の絵（男性・女性。tools/art/adult_walk_build.py が作る。右足を前・立つ・左足を前・立つ・立ち止まり）
+ * tools/art/adult_walk_build.py が作る。2026-10-24〜：第2版の絵（着く・沈む・足を運ぶ・伸び上がる×右足・左足）がある向きはその8コマ、
+ * 無い向きは前の4コマ（右足を前・立つ・左足を前・立つ）を1コマずつ2回並べている
  */
-const PLAYER_SHEET: Readonly<Record<'male' | 'female', string>> = { male: maleSheet, female: femaleSheet };
-const PLAYER_SHEET_COLS = 5;
-/** シートの立ち止まりの列 */
-const IDLE_COL = 4;
+export const PLAYER_SHEET: Readonly<Record<PlayerGender, string>> = { male: maleSheet, female: femaleSheet };
 
 /** 人の歩行の絵（4列×4行。2026-10-23 の大人の絵。tools/art/adult_walk_build.py --npc が作る） */
 const NPC_SHEET: Readonly<Record<NpcId, string>> = {
@@ -239,22 +277,6 @@ const TILE_CLASS: Readonly<Record<string, string>> = {
 
 const coins = (n: number): string => t('common.coins', { n } satisfies Params);
 
-/**
- * 1歩の向き → 人物の向き（上下左右。主人公の斜めの絵は別に #diag で選ぶ）。
- * いまの向きの成分がある斜め（例：右を向いて右下へ）は向きを変えない。斜め45度あたりで正面と横の絵が細かく入れ替わらないように。
- * それ以外の斜めは左右の絵
- */
-const facing = (dx: number, dy: number, prev: Direction): Direction => {
-  if (dx === 0 && dy === 0) return prev;
-  const p = DIR_DELTA[prev];
-  if ((p.x !== 0 && p.x === dx) || (p.y !== 0 && p.y === dy)) return prev;
-  return dx > 0 ? 'right' : dx < 0 ? 'left' : dy > 0 ? 'down' : 'up';
-};
-
-/** 1歩の向き → 斜めの絵の向き（斜めでなければ null） */
-const diagonalOf = (dx: number, dy: number): Diagonal | null =>
-  dx !== 0 && dy !== 0 ? `${dy > 0 ? 'down' : 'up'}${dx > 0 ? 'right' : 'left'}` : null;
-
 /** 2つの角度の差（-π〜π） */
 const angleDiff = (a: number, b: number): number => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 
@@ -277,9 +299,70 @@ interface Move {
   t: number;
 }
 
-class WorldView {
+/**
+ * 歩きの確認画面（walkLabScreen.ts）が本体と同じ WorldView を使うための調整項目（2026-10-24）。
+ * 本編では使わない（undefined）。値はセーブ・設定に保存しない
+ */
+export interface WorldDevState {
+  /** 移動速度の倍率（1＝本編どおり） */
+  speedScale: number;
+  /** 再生速度の倍率（進んだ距離あたりのコマ数。1＝本編どおり。移動速度と別に変えて足滑りの原因を切り分ける） */
+  animScale: number;
+  /** 時間の倍率（低速再生。1＝通常、0.25＝1/4 の速さ） */
+  timeScale: number;
+  paused: boolean;
+  /** 一時停止中の「1コマ送り」の残り回数 */
+  stepFrames: number;
+  /** カメラを動かさない（出発点を見たまま。人物の実際の移動量を確かめる） */
+  fixedCamera: boolean;
+  /** 表示倍率（null＝本編どおり VIEW_ZOOM） */
+  zoom: number | null;
+  /** その場で動かす（位置を変えずにコマだけ進める）。null＝ふつうに移動 */
+  treadmill: { dir: Direction; diag: Diagonal | null; mode: 'idle' | 'walk' | 'run' } | null;
+  /** 格子・地面線・基準点・コマの枠を出す */
+  overlays: boolean;
+}
+
+/** 確認画面に毎コマ知らせる数値 */
+export interface WorldDevFrame {
+  readonly row: number;
+  readonly col: number;
+  readonly phase: number;
+  readonly walking: boolean;
+  readonly running: boolean;
+  /** いまの速さ（論理px/秒）・1歩の長さ（論理px）・コマが切り替わる速さ（コマ/秒） */
+  readonly speedPx: number;
+  readonly stride: number;
+  readonly fps: number;
+  /** 人物のコマの高さ（論理px）・1マス（論理px）・表示倍率 */
+  readonly figureH: number;
+  readonly cell: number;
+  readonly zoom: number;
+  readonly tile: Point;
+  readonly pos: Point;
+  readonly foot: Point;
+  /** 画面に出ている人物の大きさ（論理px。表示倍率をかけたもの）：コマの枠と絵の高さ */
+  readonly shownCellW: number;
+  readonly shownCellH: number;
+  readonly gender: PlayerGender;
+}
+
+export interface WorldDevOptions {
+  readonly map: MapDefinition;
+  readonly start: Location;
+  readonly state: WorldDevState;
+  readonly onFrame?: (info: WorldDevFrame) => void;
+}
+
+export class WorldView {
   readonly #ctx: ScreenContext;
   readonly #root: HTMLElement;
+  /** 確認画面用の調整（本編では undefined） */
+  readonly #dev: WorldDevOptions | undefined;
+  /** 確認画面の格子・地面線・基準点 */
+  #devGrid: HTMLElement | null = null;
+  #devGround: HTMLElement | null = null;
+  #devOrigin: HTMLElement | null = null;
   #map!: MapDefinition;
   #pos: Point = { x: 0, y: 0 };
   #tile: Point = { x: 0, y: 0 };
@@ -298,9 +381,12 @@ class WorldView {
   #busy = false;
   #raf = 0;
   #last = 0;
-  /** 歩いた距離（論理px。コマ送り用）・最後に歩いていた時刻 */
-  #walkDist = 0;
+  /** 歩きの位相（歩数。1歩＝4コマ。コマ送り用。walkAnim.ts）・最後に歩いていた時刻 */
+  #phase = 0;
   #lastMoving = 0;
+  /** 体の傾き（度。いまの値）と、最後に体の動きを計算した時刻 */
+  #lean = 0;
+  #leanTime = 0;
   /** 足音を鳴らした歩きのコマ（-1＝止まっている） */
   #stepCol = -1;
   /** 走っているか（止まるまで続く）・歩き出してからの時間（秒。加速用） */
@@ -309,6 +395,9 @@ class WorldView {
   /** カメラの位置（地図をずらす量。論理px）。null なら次の描画で人物にぴったり合わせる */
   #cam: Point | null = null;
   #camTime = 0;
+  /** カメラが見ている点（遊びの中心。拡大後の地図の座標）と、先読みの量 */
+  #focus: Point = { x: 0, y: 0 };
+  #look: Point = { x: 0, y: 0 };
   /** 1論理px あたりの画面の画素（地図の位置をそろえる単位）と、それを測ったときの画面の大きさ */
   #snap = 1;
   #snapKey = '';
@@ -343,9 +432,10 @@ class WorldView {
   readonly #onKeyDown = (e: KeyboardEvent): void => this.#key(e, true);
   readonly #onKeyUp = (e: KeyboardEvent): void => this.#key(e, false);
 
-  constructor(ctx: ScreenContext, root: HTMLElement) {
+  constructor(ctx: ScreenContext, root: HTMLElement, dev?: WorldDevOptions) {
     this.#ctx = ctx;
     this.#root = root;
+    this.#dev = dev;
     window.addEventListener('keydown', this.#onKeyDown);
     window.addEventListener('keyup', this.#onKeyUp);
   }
@@ -360,6 +450,27 @@ class WorldView {
     sound.ambient(null);
     window.removeEventListener('keydown', this.#onKeyDown);
     window.removeEventListener('keyup', this.#onKeyUp);
+  }
+
+  /** 地図と人物を見せる倍率（VIEW_ZOOM。確認画面では指定の倍率） */
+  get #zoom(): number {
+    return this.#dev?.state.zoom ?? VIEW_ZOOM[this.#map.area];
+  }
+
+  /** 主人公の絵（男性・女性） */
+  get #gender(): PlayerGender {
+    return this.#store.save.player.gender === 'female' ? 'female' : 'male';
+  }
+
+  /** いまの1歩の長さ（論理px） */
+  get #stride(): number {
+    return strideOf(this.#figureH, this.#running);
+  }
+
+  /** 確認画面の「その場で動かす」で歩いている最中か */
+  get #treadmillMoving(): boolean {
+    const tm = this.#dev?.state.treadmill;
+    return tm !== null && tm !== undefined && tm.mode !== 'idle';
   }
 
   /** 1マスの大きさ（論理px） */
@@ -379,16 +490,18 @@ class WorldView {
   }
 
   /** 人物の絵の位置と大きさ（足元を合わせる）。lift は歩くときの弾み（影は地面に残す） */
-  #placeFigure(el: HTMLElement, p: Point, lift = 0): void {
+  #placeFigure(el: HTMLElement, p: Point, lift = 0, pose: { sx: number; sy: number; deg: number; shadow: number } | null = null): void {
     const k = this.#figureH / (FRAME_H / 2);
     const f = this.#foot(p);
     const wk = el === this.#player ? k * PLAYER_WIDEN : k;
-    el.style.transform = `translate(${f.x - (FOOT_X / 2) * wk}px, ${f.y - (FOOT_Y / 2) * k - lift}px)`;
+    // 体の動き（足元を中心に縮める・傾ける）は transform-origin を足元にして重ねる（#sizeFigure）
+    const body = pose ? ` rotate(${pose.deg.toFixed(2)}deg) scale(${pose.sx.toFixed(4)}, ${pose.sy.toFixed(4)})` : '';
+    el.style.transform = `translate(${f.x - (FOOT_X / 2) * wk}px, ${f.y - (FOOT_Y / 2) * k - lift}px)${body}`;
     // 変わったときだけ書く（毎コマ書くと、iPhone で重なり順の計算し直しが重くなる）
     const z = String(10 + Math.round(f.y));
     if (el.style.zIndex !== z) el.style.zIndex = z;
     const shadow = this.#shadows.get(el);
-    if (shadow) shadow.style.transform = `translate(${f.x}px, ${f.y}px)`;
+    if (shadow) shadow.style.transform = `translate(${f.x}px, ${f.y}px)${pose && pose.shadow !== 1 ? ` scale(${pose.shadow.toFixed(3)})` : ''}`;
   }
 
   /** 人物の足元の影（地面に置く。家具・人物より奥） */
@@ -405,14 +518,18 @@ class WorldView {
 
   #sizeFigure(el: HTMLElement): void {
     const k = this.#figureH / (FRAME_H / 2);
-    el.style.width = `${(FRAME_W / 2) * k * (el === this.#player ? PLAYER_WIDEN : 1)}px`;
+    const wk = el === this.#player ? k * PLAYER_WIDEN : k;
+    el.style.width = `${(FRAME_W / 2) * wk}px`;
     el.style.height = `${(FRAME_H / 2) * k}px`;
+    // 体の動きの中心は足元（縮めても傾けても足は地面から離れない）
+    el.style.transformOrigin = `${(FOOT_X / 2) * wk}px ${(FOOT_Y / 2) * k}px`;
   }
 
-  /** セーブの現在地のマップを表示する */
+  /** セーブの現在地のマップを表示する（確認画面では指定の地図・位置） */
   load(): void {
-    const loc = this.#store.save.location;
-    const map = getMap(loc.mapId);
+    const dev = this.#dev;
+    const loc = dev ? dev.start : this.#store.save.location;
+    const map = dev ? dev.map : getMap(loc.mapId);
     if (!map) return;
     this.#map = map;
     this.#tile = { x: loc.x, y: loc.y };
@@ -424,14 +541,18 @@ class WorldView {
     this.#afterPath = null;
     this.#busy = false;
     this.#scale = this.#artScale(map);
-    bgm.play(map.area === 'dungeon' ? 'dungeon' : 'town');
-    sound.ambient(map.area === 'dungeon' ? this.#dungeonSound().ambient : null);
+    this.#phase = 0;
+    if (!dev) {
+      bgm.play(map.area === 'dungeon' ? 'dungeon' : 'town');
+      sound.ambient(map.area === 'dungeon' ? this.#dungeonSound().ambient : null);
+    }
     this.#build(true);
     cancelAnimationFrame(this.#raf);
     this.#last = performance.now();
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
-    const flash = this.#store.flashMessage;
-    const scene = this.#sceneOnLoad();
+    // 確認画面では会話・お知らせを出さない（歩きだけを見る）
+    const flash = dev ? null : this.#store.flashMessage;
+    const scene = dev ? null : this.#sceneOnLoad();
     if (flash) {
       this.#store.flashMessage = null;
       this.#message(flash, scene ? () => this.#playScene(scene) : undefined);
@@ -517,7 +638,20 @@ class WorldView {
     return true;
   };
 
-  #blocked = (x: number, y: number): boolean => isBlocked(this.#map, x, y, this.#isVisible);
+  #blocked = (x: number, y: number): boolean =>
+    isBlocked(this.#map, x, y, this.#isVisible) || (this.#map.art !== undefined && isNearNpc(this.#map, x, y, this.#isVisible, NPC_SPACE));
+
+  /** 話せる範囲にいる人（正式な絵の街・部屋。いちばん近い人・同じ近さなら向いている方） */
+  #nearNpc(from: Point = this.#tile): NpcObject | null {
+    return this.#map.art ? nearestNpc(this.#map, from, this.#isVisible, NPC_TALK_RANGE, this.#dir) : null;
+  }
+
+  /** 人の方を向いてから話しかける */
+  #talkTo(npc: NpcObject): void {
+    this.#dir = this.#dirTo(npc);
+    this.#diag = null;
+    this.#talk(npc);
+  }
 
   #build(fade = false): void {
     this.#touch = null;
@@ -571,10 +705,19 @@ class WorldView {
         this.#mapLayer.append(el);
       }
     }
+    // 確認画面：格子（1マスごと）と地面線・基準点（地図と同じ層に置き、同じ倍率で拡大される）
+    this.#devGrid = this.#devGround = this.#devOrigin = null;
+    if (this.#dev) {
+      this.#devGrid = h('div', { class: 'world__dev-grid', attrs: { 'aria-hidden': 'true' } });
+      this.#devGrid.style.backgroundSize = `${cell}px ${cell}px`;
+      this.#devGround = h('div', { class: 'world__dev-ground', attrs: { 'aria-hidden': 'true' } });
+      this.#devOrigin = h('div', { class: 'world__dev-origin', attrs: { 'aria-hidden': 'true' } });
+      this.#mapLayer.append(this.#devGrid, this.#devGround, this.#devOrigin);
+    }
     this.#player = h('div', { class: 'world__player', attrs: { 'aria-label': t('world.player') } });
     this.#sizeFigure(this.#player);
     // 絵は最初に1回だけ設定する（あとは位置だけ動かす）
-    this.#player.style.backgroundImage = `url("${PLAYER_SHEET[save.player.gender === 'female' ? 'female' : 'male']}")`;
+    this.#player.style.backgroundImage = `url("${PLAYER_SHEET[this.#gender]}")`;
     this.#player.style.backgroundSize = `${parseFloat(this.#player.style.width) * PLAYER_SHEET_COLS}px ${parseFloat(this.#player.style.height) * PLAYER_SHEET_ROWS}px`;
     this.#addShadow(this.#player);
     this.#playerLook = '';
@@ -714,18 +857,32 @@ class WorldView {
     const hgt = parseFloat(el.style.height);
     el.style.backgroundSize = `${w * 4}px ${hgt * 4}px`;
     el.style.backgroundPosition = `${-NPC_IDLE_COL * w}px ${-DIR_ROW[dir] * hgt}px`;
+    el.dataset.face = dir;
   }
 
   /* ---------- ループ ---------- */
 
   #frame(time: number): void {
     if (this.#destroyed) return;
-    const dt = Math.min(0.05, (time - this.#last) / 1000);
+    let dt = Math.min(0.05, (time - this.#last) / 1000);
     this.#last = time;
-    if (!this.#busy) this.#step(dt);
-    if (this.#move) {
+    const dev = this.#dev?.state;
+    // 確認画面の1コマ送りで進めた時間（#oneFrameDt が #step まで済ませる）
+    let stepped = 0;
+    if (dev) {
+      // 確認画面：低速再生・一時停止・1コマ送り（止めている間は時間を進めない）
+      if (dev.paused) {
+        dt = 0;
+        if (dev.stepFrames > 0) {
+          dev.stepFrames -= 1;
+          stepped = this.#oneFrameDt();
+        }
+      } else dt *= dev.timeScale;
+    }
+    if (!this.#busy && dt > 0) this.#step(dt);
+    if (this.#move || this.#treadmillMoving) {
       this.#lastMoving = time;
-      this.#moveTime += dt;
+      this.#moveTime += dt + stepped;
     } else {
       this.#moveTime = 0;
       if (!this.#held) this.#running = false;
@@ -734,38 +891,67 @@ class WorldView {
     this.#raf = requestAnimationFrame((t) => this.#frame(t));
   }
 
+  /** 確認画面の1コマ送り：コマが1つ進むまで少しずつ時間を進め、その合計の時間を返す */
+  #oneFrameDt(): number {
+    const dev = this.#dev?.state;
+    if (!dev) return 0;
+    const before = frameOf(this.#phase);
+    let total = 0;
+    for (let i = 0; i < 400 && frameOf(this.#phase) === before; i += 1) {
+      const slice = 1 / 240;
+      if (this.#busy) break;
+      this.#step(slice);
+      total += slice;
+      if (!this.#move && !this.#treadmillMoving) break;
+    }
+    return total;
+  }
+
   /**
    * dt 秒ぶん進める。マスに着いて歩き続けるときは、あまった時間でそのまま次のマスへ進む
    * （2026-10-23。それまではマスごとに1コマ止まり、カクカクして見えた）
    */
   #step(dt: number): void {
+    const tm = this.#dev?.state.treadmill;
+    if (tm) {
+      // 確認画面「その場で動かす」：向き・状態を指定どおりにし、位置は変えずにコマだけ進める
+      this.#dir = tm.dir;
+      this.#diag = tm.diag;
+      this.#running = tm.mode === 'run';
+      this.#move = null;
+      this.#path = [];
+      if (tm.mode !== 'idle') this.#phase = advancePhase(this.#phase, this.#speed() * dt, this.#stride, this.#animScale);
+      return;
+    }
     if (!this.#move) {
       this.#startNext();
       if (!this.#move) return;
     }
-    const speed = this.#speed() / this.#cell;
-    const t0 = this.#move.t;
-    this.#move.t += (dt * speed) / this.#move.len;
-    this.#walkDist += (Math.min(1, this.#move.t) - t0) * this.#move.len * this.#cell;
-    if (this.#move.t >= 1) {
-      const rest = ((this.#move.t - 1) * this.#move.len) / speed;
+    const r = advanceMove(this.#move.t, this.#move.len, dt, this.#speed(), this.#cell);
+    this.#move.t = r.t;
+    // コマ送りは進んだ距離で決める（歩幅は walkAnim.ts。走りに変わっても位相は続きから）
+    this.#phase = advancePhase(this.#phase, r.dist, this.#stride, this.#animScale);
+    if (r.t >= 1) {
       this.#tile = this.#move.to;
       this.#pos = { ...this.#tile };
       this.#move = null;
       this.#arrive();
-      if (rest > 0 && !this.#busy) this.#step(rest);
+      if (r.rest > 0 && !this.#busy) this.#step(r.rest);
       return;
     }
     const { from, to, t } = this.#move;
     this.#pos = { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
   }
 
-  /** いまの歩く速さ（論理px/秒）。走る・歩き出しの加速・止まる最後のマスの減速 */
+  /** 確認画面の再生速度の倍率（本編は 1） */
+  get #animScale(): number {
+    return this.#dev?.state.animScale ?? 1;
+  }
+
+  /** いまの歩く速さ（論理px/秒）。走る・歩き出しの加速・止まる最後のマスの減速（walkAnim.ts） */
   #speed(): number {
-    let v = WALK_PX * (this.#running ? RUN_RATE : 1);
-    v *= Math.min(1, ACCEL_FROM + ((1 - ACCEL_FROM) * this.#moveTime) / ACCEL_S);
-    if (this.#move && !this.#held && this.#path.length === 0) v *= 1 - (1 - DECEL_TO) * this.#move.t;
-    return v;
+    const decel = this.#move && !this.#held && this.#path.length === 0 ? this.#move.t : null;
+    return walkSpeed(this.#running, this.#moveTime, decel, this.#dev?.state.speedScale ?? 1);
   }
 
   /** 止まっているとき：道順・調べる予約・押している向きから、次の1歩を始める */
@@ -778,6 +964,12 @@ class WorldView {
       return;
     }
     if (this.#afterPath) {
+      const target = this.#afterPath;
+      if (target.type === 'npc' && this.#map.art) {
+        this.#afterPath = null;
+        if (this.#nearNpc()?.id === target.id || Math.max(Math.abs(target.x - this.#tile.x), Math.abs(target.y - this.#tile.y)) <= NPC_TALK_RANGE) this.#talkTo(target);
+        return;
+      }
       const cell = adjacentCellOf(this.#afterPath, this.#tile);
       this.#afterPath = null;
       if (cell) {
@@ -854,24 +1046,45 @@ class WorldView {
     }
   }
 
+  /**
+   * 歩くときの体の動き（WALK_SQUASH ほか）。足が着くコマ（偶数）で縮み、足がそろうコマ（奇数）で伸びる。
+   * 進んだ距離から決めるので、足のコマ送りとずれない。止まると元に戻る
+   */
+  #bodyPose(time: number, walking: boolean, drawn = false, leanDrawn = false): { sx: number; sy: number; deg: number; shadow: number } | null {
+    if (REDUCED_MOTION) return null;
+    const dt = Math.min(0.05, Math.max(0, (time - this.#leanTime) / 1000));
+    this.#leanTime = time;
+    const mv = this.#move;
+    const dx = walking && mv ? Math.sign(mv.to.x - mv.from.x) : 0;
+    // 走りの絵（第3版）には前傾が描いてあるので、プログラムの傾きは付けない
+    const target = leanDrawn ? 0 : dx * (this.#running ? RUN_LEAN_DEG : WALK_LEAN_DEG);
+    this.#lean += (target - this.#lean) * (1 - Math.exp(-LEAN_RATE * dt));
+    if (Math.abs(this.#lean) < 0.01) this.#lean = 0;
+    // 1コマ＝半歩。足が着いているコマ（偶数）の真ん中で c＝1（いちばん縮む）、足がそろうコマ（奇数）の真ん中で c＝−1
+    // 第2版の絵（drawn）は体の上下が絵に描いてあるので、縮み・影の動きは付けない
+    const c = walking && !drawn ? squashOf(this.#phase) : 0;
+    const a = this.#running ? RUN_SQUASH : WALK_SQUASH;
+    if (c === 0 && this.#lean === 0) return null;
+    return { sx: 1 + (a / 2) * c, sy: 1 - a * c, deg: this.#lean, shadow: 1 + SHADOW_PULSE * c };
+  }
+
   #render(time = performance.now()): void {
     const p = this.#pos;
     // 歩いている間（と、歩き続けている途中のマスの切り替わり）は歩行シート、止まったら待機の絵
-    const walking = this.#move !== null || time - this.#lastMoving < 90;
+    const walking = isWalking(time, this.#lastMoving, this.#move !== null || this.#treadmillMoving);
     const w = parseFloat(this.#player.style.width);
     const hgt = parseFloat(this.#player.style.height);
-    if (!walking) this.#walkDist = 0;
-    // 半歩（1コマ）ごとに次のコマ。背たけが小さいダンジョンでは歩幅も小さく、走るときは歩幅を大きく
-    const stride = this.#figureH * (this.#running ? RUN_STEP_PER_HEIGHT : STEP_PER_HEIGHT);
-    const step = Math.floor(this.#walkDist / (stride / 2)) % 4;
+    if (!walking) this.#phase = 0;
+    // 1歩を4コマで送る（1周＝右足・左足の2歩＝8コマ）。背たけが小さいダンジョンでは歩幅も小さく、走るときは歩幅を大きく（walkAnim.ts）
+    const step = frameOf(this.#phase);
     const col = walking ? step : IDLE_COL;
-    // 足音：足が地面に着くコマ（右足前・左足前）に変わったときに1歩
+    // 足音：足が地面に着くコマ（右足が着く＝0・左足が着く＝4）に変わったときに1歩
     if (!walking) this.#stepCol = -1;
     else if (col !== this.#stepCol) {
       this.#stepCol = col;
-      if (col % 2 === 0) sound.step(this.#ground(), this.#running);
+      if (isContactFrame(col)) sound.step(this.#ground(), this.#running);
     }
-    const row = this.#diag ? DIAG_ROW[this.#diag] : DIR_ROW[this.#dir];
+    const row = sheetRow(this.#dir, this.#diag, walking && this.#running);
     // 立ち止まっているかの印（CSS の is-idle。呼吸の動きは 2026-10-23 にやめた）。変わったときだけ書く
     if (walking === this.#player.classList.contains('is-idle')) this.#player.classList.toggle('is-idle', !walking);
     const look = `${row}:${col}`;
@@ -879,22 +1092,48 @@ class WorldView {
       this.#player.style.backgroundPosition = `${-col * w}px ${-row * hgt}px`;
       this.#playerLook = look;
     }
-    this.#placeFigure(this.#player, p, walking && step % 2 === 1 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0);
+    const v2 = PLAYER_V2_ROWS[this.#gender].has(row);
+    const runArt = PLAYER_RUN_ART_ROWS[this.#gender].has(row);
+    this.#placeFigure(this.#player, p, walking && step % FRAMES_PER_STEP === 2 ? this.#figureH * (this.#running ? RUN_BOB : WALK_BOB) : 0, this.#bodyPose(time, walking, v2, runArt));
     const { width, height } = mapSize(this.#map);
     const cell = this.#cell;
+    const z = this.#zoom;
     const vw = this.#viewport.clientWidth || 390;
     const vh = this.#viewport.clientHeight || 600;
-    const mw = width * cell;
-    const mh = height * cell;
+    const mw = width * cell * z;
+    const mh = height * cell * z;
     const f = this.#foot(p);
-    // カメラは人物の体の真ん中を追う
-    const fy = f.y - this.#figureH / 2;
-    const tx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(f.x - vw / 2, 0), mw - vw);
-    const ty = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fy - vh / 2, 0), mh - vh);
-    // カメラは少し遅れて追う（場所に入ったときはぴったり）
+    const dev = this.#dev;
+    if (dev) this.#renderDev(time, { row, col, walking, f, w, hgt, cell, z });
+    // カメラは人物の体の真ん中＋進む向きの先読みを見る。遊びの中では動かさない
     const camDt = Math.min(0.05, Math.max(0, (time - this.#camTime) / 1000));
     this.#camTime = time;
-    if (!this.#cam) this.#cam = { x: tx, y: ty };
+    const mv = this.#move;
+    const ahead = mv ? { x: mv.to.x - mv.from.x, y: mv.to.y - mv.from.y } : { x: 0, y: 0 };
+    const al = Math.hypot(ahead.x, ahead.y) || 1;
+    const la = 1 - Math.exp(-CAMERA_LOOK_RATE * camDt);
+    this.#look = {
+      x: this.#look.x + ((ahead.x / al) * vw * CAMERA_LOOK - this.#look.x) * la,
+      y: this.#look.y + ((ahead.y / al) * vh * CAMERA_LOOK - this.#look.y) * la,
+    };
+    // 確認画面「カメラを止める」：出発点を見たまま（人物が動いた量がそのまま見える）
+    const anchor = dev?.state.fixedCamera ? this.#foot(dev.start) : f;
+    if (dev?.state.fixedCamera) this.#look = { x: 0, y: 0 };
+    const body = { x: anchor.x * z + this.#look.x, y: (anchor.y - this.#figureH / 2) * z + this.#look.y };
+    if (!this.#cam || dev?.state.fixedCamera) this.#focus = body;
+    else {
+      const dx = body.x - this.#focus.x;
+      const dy = body.y - this.#focus.y;
+      this.#focus = {
+        x: Math.abs(dx) > CAMERA_DEAD_X ? body.x - Math.sign(dx) * CAMERA_DEAD_X : this.#focus.x,
+        y: Math.abs(dy) > CAMERA_DEAD_Y ? body.y - Math.sign(dy) * CAMERA_DEAD_Y : this.#focus.y,
+      };
+    }
+    const fo = this.#focus;
+    const tx = mw <= vw ? (vw - mw) / 2 : -Math.min(Math.max(fo.x - vw / 2, 0), mw - vw);
+    const ty = mh <= vh ? (vh - mh) / 2 : -Math.min(Math.max(fo.y - vh / 2, 0), mh - vh);
+    // カメラは少し遅れて追う（場所に入ったときはぴったり）
+    if (!this.#cam || dev?.state.fixedCamera) this.#cam = { x: tx, y: ty };
     else {
       const a = 1 - Math.exp(-CAMERA_FOLLOW * camDt);
       this.#cam = { x: this.#cam.x + (tx - this.#cam.x) * a, y: this.#cam.y + (ty - this.#cam.y) * a };
@@ -902,10 +1141,10 @@ class WorldView {
     const { x: cx, y: cy } = this.#cam;
     // 画面の実際の点（デバイスの画素）にそろえる。論理px で丸めると、人物が地図に対して半px ずつ揺れて見える
     const snap = this.#pixelSnap();
-    this.#mapLayer.style.transform = `translate(${Math.round(cx * snap) / snap}px, ${Math.round(cy * snap) / snap}px)`;
+    this.#mapLayer.style.transform = `translate(${Math.round(cx * snap) / snap}px, ${Math.round(cy * snap) / snap}px)${z !== 1 ? ` scale(${z})` : ''}`;
     // 施設の看板が上の帯に隠れるときは、建物の上を少し下へずらす（玄関の上までは下げない）
     for (const sign of this.#signs) {
-      const shift = Math.max(0, Math.min(SIGN_MIN_BOTTOM - (sign.top + cy), sign.maxShift));
+      const shift = Math.max(0, Math.min((SIGN_MIN_BOTTOM - (sign.top * z + cy)) / z, sign.maxShift));
       if (shift !== sign.shift) {
         sign.shift = shift;
         sign.el.style.transform = `translate(-50%, calc(-100% + ${shift.toFixed(1)}px))`;
@@ -916,6 +1155,57 @@ class WorldView {
     if (this.#root.dataset.px !== px) this.#root.dataset.px = px;
     if (this.#root.dataset.py !== py) this.#root.dataset.py = py;
     if (!this.#move) this.#updateNear();
+  }
+
+  /** 確認画面：格子・地面線・基準点・コマの枠を更新し、数値を知らせる */
+  #renderDev(time: number, v: { row: number; col: number; walking: boolean; f: Point; w: number; hgt: number; cell: number; z: number }): void {
+    const dev = this.#dev;
+    if (!dev) return;
+    const on = dev.state.overlays;
+    if (this.#root.classList.contains('is-dev-overlay') !== on) this.#root.classList.toggle('is-dev-overlay', on);
+    if (this.#devGround) this.#devGround.style.transform = `translate(0, ${v.f.y}px)`;
+    if (this.#devOrigin) this.#devOrigin.style.transform = `translate(${v.f.x}px, ${v.f.y}px)`;
+    const speedPx = v.walking ? this.#speed() : 0;
+    const stride = this.#stride;
+    dev.onFrame?.({
+      row: v.row,
+      col: v.col,
+      phase: this.#phase,
+      walking: v.walking,
+      running: this.#running,
+      speedPx,
+      stride,
+      fps: framesPerSecond(speedPx, stride, this.#animScale),
+      figureH: this.#figureH,
+      cell: v.cell,
+      zoom: v.z,
+      tile: this.#tile,
+      pos: this.#pos,
+      foot: v.f,
+      shownCellW: v.w * v.z,
+      shownCellH: v.hgt * v.z,
+      gender: this.#gender,
+    });
+    void time;
+  }
+
+  /** 確認画面：向きを指定する（本編では使わない） */
+  setFacing(dir: Direction, diag: Diagonal | null): void {
+    if (!this.#dev) return;
+    this.#dir = dir;
+    this.#diag = diag;
+  }
+
+  /** 確認画面：人物を出発点に戻す（カメラも） */
+  resetPosition(): void {
+    const dev = this.#dev;
+    if (!dev) return;
+    this.#tile = { x: dev.start.x, y: dev.start.y };
+    this.#pos = { ...this.#tile };
+    this.#move = null;
+    this.#path = [];
+    this.#phase = 0;
+    this.#cam = null;
   }
 
   /* ---------- 操作 ---------- */
@@ -945,9 +1235,7 @@ class WorldView {
       touch.dragging = true;
       this.#path = [];
       this.#afterPath = null;
-      const v = this.#viewport.getBoundingClientRect();
-      this.#stick.style.left = `${(touch.x - v.left) / scale}px`;
-      this.#stick.style.top = `${(touch.y - v.top) / scale}px`;
+      this.#placeStick(touch.x, touch.y, scale);
       this.#stick.classList.add('is-on');
       if (!WorldView.#stickUsed) {
         WorldView.#stickUsed = true;
@@ -973,6 +1261,27 @@ class WorldView {
     const a = (sector * Math.PI) / 4;
     this.#held = { x: Math.round(Math.cos(a)), y: Math.round(Math.sin(a)) };
     this.#heldAt = performance.now();
+  }
+
+  /**
+   * スティックの輪を出す位置（指を置いた所）。2026-10-24 改訂R2 フェーズ1：輪が画面の端で欠けたり、
+   * 上の帯・右下の「調べる」に重なったりしないよう、輪だけ内側へずらす（歩く向きは指を置いた所から測るので変わらない）
+   */
+  #placeStick(clientX: number, clientY: number, scale: number): void {
+    const v = this.#viewport.getBoundingClientRect();
+    const vw = this.#viewport.clientWidth;
+    const vh = this.#viewport.clientHeight;
+    const r = STICK_RING_R + 4;
+    let x = Math.min(Math.max((clientX - v.left) / scale, r), vw - r);
+    let y = Math.min(Math.max((clientY - v.top) / scale, STICK_TOP + r), vh - r);
+    const btn = this.#examineBtn?.getBoundingClientRect();
+    if (btn) {
+      const bl = (btn.left - v.left) / scale;
+      const bt = (btn.top - v.top) / scale;
+      if (x + r > bl && y + r > bt) x = Math.max(r, bl - r);
+    }
+    this.#stick.style.left = `${x}px`;
+    this.#stick.style.top = `${y}px`;
   }
 
   #pointerUp(e: PointerEvent, tap: boolean): void {
@@ -1051,6 +1360,21 @@ class WorldView {
     // 話しかけ・調べる対象（出入口は歩いて踏むので対象外）
     const target = person ?? objectsAt(this.#map, x, y, this.#isVisible).find((o) => o.type !== 'warp');
     const from = this.#move ? this.#move.to : this.#tile;
+    if (person && this.#map.art) {
+      // 人：話せる範囲（NPC_TALK_RANGE マス以内）まで歩いてから話す。押したことが分かるよう小さな音（ボタンと同じ音）
+      sound.tap();
+      const inRange = (px: number, py: number): boolean => Math.max(Math.abs(px - person.x), Math.abs(py - person.y)) <= NPC_TALK_RANGE;
+      if (inRange(from.x, from.y) && !this.#move) {
+        this.#talkTo(person);
+        return;
+      }
+      const path = findPathWhere(this.#map, from, inRange, this.#blocked);
+      if (!path) return;
+      this.#held = null;
+      this.#path = path;
+      this.#afterPath = person;
+      return;
+    }
     if (target) {
       const here = adjacentCellOf(target, from);
       if (here && !this.#move) {
@@ -1089,9 +1413,32 @@ class WorldView {
     const key = `${this.#map.id}:${this.#tile.x},${this.#tile.y}`;
     if (key === this.#nearKey) return;
     this.#nearKey = key;
-    const near = this.#nearTarget();
+    this.#gaze();
+    const npc = this.#nearNpc();
+    const near = npc ? { x: npc.x, y: npc.y } : this.#nearTarget();
     this.#examineBtn?.classList.toggle('is-ready', near !== null);
+    // 話せる人がいるときは「話す」、それ以外は「調べる」（何ができるかをボタンの文字で見せる）
+    const label = t(npc ? 'world.talk' : 'world.examine');
+    const labelEl = this.#examineBtn?.querySelector('.world__action-label');
+    if (labelEl && labelEl.textContent !== label) {
+      labelEl.textContent = label;
+      this.#examineBtn?.setAttribute('aria-label', label);
+    }
     this.#showMarker(near);
+  }
+
+  /** 近くの人は主人公の方を向く。離れたら元の向き（正面）に戻る（話しかけたときの向きは #talk で決める） */
+  #gaze(): void {
+    for (const obj of this.#map.objects) {
+      if (obj.type !== 'npc') continue;
+      const el = this.#objectEls.get(obj.id);
+      if (!el) continue;
+      const dx = this.#tile.x - obj.x;
+      const dy = this.#tile.y - obj.y;
+      const near = Math.max(Math.abs(dx), Math.abs(dy)) <= NPC_GAZE_RANGE;
+      const dir: Direction = !near ? 'down' : Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+      if (el.dataset.face !== dir) this.#faceNpc(el, dir);
+    }
   }
 
   /** となりの人には頭の上に「…」の吹き出し、調べられる物にはきらめき。敵には出さない */
@@ -1122,6 +1469,11 @@ class WorldView {
     if (this.#busy || this.#move) return;
     const d = DIR_DELTA[this.#dir];
     const front = { x: this.#tile.x + d.x, y: this.#tile.y + d.y };
+    const npc = this.#nearNpc();
+    if (npc) {
+      this.#talkTo(npc);
+      return;
+    }
     const near = this.#nearTarget();
     if (near) {
       this.#dir = this.#dirTo(near);

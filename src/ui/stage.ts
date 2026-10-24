@@ -12,10 +12,15 @@ export interface Stage {
   readonly element: HTMLElement;
 }
 
-export function mountStage(root: HTMLElement): Stage {
+/** iPhone のホーム画面から開いたか（Safari の「ホーム画面に追加」） */
+const isIosStandalone = (): boolean => (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+export function mountStage(root: HTMLElement, options: { readonly qa?: boolean } = {}): Stage {
   const stage = h('div', { class: 'stage' });
   const viewport = h('div', { class: 'viewport' }, stage);
-  root.replaceChildren(viewport);
+  // QA 用：画面の大きさの数字（iPhone で撮ってもらい、黒い余白の原因を確かめる）
+  const diag = options.qa ? h('div', { class: 'stage-diag', attrs: { 'aria-hidden': 'true' } }) : null;
+  root.replaceChildren(viewport, ...(diag ? [diag] : []));
 
   const apply = (): void => {
     const rect = viewport.getBoundingClientRect();
@@ -23,10 +28,22 @@ export function mountStage(root: HTMLElement): Stage {
     stage.style.width = `${layout.width}px`;
     stage.style.height = `${layout.height}px`;
     stage.style.transform = `translate(${layout.offsetX}px, ${layout.offsetY}px) scale(${layout.scale})`;
+    if (diag) {
+      const app = root.getBoundingClientRect();
+      const vv = window.visualViewport;
+      diag.textContent = [
+        `screen ${window.screen.width}x${window.screen.height} inner ${window.innerWidth}x${window.innerHeight}`,
+        `vv ${vv ? `${Math.round(vv.width)}x${Math.round(vv.height)}` : '-'} app ${Math.round(app.top)}-${Math.round(app.bottom)}`,
+        `safe ${viewport.offsetTop}/${Math.round(app.bottom - rect.bottom)} view ${Math.round(rect.width)}x${Math.round(rect.height)}`,
+        `stage ${layout.width}x${layout.height} x${layout.scale.toFixed(3)} sa ${isIosStandalone() ? 1 : 0}`,
+      ].join('\n');
+    }
   };
 
   new ResizeObserver(apply).observe(viewport);
+  new ResizeObserver(apply).observe(root);
   window.addEventListener('orientationchange', apply);
+  window.addEventListener('resize', apply);
   apply();
 
   return { element: stage };

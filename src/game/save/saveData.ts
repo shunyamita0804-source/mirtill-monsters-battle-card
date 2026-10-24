@@ -9,6 +9,7 @@ import {
   createStarterCollection,
   createStarterDeck,
   isDeckValid,
+  topUpDeck,
   type Deck,
 } from '../deck/deck.ts';
 import type { IntroState } from '../../data/storyScenes.ts';
@@ -21,7 +22,7 @@ import { isIntroState, recoverIntro } from '../story/intro.ts';
  * - 読み込み時は normalizeSave() で型・範囲を確認し、壊れた値は既定値に戻す
  * - 変更はすべて「古いセーブを受け取り新しいセーブを返す」純粋関数で行う
  */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export type Gender = 'male' | 'female';
 export type Direction = 'down' | 'up' | 'left' | 'right';
@@ -235,6 +236,30 @@ function migrateLazuckTestV7(raw: RawObject): RawObject {
   return untouched ? { ...raw, collection, deck: mixed } : { ...raw, collection };
 }
 
+/**
+ * ゲームから削除したカードの ID（2026-10-24：ラズックの旧13 クロスガード。ユーザー決定「クロスガードはゲームから削除」）。
+ * 古いセーブ・バックアップに残っていても、読み込み時の変換（migrateRemoveCrossGuardV8）で外すので、バックアップの読み込みでは止めない
+ */
+export const REMOVED_CARD_IDS: readonly string[] = ['skl-lazuck-13'];
+
+/**
+ * version 7 → 8（2026-10-24）：クロスガード（skl-lazuck-13）をゲームから削除した。
+ * 所持カードとデッキから外し、デッキの抜けた分は持っているカードで埋める（足りなければ足りないまま。デッキ編集で直せる）。
+ * 代わりのカードは配らない
+ */
+function migrateRemoveCrossGuardV8(raw: RawObject): RawObject {
+  const removed = new Set(REMOVED_CARD_IDS);
+  const collection: Record<string, number> = isObject(raw.collection) ? { ...(raw.collection as Record<string, number>) } : {};
+  for (const id of removed) delete collection[id];
+  const deck = raw.deck;
+  if (!isObject(deck) || !Array.isArray(deck.skills) || !Array.isArray(deck.monsters)) return { ...raw, collection };
+  const skills = (deck.skills as unknown[]).filter((id) => !(typeof id === 'string' && removed.has(id)));
+  if (skills.length === deck.skills.length) return { ...raw, collection };
+  const counts = Object.fromEntries(Object.entries(collection).filter(([, n]) => typeof n === 'number')) as Record<string, number>;
+  const filled = topUpDeck({ monsters: deck.monsters as string[], skills: skills as string[] }, counts);
+  return { ...raw, collection, deck: { ...deck, skills: filled.skills } };
+}
+
 /** version n → n+1 の変換。形式を変えるときはここに足し、SAVE_VERSION を上げる */
 const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
   1: migrateDeckRulesV2,
@@ -243,6 +268,7 @@ const MIGRATIONS: Readonly<Record<number, (raw: RawObject) => RawObject>> = {
   4: migrateTownV5,
   5: migrateSoramoTestV6,
   6: migrateLazuckTestV7,
+  7: migrateRemoveCrossGuardV8,
 };
 
 export function migrate(raw: RawObject): RawObject | null {

@@ -7,6 +7,8 @@ import './ui/styles/battle.css';
 import './ui/styles/dialogue.css';
 import './ui/styles/uiFrames.css';
 import './ui/styles/uiParts.css';
+import './ui/styles/battleTable.css';
+import './ui/styles/walkLab.css';
 import { startApp } from './ui/app.ts';
 
 const root = document.querySelector<HTMLElement>('#app');

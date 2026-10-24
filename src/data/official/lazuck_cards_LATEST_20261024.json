@@ -1,0 +1,251 @@
+{
+  "document_type": "LAZUCK_16_SKILLS_LATEST_ORDER_AND_USER_APPROVED_DELTAS",
+  "status": "APPROVED_DESIGN_NOT_CODE_IMPLEMENTED",
+  "monster_game_id_from_earlier_reference": "mon-lazuck (VERIFY_REPO)",
+  "source": "previous handoff plus subsequent user approvals in 2026-10-24 chat",
+  "skill_cards": [
+    {
+      "ordinal": 1,
+      "name_ja": "ひっかき",
+      "category": "force",
+      "mana": 0,
+      "damage": 1,
+      "effect_text_ja": null,
+      "availability": "initial",
+      "prior_ordinal": 1,
+      "game_id": "skl-lazuck-01",
+      "origin": "approved existing card",
+      "illustration_original": "01_ひっかき.png"
+    },
+    {
+      "ordinal": 2,
+      "name_ja": "かみつき",
+      "category": "force",
+      "mana": 1,
+      "damage": 1,
+      "effect_text_ja": null,
+      "availability": "initial",
+      "prior_ordinal": 2,
+      "game_id": "skl-lazuck-02",
+      "origin": "approved existing card",
+      "illustration_original": "02_かみつき.png"
+    },
+    {
+      "ordinal": 3,
+      "name_ja": "とびかかり",
+      "category": "force",
+      "mana": 2,
+      "damage": 3,
+      "effect_text_ja": null,
+      "availability": "initial",
+      "prior_ordinal": 3,
+      "game_id": "skl-lazuck-03",
+      "origin": "approved existing card",
+      "illustration_original": "03_とびかかり.png"
+    },
+    {
+      "ordinal": 4,
+      "name_ja": "みだれづめ",
+      "category": "force",
+      "mana": 3,
+      "damage": 2,
+      "effect_text_ja": "回避されない",
+      "availability": "initial",
+      "prior_ordinal": 4,
+      "game_id": "skl-lazuck-04",
+      "origin": "approved existing card",
+      "illustration_original": "04_みだれづめ.png"
+    },
+    {
+      "ordinal": 5,
+      "name_ja": "しっぽアタック",
+      "category": "force",
+      "mana": 1,
+      "damage": 2,
+      "effect_text_ja": null,
+      "availability": "initial",
+      "prior_ordinal": 5,
+      "game_id": "skl-lazuck-05",
+      "origin": "approved existing card",
+      "illustration_original": "05_しっぽアタック.png"
+    },
+    {
+      "ordinal": 6,
+      "name_ja": "しっぷうタックル",
+      "category": "force",
+      "mana": 4,
+      "damage": 4,
+      "effect_text_ja": null,
+      "availability": "initial",
+      "prior_ordinal": 6,
+      "game_id": "skl-lazuck-06",
+      "origin": "approved existing card",
+      "illustration_original": "06_しっぷうタックル.png"
+    },
+    {
+      "ordinal": 7,
+      "name_ja": "トリックショット",
+      "category": "wisdom",
+      "mana": 2,
+      "damage": 3,
+      "effect_text_ja": null,
+      "availability": "collect",
+      "prior_ordinal": 9,
+      "game_id": "skl-lazuck-09",
+      "origin": "approved existing card",
+      "illustration_original": "09_トリックショット.png"
+    },
+    {
+      "ordinal": 8,
+      "name_ja": "シャドウバースト",
+      "category": "wisdom",
+      "mana": 4,
+      "damage": 5,
+      "effect_text_ja": null,
+      "availability": "collect",
+      "prior_ordinal": 10,
+      "game_id": "skl-lazuck-10",
+      "origin": "approved existing card",
+      "illustration_original": "10_シャドウバースト.png"
+    },
+    {
+      "ordinal": 9,
+      "name_ja": "ちょうはつ",
+      "category": "special",
+      "mana": 2,
+      "damage": null,
+      "effect_text_ja": "指定した相手モンスターは次のターン、ラズックにしか攻撃できない",
+      "availability": "initial",
+      "prior_ordinal": 7,
+      "game_id": "skl-lazuck-07",
+      "origin": "approved existing card",
+      "illustration_original": "07_ちょうはつ.png"
+    },
+    {
+      "ordinal": 10,
+      "name_ja": "ダストキック",
+      "category": "special",
+      "mana": 0,
+      "damage": null,
+      "effect_text_ja": "指定した相手の次のターンのちから技ダメージ−1",
+      "availability": "initial",
+      "prior_ordinal": 8,
+      "game_id": "skl-lazuck-08",
+      "origin": "approved existing card",
+      "illustration_original": "08_ダストキック.png"
+    },
+    {
+      "ordinal": 11,
+      "name_ja": "いたずら",
+      "category": "special",
+      "mana": 2,
+      "damage": null,
+      "effect_text_ja": "相手の手札からランダムに1枚を相手の山札へ戻してシャッフルする。相手はカードを補充しない。",
+      "availability": "collect",
+      "prior_ordinal": null,
+      "game_id": "NEW_UNIQUE_ID_AFTER_REPO_INSPECTION",
+      "origin": "new skill replacing cross guard",
+      "illustration_original": "Razuk_Itazura_Approved_USER_IMAGE.jpeg",
+      "image_format": "JPEG",
+      "notes": "The user-supplied completed artwork is JPEG. Do not claim PNG or regenerate. 13クロスガード is retired from new deck, preserve legacy assets if needed for existing saves."
+    },
+    {
+      "ordinal": 12,
+      "name_ja": "しっぽいなし",
+      "category": "defense",
+      "mana": 1,
+      "damage": null,
+      "effect_text_ja": "受けるちから技のダメージを3軽減する",
+      "availability": "initial",
+      "prior_ordinal": 11,
+      "game_id": "skl-lazuck-11",
+      "origin": "approved existing card",
+      "illustration_original": "11_しっぽいなし.png"
+    },
+    {
+      "ordinal": 13,
+      "name_ja": "シャドウガード",
+      "category": "defense",
+      "mana": 2,
+      "damage": null,
+      "effect_text_ja": "受けるかしこさ技のダメージを4軽減する",
+      "availability": "collect",
+      "prior_ordinal": 12,
+      "game_id": "skl-lazuck-12",
+      "origin": "approved existing card",
+      "illustration_original": "12_シャドウガード.png"
+    },
+    {
+      "ordinal": 14,
+      "name_ja": "フェイントステップ",
+      "category": "evade",
+      "mana": 2,
+      "damage": null,
+      "effect_text_ja": "ちから技を回避",
+      "availability": "initial",
+      "prior_ordinal": 14,
+      "game_id": "skl-lazuck-14",
+      "origin": "approved existing card",
+      "illustration_original": "14_フェイントステップ.png",
+      "evasion_criteria": {
+        "against": [
+          "force"
+        ],
+        "min_incoming_attack_required_mana": null
+      }
+    },
+    {
+      "ordinal": 15,
+      "name_ja": "シャドウスリップ",
+      "category": "evade",
+      "mana": 2,
+      "damage": null,
+      "effect_text_ja": "必要マナ2以上のちから技・かしこさ技を回避",
+      "availability": "collect",
+      "prior_ordinal": 15,
+      "game_id": "skl-lazuck-15",
+      "origin": "approved existing card",
+      "illustration_original": "15_シャドウスリップ.png",
+      "evasion_criteria": {
+        "against": [
+          "force",
+          "wisdom"
+        ],
+        "min_incoming_attack_required_mana": 2
+      }
+    },
+    {
+      "ordinal": 16,
+      "name_ja": "ミラージュダッシュ",
+      "category": "evade",
+      "mana": 2,
+      "damage": null,
+      "effect_text_ja": "ちから技・かしこさ技を回避",
+      "availability": "collect",
+      "prior_ordinal": 16,
+      "game_id": "skl-lazuck-16",
+      "origin": "approved existing card",
+      "illustration_original": "16_ミラージュダッシュ.png",
+      "evasion_criteria": {
+        "against": [
+          "force",
+          "wisdom"
+        ],
+        "min_incoming_attack_required_mana": null
+      }
+    }
+  ],
+  "deprecated_skill": {
+    "name_ja": "クロスガード",
+    "prior_ordinal": 13,
+    "prior_persistent_id": "skl-lazuck-13",
+    "do_not_purge_saved_records_before_migration": true
+  },
+  "warnings": [
+    "Reordering ordinal is not authorization to reassign stable persistent IDs or asset references.",
+    "The new いたずら needs a new unique persistent ID; check repo before assigning.",
+    "Availability remains 10 initial / 6 collect per previous specific approvals; do not change without user approval.",
+    "New item いたずら is collect because it replaces previous collect クロスガード; verify integration into future pack.",
+    "Do not silently change unresolved taunt/debuff edge cases."
+  ]
+}

@@ -201,6 +201,11 @@ export function createSupportCard(card: SupportCard, options: SkillCardOptions):
   return el;
 }
 
+/** 技カードの幅から高さを出す（テンプレートの縦横比。カードの裏など、同じ外形で並べたいときに使う） */
+export function skillCardHeight(width: number): number {
+  return (width * H) / W;
+}
+
 /** 技・サポートどちらでも描く */
 export function createPlayCard(card: PlayCard, options: SkillCardOptions): HTMLElement {
   return card.kind === 'skill' ? createSkillCard(card, options) : createSupportCard(card, options);

@@ -3,6 +3,7 @@ import { BATTLE_RULES } from '../../data/rules.ts';
 import { cardName } from '../../i18n/content.ts';
 import { t } from '../../i18n/i18n.ts';
 import {
+  evadeMinCost,
   guardAgainst,
   guardReduction,
   skillValue,
@@ -14,7 +15,7 @@ import {
   type SupportCard,
 } from '../cards/cardTypes.ts';
 import type { Deck } from '../deck/deck.ts';
-import { nextRandom, shuffle } from '../rng.ts';
+import { nextInt, nextRandom, shuffle } from '../rng.ts';
 
 /**
  * カードバトルのルール（DOM 非依存の純粋関数）。
@@ -40,8 +41,11 @@ export interface BattleMonster {
   readonly life: number;
   /** このターンに技を使ったか */
   readonly acted: boolean;
-  /** 次に使う stat の技のダメージを amount 減らす（正式：吠える）。使ったら消える */
-  readonly weaken?: { readonly stat: StatType; readonly amount: number } | null;
+  /**
+   * 次に使う stat の技のダメージを amount 減らす（正式：吠える）。使ったら消える。
+   * untilTurn があれば、その手番が過ぎたら効かない（正式：ガウルの熱風の威嚇「次のターンまで」）
+   */
+  readonly weaken?: { readonly stat: StatType; readonly amount: number; readonly untilTurn?: number } | null;
   /** この手番（turn）の間は攻撃の技を使えない（正式：すなかけ） */
   readonly sealedTurn?: number | null;
   /** この手番（turn）の間だけ、stat の技のダメージを amount 減らす（正式：ラズックのダストキック。吠えると違い、使っても消えず、手番が過ぎたら効かない） */
@@ -312,9 +316,14 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
     if (!target || target.cardId !== skill.monsterId) return NO(t('battle.ng.notTarget'));
     const against = guardAgainst(skill);
     if (against !== 'all' && against !== pending.stat) return NO(t('battle.ng.wrongStat', { stat: statLabel(pending.stat) }));
-    const attack = getSkill(pending.cardId).effect;
+    const attackCard = getSkill(pending.cardId);
+    const attack = attackCard.effect;
     if (attack.type === 'attack' && type === 'defense' && attack.unblockable) return NO(t('battle.ng.unblockable'));
+    // 「回避されない」攻撃は、回避の条件が合っていても回避できない（防御はできる）
     if (attack.type === 'attack' && type === 'evade' && attack.undodgeable) return NO(t('battle.ng.undodgeable'));
+    // 「必要マナ2以上の〜を回避」：受ける攻撃カードに印字された必要マナで判定（いまのマナの残りではない）
+    const minCost = evadeMinCost(skill);
+    if (minCost > 0 && attackCard.cost < minCost) return NO(t('battle.ng.evadeMinCost', { n: minCost }));
     if (manaOf(state.sides[side]) < skill.cost) return NO(t('battle.ng.noMana'));
     return YES;
   }
@@ -322,6 +331,8 @@ export function cardUsability(state: BattleState, side: Side, cardUid: string): 
   if (state.active !== side) return NO(t('battle.ng.opponentTurn'));
   if (state.phase === 'mana') return NO(t('battle.ng.manaPhase'));
   if (skill.effect.type === 'defense' || skill.effect.type === 'evade') return NO(t('battle.ng.defenseOnAttack'));
+  // いたずら：相手の手札がないときは使えない（2026-10-24 ユーザー指示）
+  if (skill.effect.type === 'handToDeck' && state.sides[otherSide(side)].hand.length === 0) return NO(t('battle.ng.noOpponentHand'));
   if (manaOf(state.sides[side]) < skill.cost) return NO(t('battle.ng.noMana'));
   if (availableUsers(state, side, skill).length === 0) {
     // すなかけで攻撃を封じられているだけのとき
@@ -374,10 +385,11 @@ export function fieldModifier(state: BattleState, stat: StatType): number {
   return e.stat === 'all' || e.stat === stat ? e.modifier : 0;
 }
 
-/** 使うモンスターにかかっている「次の技のダメージ−」（吠える）。その技の種類に効くときだけ */
-export function weakenOf(user: BattleMonster | undefined, skill: SkillCard): number {
+/** 使うモンスターにかかっている「次の技のダメージ−」（吠える・熱風の威嚇）。その技の種類に効き、期限（untilTurn）が過ぎていないときだけ */
+export function weakenOf(state: BattleState, user: BattleMonster | undefined, skill: SkillCard): number {
   const w = user?.weaken;
-  return w && skill.stat && w.stat === skill.stat.type ? w.amount : 0;
+  if (!w || (w.untilTurn !== undefined && state.turn > w.untilTurn)) return 0;
+  return skill.stat && w.stat === skill.stat.type ? w.amount : 0;
 }
 
 /** 使うモンスターにかかっている「この手番の技のダメージ−」（ダストキック）。この手番で、その技の種類に効くときだけ */
@@ -389,7 +401,7 @@ export function weakenTurnOf(state: BattleState, user: BattleMonster | undefined
 /** 攻撃の威力（場の増減と、使うモンスターへの「吠える」「ダストキック」を反映。0未満にはならない） */
 export function attackPower(state: BattleState, skill: SkillCard, user?: BattleMonster): number {
   if (!skill.stat) return 0;
-  return Math.max(0, skill.stat.value + fieldModifier(state, skill.stat.type) - weakenOf(user, skill) - weakenTurnOf(state, user, skill));
+  return Math.max(0, skill.stat.value + fieldModifier(state, skill.stat.type) - weakenOf(state, user, skill) - weakenTurnOf(state, user, skill));
 }
 
 /** 手札をマナにできるか（攻撃のあとのマナ化の間だけ。枚数の制限なし） */
@@ -618,7 +630,7 @@ function useCard(
       if (!target || !skill.stat) return state;
       const power = attackPower(state, skill, user);
       // 吠える（次の技のダメージ−）は、その種類の技を使ったら消える
-      if (weakenOf(user, skill) > 0) next = updateMonster(next, user.uid, { weaken: null });
+      if (weakenOf(state, user, skill) > 0) next = updateMonster(next, user.uid, { weaken: null });
       // 防御も回避もできない攻撃は、守備を待たずにダメージ
       if (skill.effect.unblockable && skill.effect.undodgeable) {
         const hit = applyDamage(power > 0 ? addFx(next, hitKind(skill.id), side) : next, target.uid, power);
@@ -653,6 +665,11 @@ function useCard(
         next = updateMonster(next, target.uid, { weakenTurn: { stat: e.stat, amount: e.amount, turn: state.turn + 1 } });
         return addLog(next, t('battle.log.weakenTurn', { name: nameOf(target.cardId), stat: statLabel(e.stat), n: e.amount }));
       }
+      if (e.duration === 'nextUseByNextTurn') {
+        // 熱風の威嚇：次にその種類の技を使ったら消える。使わなくても、相手の次の手番（turn + 1）が過ぎたら効かない
+        next = updateMonster(next, target.uid, { weaken: { stat: e.stat, amount: e.amount, untilTurn: state.turn + 1 } });
+        return addLog(next, t('battle.log.weakenTurn', { name: nameOf(target.cardId), stat: statLabel(e.stat), n: e.amount }));
+      }
       next = updateMonster(next, target.uid, { weaken: { stat: e.stat, amount: e.amount } });
       return addLog(next, t('battle.log.weaken', { name: nameOf(target.cardId), stat: statLabel(e.stat), n: e.amount }));
     }
@@ -668,10 +685,26 @@ function useCard(
       next = updateMonster(next, target.uid, { taunt: { monsterId: user.cardId, turn: state.turn + 1 } });
       return addLog(next, t('battle.log.taunt', { name: nameOf(target.cardId), only: nameOf(user.cardId) }));
     }
+    case 'handToDeck':
+      return handToDeck(next, otherSide(side));
     case 'defense':
     case 'evade':
       return state;
   }
+}
+
+/**
+ * いたずら（正式：ラズック 2026-10-24）：side の手札からランダムに1枚を、その山札へ戻してシャッフルする。補充はしない。
+ * 手札が0枚のときは使えない（cardUsability。2026-10-24 ユーザー指示）
+ */
+function handToDeck(state: BattleState, side: Side): BattleState {
+  const s = state.sides[side];
+  if (s.hand.length === 0) return state;
+  const pick = nextInt(state.seed, s.hand.length);
+  const card = s.hand[pick.value] as HandCard;
+  const mixed = shuffle([...s.deck, card.cardId], pick.seed);
+  const next = updateSide({ ...state, seed: mixed.seed }, side, { hand: s.hand.filter((c) => c.uid !== card.uid), deck: mixed.items });
+  return addLog(next, t('battle.log.handToDeck', { player: s.name }));
 }
 
 function healMonster(state: BattleState, target: BattleMonster, value: number): BattleState {

@@ -107,6 +107,9 @@ export function chooseAction(state: BattleState, side: Side): BattleAction | nul
   const special = options.filter(isSkillOption).find((o) => ['weaken', 'seal', 'taunt'].includes(o.def.effect.type));
   const strongestEnemy = [...enemies].sort((a, b) => b.life - a.life)[0];
   if (special && strongestEnemy) return attackAction(state, side, special, strongestEnemy.uid);
+  // いたずら：相手の手札が2枚以上あるときに使う（仮の思考）
+  const prank = options.filter(isSkillOption).find((o) => o.def.effect.type === 'handToDeck');
+  if (prank && state.sides[otherSide(side)].hand.length >= 2) return { type: 'useCard', side, cardUid: prank.card.uid };
 
   // 5. マナ・ドロー
   // 山札が足りないと負けになるので、山札を動かす効果は山札に余裕があるときだけ。

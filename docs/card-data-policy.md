@@ -53,6 +53,9 @@
 | SOR-SK-01〜16 | `skl-soramo-01`〜`skl-soramo-16`（番号は同じ） | ひっかき〜星影ステップ |
 | （モンスター） | `mon-lazuck` | ラズック（ライフ6。2026-10-23 に技が届き、登録のみから正式へ） |
 | LAZ-SK-01〜16 | `skl-lazuck-01`〜`skl-lazuck-16`（番号は同じ） | ひっかき〜ミラージュダッシュ |
+| （なし） | `skl-lazuck-itazura` | いたずら（2026-10-24 新規。番号の ID と取り違えないよう名前の ID） |
+| （モンスター） | `mon-gauul` | ガウル（ライフ6。2026-10-24 に技が届き、登録のみから正式へ） |
+| GAU-SK-01〜16 | `skl-gauul-01`〜`skl-gauul-16`（番号は同じ） | つつく〜灼熱の飛翔 |
 
 ラズックの正本は `src/data/official/lazuck_cards_OFFICIAL.json`（無改変）、読み込みは `src/data/lazuck.ts`（ソラモと同じ作り方 `src/data/officialSkills.ts`）。
 絵は `laz_sk_NN.webp`。**初期・収集の配分が食い違っている**（全体方針は初期8・収集8、1枚ずつの指定を足すと初期10〔01〜08・11・14〕・収集6）。データは1枚ずつの指定のまま持ち、配布・スターター・パックには使っていない（ユーザー確認待ち）
@@ -60,7 +63,22 @@
 - 絵：技 `assets/images/cards/skills/sor_sk_NN.webp`（827×937 のまま WebP）、モンスター `soramo_official.webp`（ショップ・図鑑など）・`soramo_battle.webp`（バトル）
 - レアリティは未定（`rarity: null`。モンスターのランク C とは別物）。パックには入れていない
 - 英語は仮訳（`src/i18n/contentEnOfficialDraft.ts` に分けて管理）
-- 登録だけ（ゲームで未使用）：ガウルのモンスターカード（`src/data/registeredMonsters.ts`）
+- 登録だけのモンスターは、いまはいない（ガウルは 2026-10-24 に正式へ）
+
+### 2026-10-24 の改訂（Seimon_Claude_Gaul16_RazukSoramoPatch_20261024_CONTROL）
+
+- 届いた JSON は無改変で `src/data/official/` に置いた：`gauul_cards_OFFICIAL_20261024.json`（ガウル16技）・`lazuck_cards_LATEST_20261024.json`（ラズックの新しい並びと性能）・
+  `lazuck_order_mapping_20261024.json`（新旧の番号の対応）・`evasion_LATEST_20261024.json`（回避8件の条件）。元の `soramo_cards_OFFICIAL.json`・`lazuck_cards_OFFICIAL.json` も変えていない
+- **ラズックの並び替えは表示の番号（`displayNo`）だけ。** ゲーム内 ID・絵のファイル名・デザイン ID は元のまま（例：トリックショットは `skl-lazuck-09`・`laz_sk_09.webp` のまま表示 07）。
+  カード詳細に「番号」を出す
+- **旧13 クロスガード（`skl-lazuck-13`）はゲームから削除**（2026-10-24 ユーザー決定）。カードの一覧から外し、セーブは version 8 で所持・デッキから外す
+  （`migrateRemoveCrossGuardV8`。デッキの抜けた分は持っているカードで埋め、足りなければ足りないまま＝デッキ編集で直す。代わりのカードは配らない）。
+  古いバックアップに入っていても止めずに読み込む（`REMOVED_CARD_IDS`）。元の JSON と絵 `laz_sk_13.webp` は記録として残す
+- ガウルの技の絵：原本 PNG 16枚を `design-parts/cards-original/gauul/` に無改変で保管（SHA-256 の照合表も）。ゲーム用は `tools/art/card_art_webp.py` で縦横比を変えずに幅 827 に縮めた WebP（`gau_sk_NN.webp`）。
+  ラズックのいたずらは原本 JPEG（`design-parts/cards-original/lazuck/`。PNG ではない）から `laz_sk_itazura.webp`
+- 技の絵は `object-fit: contain` で全体を入れる（ガウルの原本は縦横比がわずかに違うものがあるため）
+- ガウルはパック・スターター・相手の編成に入れていない（配る枚数・敵の編成は未定）。QA の「全カード」で手に入り、デッキに組める
+- 英語：ガウルの技名・効果、いたずらは Claude の仮訳
 - 【テスト用】ユーザー指示「技の発動を見るため、仮のカードはすべてソラモに」：スターター・相手の編成をソラモ3体に（`createSoramoTestDeck`・`SORAMO_TEAM`）。
   旧セーブは version 6 で1回だけソラモのカードを受け取り、デッキがソラモに替わる（仮カードは消さない）。同じモンスターの重複を「可」に（`DECK_RULES`）
 - 【テスト用】2026-10-23 ユーザー指示「仮置きで、ソラモしかいない所にラズックも出して」：スターター＝ソラモ・ラズック・ソラモ（`createMixedTestDeck`）、
