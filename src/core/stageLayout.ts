@@ -47,23 +47,3 @@ export function computeStageLayout(
     offsetY: (availableHeight - height * scale) / 2,
   };
 }
-
-/**
- * iPhone のホーム画面から開いたとき、画面の高さが「上の帯（時計などの所）を除いた高さ」で渡されるのに、
- * 絵は画面のいちばん上から描かれることがある（2026-10-24 ユーザーの動画：852pt の画面で 760pt までしか描かれず、下 92pt が黒かった）。
- * そのときだけ、#app の高さを画面の本当の高さにする。条件に当てはまらない端末・Safari では何もしない
- */
-export function shortStandaloneHeight(env: {
-  readonly standalone: boolean;
-  readonly innerWidth: number;
-  readonly innerHeight: number;
-  readonly screenHeight: number;
-  readonly appTop: number;
-  readonly safeTop: number;
-}): number | null {
-  if (!env.standalone || env.innerWidth >= env.innerHeight || env.safeTop <= 0) return null;
-  // 画面のいちばん上から描いていて、足りない高さが上のセーフエリアとほぼ同じとき
-  const missing = env.screenHeight - env.innerHeight;
-  if (Math.abs(env.appTop) > 1 || missing < 1 || Math.abs(missing - env.safeTop) > 2) return null;
-  return env.screenHeight;
-}

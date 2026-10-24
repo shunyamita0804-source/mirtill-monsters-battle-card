@@ -1,4 +1,4 @@
-import { computeStageLayout, shortStandaloneHeight } from '../core/stageLayout.ts';
+import { computeStageLayout } from '../core/stageLayout.ts';
 import { h } from './dom.ts';
 
 /**
@@ -23,19 +23,6 @@ export function mountStage(root: HTMLElement, options: { readonly qa?: boolean }
   root.replaceChildren(viewport, ...(diag ? [diag] : []));
 
   const apply = (): void => {
-    const fixed = shortStandaloneHeight({
-      standalone: isIosStandalone(),
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
-      screenHeight: window.screen.height,
-      appTop: root.getBoundingClientRect().top,
-      safeTop: viewport.offsetTop,
-    });
-    const height = fixed ? `${fixed}px` : '';
-    if (root.style.height !== height) {
-      root.style.height = height;
-      root.style.bottom = fixed ? 'auto' : '';
-    }
     const rect = viewport.getBoundingClientRect();
     const layout = computeStageLayout(rect.width, rect.height);
     stage.style.width = `${layout.width}px`;
@@ -48,7 +35,7 @@ export function mountStage(root: HTMLElement, options: { readonly qa?: boolean }
         `screen ${window.screen.width}x${window.screen.height} inner ${window.innerWidth}x${window.innerHeight}`,
         `vv ${vv ? `${Math.round(vv.width)}x${Math.round(vv.height)}` : '-'} app ${Math.round(app.top)}-${Math.round(app.bottom)}`,
         `safe ${viewport.offsetTop}/${Math.round(app.bottom - rect.bottom)} view ${Math.round(rect.width)}x${Math.round(rect.height)}`,
-        `stage ${layout.width}x${layout.height} x${layout.scale.toFixed(3)} sa ${isIosStandalone() ? 1 : 0} fix ${fixed ?? '-'}`,
+        `stage ${layout.width}x${layout.height} x${layout.scale.toFixed(3)} sa ${isIosStandalone() ? 1 : 0}`,
       ].join('\n');
     }
   };

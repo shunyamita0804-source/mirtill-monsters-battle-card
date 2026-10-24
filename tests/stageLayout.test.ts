@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeStageLayout, MAX_STAGE_WIDTH, shortStandaloneHeight } from '../src/core/stageLayout.ts';
+import { computeStageLayout, MAX_STAGE_WIDTH } from '../src/core/stageLayout.ts';
 
 describe('computeStageLayout', () => {
   it('基準解像度ちょうどなら等倍', () => {
@@ -63,28 +63,5 @@ describe('computeStageLayout', () => {
   it('サイズが取れないときは等倍にする', () => {
     expect(computeStageLayout(0, 0).scale).toBe(1);
     expect(computeStageLayout(Number.NaN, 500).scale).toBe(1);
-  });
-});
-
-describe('shortStandaloneHeight（iPhone のホーム画面から開いたときの高さの補正）', () => {
-  const base = { standalone: true, innerWidth: 393, innerHeight: 793, screenHeight: 852, appTop: 0, safeTop: 59 };
-
-  it('高さが上のセーフエリアの分だけ短く渡されたら、画面の本当の高さにする（2026-10-24 の動画の状態）', () => {
-    expect(shortStandaloneHeight(base)).toBe(852);
-  });
-
-  it('正しい高さで渡されているときは何もしない', () => {
-    expect(shortStandaloneHeight({ ...base, innerHeight: 852 })).toBeNull();
-  });
-
-  it('Safari（ホーム画面から開いていない）・横持ち・セーフエリアなしでは何もしない', () => {
-    expect(shortStandaloneHeight({ ...base, standalone: false })).toBeNull();
-    expect(shortStandaloneHeight({ ...base, innerWidth: 852, innerHeight: 393 })).toBeNull();
-    expect(shortStandaloneHeight({ ...base, safeTop: 0 })).toBeNull();
-  });
-
-  it('足りない高さがセーフエリアと違う・画面が上から始まっていないときは何もしない', () => {
-    expect(shortStandaloneHeight({ ...base, innerHeight: 700 })).toBeNull();
-    expect(shortStandaloneHeight({ ...base, appTop: 59 })).toBeNull();
   });
 });
