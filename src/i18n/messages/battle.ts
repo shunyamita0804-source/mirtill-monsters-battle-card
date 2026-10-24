@@ -121,6 +121,26 @@ export const BATTLE = {
   'battle.info.manaAria': { ja: 'マナ {n}', en: 'Mana {n}' },
   'battle.info.deck': { ja: '山札 ×{n}', en: 'Deck ×{n}' },
   'battle.info.hand': { ja: '手札 ×{n}', en: 'Hand ×{n}' },
+  'battle.info.discard': { ja: '捨札 ×{n}', en: 'Discard ×{n}' },
+  // 相手・自分の列の左（2026-10-24 改訂R2）：いまの状態と、モンスターの数
+  'battle.zone.state.attack': { ja: '攻撃中', en: 'Attacking' },
+  'battle.zone.state.mana': { ja: 'マナ化中', en: 'Making Mana' },
+  'battle.zone.state.defense': { ja: '守備中', en: 'Defending' },
+  'battle.zone.state.wait': { ja: '待機中', en: 'Waiting' },
+  'battle.zone.state.ended': { ja: '対戦終了', en: 'Over' },
+  'battle.zone.acted': { ja: '行動済 {n}/{m}', en: 'Acted {n}/{m}' },
+  'battle.zone.alive': { ja: '残り {n}体', en: '{n} left' },
+  'battle.oppHand.empty': { ja: '相手の手札なし', en: 'No cards in hand' },
+  'battle.hand.empty': { ja: '手札なし', en: 'No cards in hand' },
+  // 経過（ログ）：真ん中の帯に最新の1行、押すとすべて
+  'battle.log.title': { ja: 'これまでの経過', en: 'Battle Log' },
+  'battle.log.open': { ja: 'これまでの経過を見る', en: 'Show battle log' },
+  'battle.log.more': { ja: '経過', en: 'Log' },
+  // いちばん下の操作の列：自分の番でないときの札
+  'battle.dock.waiting': { ja: '相手の番', en: "Opponent's turn" },
+  'battle.dock.defense': { ja: '守備を選ぶ', en: 'Choose defense' },
+  'battle.dock.noDefense': { ja: '守備できるカードなし', en: 'No defense cards' },
+  'battle.dock.auto': { ja: 'オート中', en: 'Auto' },
   'battle.monster.aria': { ja: '{name} ライフ{life}', en: '{name}, Life {life}' },
   'battle.monster.acted': { ja: '行動済', en: 'Acted' },
   'battle.monster.owner.player': { ja: 'あなたのモンスター', en: 'Your monster' },
@@ -161,8 +181,8 @@ export const BATTLE = {
   'battle.prompt.usable': { ja: '使えます', en: 'Usable' },
   'battle.prompt.unusable': { ja: '使えません', en: 'Cannot use' },
   'battle.prompt.hintMain': {
-    ja: '手札をタップ（指でなぞると見比べられます）すると、説明と「使う」が出ます。上へはじくとすぐ使えます。攻撃を終えるときは右上の「攻撃終了」',
-    en: 'Tap a card (swipe to compare) to see it and "Use". Flick a card up to use it right away. To end your attack, tap "End Attack" at the top right',
+    ja: '手札をタップ（指でなぞると見比べられます）すると、説明と「使う」が出ます。上へはじくとすぐ使えます。攻撃を終えるときは右下の「攻撃終了」',
+    en: 'Tap a card (swipe to compare) to see it and "Use". Flick a card up to use it right away. To end your attack, tap "End Attack" at the bottom right',
   },
   'battle.prompt.hint': {
     ja: '手札のカードをタップするか指でなぞると、ここに説明と拡大したカードが出ます。',

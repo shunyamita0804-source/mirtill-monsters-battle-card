@@ -18,6 +18,7 @@ import {
   type Side,
 } from '../../game/battle/engine.ts';
 import iconDeck from '@assets/images/ui/battle/icon_deck.webp';
+import iconDiscard from '@assets/images/ui/battle/icon_discard.webp';
 import iconHand from '@assets/images/ui/battle/icon_hand.webp';
 import iconMana from '@assets/images/ui/battle/icon_mana.webp';
 import { opponentFace, opponentFaceUrl } from '../components/opponentFace.ts';
@@ -32,7 +33,7 @@ import { confirmModal, openModal } from '../components/modal.ts';
 import { commandButton, confirmCommand } from '../components/commandButton.ts';
 import { createMonsterCard } from '../components/monsterCard.ts';
 import { battleDigits } from '../components/battleDigits.ts';
-import { createPlayCard, createSkillCard } from '../components/skillCard.ts';
+import { createPlayCard, createSkillCard, skillCardHeight } from '../components/skillCard.ts';
 import { bgm } from '../bgm.ts';
 import { button, h } from '../dom.ts';
 import { once, type BattleRequest } from '../gameStore.ts';
@@ -70,10 +71,20 @@ function showcaseSound(card: PlayCard): SoundId {
 
 /** 相手の1手ごとの間（ミリ秒） */
 const AI_STEP_MS = 1100;
-/** 場のモンスターのカードの幅（2026-10-23 に 74→88。場を大きく見せる） */
-const MONSTER_CARD_W = 72;
-/** 中段の大きなカードの幅（論理px）。2026-10-23 ユーザー「上下の幅をもう少し縮めていい」で、高さいっぱいをやめて固定に */
-const DETAIL_CARD_W = 132;
+/**
+ * 場のモンスターのカードの幅（2026-10-24 改訂R2：72→58。約20%小さくして、列の左右に情報欄を置く。
+ * 72・58（20%）・54（25%）を3つの画面サイズで比べて決めた。記録は docs/battle-layout-r2.md）
+ */
+const MONSTER_CARD_W = 58;
+/**
+ * 手札のカードの幅（論理px）。自分の手札（表）と相手の手札（裏）で同じ値を使い、外形をそろえる（2026-10-24 改訂R2）。
+ * 高さは技カードの縦横比から skillCardHeight() で出す
+ */
+const HAND_CARD_W = 62;
+/** 説明の欄の大きなカードの幅（論理px） */
+const DETAIL_CARD_W = 106;
+/** 相手の手札の裏向きのカードが、場の真ん中やマナの欄へ動く時間（ミリ秒。見た目だけ。ルールの処理は先に済んでいる） */
+const OPP_CARD_FLY_MS = 300;
 /** 相手のひと言を大きく出しておく時間（ミリ秒）。押すと先に消える */
 const TALK_MS = 2600;
 /** 使ったカードを大きく見せる時間（2026-10-23。PS版のように「何を使ったか」を見せる） */
@@ -165,6 +176,9 @@ export const battleScreen: ScreenDefinition = {
       element.classList.add('has-bg');
       element.style.setProperty('--battle-bg', `url("${req.background}")`);
     }
+    // 手札のカードの大きさ（自分の手札＝表・相手の手札＝裏で同じ値。CSS の --hand-card-w / --hand-card-h）
+    element.style.setProperty('--hand-card-w', `${HAND_CARD_W}px`);
+    element.style.setProperty('--hand-card-h', `${skillCardHeight(HAND_CARD_W).toFixed(2)}px`);
     const save = ctx.store.save;
     const seed = randomSeed();
 
@@ -196,6 +210,8 @@ export const battleScreen: ScreenDefinition = {
     let lastPlayed: { cardId: string; side: Side } | null = null;
     /** 表示済みの手札（新しく来たカードだけを配る演出にする） */
     const shownHand = new Set<string>();
+    /** 表示済みの相手の手札（新しく引いたカードだけ山札から来る動きにする。中身は画面に出さない） */
+    const shownOppHand = new Set<string>();
     /** 配っている間は操作と相手の行動を待たせる */
     let busyUntil = 0;
     /** 前回描画時のライフ（ダメージ・回復の演出に使う） */
@@ -243,20 +259,70 @@ export const battleScreen: ScreenDefinition = {
       return hand ? { cardId: hand.cardId, side: action.side } : null;
     };
 
+    /**
+     * 相手が手札のカードを使う・守備に出す・マナにするとき、そのカードの裏向きの絵の位置（画面の座標）。
+     * 並び順だけで探す（カードの中身は使わない）
+     */
+    const opponentCardFrom = (s: BattleState, action: BattleAction): DOMRect | null => {
+      if (action.side !== 'opponent') return null;
+      const uid = action.type === 'useCard' || action.type === 'convertToMana' || action.type === 'defend' ? action.cardUid : null;
+      if (!uid) return null;
+      const index = s.sides.opponent.hand.findIndex((c) => c.uid === uid);
+      const back = index >= 0 ? element.querySelectorAll('.battle-hand--opponent .battle-hand__back')[index] : undefined;
+      return back ? back.getBoundingClientRect() : null;
+    };
+
+    /**
+     * 相手の手札の裏向きのカードを、場の真ん中（使う）かマナの欄（マナ化）へ動かす。見た目だけで、ルールの処理は先に済んでいる。
+     * 真ん中に着いたら showcase で表を見せる（使ったカードは公開される場面なので、ここで初めて表にする）
+     */
+    const flyOpponentCard = (from: DOMRect, goal: 'center' | 'mana'): void => {
+      const root = element.getBoundingClientRect();
+      const scale = stageScale();
+      const x = (from.left - root.left) / scale;
+      const y = (from.top - root.top) / scale;
+      let gx = element.offsetWidth / 2;
+      let gy = element.offsetHeight / 2;
+      if (goal === 'mana') {
+        const box = element.querySelector('.battle-info--opponent .battle-info__mana');
+        if (box) {
+          const g = box.getBoundingClientRect();
+          gx = (g.left + g.width / 2 - root.left) / scale;
+          gy = (g.top + g.height / 2 - root.top) / scale;
+        }
+      }
+      const w = from.width / scale;
+      const hgt = from.height / scale;
+      const fly = h('span', { class: `battle-hand__back battle__opp-fly battle__opp-fly--${goal}` });
+      fly.style.left = `${x}px`;
+      fly.style.top = `${y}px`;
+      fly.style.setProperty('--dx', `${gx - (x + w / 2)}px`);
+      fly.style.setProperty('--dy', `${gy - (y + hgt / 2)}px`);
+      fxLayer.append(fly);
+      setTimeout(() => fly.remove(), OPP_CARD_FLY_MS + 60);
+    };
+
     const dispatch = (action: BattleAction): void => {
       if (!state) return;
       const played = playedCard(state, action);
+      const oppFrom = opponentCardFrom(state, action);
       const next = applyAction(state, action);
       if (next === state) return;
       state = next;
       targeting = null;
       if (selectedUid && !state.sides.player.hand.some((c) => c.uid === selectedUid)) selectedUid = null;
+      // 相手のカードは、裏向きのまま手札から真ん中へ動いてから表を見せる
+      const revealDelay = played && oppFrom ? OPP_CARD_FLY_MS : 0;
       if (played) {
         lastPlayed = played;
-        busyUntil = Math.max(busyUntil, Date.now() + SHOWCASE_MS - 150);
+        busyUntil = Math.max(busyUntil, Date.now() + revealDelay + SHOWCASE_MS - 150);
       }
       render();
-      if (played) showcase(played.cardId, played.side);
+      if (oppFrom) flyOpponentCard(oppFrom, action.type === 'convertToMana' ? 'mana' : 'center');
+      if (played) {
+        if (revealDelay > 0) setTimeout(() => !destroyed && showcase(played.cardId, played.side), revealDelay);
+        else showcase(played.cardId, played.side);
+      }
     };
 
     /**
@@ -665,22 +731,64 @@ export const battleScreen: ScreenDefinition = {
       });
     };
 
-    /* ---------- 表示 ---------- */
+    /** これまでの経過（ログ）をすべて見る窓。ふだんは真ん中の帯に最新の1行だけ出す */
+    const showLog = (): void => {
+      if (!state) return;
+      const lines = [...state.log].reverse();
+      const handle = openModal(element, {
+        title: t('battle.log.title'),
+        body: [h('ol', { class: 'battle-log' }, ...lines.map((l) => h('li', { class: 'battle-log__line', text: l.text })))],
+        actions: [{ label: t('common.close'), primary: true, onTap: () => handle.close() }],
+      });
+    };
 
+    /* ---------- 表示 ---------- */
+    // 2026-10-24 改訂R2「対戦テーブル」：上から 相手の手札（裏）→ 相手の列 → 真ん中の帯 → 自分の列 → 自分の手札（表）→ 説明 → 操作。
+    // 相手・自分の列はどちらも 左＝誰・いまの状態、真ん中＝モンスター3体、右＝マナ・山札・手札・捨札（同じ並び・同じ意味）
+
+    /** いまの状態（攻撃中・マナ化中・守備中・待機中） */
+    const sideState = (s: BattleState, side: Side): string => {
+      if (s.phase === 'ended') return t('battle.zone.state.ended');
+      if (s.phase === 'defense' && s.pending) return t(s.pending.attacker === side ? 'battle.zone.state.attack' : 'battle.zone.state.defense');
+      if (s.active !== side) return t('battle.zone.state.wait');
+      return t(s.phase === 'mana' ? 'battle.zone.state.mana' : 'battle.zone.state.attack');
+    };
+
+    /** 列の左：誰か（相手は顔の絵と名前）・いまの状態・行動したモンスターの数（攻撃中）または残りのモンスターの数 */
+    const sideZone = (s: BattleState, side: Side): HTMLElement => {
+      const st = s.sides[side];
+      const active = s.active === side && s.phase !== 'ended';
+      const alive = st.monsters.filter((m) => m.life > 0);
+      const attacking = active && s.phase === 'main';
+      return h(
+        'div',
+        { class: `battle-zone battle-zone--${side}${active ? ' is-active' : ''}` },
+        h(
+          'span',
+          { class: 'battle-zone__who' },
+          side === 'opponent' && req.opponent.id ? opponentFace(req.opponent.id, 22) : null,
+          h('span', { class: 'battle-zone__tag', text: t(`battle.side.${side}`) }),
+        ),
+        side === 'opponent' ? h('span', { class: 'battle-zone__name', text: st.name }) : null,
+        h('span', { class: 'battle-zone__state', text: sideState(s, side) }),
+        h('span', {
+          class: 'battle-zone__sub',
+          text: attacking
+            ? t('battle.zone.acted', { n: alive.filter((m) => m.acted).length, m: alive.length })
+            : t('battle.zone.alive', { n: alive.length }),
+        }),
+      );
+    };
+
+    /** 列の右：マナ・山札・手札・捨札（アイコンはデザイン第4弾）。手札の数は上下に並べた手札の枚数と同じ */
     const infoBox = (s: BattleState, side: Side): HTMLElement => {
       const st = s.sides[side];
       const active = s.active === side && s.phase !== 'ended';
+      const count = (icon: string, text: string): HTMLElement =>
+        h('span', { class: 'battle-info__count' }, h('img', { class: 'battle-info__icon', attrs: { src: icon, alt: '', draggable: 'false' } }), h('span', { text }));
       return h(
         'div',
         { class: `battle-info battle-info--${side}${active ? ' is-active' : ''}` },
-        h('span', { class: 'battle-info__tag', text: t(`battle.side.${side}`) }),
-        // 大会の相手は顔の絵（第5弾）を名前の横に
-        h(
-          'span',
-          { class: 'battle-info__name' },
-          side === 'opponent' && req.opponent.id ? opponentFace(req.opponent.id, 22) : null,
-          h('span', { text: side === 'player' ? t('battle.side.player') : st.name }),
-        ),
         h(
           'div',
           { class: 'battle-info__mana', attrs: { 'aria-label': t('battle.info.manaAria', { n: manaOf(st) }) } },
@@ -688,19 +796,9 @@ export const battleScreen: ScreenDefinition = {
           h('span', { class: 'battle-info__mana-label', text: t('card.detail.mana') }),
           h('span', { class: 'battle-info__mana-value', text: String(manaOf(st)) }),
         ),
-        // 山札・手札の数（アイコンはデザイン第4弾）
-        h(
-          'span',
-          { class: 'battle-info__count' },
-          h('img', { class: 'battle-info__icon', attrs: { src: iconDeck, alt: '', draggable: 'false' } }),
-          h('span', { text: t('battle.info.deck', { n: st.deck.length }) }),
-        ),
-        h(
-          'span',
-          { class: 'battle-info__count' },
-          h('img', { class: 'battle-info__icon', attrs: { src: iconHand, alt: '', draggable: 'false' } }),
-          h('span', { text: t('battle.info.hand', { n: st.hand.length }) }),
-        ),
+        count(iconDeck, t('battle.info.deck', { n: st.deck.length })),
+        count(iconHand, t('battle.info.hand', { n: st.hand.length })),
+        count(iconDiscard, t('battle.info.discard', { n: st.discard.length })),
       );
     };
 
@@ -708,8 +806,7 @@ export const battleScreen: ScreenDefinition = {
       h(
         'div',
         { class: `battle-side battle-side--${side}` },
-        // 情報の箱：自分は左端（下にコマンドをまとめる。親指の届く所）、相手は右端。モンスターは残りの真ん中
-        side === 'player' ? h('div', { class: 'battle-side__panel' }, infoBox(s, side), commandColumn(s, dealing())) : null,
+        sideZone(s, side),
         h(
           'div',
           { class: 'battle-side__monsters' },
@@ -723,13 +820,20 @@ export const battleScreen: ScreenDefinition = {
             return h(
               'button',
               {
-                class: `battle__monster${isTarget ? ' is-target' : ''}${isPendingTarget ? ' is-attacked' : ''}${m.acted && m.life > 0 ? ' is-acted' : ''}${diff < 0 ? ' is-hit' : ''}`,
+                // 対象を選ぶ間は、選べないモンスターを暗くして候補と見分ける
+                class: `battle__monster${isTarget ? ' is-target' : targeting ? ' is-not-target' : ''}${isPendingTarget ? ' is-attacked' : ''}${m.acted && m.life > 0 ? ' is-acted' : ''}${diff < 0 ? ' is-hit' : ''}`,
                 attrs: { type: 'button', 'aria-label': t('battle.monster.aria', { name: cardName(m.cardId), life: m.life }) },
                 dataset: { uid: m.uid },
                 on: { click: () => tapMonster(side, m) },
               },
               createMonsterCard(getMonster(m.cardId), { width: MONSTER_CARD_W, life: { current: m.life, max: m.maxLife }, showName: false }),
-              h('span', { class: 'battle__monster-life', text: String(m.life) }),
+              // いまのライフ／最大（最大はカードのデータから。バーと同じ値）
+              h(
+                'span',
+                { class: `battle__monster-life${m.life <= 0 ? ' is-down' : m.life * 3 <= m.maxLife ? ' is-low' : ''}` },
+                h('span', { class: 'battle__monster-life-now', text: String(m.life) }),
+                h('span', { class: 'battle__monster-life-max', text: `/${m.maxLife}` }),
+              ),
               m.acted && m.life > 0 ? h('span', { class: 'battle__acted', text: t('battle.monster.acted') }) : null,
               // 吠える・ダストキック（技のダメージ−）・すなかけ（次の手番は攻撃できない）・ちょうはつ（ラズックだけ）がかかっている印
               m.life > 0 ? statusBadges(s, m) : null,
@@ -739,7 +843,7 @@ export const battleScreen: ScreenDefinition = {
             );
           }),
         ),
-        side === 'opponent' ? infoBox(s, side) : null,
+        infoBox(s, side),
       );
 
     /** モンスターにかかっている特殊の効果の印（無ければ null） */
@@ -754,25 +858,33 @@ export const battleScreen: ScreenDefinition = {
       return h('span', { class: 'battle__status' }, ...items.map((text) => h('span', { text })));
     };
 
-    /** 中段：左に説明文、右に選んだ技カードの拡大 */
     /**
-     * 相手の手札（裏向き。2026-10-23 ユーザー指示「相手の手札は見えたらダメ」）。枚数が分かるよう、カードの裏を少し重ねて並べる
+     * 相手の手札（裏向き。2026-10-23 ユーザー指示「相手の手札は見えたらダメ」）。
+     * 2026-10-24 改訂R2：自分の手札と同じ大きさ（HAND_CARD_W）で、実際の枚数だけ並べる。押しても何も出さない。
+     * 枚数が多くて入りきらないときは重ねる（相手の手札は操作しないので重ねてよい）
      */
-    const opponentHand = (s: BattleState): HTMLElement =>
-      h(
+    const opponentHand = (s: BattleState): HTMLElement => {
+      const hand = s.sides.opponent.hand;
+      let newIndex = 0;
+      const row = h(
         'div',
-        { class: 'battle-opp__hand', attrs: { role: 'img', 'aria-label': t('battle.oppHand.count', { n: s.sides.opponent.hand.length }) } },
-        ...s.sides.opponent.hand.map(() => h('span', { class: 'battle-opp__back' })),
+        { class: 'battle-hand battle-hand--opponent', attrs: { role: 'img', 'aria-label': t('battle.oppHand.count', { n: hand.length }) } },
+        ...hand.map((c) => {
+          const back = h('span', { class: 'battle-hand__back' });
+          if (!shownOppHand.has(c.uid)) {
+            // 新しく引いたカード：山札の方から1枚ずつ来る
+            back.classList.add('is-dealt');
+            back.style.animationDelay = `${newIndex * DEAL_MS}ms`;
+            newIndex++;
+            shownOppHand.add(c.uid);
+          }
+          return back;
+        }),
+        hand.length === 0 ? h('span', { class: 'battle-hand__empty', text: t('battle.oppHand.empty') }) : null,
       );
-
-    /** 上の段：相手の顔の絵（小さく）と名前。ひと言は talkOverlay で大きく出す */
-    const opponentTalk = (s: BattleState): HTMLElement =>
-      h(
-        'div',
-        { class: 'battle-opp__talk' },
-        (req.opponent.id ? opponentFace(req.opponent.id, 30) : null) ?? h('span', { class: 'battle-opp__noface', text: t('battle.side.opponent') }),
-        h('span', { class: 'battle-opp__name', text: s.sides.opponent.name }),
-      );
+      row.style.setProperty('--n', String(Math.max(1, hand.length)));
+      return row;
+    };
 
     /**
      * 相手のひと言（2026-10-23 ユーザー指示：顔の絵とセリフは大きく、カードの上に重ねてよい。PS版の対戦画面にならう）。
@@ -805,7 +917,6 @@ export const battleScreen: ScreenDefinition = {
       const card = hand ? getPlayCard(hand.cardId) : undefined;
       // 何も選んでいないときは、直前に使われたカードを出す（空の枠を見せない）
       const recent = !card && lastPlayed ? getPlayCard(lastPlayed.cardId) : undefined;
-      const logs = s.log.slice(-2).map((l) => h('p', { class: 'battle-text__log', text: l.text }));
       let body: (HTMLElement | null)[];
       if (targeting) {
         body = [h('p', { class: 'battle-text__prompt', text: targeting.prompt })];
@@ -874,12 +985,7 @@ export const battleScreen: ScreenDefinition = {
         h(
           'div',
           { class: 'battle-detail__left' },
-          h(
-            'div',
-            { class: 'battle-text' },
-            h('div', { class: 'battle-text__body' }, ...body),
-            h('div', { class: 'battle-text__logs', attrs: { 'aria-live': 'polite' } }, ...logs),
-          ),
+          h('div', { class: 'battle-text' }, h('div', { class: 'battle-text__body' }, ...body)),
         ),
         h(
           'div',
@@ -942,7 +1048,7 @@ export const battleScreen: ScreenDefinition = {
                 },
               },
             },
-            createPlayCard(card, { width: 56, showText: false }),
+            createPlayCard(card, { width: HAND_CARD_W, showText: false }),
             h('span', { class: 'battle__hand-name', text: cardName(card) }),
             picked ? h('span', { class: 'battle__hand-mana', text: t('card.detail.mana') }) : null,
           );
@@ -955,6 +1061,7 @@ export const battleScreen: ScreenDefinition = {
           }
           return el;
         }),
+        s.sides.player.hand.length === 0 ? h('span', { class: 'battle-hand__empty', text: t('battle.hand.empty') }) : null,
       );
       if (newIndex > 0) busyUntil = Math.max(busyUntil, Date.now() + newIndex * DEAL_MS + 200);
       return row;
@@ -1093,12 +1200,23 @@ export const battleScreen: ScreenDefinition = {
         h('span', { class: 'battle__top-label', text: label }),
       );
 
-    const header = (): HTMLElement =>
+    /** 上の帯：降参（左端・確かめてから）／対戦の名前といまの手番・場面／ルール（右端） */
+    const header = (s: BattleState | null = null): HTMLElement =>
       h(
         'header',
-        { class: 'battle__header' },
+        { class: `battle__header${s ? ` battle__header--${s.phase === 'ended' ? 'ended' : s.active}` : ''}` },
         req.allowSurrender ? topButton('surrender', t('battle.surrender'), surrender) : h('span'),
-        h('h1', { class: 'battle__title', text: req.title }),
+        h(
+          'div',
+          { class: 'battle__heading' },
+          h('h1', { class: 'battle__title', text: req.title }),
+          s
+            ? h('p', {
+                class: 'battle__turn-text',
+                text: s.phase === 'ended' ? t('battle.turnBar.ended') : t('battle.turnBar', { n: s.turn, who: t(`battle.side.${s.active}`), phase: t(`battle.phase.${s.phase}`) }),
+              })
+            : null,
+        ),
         topButton('rules', t('battle.rules'), showRules),
       );
 
@@ -1139,7 +1257,23 @@ export const battleScreen: ScreenDefinition = {
       return el;
     };
 
-    /** 場の全体カード（上の帯の右に出す。タップで詳しく） */
+    /** 真ん中の帯（相手の列と自分の列の間）：左に場のカード（なければ先攻・後攻）、右に最新の経過1行。押すと経過をすべて見る */
+    const midBand = (s: BattleState): HTMLElement => {
+      const last = s.log[s.log.length - 1];
+      return h(
+        'div',
+        { class: 'battle-mid' },
+        fieldChip(s),
+        h(
+          'button',
+          { class: 'battle-mid__log', attrs: { type: 'button', 'aria-label': t('battle.log.open') }, on: { click: showLog } },
+          h('span', { class: 'battle-mid__log-text', attrs: { 'aria-live': 'polite' }, text: last?.text ?? '' }),
+          h('span', { class: 'battle-mid__log-more', text: t('battle.log.more') }),
+        ),
+      );
+    };
+
+    /** 場の全体カード（真ん中の帯の左に出す。タップで詳しく） */
     const fieldChip = (s: BattleState): HTMLElement => {
       if (!s.field) return h('span', { class: 'battle-turn__first', text: t(s.first === 'player' ? 'battle.field.first' : 'battle.field.second') });
       const card = getSupport(s.field.cardId);
@@ -1196,50 +1330,48 @@ export const battleScreen: ScreenDefinition = {
     };
 
     /**
-     * いまできるコマンド（2026-10-23：画面中央の帯をやめ、説明の箱の下に小さく並べる）。
-     * - 攻撃：カードを選ぶと「使う（使えるときだけ）／やめる」。使えるカードが1枚もなければ「攻撃終了」
-     * - 対象選択中：「やめる」
-     * - マナ化：「マナにする（N枚）」（選んだとき）／「ターン終了」
-     * - 相手の番・配っている間・オート中は出さない
-     * ほかのコマンド（攻撃終了・ルール・降参）は、上の帯の右の「コマンド」で開く一覧（PS版の「コマンド」にならう）
+     * 画面のいちばん下の操作の列（2026-10-24 改訂R2。親指の届く所）。左に「コマンド」、右端に場面の主なボタン。
+     * - 攻撃：右端に「攻撃終了」をいつも出す。カードを選ぶと、その左に「やめる」「使う（使えるときだけ）」。対象を選ぶ間は「やめる」
+     * - マナ化：右端に「ターン終了」、選んだカードがあればその左に「マナにする（N枚）」
+     * - 相手の番・守備・オート中：右端にいまの状態の札（押せない）
+     * 配っている間・手札をなぞっている間は、並びを変えずに押せないだけにする（ボタンの位置が跳ねないように）
      */
-    const commandColumn = (s: BattleState, blocked: boolean): HTMLElement | null => {
-      const buttons: HTMLButtonElement[] = [];
-      // 手札をなぞっている間は出さない（指を離すと出る）
-      const mine = s.active === 'player' && !auto && !blocked && !swipe;
+    const commandDock = (s: BattleState, blocked: boolean): HTMLElement | null => {
+      if (s.phase === 'ended') {
+        lastCommandKey = '';
+        return null;
+      }
+      const buttons: HTMLElement[] = [];
+      const mine = s.active === 'player' && !auto;
       const selected = selectedUid ? s.sides.player.hand.find((c) => c.uid === selectedUid) : undefined;
-      const anyUsable = s.sides.player.hand.some((c) => cardUsability(s, 'player', c.uid).usable);
       const deselect = (): void => {
         selectedUid = null;
         targeting = null;
         render();
       };
+      const statusTag = (text: string): HTMLElement => h('span', { class: 'battle-dock__status', text });
       if (mine && s.phase === 'main') {
-        if (targeting) {
-          buttons.push(commandButton(t('common.cancel'), deselect, 'cancel'));
-        } else if (selected) {
-          if (cardUsability(s, 'player', selected.uid).usable) buttons.push(commandButton(t('battle.cmd.use'), () => useCard(selected.uid)));
-          buttons.push(commandButton(t('common.cancel'), deselect, 'cancel'));
-        } else if (!anyUsable) {
-          // 使えるカードが1枚もなければ、することは攻撃終了だけ
-          buttons.push(commandButton(t('battle.cmd.endAttack'), () => requestEndAttack(s), 'cancel'));
-        }
+        if (targeting || selected) buttons.push(commandButton(t('common.cancel'), deselect, 'cancel'));
+        if (!targeting && selected && cardUsability(s, 'player', selected.uid).usable) buttons.push(commandButton(t('battle.cmd.use'), () => useCard(selected.uid)));
+        const end = commandButton(t('battle.cmd.endAttack'), () => requestEndAttack(s), 'cancel');
+        end.classList.add('battle-dock__main');
+        buttons.push(end);
       } else if (mine && s.phase === 'mana') {
         if (manaPicks.size > 0 && canConvertToMana(s, 'player')) buttons.push(commandButton(t('battle.cmd.makeMana', { n: manaPicks.size }), convertPicked));
-        buttons.push(commandButton(t('battle.cmd.endTurn'), () => requestEndTurn(), 'cancel'));
+        const end = commandButton(t('battle.cmd.endTurn'), () => requestEndTurn(), 'cancel');
+        end.classList.add('battle-dock__main');
+        buttons.push(end);
+      } else if (s.phase === 'defense' && s.pending?.attacker === 'opponent' && !auto) {
+        buttons.push(statusTag(t(noDefensePossible(s) ? 'battle.dock.noDefense' : 'battle.dock.defense')));
+      } else {
+        buttons.push(statusTag(t(auto ? 'battle.dock.auto' : 'battle.dock.waiting')));
       }
-      // その他のコマンド（攻撃終了・ルール・降参）の一覧を開くボタン（PS版の「コマンド」）
-      const menuButton = commandMenuButton(s);
-      if (menuButton) buttons.push(menuButton as HTMLButtonElement);
-      if (buttons.length === 0) {
-        lastCommandKey = '';
-        return null;
-      }
-      const key = buttons.map((b) => b.getAttribute('aria-label')).join('|');
-      const row = h('div', { class: 'battle__commands', attrs: { role: 'group', 'aria-label': t('battle.cmd.aria') } }, ...buttons);
-      if (key !== lastCommandKey) row.classList.add('is-enter');
+      if (blocked || swipe) for (const b of buttons) if (b instanceof HTMLButtonElement) b.disabled = true;
+      const key = buttons.map((b) => b.getAttribute('aria-label') ?? b.textContent).join('|');
+      const actions = h('div', { class: 'battle-dock__actions' }, ...buttons);
+      if (key !== lastCommandKey) actions.classList.add('is-enter');
       lastCommandKey = key;
-      return row;
+      return h('div', { class: 'battle-dock battle__commands', attrs: { role: 'group', 'aria-label': t('battle.cmd.aria') } }, commandMenuButton(), actions);
     };
 
     const requestEndTurn = (): void => {
@@ -1249,9 +1381,8 @@ export const battleScreen: ScreenDefinition = {
       } else end();
     };
 
-    /** 「コマンド」ボタン（自分の情報の下）。押すとコマンドの一覧を開く */
-    const commandMenuButton = (s: BattleState): HTMLElement | null => {
-      if (s.phase === 'ended') return null;
+    /** 「コマンド」ボタン（いちばん下の列の左）。押すとコマンドの一覧（攻撃終了・ターン終了・ルール・降参）を開く */
+    const commandMenuButton = (): HTMLElement => {
       const b = commandButton(t('battle.cmd.menu'), () => {
         commandMenuOpen = !commandMenuOpen;
         render();
@@ -1262,7 +1393,7 @@ export const battleScreen: ScreenDefinition = {
       return b;
     };
 
-    /** コマンドの一覧（「コマンド」ボタンの右に開く）。外側を押すと閉じる */
+    /** コマンドの一覧（「コマンド」ボタンの上に開く）。外側を押すと閉じる */
     const commandMenu = (s: BattleState, blocked: boolean): HTMLElement | null => {
       if (!commandMenuOpen || s.phase === 'ended') return null;
       const close = (): void => {
@@ -1304,29 +1435,14 @@ export const battleScreen: ScreenDefinition = {
       const blocked = dealing();
       const menu = commandMenu(s, blocked);
 
-      const turnText =
-        s.phase === 'ended'
-          ? t('battle.turnBar.ended')
-          : t('battle.turnBar', { n: s.turn, who: t(`battle.side.${s.active}`), phase: t(`battle.phase.${s.phase}`) });
       replaceView(
-        header(),
+        header(s),
         qaBar() ?? '',
-        h(
-          'div',
-          { class: `battle-turn battle-turn--${s.phase === 'ended' ? 'ended' : s.active}` },
-          h('span', { class: 'battle-turn__text', text: turnText }),
-          h('div', { class: 'battle-turn__right' }, fieldChip(s)),
-        ),
-        // 場（残りの高さに広がる）：相手の顔と手札（裏向き）→ 相手のモンスター（右端に情報）→ 自分のモンスター（左端に情報とコマンド）
-        h(
-          'div',
-          { class: 'battle-board' },
-          h('div', { class: 'battle-opp' }, opponentTalk(s), opponentHand(s)),
-          monsterRow(s, 'opponent'),
-          monsterRow(s, 'player'),
-        ),
+        // 対戦テーブル：相手の手札（裏）→ 相手の列 → 真ん中の帯 → 自分の列 → 自分の手札（表）
+        h('div', { class: 'battle-board' }, opponentHand(s), monsterRow(s, 'opponent'), midBand(s), monsterRow(s, 'player'), hand),
+        // 説明の欄（残りの高さに広がる）といちばん下の操作
         detailPanel(s),
-        hand,
+        commandDock(s, blocked) ?? '',
       );
       const overlays = [talkOverlay(s), menu, defenseOverlay(s), resultOverlay(s), phaseBanner(s), hintOverlay(s)].filter((o): o is HTMLElement => o !== null);
       element.append(...overlays);
